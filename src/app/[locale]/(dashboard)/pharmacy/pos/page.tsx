@@ -2,6 +2,7 @@
 
 import { CartContents } from "@/components/pharmacy/pos/cart-contents"
 import { InteractionAlert } from "@/components/pharmacy/pos/interaction-alert"
+import { PrescriptionLinkDialog } from "@/components/pharmacy/pos/prescription-link-dialog"
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { TransactionHistory } from "@/components/pharmacy/transaction-history"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
@@ -50,6 +51,12 @@ export default function POSPage() {
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [lastTransaction, setLastTransaction] = useState<any>(null)
 
+  // Prescription Dialog State
+  const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
+
+  // Cart Sheet State (Controlled)
+  const [cartOpen, setCartOpen] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
@@ -65,6 +72,7 @@ export default function POSPage() {
   const tax = subtotal * 0.1 
   const discountAmount = (subtotal * discount) / 100
   const total = subtotal + tax - discountAmount
+  const itemCount = cart.reduce((count, item) => count + item.quantity, 0)
 
   const { checkInteractions } = useDrugInteraction()
   const [showInteractionAlert, setShowInteractionAlert] = useState(false)
@@ -107,12 +115,18 @@ export default function POSPage() {
       clearCart()
       setDiscount(0)
       setSelectedCustomer(null)
+      setCartOpen(false) 
+  }
+
+  const handleLinkPrescription = (id: string) => {
+      // In a real app, you'd fetch prescription details here
+      console.log("Linked prescription:", id)
   }
 
   if (!isMounted) return null
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] gap-4 p-2 relative">
+    <div className="flex flex-col md:flex-row h-[calc(100dvh-8rem)] md:h-[calc(100dvh-8rem)] -mx-2 -my-2 p-2 gap-4 relative overflow-hidden bg-background rounded-lg">
             <ReceiptDialog 
                 open={receiptOpen} 
                 onOpenChange={setReceiptOpen} 
@@ -128,10 +142,32 @@ export default function POSPage() {
                     processTransaction()
                 }}
             />
+
+            <PrescriptionLinkDialog 
+                open={linkPrescriptionOpen}
+                onOpenChange={setLinkPrescriptionOpen}
+                onLink={handleLinkPrescription}
+            />
+
+            {/* Mobile Cart Sheet (Controlled) */}
+            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+                <SheetContent side="right" className="p-0 w-full sm:w-[400px]">
+                    <CartContents 
+                        onCheckout={handleCheckout}
+                        customerDialogOpen={customerDialogOpen}
+                        setCustomerDialogOpen={setCustomerDialogOpen}
+                        selectedCustomer={selectedCustomer}
+                        setSelectedCustomer={setSelectedCustomer}
+                        discount={discount}
+                        setDiscount={setDiscount}
+                    />
+                </SheetContent>
+            </Sheet>
       
       {/* Product Section */}
-      <div className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-card p-4 rounded-xl border shadow-sm sticky top-0 z-10">
+      <div className="flex-1 flex flex-col h-full min-h-0 gap-4 pb-16 md:pb-0"> {/* Start pb-16 for mobile footer space */}
+        {/* Header - Fixed Height */}
+        <div className="flex-none flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-card p-4 rounded-xl border shadow-sm z-10">
             <div className="relative flex-1 w-full sm:w-auto">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -151,53 +187,50 @@ export default function POSPage() {
                  </Tabs>
 
                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" title="Link Prescription">
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        title="Link Prescription"
+                        onClick={() => setLinkPrescriptionOpen(true)}
+                    >
                         <FileText className="h-4 w-4" />
                     </Button>
                     <TransactionHistory />
                     
-                    {/* Mobile Cart Trigger */}
-                     <Sheet>
-                        <SheetTrigger asChild>
-                            <Button className="md:hidden relative">
-                                <ShoppingCart className="h-4 w-4" />
-                                {cart.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border border-background" />
-                                )}
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="p-0 w-full sm:w-[400px]">
-                            <CartContents 
-                                onCheckout={handleCheckout}
-                                customerDialogOpen={customerDialogOpen}
-                                setCustomerDialogOpen={setCustomerDialogOpen}
-                                selectedCustomer={selectedCustomer}
-                                setSelectedCustomer={setSelectedCustomer}
-                                discount={discount}
-                                setDiscount={setDiscount}
-                            />
-                        </SheetContent>
-                    </Sheet>
+                    {/* Mobile Cart Trigger (Header) */}
+                    <Button 
+                        className="md:hidden relative"
+                        onClick={() => setCartOpen(true)}
+                    >
+                        <ShoppingCart className="h-4 w-4" />
+                        {itemCount > 0 && (
+                            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border border-background" />
+                        )}
+                    </Button>
                 </div>
             </div>
         </div>
 
-        <Tabs defaultValue="All" className="w-full space-y-4 hidden md:block" onValueChange={setActiveCategory} value={activeCategory}>
-            <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
-                {categories.map(cat => (
-                    <TabsTrigger 
-                        key={cat} 
-                        value={cat}
-                        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full border px-4 py-2"
-                    >
-                        {cat}
-                    </TabsTrigger>
-                ))}
-            </TabsList>
-        </Tabs>
+        {/* Categories - Fixed Height */}
+        <div className="flex-none">
+            <Tabs defaultValue="All" className="w-full hidden md:block" onValueChange={setActiveCategory} value={activeCategory}>
+                <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
+                    {categories.map(cat => (
+                        <TabsTrigger 
+                            key={cat} 
+                            value={cat}
+                            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-full border px-4 py-2"
+                        >
+                            {cat}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+        </div>
 
-        <ScrollArea className="flex-1">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+        {/* Scrollable Product Grid */}
+        <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
                 {filteredProducts.map((product) => (
                     <Card 
                         key={product.id} 
@@ -223,8 +256,24 @@ export default function POSPage() {
         </ScrollArea>
       </div>
 
-      {/* Desktop Cart Section */}
-      <div className="hidden md:flex w-[350px] lg:w-[400px] flex-col bg-card border rounded-xl shadow-lg h-full overflow-hidden">
+      {/* Fixed Mobile Cart Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50">
+          <Button 
+            className="w-full h-14 text-lg shadow-lg flex justify-between items-center px-6" 
+            onClick={() => setCartOpen(true)}
+          >
+              <div className="flex items-center gap-2">
+                  <div className="bg-white/20 p-2 rounded-full">
+                    <ShoppingCart className="h-5 w-5" />
+                  </div>
+                  <span className="font-semibold">{itemCount} Items</span>
+              </div>
+              <span className="font-bold text-xl">${total.toFixed(2)}</span>
+          </Button>
+      </div>
+
+      {/* Desktop Cart Section - Fixed Height */}
+      <div className="hidden md:flex flex-none w-[350px] lg:w-[400px] flex-col bg-card border rounded-xl shadow-lg h-full overflow-hidden">
          <CartContents 
             onCheckout={handleCheckout}
             customerDialogOpen={customerDialogOpen}
