@@ -13,6 +13,7 @@ import {
   FileText,
   Package,
   Pill,
+  Settings,
   ShieldCheck,
   ShoppingCart
 } from "lucide-react"
@@ -130,6 +131,13 @@ export default function PharmacyPage() {
                         <Bell className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
                         <h3 className="font-semibold group-hover:text-primary transition-colors">Reminders</h3>
                         <p className="text-xs text-center text-muted-foreground mt-1">Dosage Alerts</p>
+                    </div>
+                </Link>
+                <Link href="/pharmacy/setup">
+                     <div className="flex flex-col items-center justify-center p-6 bg-background rounded-xl border border-dashed hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
+                        <Settings className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">Pharmacy Setup</h3>
+                        <p className="text-xs text-center text-muted-foreground mt-1">Manage Master Data</p>
                     </div>
                 </Link>
             </CardContent>

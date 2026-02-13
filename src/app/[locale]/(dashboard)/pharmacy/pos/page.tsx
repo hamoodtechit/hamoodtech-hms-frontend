@@ -14,32 +14,47 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
-import { ChevronLeft, ChevronRight, FileText, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileText, Loader2, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-// Mock Data (Products)
-const categories = ["All", "Tablets", "Syrups", "Injections", "Equipment", "Antibiotics"]
-const products = [
-  { id: 1, name: "Paracetamol 500mg", category: "Tablets", price: 5.00, stock: 150 },
-  { id: 2, name: "Amoxicillin 250mg", category: "Antibiotics", price: 12.50, stock: 80 },
-  { id: 3, name: "Cough Syrup", category: "Syrups", price: 8.00, stock: 45 },
-  { id: 4, name: "Insulin Injection", category: "Injections", price: 45.00, stock: 20 },
-  { id: 5, name: "Face Mask (N95)", category: "Equipment", price: 1.50, stock: 500 },
-  { id: 6, name: "Vitamin C", category: "Tablets", price: 6.00, stock: 100 },
-  { id: 7, name: "Bandage", category: "Equipment", price: 2.00, stock: 200 },
-  { id: 8, name: "Ibuprofen 400mg", category: "Tablets", price: 7.50, stock: 120 },
-  { id: 9, name: "Azithromycin 500mg", category: "Antibiotics", price: 15.00, stock: 60 },
-  { id: 10, name: "Syringe 5ml", category: "Equipment", price: 0.50, stock: 1000 },
-]
+import { pharmacyService } from "@/services/pharmacy-service"
+import { Medicine } from "@/types/pharmacy"
 
 export default function POSPage() {
   const { cart, addToCart, clearCart, addTransaction } = usePosStore()
   
-  // Hydration check
+  // State
   const [isMounted, setIsMounted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [medicines, setMedicines] = useState<Medicine[]>([])
+  const [categories, setCategories] = useState<string[]>(["All"])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeCategory, setActiveCategory] = useState("All")
+  const [discount, setDiscount] = useState(0)
   
   const tabsListRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [medRes, catRes] = await Promise.all([
+        pharmacyService.getMedicines({ limit: 1000 }),
+        pharmacyService.getEntities('categories', { limit: 100 })
+      ])
+      setMedicines(medRes.data)
+      setCategories(["All", ...catRes.data.map(c => c.name)])
+    } catch (error) {
+      toast.error("Failed to load POS data")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const scrollTabs = (direction: 'left' | 'right') => {
     if (tabsListRef.current) {
@@ -50,10 +65,6 @@ export default function POSPage() {
         })
     }
   }
-  
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeCategory, setActiveCategory] = useState("All")
-  const [discount, setDiscount] = useState(0)
   
   // Customer State
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
@@ -69,13 +80,21 @@ export default function POSPage() {
   // Cart Sheet State (Controlled)
   const [cartOpen, setCartOpen] = useState(false)
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  const handleAddToCart = (medicine: Medicine) => {
+    addToCart({
+      id: medicine.id,
+      name: medicine.name,
+      price: Number(medicine.salePrice),
+      stock: medicine.stock || 0,
+      category: medicine.category?.name || 'Uncategorized'
+    })
+  }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory = activeCategory === "All" || product.category === activeCategory
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = medicines.filter((medicine) => {
+    const matchesCategory = activeCategory === "All" || medicine.category?.name === activeCategory
+    const matchesSearch = medicine.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         medicine.genericName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         medicine.barcode?.includes(searchQuery)
     return matchesCategory && matchesSearch
   })
 
@@ -271,41 +290,55 @@ export default function POSPage() {
 
         {/* Scrollable Product Grid */}
         <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
-                {filteredProducts.map((product) => {
-                    const cartItem = cart.find(item => item.id === product.id)
-                    const quantity = cartItem ? cartItem.quantity : 0
+            {loading ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-2 text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span>Loading medicines...</span>
+                </div>
+            ) : filteredProducts.length === 0 ? (
+                <div className="flex items-center justify-center h-64 text-muted-foreground font-medium">
+                    No medicines found.
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                    {filteredProducts.map((product) => {
+                        const cartItem = cart.find(item => item.id === product.id)
+                        const quantity = cartItem ? cartItem.quantity : 0
+                        const salePrice = Number(product.salePrice)
 
-                    return (
-                    <Card 
-                        key={product.id} 
-                        className={`cursor-pointer transition-all group overflow-hidden border-2 ${quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
-                        onClick={() => addToCart(product)}
-                    >
-                        <CardHeader className="p-3 sm:p-4 bg-secondary/10 group-hover:bg-primary/5 transition-colors relative">
-                            <div className="flex justify-between items-start">
-                                <Badge variant="outline" className="text-[10px] sm:text-xs bg-background/80 backdrop-blur-sm">{product.category}</Badge>
-                                {product.stock < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
-                            </div>
-                            
-                            {quantity > 0 && (
-                                <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm animate-in zoom-in">
-                                    {quantity}
+                        return (
+                        <Card 
+                            key={product.id} 
+                            className={`cursor-pointer transition-all group overflow-hidden border-2 ${quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
+                            onClick={() => handleAddToCart(product)}
+                        >
+                            <CardHeader className="p-3 sm:p-4 bg-secondary/10 group-hover:bg-primary/5 transition-colors relative">
+                                <div className="flex justify-between items-start">
+                                    <Badge variant="outline" className="text-[10px] sm:text-xs bg-background/80 backdrop-blur-sm truncate max-w-[80%]">
+                                        {product.category?.name || 'N/A'}
+                                    </Badge>
+                                    {(product.stock || 0) < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
                                 </div>
-                            )}
-                        </CardHeader>
+                                
+                                {quantity > 0 && (
+                                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm animate-in zoom-in">
+                                        {quantity}
+                                    </div>
+                                )}
+                            </CardHeader>
 
-                        <CardContent className="p-3 sm:p-4">
-                             <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
-                             <div className="mt-2 flex items-end justify-between">
-                                <span className="text-base sm:text-lg font-bold text-primary">${product.price.toFixed(2)}</span>
-                                <span className="text-xs text-muted-foreground">{product.stock} left</span>
-                             </div>
-                        </CardContent>
-                    </Card>
-                    )
-                })}
-            </div>
+                            <CardContent className="p-3 sm:p-4">
+                                <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
+                                <div className="mt-2 flex items-end justify-between">
+                                    <span className="text-base sm:text-lg font-bold text-primary">${salePrice.toFixed(2)}</span>
+                                    <span className="text-xs text-muted-foreground">{product.stock || 0} left</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        )
+                    })}
+                </div>
+            )}
         </ScrollArea>
       </div>
 
@@ -321,7 +354,7 @@ export default function POSPage() {
                   </div>
                   <span className="font-semibold">{itemCount} Items</span>
               </div>
-              <span className="font-bold text-xl">${total.toFixed(2)}</span>
+              <span className="font-bold text-xl">${Number(total).toFixed(2)}</span>
           </Button>
       </div>
 

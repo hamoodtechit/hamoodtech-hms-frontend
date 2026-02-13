@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
 export interface Product {
-    id: number
+    id: string
     name: string
     price: number
     quantity: number
@@ -25,8 +25,8 @@ interface PosState {
     cart: Product[]
     transactions: Transaction[]
     addToCart: (product: any) => void
-    removeFromCart: (id: number) => void
-    updateQuantity: (id: number, delta: number) => void
+    removeFromCart: (id: string) => void
+    updateQuantity: (id: string, delta: number) => void
     clearCart: () => void
     addTransaction: (transaction: Transaction) => void
     refundTransaction: (id: string) => void
@@ -51,10 +51,10 @@ export const usePosStore = create<PosState>()(
                 }
                 return { cart: [...state.cart, { ...product, quantity: 1 }] }
             }),
-            removeFromCart: (id) => set((state) => ({
+            removeFromCart: (id: string) => set((state) => ({
                 cart: state.cart.filter((item) => item.id !== id)
             })),
-            updateQuantity: (id, delta) => set((state) => ({
+            updateQuantity: (id: string, delta: number) => set((state) => ({
                 cart: state.cart.map((item) => {
                     if (item.id === id) {
                         const newQuantity = Math.max(1, item.quantity + delta)
