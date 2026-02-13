@@ -35,15 +35,6 @@ export default function DashboardShell({
         </div>
       </main>
 
-      {/* Mobile Layout (simplified, sidebar is handled by header/sheet, main content flows normally) */}
-      <div className="md:hidden min-h-screen bg-background">
-          {/* Header is likely already rendered above in 'main' for desktop, but for mobile structure we might need adjustments. 
-             Wait, the original code had Header inside Main. On mobile, 'hidden md:flex' hides the sidebar wrapper. 
-             'md:ml-72' only applies on md. So on mobile, margin is 0. 
-             This single 'main' block works for mobile too! 
-             I will remove the specific mobile div block as it's redundant if main handles it correctly. 
-          */}
-      </div>
     </div>
   )
 }

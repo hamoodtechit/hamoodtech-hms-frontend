@@ -4,7 +4,6 @@ import { CustomerDialog } from "@/components/pharmacy/customer-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { usePosStore } from "@/store/use-pos-store"
 import { CreditCard, Minus, Plus, ShoppingCart, Tag, Trash2, User, X } from "lucide-react"
@@ -47,7 +46,7 @@ export function CartContents({
                 <Badge variant="secondary" className="px-2 py-1">{cart.length} items</Badge>
             </div>
             
-            <ScrollArea className="flex-1 p-4">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 {cart.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-4 opacity-50">
                         <div className="p-4 bg-secondary rounded-full">
@@ -97,7 +96,7 @@ export function CartContents({
                         ))}
                     </div>
                 )}
-            </ScrollArea>
+            </div>
 
             <div className="p-6 bg-secondary/5 border-t space-y-4">
                 
