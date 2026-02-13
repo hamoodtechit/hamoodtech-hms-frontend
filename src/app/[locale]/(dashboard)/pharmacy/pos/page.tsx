@@ -14,8 +14,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
-import { FileText, Search, ShoppingCart } from "lucide-react"
-import { useEffect, useState } from "react"
+import { ChevronLeft, ChevronRight, FileText, Search, ShoppingCart } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 // Mock Data (Products)
@@ -38,6 +38,18 @@ export default function POSPage() {
   
   // Hydration check
   const [isMounted, setIsMounted] = useState(false)
+  
+  const tabsListRef = useRef<HTMLDivElement>(null)
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsListRef.current) {
+        const scrollAmount = 200
+        tabsListRef.current.scrollBy({
+            left: direction === 'left' ? -scrollAmount : scrollAmount,
+            behavior: 'smooth'
+        })
+    }
+  }
   
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState("All")
@@ -179,14 +191,42 @@ export default function POSPage() {
                 />
             </div>
             <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
-                 <Tabs defaultValue="All" value={activeCategory} onValueChange={setActiveCategory} className="w-full sm:w-auto md:hidden">
-                    <TabsList className="w-full">
-                         <TabsTrigger value="All" className="flex-1">All</TabsTrigger>
-                         <TabsTrigger value="Tablets" className="flex-1">Pills</TabsTrigger>
-                    </TabsList>
-                 </Tabs>
+                 <div className="flex-1 w-auto min-w-0 md:hidden relative flex items-center group">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-0 z-10 h-full w-8 bg-background/80 backdrop-blur-sm border-r rounded-r-none hover:bg-background"
+                        onClick={() => scrollTabs('left')}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
 
-                <div className="flex gap-2">
+                     <Tabs defaultValue="All" value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+                        <div 
+                            ref={tabsListRef}
+                            className="w-full overflow-x-auto no-scrollbar scroll-smooth px-8" // Add padding for buttons
+                        >
+                            <TabsList className="w-max justify-start">
+                                {categories.map(cat => (
+                                    <TabsTrigger key={cat} value={cat} className="flex-1 px-4">
+                                        {cat}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </div>
+                     </Tabs>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 z-10 h-full w-8 bg-background/80 backdrop-blur-sm border-l rounded-l-none hover:bg-background"
+                        onClick={() => scrollTabs('right')}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                 </div>
+
+                <div className="flex gap-2 flex-none">
                     <Button 
                         variant="outline" 
                         size="icon" 
