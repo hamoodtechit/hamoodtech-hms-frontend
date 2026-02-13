@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
@@ -164,6 +164,7 @@ export default function POSPage() {
             {/* Mobile Cart Sheet (Controlled) */}
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
                 <SheetContent side="right" className="p-0 w-full sm:w-[400px]">
+                    <SheetTitle className="sr-only">Cart</SheetTitle>
                     <CartContents 
                         onCheckout={handleCheckout}
                         customerDialogOpen={customerDialogOpen}
@@ -271,18 +272,29 @@ export default function POSPage() {
         {/* Scrollable Product Grid */}
         <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product) => {
+                    const cartItem = cart.find(item => item.id === product.id)
+                    const quantity = cartItem ? cartItem.quantity : 0
+
+                    return (
                     <Card 
                         key={product.id} 
-                        className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group overflow-hidden"
+                        className={`cursor-pointer transition-all group overflow-hidden border-2 ${quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
                         onClick={() => addToCart(product)}
                     >
-                        <CardHeader className="p-3 sm:p-4 bg-secondary/10 group-hover:bg-primary/5 transition-colors">
+                        <CardHeader className="p-3 sm:p-4 bg-secondary/10 group-hover:bg-primary/5 transition-colors relative">
                             <div className="flex justify-between items-start">
                                 <Badge variant="outline" className="text-[10px] sm:text-xs bg-background/80 backdrop-blur-sm">{product.category}</Badge>
                                 {product.stock < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
                             </div>
+                            
+                            {quantity > 0 && (
+                                <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm animate-in zoom-in">
+                                    {quantity}
+                                </div>
+                            )}
                         </CardHeader>
+
                         <CardContent className="p-3 sm:p-4">
                              <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
                              <div className="mt-2 flex items-end justify-between">
@@ -291,7 +303,8 @@ export default function POSPage() {
                              </div>
                         </CardContent>
                     </Card>
-                ))}
+                    )
+                })}
             </div>
         </ScrollArea>
       </div>

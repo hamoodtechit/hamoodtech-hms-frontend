@@ -13,6 +13,7 @@ import {
     LayoutDashboard,
     Pill,
     Settings,
+    Shield,
     Users
 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -46,6 +47,12 @@ export function Sidebar() {
       icon: CalendarDays,
       href: "/appointments",
       color: "text-orange-400",
+    },
+    {
+      label: "Roles & Permissions",
+      icon: Shield,
+      href: "/settings/roles",
+      color: "text-amber-400",
     },
     {
       label: t("settings"),
