@@ -1,0 +1,16 @@
+{
+  "Index": {
+    "title": "Sistema de Gestión Hospitalaria"
+  },
+  "Sidebar": {
+    "dashboard": "Panel de Control",
+    "patients": "Pacientes",
+    "appointments": "Citas",
+    "settings": "Configuración"
+  },
+  "Theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  }
+}

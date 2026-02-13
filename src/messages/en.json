@@ -1,0 +1,16 @@
+{
+  "Index": {
+    "title": "Hospital Management System"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "settings": "Settings"
+  },
+  "Theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}
