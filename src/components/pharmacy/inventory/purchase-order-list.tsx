@@ -16,10 +16,13 @@ import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { PurchaseDetailsDialog } from "./purchase-details-dialog"
 
 export function PurchaseOrderList() {
     const [purchases, setPurchases] = useState<Purchase[]>([])
     const [loading, setLoading] = useState(true)
+    const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState(false)
 
     const fetchPurchases = async () => {
         try {
@@ -47,6 +50,11 @@ export function PurchaseOrderList() {
         }
     }
 
+    const handleViewDetails = (purchase: Purchase) => {
+        setSelectedPurchase(purchase)
+        setDetailsOpen(true)
+    }
+
     return (
         <div className="space-y-4">
             <div className="rounded-md border bg-card">
@@ -56,6 +64,7 @@ export function PurchaseOrderList() {
                             <TableHead>PO Number</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Supplier</TableHead>
+                            <TableHead>Total Amount</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -63,7 +72,7 @@ export function PurchaseOrderList() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">
+                                <TableCell colSpan={6} className="text-center py-8">
                                     <div className="flex items-center justify-center text-muted-foreground">
                                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                         Loading orders...
@@ -72,12 +81,17 @@ export function PurchaseOrderList() {
                             </TableRow>
                         ) : purchases.map((po) => (
                             <TableRow key={po.id}>
-                                <TableCell className="font-medium">#{po.id.slice(-6).toUpperCase()}</TableCell>
+                                <TableCell className="font-medium">
+                                    {po.poNumber || `#${po.id.slice(-6).toUpperCase()}`}
+                                </TableCell>
                                 <TableCell>{format(new Date(po.createdAt), "PPP")}</TableCell>
                                 <TableCell>{po.supplier?.name || 'Unknown Supplier'}</TableCell>
                                 <TableCell>
+                                    ${Number(po.totalPrice || 0).toLocaleString()}
+                                </TableCell>
+                                <TableCell>
                                     <Badge variant={
-                                        po.status === 'complete' ? 'default' : 
+                                        po.status === 'completed' ? 'default' : 
                                         po.status === 'pending' ? 'secondary' : 'destructive'
                                     }>
                                         {po.status}
@@ -85,11 +99,18 @@ export function PurchaseOrderList() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => handleViewDetails(po)}
+                                        >
+                                            View
+                                        </Button>
                                         {po.status === 'pending' && (
                                             <>
                                                 <Button 
                                                     size="sm" 
-                                                    onClick={() => handleStatusUpdate(po.id, 'complete')}
+                                                    onClick={() => handleStatusUpdate(po.id, 'completed')}
                                                     className="bg-emerald-600 hover:bg-emerald-700 h-8"
                                                 >
                                                     Complete
@@ -110,7 +131,7 @@ export function PurchaseOrderList() {
                         ))}
                         {!loading && purchases.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                                     No purchase orders found.
                                 </TableCell>
                             </TableRow>
@@ -118,6 +139,12 @@ export function PurchaseOrderList() {
                     </TableBody>
                 </Table>
             </div>
+            
+            <PurchaseDetailsDialog 
+                open={detailsOpen} 
+                onOpenChange={setDetailsOpen} 
+                purchase={selectedPurchase} 
+            />
         </div>
     )
 }

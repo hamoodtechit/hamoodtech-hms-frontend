@@ -99,23 +99,27 @@ export interface SupplierListResponse {
 }
 
 export interface PurchaseItem {
+  id?: string;
   medicineId: string;
   itemName: string;
   itemDescription?: string;
   unit: string;
-  price: number;
-  mrp: number;
-  quantity: number;
-  batchNumber: string;
+  price: number | string;
+  mrp: number | string;
+  quantity: number | string;
+  totalPrice?: number | string;
+  batchNumber?: string;
   expiryDate: string;
 }
 
-export type PurchaseStatus = 'pending' | 'complete' | 'rejected';
+export type PurchaseStatus = 'pending' | 'completed' | 'rejected';
 
 export interface Purchase {
   id: string;
   branchId: string;
   supplierId: string;
+  poNumber?: string;
+  totalPrice?: number | string;
   status: PurchaseStatus;
   purchaseItems: PurchaseItem[];
   createdAt: string;
@@ -153,8 +157,8 @@ export interface Stock {
   batchNumber: string;
   expiryDate: string;
   quantity: number;
-  unitPrice: number;
-  mrp: number;
+  unitPrice: number | string;
+  mrp: number | string;
   unit: string;
   createdAt: string;
   updatedAt: string;
@@ -169,19 +173,21 @@ export interface Medicine {
   barcode?: string;
   unit: string;
   categoryId: string;
-  category?: PharmacyEntity;
+  category?: { id: string; name: string };
   brandId: string;
-  brand?: PharmacyEntity;
+  brand?: { id: string; name: string };
   groupId: string;
-  group?: PharmacyEntity;
+  group?: { id: string; name: string };
   medicineUnitId: string;
-  medicineUnit?: PharmacyEntity;
-  unitPrice: number;
-  salePrice: number;
-  mrp: number;
+  medicineUnit?: { id: string; name: string };
+  unitPrice: number | string;
+  salePrice: number | string;
+  mrp: number | string;
   reorderLevel: number;
   isActive: boolean;
+  rackNumber?: string;
   stock?: number;
+  stocks?: Stock[];
   createdAt: string;
   updatedAt: string;
 }
@@ -202,6 +208,7 @@ export interface MedicinePayload {
   mrp?: number;
   reorderLevel?: number;
   isActive?: boolean;
+  rackNumber?: string;
   openingStock?: number;
   batchNumber?: string;
   expiryDate?: string;
@@ -223,3 +230,137 @@ export interface StockTransferPayload {
 
 export type PharmacyEntityType = 'brands' | 'categories' | 'groups' | 'units' | 'branches';
 
+export interface Patient {
+  id: string;
+  name: string;
+  nameBangla?: string;
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  dob?: string;
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  address: string;
+  visitType?: 'ipd' | 'opd' | 'emergency';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PatientPayload {
+  name: string;
+  nameBangla?: string;
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  dob?: string;
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  address: string;
+  visitType?: 'ipd' | 'opd' | 'emergency';
+}
+
+export interface PatientQueryParams {
+  page?: number;
+  limit?: number;
+  name?: string;
+  phone?: string;
+  visitType?: 'ipd' | 'opd' | 'emergency';
+}
+
+export interface PatientListResponse {
+    success: boolean;
+    message: string;
+    data: Patient[];
+    meta: {
+        page: number;
+        pageSize: number;
+        totalPages: number;
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    }
+}
+
+export interface SaleItem {
+  medicineId: string;
+  itemName: string;
+  itemDescription?: string;
+  unit: string;
+  price: number;
+  mrp: number;
+  quantity: number;
+  batchNumber: string;
+  expiryDate: string;
+}
+
+export interface SalePayload {
+  branchId: string;
+  patientId?: string; // Optional if not registered/walk-in
+  status: 'pending' | 'completed' | 'cancelled';
+  saleItems: SaleItem[];
+}
+
+export interface Sale {
+  id: string;
+  branchId: string;
+  patientId: string;
+  invoiceNumber: string;
+  totalPrice: number | string;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  branch?: { name: string };
+  patient?: { name: string };
+  saleItems: SaleItemDetails[];
+}
+
+export interface SaleItemDetails {
+  id: string;
+  saleId: string;
+  medicineId: string;
+  invoiceNumber: string;
+  itemName: string;
+  itemDescription?: string | null;
+  unit: string;
+  price: number | string;
+  mrp: number | string;
+  quantity: number | string;
+  totalPrice: number | string;
+  batchNumber: string;
+  expiryDate: string;
+  createdAt: string;
+  updatedAt: string;
+  saleReturnId?: string | null;
+}
+
+export interface SaleListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    sales: Sale[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }
+  }
+}
+
+export interface SaleReturnItemPayload {
+  medicineId: string;
+  itemName: string;
+  itemDescription?: string;
+  unit: string;
+  price: number;
+  mrp: number;
+  quantity: number;
+  batchNumber: string;
+  expiryDate: string;
+}
+
+export interface SaleReturnPayload {
+  branchId: string;
+  patientId?: string;
+  invoiceNumber: string;
+  status: 'pending' | 'verified' | 'approved' | 'rejected';
+  saleReturnItems: SaleReturnItemPayload[];
+}

@@ -5,6 +5,12 @@ import { StockTransferDialog } from "@/app/[locale]/(dashboard)/pharmacy/invento
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
     Table,
     TableBody,
     TableCell,
@@ -15,17 +21,18 @@ import {
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Stock } from "@/types/pharmacy"
 import { format } from "date-fns"
-import { ArrowUpRight, Loader2, RefreshCw } from "lucide-react"
+import { ArrowRightLeft, Loader2, MoreHorizontal, Settings2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 interface BatchListProps {
     itemId: string
+    initialStocks?: Stock[]
 }
 
-export function BatchList({ itemId }: BatchListProps) {
-    const [stocks, setStocks] = useState<Stock[]>([])
-    const [loading, setLoading] = useState(true)
+export function BatchList({ itemId, initialStocks }: BatchListProps) {
+    const [stocks, setStocks] = useState<Stock[]>(initialStocks || [])
+    const [loading, setLoading] = useState(!initialStocks)
     
     // Dialog States
     const [adjustmentOpen, setAdjustmentOpen] = useState(false)
@@ -35,8 +42,10 @@ export function BatchList({ itemId }: BatchListProps) {
     const loadBatches = async () => {
         try {
             setLoading(true)
-            const response = await pharmacyService.getStocks({ medicineId: itemId })
-            setStocks(response.data)
+            // We fetch the full medicine details to get the updated stocks
+            // because the /pharmacy/stocks endpoint might be unreliable or require different params
+            const response = await pharmacyService.getMedicine(itemId)
+            setStocks(response.data.stocks || [])
         } catch (error) {
             toast.error("Failed to load batch data")
         } finally {
@@ -45,8 +54,13 @@ export function BatchList({ itemId }: BatchListProps) {
     }
 
     useEffect(() => {
-        loadBatches()
-    }, [itemId])
+        if (initialStocks) {
+            setStocks(initialStocks)
+            setLoading(false)
+        } else {
+            loadBatches()
+        }
+    }, [itemId, initialStocks])
 
     return (
         <div className="space-y-4">
@@ -95,32 +109,31 @@ export function BatchList({ itemId }: BatchListProps) {
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-1">
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                                                onClick={() => {
-                                                    setSelectedStock(batch)
-                                                    setAdjustmentOpen(true)
-                                                }}
-                                                title="Adjust Stock"
-                                            >
-                                                <RefreshCw className="h-4 w-4" />
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-orange-600 hover:text-orange-600 hover:bg-orange-50"
-                                                onClick={() => {
-                                                    setSelectedStock(batch)
-                                                    setTransferOpen(true)
-                                                }}
-                                                title="Transfer Stock"
-                                            >
-                                                <ArrowUpRight className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem 
+                                                    onClick={() => {
+                                                        setSelectedStock(batch)
+                                                        setAdjustmentOpen(true)
+                                                    }}
+                                                >
+                                                    <Settings2 className="mr-2 h-4 w-4" /> Adjust Stock
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setSelectedStock(batch)
+                                                        setTransferOpen(true)
+                                                    }}
+                                                >
+                                                    <ArrowRightLeft className="mr-2 h-4 w-4" /> Transfer Stock
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             )

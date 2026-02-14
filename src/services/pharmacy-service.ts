@@ -12,6 +12,10 @@ import {
     PurchaseListResponse,
     PurchasePayload,
     PurchaseStatus,
+    Sale,
+    SaleListResponse,
+    SalePayload,
+    SaleReturnPayload,
     Stock,
     StockAdjustmentPayload,
     StockTransferPayload,
@@ -212,6 +216,45 @@ export const pharmacyService = {
 
   updatePurchaseStatus: async (id: string, status: PurchaseStatus): Promise<{ success: boolean, message: string, data: Purchase }> => {
     const response = await api.patch<{ success: boolean, message: string, data: Purchase }>(`/pharmacy/purchases/${id}/status`, { status });
+    return response.data;
+  },
+
+  // Sales APIs
+  createSale: async (data: SalePayload): Promise<{ success: boolean, message: string, data: any }> => {
+    const response = await api.post<{ success: boolean, message: string, data: any }>('/pharmacy/sales', data);
+    return response.data;
+  },
+
+  getSales: async (params?: {
+    page?: number;
+    limit?: number;
+    branchId?: string;
+    patientId?: string;
+    status?: string;
+  }): Promise<SaleListResponse> => {
+    const response = await api.get<SaleListResponse>('/pharmacy/sales', { params });
+    return response.data;
+  },
+
+  getSale: async (id: string): Promise<{ success: boolean, message: string, data: Sale }> => {
+    const response = await api.get<{ success: boolean, message: string, data: Sale }>(`/pharmacy/sales/${id}`);
+    return response.data;
+  },
+
+  // Sale Returns APIs
+  createSaleReturn: async (data: SaleReturnPayload): Promise<{ success: boolean, message: string, data: any }> => {
+    const response = await api.post<{ success: boolean, message: string, data: any }>('/pharmacy/sale-returns', data);
+    return response.data;
+  },
+
+  getSaleReturns: async (params?: {
+    page?: number;
+    limit?: number;
+    branchId?: string;
+    patientId?: string;
+    status?: string;
+  }): Promise<any> => { // TODO: Define SaleReturnListResponse if needed
+    const response = await api.get('/pharmacy/sale-returns', { params });
     return response.data;
   },
 };

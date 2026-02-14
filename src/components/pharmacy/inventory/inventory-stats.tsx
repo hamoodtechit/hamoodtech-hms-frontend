@@ -32,9 +32,20 @@ export function InventoryStats() {
         ))}
     </div>
 
-    const totalStock = medicines.reduce((acc, m) => acc + (Number(m.stock) || 0), 0)
-    const totalValue = medicines.reduce((acc, m) => acc + ((Number(m.stock) || 0) * (Number(m.unitPrice) || 0)), 0)
-    const lowStockCount = medicines.filter(m => (Number(m.stock) || 0) <= (Number(m.reorderLevel) || 0)).length
+    const totalStock = medicines.reduce((acc, m) => {
+        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
+        return acc + itemStock
+    }, 0)
+    
+    const totalValue = medicines.reduce((acc, m) => {
+        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
+        return acc + (itemStock * (Number(m.unitPrice) || 0))
+    }, 0)
+
+    const lowStockCount = medicines.filter(m => {
+        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
+        return itemStock <= (Number(m.reorderLevel) || 0)
+    }).length
     const expiringCount = 0 // Expiring batches data handled separately in deeper modules
 
     return (

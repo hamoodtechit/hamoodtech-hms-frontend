@@ -2,21 +2,21 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { pharmacyService } from "@/services/pharmacy-service"
@@ -59,6 +59,7 @@ export function MedicineDialog({
     mrp: 0,
     reorderLevel: 5,
     isActive: true,
+    rackNumber: "",
     openingStock: 0,
     batchNumber: "",
     expiryDate: ""
@@ -85,11 +86,12 @@ export function MedicineDialog({
           brandId: medicineToEdit.brandId || "",
           groupId: medicineToEdit.groupId || "",
           medicineUnitId: medicineToEdit.medicineUnitId || "",
-          unitPrice: medicineToEdit.unitPrice || 0,
-          salePrice: medicineToEdit.salePrice || 0,
-          mrp: medicineToEdit.mrp || 0,
-          reorderLevel: medicineToEdit.reorderLevel || 5,
+          unitPrice: Number(medicineToEdit.unitPrice) || 0,
+          salePrice: Number(medicineToEdit.salePrice) || 0,
+          mrp: Number(medicineToEdit.mrp) || 0,
+          reorderLevel: Number(medicineToEdit.reorderLevel) || 5,
           isActive: medicineToEdit.isActive ?? true,
+          rackNumber: medicineToEdit.rackNumber || "",
           openingStock: undefined,
           batchNumber: undefined,
           expiryDate: undefined
@@ -111,6 +113,7 @@ export function MedicineDialog({
           mrp: 0,
           reorderLevel: 5,
           isActive: true,
+          rackNumber: "",
           openingStock: 0,
           batchNumber: "",
           expiryDate: ""
@@ -193,6 +196,7 @@ export function MedicineDialog({
         mrp: Number(formData.mrp) || 0,
         reorderLevel: Number(formData.reorderLevel) || 10,
         isActive: formData.isActive ?? true,
+        rackNumber: formData.rackNumber || undefined,
       };
 
       // Add opening stock fields only if it's a new medicine
@@ -298,6 +302,17 @@ export function MedicineDialog({
                 />
               </div>
               <div className="space-y-2">
+                 <Label htmlFor="rackNumber">Rack / Self No.</Label>
+                 <Input 
+                   id="rackNumber" 
+                   value={formData.rackNumber} 
+                   onChange={(e) => handleInputChange('rackNumber', e.target.value)}
+                   placeholder="e.g. A-12"
+                 />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
                 <Label htmlFor="unit">Base Unit (e.g. Pcs, Strip) *</Label>
                 <Input 
                   id="unit" 
@@ -305,7 +320,6 @@ export function MedicineDialog({
                   onChange={(e) => handleInputChange('unit', e.target.value)}
                   placeholder="e.g. Pcs"
                 />
-              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

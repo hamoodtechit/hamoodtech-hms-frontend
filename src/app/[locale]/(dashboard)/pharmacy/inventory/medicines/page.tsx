@@ -38,6 +38,7 @@ import { Medicine, PharmacyMeta } from "@/types/pharmacy"
 import {
     ArrowLeft,
     Edit,
+    Eye,
     Loader2,
     MoreHorizontal,
     Plus,
@@ -47,6 +48,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 
 export default function MedicinesPage() {
@@ -57,7 +59,9 @@ export default function MedicinesPage() {
   const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
   // Delete State
   const [deletingMedicine, setDeletingMedicine] = useState<Medicine | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -95,6 +99,11 @@ export default function MedicinesPage() {
   const handleEdit = (medicine: Medicine) => {
     setEditingMedicine(medicine)
     setDialogOpen(true)
+  }
+
+  const handleViewDetails = (medicine: Medicine) => {
+    setSelectedMedicine(medicine)
+    setDetailsOpen(true)
   }
 
   const handleDeleteClick = (medicine: Medicine) => {
@@ -217,8 +226,8 @@ export default function MedicinesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-col items-center">
-                           <span className={`text-sm font-bold ${(medicine.stock || 0) <= medicine.reorderLevel ? 'text-destructive' : 'text-primary'}`}>
-                             {medicine.stock || 0}
+                           <span className={`text-sm font-bold ${(medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0) <= medicine.reorderLevel ? 'text-destructive' : 'text-primary'}`}>
+                             {medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0}
                            </span>
                            <span className="text-[10px] text-muted-foreground uppercase">{medicine.unit || 'Units'}</span>
                         </div>
@@ -241,6 +250,9 @@ export default function MedicinesPage() {
                             <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleViewDetails(medicine)}>
+                                <Eye className="mr-2 h-4 w-4" /> View Details
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(medicine)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit Details
                               </DropdownMenuItem>
@@ -303,12 +315,18 @@ export default function MedicinesPage() {
         medicineToEdit={editingMedicine}
       />
 
+      <MedicineDetailsDialog 
+        open={detailsOpen} 
+        onOpenChange={setDetailsOpen} 
+        medicine={selectedMedicine}
+      />
+
       <Dialog open={!!selectedMedicineForStock} onOpenChange={(open) => !open && setSelectedMedicineForStock(null)}>
         <DialogContent className="max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Batch Details: {selectedMedicineForStock?.name}</DialogTitle>
             </DialogHeader>
-            {selectedMedicineForStock && <BatchList itemId={selectedMedicineForStock.id} />}
+            {selectedMedicineForStock && <BatchList itemId={selectedMedicineForStock.id} initialStocks={selectedMedicineForStock.stocks} />}
         </DialogContent>
       </Dialog>
 

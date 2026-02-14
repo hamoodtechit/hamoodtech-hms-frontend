@@ -111,11 +111,10 @@ export function CreateOrderDialog() {
     const invalidItem = purchaseItems.find(item => 
       !item.medicineId || 
       item.quantity <= 0 || 
-      !item.batchNumber || 
       !item.expiryDate
     )
     if (invalidItem) {
-      toast.error("Please fill all item details (Medicine, Qty, Batch, Expiry)")
+      toast.error("Please fill all required details (Medicine, Qty, Expiry)")
       return
     }
 
@@ -128,6 +127,9 @@ export function CreateOrderDialog() {
         status: 'pending' as const,
         purchaseItems: purchaseItems.map(item => ({
           ...item,
+          price: Number(item.price),
+          mrp: Number(item.mrp),
+          quantity: Number(item.quantity),
           expiryDate: new Date(item.expiryDate).toISOString()
         }))
       }
@@ -242,7 +244,7 @@ export function CreateOrderDialog() {
                     />
                   </div>
                   <div className="col-span-2 space-y-2">
-                    <Label className="text-xs font-semibold">Batch #</Label>
+                    <Label className="text-xs font-semibold">Batch # (Opt)</Label>
                     <Input 
                       className="h-9" 
                       placeholder="Batch" 

@@ -1,28 +1,29 @@
 "use client"
 
+import { MedicineDetailsDialog } from "@/app/[locale]/(dashboard)/pharmacy/inventory/medicines/components/medicine-details-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Medicine, PharmacyMeta } from "@/types/pharmacy"
-import { Loader2, MoreHorizontal, Search } from "lucide-react"
+import { Eye, Layers, Loader2, MoreHorizontal, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { BatchList } from "./batch-list"
@@ -34,6 +35,13 @@ export function StockTable() {
   const [page, setPage] = useState(1)
   const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   const [selectedItem, setSelectedItem] = useState<Medicine | null>(null)
+  const [detailsItem, setDetailsItem] = useState<Medicine | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+
+  const handleViewDetails = (item: Medicine) => {
+    setDetailsItem(item)
+    setDetailsOpen(true)
+  }
 
   const loadStock = async () => {
     try {
@@ -106,7 +114,7 @@ export function StockTable() {
                 </TableRow>
             ) : (
                 medicines.map((item) => {
-                    const stock = Number(item.stock) || 0
+                    const stock = item.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || Number(item.stock) || 0
                     const isLow = stock <= Number(item.reorderLevel)
                     const isOut = stock === 0
 
@@ -147,8 +155,11 @@ export function StockTable() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => handleViewDetails(item)}>
+                                            <Eye className="mr-2 h-4 w-4" /> View Details
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => setSelectedItem(item)}>
-                                            View Batches / Adjust
+                                            <Layers className="mr-2 h-4 w-4" /> View Batches
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem className="text-destructive" disabled>Archive Item</DropdownMenuItem>
@@ -194,9 +205,15 @@ export function StockTable() {
             <DialogHeader>
                 <DialogTitle>Batch Details: {selectedItem?.name}</DialogTitle>
             </DialogHeader>
-            {selectedItem && <BatchList itemId={selectedItem.id} />}
+            {selectedItem && <BatchList itemId={selectedItem.id} initialStocks={selectedItem.stocks} />}
         </DialogContent>
       </Dialog>
+      
+      <MedicineDetailsDialog 
+        open={detailsOpen} 
+        onOpenChange={setDetailsOpen} 
+        medicine={detailsItem}
+      />
     </div>
   )
 }

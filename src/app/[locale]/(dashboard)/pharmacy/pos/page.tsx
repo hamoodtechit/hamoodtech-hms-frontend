@@ -14,12 +14,14 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
+import { useStoreContext } from "@/store/use-store-context"
 import { ChevronLeft, ChevronRight, FileText, Loader2, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { patientService } from "@/services/patient-service"
 import { pharmacyService } from "@/services/pharmacy-service"
-import { Medicine } from "@/types/pharmacy"
+import { Medicine, Patient } from "@/types/pharmacy"
 
 export default function POSPage() {
   const { cart, addToCart, clearCart, addTransaction } = usePosStore()
@@ -49,6 +51,17 @@ export default function POSPage() {
       ])
       setMedicines(medRes.data)
       setCategories(["All", ...catRes.data.map(c => c.name)])
+
+      // Load default patient
+      try {
+          const defaultPatientRes = await patientService.getPatient('default-opd-patient')
+          if (defaultPatientRes.success && defaultPatientRes.data) {
+              setSelectedCustomer(defaultPatientRes.data)
+          }
+      } catch (err) {
+          console.warn("Could not load default patient", err)
+      }
+
     } catch (error) {
       toast.error("Failed to load POS data")
     } finally {
@@ -67,7 +80,7 @@ export default function POSPage() {
   }
   
   // Customer State
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
 
   // Receipt State
@@ -81,20 +94,33 @@ export default function POSPage() {
   const [cartOpen, setCartOpen] = useState(false)
 
   const handleAddToCart = (medicine: Medicine) => {
+    // Find a suitable batch (first one with stock > 0)
+    const activeBatch = medicine.stocks?.find(s => s.quantity > 0)
+    
+    if (!activeBatch && (medicine.stock || 0) <= 0) {
+        toast.error("Item is out of stock")
+        return
+    }
+
     addToCart({
       id: medicine.id,
       name: medicine.name,
       price: Number(medicine.salePrice),
-      stock: medicine.stock || 0,
+      quantity: 1, // Start with 1
+      stock: activeBatch?.quantity || medicine.stock || 0,
+      batchNumber: activeBatch?.batchNumber,
+      expiryDate: activeBatch?.expiryDate,
+      medicineId: medicine.id,
       category: medicine.category?.name || 'Uncategorized'
-    })
+    } as any) // Cast to basic product structure expected by store, store then uses Product interface
   }
 
   const filteredProducts = medicines.filter((medicine) => {
     const matchesCategory = activeCategory === "All" || medicine.category?.name === activeCategory
     const matchesSearch = medicine.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          medicine.genericName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         medicine.barcode?.includes(searchQuery)
+                         medicine.barcode?.includes(searchQuery) ||
+                         medicine.rackNumber?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
@@ -124,29 +150,66 @@ export default function POSPage() {
       processTransaction()
   }
 
-  const processTransaction = () => {
-      const transaction = {
-          id: `TRX-${Date.now()}`,
-          customerName: selectedCustomer ? selectedCustomer.name : "Walk-in Customer",
-          items: [...cart],
-          total,
-          subtotal,
-          tax,
-          discount,
-          date: new Date().toLocaleString(),
-          status: "Completed" as const,
-          paymentMethod: "Cash" as const
+  const { activeStoreId } = useStoreContext()
+  
+  const processTransaction = async () => {
+      if (!activeStoreId) {
+          toast.error("No active branch selected. Please select a store.")
+          return
       }
-      
-      addTransaction(transaction)
-      setLastTransaction(transaction)
 
-      toast.success("Payment Processed Successfully!")
-      setReceiptOpen(true)
-      clearCart()
-      setDiscount(0)
-      setSelectedCustomer(null)
-      setCartOpen(false) 
+      try {
+          const salePayload = {
+              branchId: activeStoreId,
+              patientId: selectedCustomer?.id,
+              status: "completed" as const,
+              saleItems: cart.map(item => ({
+                  medicineId: item.id, // Store uses 'id' as medicineId usually
+                  itemName: item.name,
+                  unit: "pcs", // Defaulting, ideally from medicine
+                  price: item.price,
+                  mrp: item.price, // Assuming MRP same as sale price for now if not available
+                  quantity: item.quantity,
+                  batchNumber: item.batchNumber || "BATCH-N/A",
+                  expiryDate: item.expiryDate || new Date().toISOString()
+              }))
+          }
+
+          setLoading(true)
+          const response = await pharmacyService.createSale(salePayload)
+          
+          const transaction = {
+              id: response.data?.id || `TRX-${Date.now()}`,
+              customerName: selectedCustomer ? selectedCustomer.name : "Walk-in Customer",
+              items: [...cart],
+              total,
+              subtotal,
+              tax,
+              discount,
+              date: new Date().toLocaleString(),
+              status: "Completed" as const,
+              paymentMethod: "Cash" as const
+          }
+          
+          addTransaction(transaction)
+          setLastTransaction(transaction)
+
+          toast.success("Payment Processed Successfully!")
+          setReceiptOpen(true)
+          clearCart()
+          setDiscount(0)
+          setSelectedCustomer(null)
+          setCartOpen(false) 
+          
+          // Refresh products to update stock
+          loadData()
+
+      } catch (error) {
+          console.error(error)
+          toast.error("Failed to process sale")
+      } finally {
+          setLoading(false)
+      }
   }
 
   const handleLinkPrescription = (id: string) => {
@@ -317,7 +380,10 @@ export default function POSPage() {
                                     <Badge variant="outline" className="text-[10px] sm:text-xs bg-background/80 backdrop-blur-sm truncate max-w-[80%]">
                                         {product.category?.name || 'N/A'}
                                     </Badge>
-                                    {(product.stock || 0) < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
+                                    <div className="flex flex-col items-end gap-1">
+                                        {(product.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || product.stock || 0) < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
+                                        {product.rackNumber && <span className="text-[10px] text-muted-foreground font-mono bg-muted/50 px-1 rounded">Rack: {product.rackNumber}</span>}
+                                    </div>
                                 </div>
                                 
                                 {quantity > 0 && (
@@ -331,7 +397,9 @@ export default function POSPage() {
                                 <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
                                 <div className="mt-2 flex items-end justify-between">
                                     <span className="text-base sm:text-lg font-bold text-primary">${salePrice.toFixed(2)}</span>
-                                    <span className="text-xs text-muted-foreground">{product.stock || 0} left</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {product.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || product.stock || 0} left
+                                    </span>
                                 </div>
                             </CardContent>
                         </Card>

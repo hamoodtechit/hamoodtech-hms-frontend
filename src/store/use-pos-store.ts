@@ -6,6 +6,10 @@ export interface Product {
     name: string
     price: number
     quantity: number
+    batchNumber?: string
+    expiryDate?: string
+    stockId?: string
+    medicineId?: string
 }
 
 export interface Transaction {
@@ -24,9 +28,9 @@ export interface Transaction {
 interface PosState {
     cart: Product[]
     transactions: Transaction[]
-    addToCart: (product: any) => void
-    removeFromCart: (id: string) => void
-    updateQuantity: (id: string, delta: number) => void
+    addToCart: (product: Product) => void
+    removeFromCart: (id: string, batchNumber?: string) => void
+    updateQuantity: (id: string, delta: number, batchNumber?: string) => void
     clearCart: () => void
     addTransaction: (transaction: Transaction) => void
     refundTransaction: (id: string) => void
@@ -41,22 +45,28 @@ export const usePosStore = create<PosState>()(
                  { id: "PH-1003", date: "2024-02-11 11:30", customerName: "Guest", total: 12.00, status: "Completed", items: [], subtotal: 10, tax: 2, discount: 0, paymentMethod: 'Cash' },
             ],
             addToCart: (product) => set((state) => {
-                const existing = state.cart.find((item) => item.id === product.id)
+                // Check if item with same ID AND same batch exists
+                const existing = state.cart.find((item) => 
+                    item.id === product.id && item.batchNumber === product.batchNumber
+                )
+                
                 if (existing) {
                     return {
                         cart: state.cart.map((item) =>
-                            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                            (item.id === product.id && item.batchNumber === product.batchNumber) 
+                                ? { ...item, quantity: item.quantity + 1 } 
+                                : item
                         )
                     }
                 }
                 return { cart: [...state.cart, { ...product, quantity: 1 }] }
             }),
-            removeFromCart: (id: string) => set((state) => ({
-                cart: state.cart.filter((item) => item.id !== id)
+            removeFromCart: (id: string, batchNumber?: string) => set((state) => ({
+                cart: state.cart.filter((item) => !(item.id === id && item.batchNumber === batchNumber))
             })),
-            updateQuantity: (id: string, delta: number) => set((state) => ({
+            updateQuantity: (id: string, delta: number, batchNumber?: string) => set((state) => ({
                 cart: state.cart.map((item) => {
-                    if (item.id === id) {
+                    if (item.id === id && item.batchNumber === batchNumber) {
                         const newQuantity = Math.max(1, item.quantity + delta)
                         return { ...item, quantity: newQuantity }
                     }

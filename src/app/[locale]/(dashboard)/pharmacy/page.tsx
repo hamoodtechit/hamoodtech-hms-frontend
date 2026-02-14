@@ -4,6 +4,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "@/i18n/navigation"
+import { pharmacyService } from "@/services/pharmacy-service"
+import { Sale } from "@/types/pharmacy"
 import {
   Activity,
   AlertTriangle,
@@ -11,12 +13,14 @@ import {
   Bell,
   DollarSign,
   FileText,
+  Loader2,
   Package,
   Pill,
   Settings,
   ShieldCheck,
   ShoppingCart
 } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function PharmacyPage() {
   return (
@@ -151,21 +155,57 @@ export default function PharmacyPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="flex items-center">
-                            <div className="space-y-1 overflow-hidden">
-                                <p className="text-sm font-medium leading-none truncate">Order #PH-{1000 + i}</p>
-                                <p className="text-xs text-muted-foreground truncate">Just now</p>
-                            </div>
-                            <div className="ml-auto font-medium whitespace-nowrap pl-2">+$2{i}0.00</div>
-                        </div>
-                    ))}
-                </div>
+                <RecentSalesList />
             </CardContent>
         </Card>
       </div>
     </div>
   )
 }
+
+function RecentSalesList() {
+    const [sales, setSales] = useState<Sale[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchSales = async () => {
+            try {
+                const response = await pharmacyService.getSales({ limit: 5 })
+                setSales(response.data.sales)
+            } catch (error) {
+                console.error("Failed to fetch recent sales", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchSales()
+    }, [])
+
+    if (loading) {
+        return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+    }
+
+    if (sales.length === 0) {
+        return <div className="text-sm text-muted-foreground text-center py-4">No recent sales found.</div>
+    }
+
+    return (
+        <div className="space-y-4">
+            {sales.map((sale) => (
+                <div key={sale.id} className="flex items-center">
+                    <div className="space-y-1 overflow-hidden">
+                        <p className="text-sm font-medium leading-none truncate">{sale.invoiceNumber}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                            {new Date(sale.createdAt).toLocaleTimeString()} - {sale.patient?.name || 'Walk-in'}
+                        </p>
+                    </div>
+                    <div className="ml-auto font-medium whitespace-nowrap pl-2">
+                        +${Number(sale.totalPrice || 0).toFixed(2)}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+    
 

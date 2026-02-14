@@ -1,19 +1,20 @@
 "use client"
 
-import { CustomerDialog } from "@/components/pharmacy/customer-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { usePosStore } from "@/store/use-pos-store"
-import { CreditCard, Minus, Plus, ShoppingCart, Tag, Trash2, User, X } from "lucide-react"
+import { Patient } from "@/types/pharmacy"
+import { CreditCard, Minus, Plus, ShoppingCart, Tag, Trash2 } from "lucide-react"
+import { PatientSearch } from "./patient-search"
 
 interface CartContentsProps {
     onCheckout: () => void
     customerDialogOpen: boolean
     setCustomerDialogOpen: (open: boolean) => void
-    selectedCustomer: any
-    setSelectedCustomer: (customer: any) => void
+    selectedCustomer: Patient | null
+    setSelectedCustomer: (customer: Patient | null) => void
     discount: number
     setDiscount: (discount: number) => void
 }
@@ -69,7 +70,7 @@ export function CartContents({
                                             variant="ghost" 
                                             size="icon" 
                                             className="h-6 w-6 rounded-sm hover:bg-background"
-                                            onClick={() => updateQuantity(item.id, -1)}
+                                            onClick={() => updateQuantity(item.id, -1, item.batchNumber)}
                                         >
                                             <Minus className="h-3 w-3" />
                                         </Button>
@@ -78,7 +79,7 @@ export function CartContents({
                                             variant="ghost" 
                                             size="icon" 
                                             className="h-6 w-6 rounded-sm hover:bg-background"
-                                            onClick={() => updateQuantity(item.id, 1)}
+                                            onClick={() => updateQuantity(item.id, 1, item.batchNumber)}
                                         >
                                             <Plus className="h-3 w-3" />
                                         </Button>
@@ -86,7 +87,7 @@ export function CartContents({
                                             variant="ghost" 
                                             size="icon" 
                                             className="h-6 w-6 rounded-sm hover:bg-background text-destructive hover:text-destructive"
-                                            onClick={() => removeFromCart(item.id)}
+                                            onClick={() => removeFromCart(item.id, item.batchNumber)}
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </Button>
@@ -103,43 +104,17 @@ export function CartContents({
                 {/* Customer Selection */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Customer</span>
-                        <CustomerDialog 
-                            open={customerDialogOpen} 
-                            onOpenChange={setCustomerDialogOpen}
-                            onCustomerAdded={setSelectedCustomer}
-                        />
+                        <span className="text-sm font-medium">Customer / Patient</span>
                     </div>
                     
-                    {selectedCustomer ? (
-                        <div className="flex items-center justify-between bg-primary/10 p-2 rounded-md border border-primary/20">
-                            <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                                    <User className="h-4 w-4 text-primary" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">{selectedCustomer.name}</p>
-                                    {selectedCustomer.points && (
-                                        <p className="text-xs text-muted-foreground">{selectedCustomer.points} Points</p>
-                                    )}
-                                </div>
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSelectedCustomer(null)}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="flex gap-2">
-                            <Input placeholder="Search customer (phone/name)..." className="h-9 text-sm" />
-                            <Button variant="secondary" size="icon" className="h-9 w-9 shrink-0" onClick={() => setCustomerDialogOpen(true)}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )}
-                    {selectedCustomer?.allergies && (
-                        <div className="flex items-center gap-2 text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 dark:bg-red-900/10 dark:border-red-900/20">
-                            <Tag className="h-3 w-3" />
-                            <span>Allergy Alert: {selectedCustomer.allergies}</span>
+                    <PatientSearch 
+                        selectedPatient={selectedCustomer} 
+                        onSelect={setSelectedCustomer} 
+                    />
+
+                    {selectedCustomer?.bloodGroup && (
+                         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/20 p-2 rounded">
+                            <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
                         </div>
                     )}
                 </div>
