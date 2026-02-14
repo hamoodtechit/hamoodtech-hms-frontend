@@ -1,13 +1,23 @@
 import {
+    Branch,
+    BranchListResponse,
+    BranchPayload,
     Medicine,
     MedicinePayload,
     PharmacyEntity,
     PharmacyEntityType,
     PharmacyPayload,
     PharmacyResponse,
+    Purchase,
+    PurchaseListResponse,
+    PurchasePayload,
+    PurchaseStatus,
     Stock,
     StockAdjustmentPayload,
-    StockTransferPayload
+    StockTransferPayload,
+    Supplier,
+    SupplierListResponse,
+    SupplierPayload
 } from '@/types/pharmacy';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -116,6 +126,93 @@ export const pharmacyService = {
 
   transferStock: async (data: StockTransferPayload): Promise<void> => {
     await api.post('/pharmacy/stocks/transfer', data);
+  },
+
+  // Branch APIs
+  getBranches: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+  }): Promise<BranchListResponse> => {
+    const response = await api.get<BranchListResponse>('/branches', { params });
+    return response.data;
+  },
+
+  getBranch: async (id: string): Promise<{ success: boolean, message: string, data: Branch }> => {
+    const response = await api.get<{ success: boolean, message: string, data: Branch }>(`/branches/${id}`);
+    return response.data;
+  },
+
+  createBranch: async (data: BranchPayload): Promise<{ success: boolean, message: string, data: Branch }> => {
+    const response = await api.post<{ success: boolean, message: string, data: Branch }>('/branches', data);
+    return response.data;
+  },
+
+  updateBranch: async (id: string, data: BranchPayload): Promise<{ success: boolean, message: string, data: Branch }> => {
+    const response = await api.put<{ success: boolean, message: string, data: Branch }>(`/branches/${id}`, data);
+    return response.data;
+  },
+
+  deleteBranch: async (id: string): Promise<{ success: boolean, message: string }> => {
+    const response = await api.delete<{ success: boolean, message: string }>(`/branches/${id}`);
+    return response.data;
+  },
+
+  // Supplier APIs
+  getSuppliers: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+  }): Promise<SupplierListResponse> => {
+    const response = await api.get<SupplierListResponse>('/pharmacy/suppliers', { params });
+    return response.data;
+  },
+
+  getSupplier: async (id: string): Promise<{ success: boolean, message: string, data: Supplier }> => {
+    const response = await api.get<{ success: boolean, message: string, data: Supplier }>(`/pharmacy/suppliers/${id}`);
+    return response.data;
+  },
+
+  createSupplier: async (data: SupplierPayload): Promise<{ success: boolean, message: string, data: Supplier }> => {
+    const response = await api.post<{ success: boolean, message: string, data: Supplier }>('/pharmacy/suppliers', data);
+    return response.data;
+  },
+
+  updateSupplier: async (id: string, data: SupplierPayload): Promise<{ success: boolean, message: string, data: Supplier }> => {
+    const response = await api.put<{ success: boolean, message: string, data: Supplier }>(`/pharmacy/suppliers/${id}`, data);
+    return response.data;
+  },
+
+  deleteSupplier: async (id: string): Promise<{ success: boolean, message: string }> => {
+    const response = await api.delete<{ success: boolean, message: string }>(`/pharmacy/suppliers/${id}`);
+    return response.data;
+  },
+
+  // Purchase APIs
+  getPurchases: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    branchId?: string;
+    supplierId?: string;
+    status?: PurchaseStatus;
+  }): Promise<PurchaseListResponse> => {
+    const response = await api.get<PurchaseListResponse>('/pharmacy/purchases', { params });
+    return response.data;
+  },
+
+  getPurchase: async (id: string): Promise<{ success: boolean, message: string, data: Purchase }> => {
+    const response = await api.get<{ success: boolean, message: string, data: Purchase }>(`/pharmacy/purchases/${id}`);
+    return response.data;
+  },
+
+  createPurchase: async (data: PurchasePayload): Promise<{ success: boolean, message: string, data: Purchase }> => {
+    const response = await api.post<{ success: boolean, message: string, data: Purchase }>('/pharmacy/purchases', data);
+    return response.data;
+  },
+
+  updatePurchaseStatus: async (id: string, status: PurchaseStatus): Promise<{ success: boolean, message: string, data: Purchase }> => {
+    const response = await api.patch<{ success: boolean, message: string, data: Purchase }>(`/pharmacy/purchases/${id}/status`, { status });
+    return response.data;
   },
 };
 

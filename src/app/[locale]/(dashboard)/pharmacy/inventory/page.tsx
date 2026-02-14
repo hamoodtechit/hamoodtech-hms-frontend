@@ -4,6 +4,7 @@ import { CreateOrderDialog } from "@/components/pharmacy/inventory/create-order-
 import { InventoryStats } from "@/components/pharmacy/inventory/inventory-stats"
 import { PurchaseOrderList } from "@/components/pharmacy/inventory/purchase-order-list"
 import { StockTable } from "@/components/pharmacy/inventory/stock-table"
+import { SupplierTable } from "@/components/pharmacy/inventory/supplier-table"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -47,9 +48,7 @@ export default function InventoryPage() {
                 <PurchaseOrderList />
             </TabsContent>
             <TabsContent value="suppliers">
-                 <div className="flex h-[400px] items-center justify-center rounded-md border border-dashed text-muted-foreground bg-secondary/10">
-                    Supplier Management Module Coming Soon
-                </div>
+                <SupplierTable />
             </TabsContent>
         </Tabs>
     </div>
