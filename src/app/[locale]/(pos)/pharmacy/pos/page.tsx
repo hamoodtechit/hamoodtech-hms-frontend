@@ -13,12 +13,14 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
+import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { ChevronLeft, ChevronRight, FileText, Info, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { CloseRegisterDialog } from "@/components/pharmacy/pos/close-register-dialog"
 import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -245,8 +247,23 @@ export default function POSPage() {
 
   if (!isMounted) return null
 
+  if (!activeStoreId && !loading) {
+    return (
+        <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
+            <h2 className="text-2xl font-bold">No Branch Selected</h2>
+            <p className="text-muted-foreground">Please select a branch to access the POS system.</p>
+            <div className="flex gap-4">
+                <StoreSwitcher />
+                <Link href="/pharmacy">
+                    <Button variant="outline">Exit POS</Button>
+                </Link>
+            </div>
+        </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100dvh-8rem)] md:h-[calc(100dvh-8rem)] -mx-2 -my-2 p-2 gap-4 relative overflow-hidden bg-background rounded-lg">
+    <div className="flex flex-col md:flex-row h-screen p-2 gap-4 relative overflow-hidden bg-background">
             <ReceiptDialog 
                 open={receiptOpen} 
                 onOpenChange={setReceiptOpen} 
@@ -365,6 +382,12 @@ export default function POSPage() {
                     >
                         <FileText className="h-4 w-4" />
                     </Button>
+                    <Link href="/pharmacy">
+                        <Button variant="ghost" size="icon" className="text-muted-foreground mr-2" title="Exit POS">
+                            <ChevronLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <StoreSwitcher />
                     <TransactionHistory />
                     
                     {activeRegister && (

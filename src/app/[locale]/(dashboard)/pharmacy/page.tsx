@@ -5,21 +5,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
+import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/pharmacy"
 import {
-    Activity,
-    AlertTriangle,
-    ArrowRight,
-    Bell,
-    DollarSign,
-    FileText,
-    List,
-    Loader2,
-    Package,
-    Pill,
-    Settings,
-    ShieldCheck,
-    ShoppingCart
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Bell,
+  DollarSign,
+  FileText,
+  List,
+  Loader2,
+  Package,
+  Pill,
+  Settings,
+  ShieldCheck,
+  ShoppingCart
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -174,11 +175,15 @@ export default function PharmacyPage() {
 function RecentSalesList() {
     const [sales, setSales] = useState<Sale[]>([])
     const [loading, setLoading] = useState(true)
+    const { activeStoreId } = useStoreContext()
 
     useEffect(() => {
         const fetchSales = async () => {
             try {
-                const response = await pharmacyService.getSales({ limit: 5 })
+                const response = await pharmacyService.getSales({ 
+                    limit: 5,
+                    branchId: activeStoreId || undefined 
+                })
                 setSales(response.data.sales)
             } catch (error) {
                 console.error("Failed to fetch recent sales", error)
@@ -187,7 +192,7 @@ function RecentSalesList() {
             }
         }
         fetchSales()
-    }, [])
+    }, [activeStoreId])
 
     if (loading) {
         return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -199,7 +204,7 @@ function RecentSalesList() {
 
     return (
         <div className="space-y-4">
-            {sales.map((sale) => (
+            {sales.map((sale: Sale) => (
                 <div key={sale.id} className="flex items-center">
                     <div className="space-y-1 overflow-hidden">
                         <p className="text-sm font-medium leading-none truncate">{sale.invoiceNumber}</p>

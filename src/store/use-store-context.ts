@@ -40,7 +40,6 @@ export const useStoreContext = create<StoreContextState>()(
         {
             name: 'store-context',
             storage: createJSONStorage(() => localStorage),
-            skipHydration: true,
         }
     )
 )
