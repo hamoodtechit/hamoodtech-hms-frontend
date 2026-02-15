@@ -1,3 +1,4 @@
+import { CashRegister } from '@/types/pharmacy'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -28,6 +29,8 @@ export interface Transaction {
 interface PosState {
     cart: Product[]
     transactions: Transaction[]
+    activeRegister: CashRegister | null
+    setActiveRegister: (register: CashRegister | null) => void
     addToCart: (product: Product) => void
     removeFromCart: (id: string, batchNumber?: string) => void
     updateQuantity: (id: string, delta: number, batchNumber?: string) => void
@@ -44,6 +47,8 @@ export const usePosStore = create<PosState>()(
                  { id: "PH-1004", date: "2024-02-11 12:45", customerName: "John Doe", total: 45.50, status: "Completed", items: [], subtotal: 40, tax: 5.5, discount: 0, paymentMethod: 'Card' },
                  { id: "PH-1003", date: "2024-02-11 11:30", customerName: "Guest", total: 12.00, status: "Completed", items: [], subtotal: 10, tax: 2, discount: 0, paymentMethod: 'Cash' },
             ],
+            activeRegister: null,
+            setActiveRegister: (register) => set({ activeRegister: register }),
             addToCart: (product) => set((state) => {
                 // Check if item with same ID AND same batch exists
                 const existing = state.cart.find((item) => 

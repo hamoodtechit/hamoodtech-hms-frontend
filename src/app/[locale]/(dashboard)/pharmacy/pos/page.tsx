@@ -15,16 +15,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { usePosStore } from "@/store/use-pos-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, FileText, Loader2, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileText, Info, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { CloseRegisterDialog } from "@/components/pharmacy/pos/close-register-dialog"
+import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { patientService } from "@/services/patient-service"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Medicine, Patient } from "@/types/pharmacy"
 
 export default function POSPage() {
-  const { cart, addToCart, clearCart, addTransaction } = usePosStore()
+  const { cart, addToCart, clearCart, addTransaction, activeRegister, setActiveRegister } = usePosStore()
   
   // State
   const [isMounted, setIsMounted] = useState(false)
@@ -37,10 +40,35 @@ export default function POSPage() {
   
   const tabsListRef = useRef<HTMLDivElement>(null)
 
+  const { activeStoreId } = useStoreContext()
+  const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
+  const [closeRegisterOpen, setCloseRegisterOpen] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
+    if (activeStoreId) {
+        checkSession()
+    }
     loadData()
-  }, [])
+  }, [activeStoreId])
+
+  const checkSession = async () => {
+    if (!activeStoreId) return
+    try {
+        const response = await pharmacyService.getActiveCashRegister(activeStoreId)
+        if (response.success && response.data) {
+            setActiveRegister(response.data)
+            setOpenRegisterOpen(false)
+        } else {
+            setActiveRegister(null)
+            setOpenRegisterOpen(true)
+        }
+    } catch (error) {
+        console.error("Failed to check session", error)
+        setActiveRegister(null)
+        setOpenRegisterOpen(true)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -150,8 +178,6 @@ export default function POSPage() {
       processTransaction()
   }
 
-  const { activeStoreId } = useStoreContext()
-  
   const processTransaction = async () => {
       if (!activeStoreId) {
           toast.error("No active branch selected. Please select a store.")
@@ -198,11 +224,11 @@ export default function POSPage() {
           setReceiptOpen(true)
           clearCart()
           setDiscount(0)
-          setSelectedCustomer(null)
           setCartOpen(false) 
           
-          // Refresh products to update stock
+          // Refresh products and session to update stock and register totals
           loadData()
+          checkSession()
 
       } catch (error) {
           console.error(error)
@@ -241,6 +267,27 @@ export default function POSPage() {
                 open={linkPrescriptionOpen}
                 onOpenChange={setLinkPrescriptionOpen}
                 onLink={handleLinkPrescription}
+            />
+
+            <OpenRegisterDialog 
+                open={openRegisterOpen}
+                onOpenChange={setOpenRegisterOpen}
+                branchId={activeStoreId || ""}
+                onSuccess={() => {
+                    setOpenRegisterOpen(false)
+                    loadData()
+                }}
+            />
+
+            <CloseRegisterDialog 
+                open={closeRegisterOpen}
+                onOpenChange={setCloseRegisterOpen}
+                registerId={activeRegister?.id || ""}
+                onSuccess={() => {
+                    setCloseRegisterOpen(false)
+                    setActiveRegister(null)
+                    setOpenRegisterOpen(true)
+                }}
             />
 
             {/* Mobile Cart Sheet (Controlled) */}
@@ -320,6 +367,75 @@ export default function POSPage() {
                     </Button>
                     <TransactionHistory />
                     
+                    {activeRegister && (
+                        <>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="icon" title="Session Info">
+                                    <Info className="h-4 w-4" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium leading-none">Session Summary</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            Manage your active register shift.
+                                        </p>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-muted-foreground">Opened At:</span>
+                                            <span>{new Date(activeRegister.openedAt).toLocaleTimeString()}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-muted-foreground">Opening Balance:</span>
+                                            <span className="font-mono">${Number(activeRegister.openingBalance).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-muted-foreground">Sales Total ({activeRegister.salesCount}):</span>
+                                            <span className="font-mono text-emerald-600">${Number(activeRegister.salesAmount).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center font-bold">
+                                            <span>Expected Cash:</span>
+                                            <span className="font-mono">
+                                                ${(Number(activeRegister.openingBalance) + Number(activeRegister.salesAmount) - Number(activeRegister.expensesAmount || 0)).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {activeRegister.sales && activeRegister.sales.length > 0 && (
+                                        <div className="space-y-2 pt-2 border-t">
+                                            <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent Transactions</h5>
+                                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                {activeRegister.sales.slice(0, 5).map((sale) => (
+                                                    <div key={sale.id} className="flex justify-between text-xs">
+                                                        <span className="font-mono">{sale.invoiceNumber}</span>
+                                                        <span className="font-medium">${Number(sale.totalPrice).toFixed(2)}</span>
+                                                    </div>
+                                                ))}
+                                                {activeRegister.sales.length > 5 && (
+                                                    <p className="text-[10px] text-center text-muted-foreground italic">Showing last 5 sales</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            title="Close Register"
+                            onClick={() => setCloseRegisterOpen(true)}
+                        >
+                            <LogOut className="h-4 w-4" />
+                        </Button>
+                        </>
+                    )}
+
                     {/* Mobile Cart Trigger (Header) */}
                     <Button 
                         className="md:hidden relative"

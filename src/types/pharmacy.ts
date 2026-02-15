@@ -364,3 +364,68 @@ export interface SaleReturnPayload {
   status: 'pending' | 'verified' | 'approved' | 'rejected';
   saleReturnItems: SaleReturnItemPayload[];
 }
+
+export interface CashRegister {
+  id: string;
+  branchId: string;
+  userId: string;
+  openingBalance: number | string;
+  closingBalance?: number | string | null;
+  actualBalance?: number | string | null;
+  difference?: number | string | null;
+  openingNote?: string | null;
+  closingNote?: string | null;
+  salesCount?: number;
+  salesAmount?: number | string;
+  expensesCount?: number;
+  expensesAmount?: number | string;
+  status: 'open' | 'closed';
+  openedAt: string;
+  closedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { name: string };
+  branch?: { name: string };
+  sales?: {
+    id: string;
+    branchId: string;
+    patientId: string;
+    invoiceNumber: string;
+    totalPrice: string | number;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    cashRegisterSessionId: string;
+  }[];
+}
+
+export interface CashRegisterOpenPayload {
+  branchId: string;
+  openingBalance: number;
+  openingNote?: string;
+}
+
+export interface CashRegisterClosePayload {
+  actualBalance: number;
+  closingNote?: string;
+}
+
+export interface CashRegisterResponse {
+  success: boolean;
+  message: string;
+  data: CashRegister;
+}
+
+export interface CashRegisterListResponse {
+  success: boolean;
+  message: string;
+  data: CashRegister[];
+  meta: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  }
+}

@@ -2,6 +2,10 @@ import {
     Branch,
     BranchListResponse,
     BranchPayload,
+    CashRegisterClosePayload,
+    CashRegisterListResponse,
+    CashRegisterOpenPayload,
+    CashRegisterResponse,
     Medicine,
     MedicinePayload,
     PharmacyEntity,
@@ -255,6 +259,32 @@ export const pharmacyService = {
     status?: string;
   }): Promise<any> => { // TODO: Define SaleReturnListResponse if needed
     const response = await api.get('/pharmacy/sale-returns', { params });
+    return response.data;
+  },
+
+  // --- Cash Register ---
+  openCashRegister: async (data: CashRegisterOpenPayload): Promise<CashRegisterResponse> => {
+    const response = await api.post<CashRegisterResponse>('/pharmacy/cash-register/open', data);
+    return response.data;
+  },
+
+  closeCashRegister: async (id: string, data: CashRegisterClosePayload): Promise<CashRegisterResponse> => {
+    const response = await api.post<CashRegisterResponse>(`/pharmacy/cash-register/${id}/close`, data);
+    return response.data;
+  },
+
+  getActiveCashRegister: async (branchId: string): Promise<CashRegisterResponse> => {
+    const response = await api.get<CashRegisterResponse>('/pharmacy/cash-register/active', { params: { branchId } });
+    return response.data;
+  },
+
+  getCashRegisters: async (params?: { page?: number; limit?: number; branchId?: string; userId?: string; status?: string }): Promise<CashRegisterListResponse> => {
+    const response = await api.get<CashRegisterListResponse>('/pharmacy/cash-register', { params });
+    return response.data;
+  },
+
+  getCashRegister: async (id: string): Promise<CashRegisterResponse> => {
+    const response = await api.get<CashRegisterResponse>(`/pharmacy/cash-register/${id}`);
     return response.data;
   },
 };

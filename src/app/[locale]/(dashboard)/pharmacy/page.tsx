@@ -7,18 +7,19 @@ import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Sale } from "@/types/pharmacy"
 import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  Bell,
-  DollarSign,
-  FileText,
-  Loader2,
-  Package,
-  Pill,
-  Settings,
-  ShieldCheck,
-  ShoppingCart
+    Activity,
+    AlertTriangle,
+    ArrowRight,
+    Bell,
+    DollarSign,
+    FileText,
+    List,
+    Loader2,
+    Package,
+    Pill,
+    Settings,
+    ShieldCheck,
+    ShoppingCart
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -142,6 +143,13 @@ export default function PharmacyPage() {
                         <Settings className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
                         <h3 className="font-semibold group-hover:text-primary transition-colors">Pharmacy Setup</h3>
                         <p className="text-xs text-center text-muted-foreground mt-1">Manage Master Data</p>
+                    </div>
+                </Link>
+                <Link href="/pharmacy/registers">
+                     <div className="flex flex-col items-center justify-center p-6 bg-background rounded-xl border border-dashed hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
+                        <List className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">Cash Registers</h3>
+                        <p className="text-xs text-center text-muted-foreground mt-1">Audit shift sessions</p>
                     </div>
                 </Link>
             </CardContent>
