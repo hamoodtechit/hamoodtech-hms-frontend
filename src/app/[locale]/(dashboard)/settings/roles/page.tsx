@@ -29,6 +29,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { roleService } from "@/services/role-service"
 import { Role } from "@/types/role"
 import { Edit, Loader2, MoreHorizontal, Plus, Shield, Trash2, Users } from "lucide-react"
@@ -37,6 +38,7 @@ import { toast } from "sonner"
 import { RoleDialog } from "./components/role-dialog"
 
 export default function RolesPage() {
+  const { hasPermission } = usePermissions()
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -100,9 +102,12 @@ export default function RolesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Roles & Permissions</h1>
           <p className="text-muted-foreground">Manage system roles and their descriptive access levels.</p>
         </div>
+
+        {hasPermission('role:create') && (
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" /> Add New Role
         </Button>
+        )}
       </div>
 
       <Card>
@@ -178,10 +183,12 @@ export default function RolesPage() {
                             <DropdownMenuContent align="end" className="w-[160px]">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            {hasPermission('role:update') && (
                             <DropdownMenuItem onClick={() => handleEdit(role)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit Role
                             </DropdownMenuItem>
-                            {!role.isSystem && (
+                            )}
+                            {!role.isSystem && hasPermission('role:delete') && (
                                 <DropdownMenuItem 
                                     className="text-destructive focus:text-destructive"
                                     onClick={() => handleDeleteClick(role)}

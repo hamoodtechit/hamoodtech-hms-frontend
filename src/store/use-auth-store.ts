@@ -3,17 +3,28 @@ import Cookies from 'js-cookie';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User {
+export interface Permission {
+  key: string;
+  module: string;
+  action: string;
+  description: string;
+}
+
+export interface User {
   id: string;
   username: string;
   email: string;
   fullName: string;
+  fullNameBangla?: string;
+  phone?: string | null;
+  isActive: boolean;
   role: {
     id: string;
     name: string;
-    permissions: string[];
     description?: string;
+    permissions: Permission[];
   };
+  permissions: string[]; // Direct permissions (e.g. ["*"])
 }
 
 interface AuthState {

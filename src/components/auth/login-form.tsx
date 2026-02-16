@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Lock, Mail } from "lucide-react"
@@ -115,6 +115,12 @@ export function LoginForm() {
             Secure System
           </span>
         </div>
+      </div>
+      <div className="text-center text-sm text-muted-foreground mt-4">
+        Need to initialize?{" "}
+        <Link href="/setup" className="underline underline-offset-4 hover:text-primary">
+          Setup New Organization
+        </Link>
       </div>
     </div>
   )

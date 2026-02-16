@@ -8,10 +8,12 @@ import { SupplierTable } from "@/components/pharmacy/inventory/supplier-table"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { Pill } from "lucide-react"
 
 export default function InventoryPage() {
+  const { hasPermission } = usePermissions()
   return (
     <div className="space-y-6 pt-2">
         <div className="flex items-center justify-between">
@@ -43,7 +45,7 @@ export default function InventoryPage() {
             </TabsContent>
             <TabsContent value="po" className="space-y-4">
                 <div className="flex justify-end">
-                    <CreateOrderDialog />
+                    {hasPermission('medicine:purchase') && <CreateOrderDialog />}
                 </div>
                 <PurchaseOrderList />
             </TabsContent>
