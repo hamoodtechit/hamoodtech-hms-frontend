@@ -1,0 +1,24 @@
+
+> frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.9s
+  Running TypeScript ...
+Failed to compile.
+
+./src/services/pharmacy-service.ts:245:15
+Type error: Cannot find name 'SaleReturnListResponse'. Did you mean 'SaleListResponse'?
+
+[0m [90m 243 |[39m     patientId[33m?[39m[33m:[39m string[33m;[39m
+ [90m 244 |[39m     status[33m?[39m[33m:[39m string[33m;[39m
+[31m[1m>[22m[39m[90m 245 |[39m   })[33m:[39m [33mPromise[39m[33m<[39m[33mSaleReturnListResponse[39m[33m>[39m [33m=>[39m {
+ [90m     |[39m               [31m[1m^[22m[39m
+ [90m 246 |[39m     [36mconst[39m response [33m=[39m [36mawait[39m api[33m.[39m[36mget[39m[33m<[39m[33mSaleReturnListResponse[39m[33m>[39m([32m'/pharmacy/sale-returns'[39m[33m,[39m { params })[33m;[39m
+ [90m 247 |[39m     [36mreturn[39m response[33m.[39mdata[33m;[39m
+ [90m 248 |[39m   }[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null
