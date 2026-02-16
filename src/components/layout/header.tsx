@@ -3,7 +3,6 @@
 import { MobileSidebar } from "@/components/layout/mobile-sidebar"
 import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { UserNav } from "@/components/layout/user-nav"
-import { Badge } from "@/components/ui/badge"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -16,12 +15,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { ModeToggle } from "@/components/ui/theme-toggle"
-import { usePathname } from "@/i18n/navigation"
-import { Bell, Search } from "lucide-react"
+import { useActiveSession } from "@/hooks/pharmacy-queries"
+import { Link, usePathname } from "@/i18n/navigation"
+import { useStoreContext } from "@/store/use-store-context"
+import { Bell, PlayCircle, Search } from "lucide-react"
 
 export function Header() {
   const pathname = usePathname()
   const paths = pathname.split('/').filter(Boolean)
+  const { activeStoreId } = useStoreContext()
+  const { data: sessionResponse } = useActiveSession(activeStoreId || "")
+  const activeSession = sessionResponse?.data
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,7 +34,7 @@ export function Header() {
         <StoreSwitcher className="hidden md:flex mr-2" />
         
         {/* Breadcrumbs */}
-        <div className="hidden lg:flex items-center text-sm text-muted-foreground">
+        <div className="hidden lg:flex items-center text-sm text-muted-foreground mr-4">
              <Breadcrumb>
                 <BreadcrumbList>
                     <BreadcrumbItem>
@@ -53,18 +57,32 @@ export function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-2 md:gap-4">
+            {/* Session Indicator & Quick POS */}
+            {activeSession && activeSession.status === 'open' && (
+                <Link href="/pharmacy/pos">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="hidden sm:flex items-center gap-2 border-emerald-500/50 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 transition-all animate-in fade-in slide-in-from-right-4 duration-500"
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 pulse-fast"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="font-semibold tracking-wide">POS ACTIVE</span>
+                        <PlayCircle className="h-4 w-4 ml-1" />
+                    </Button>
+                </Link>
+            )}
+
             {/* Global Search */}
-            <div className="relative w-32 sm:w-64 lg:w-96">
+            <div className="relative w-32 sm:w-48 lg:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search (Ctrl + K)"
+                  placeholder="Search..."
                   className="pl-9 h-9 bg-secondary/50 border-none focus-visible:ring-1 focus-visible:ring-primary"
                 />
-                <div className="absolute right-2 top-2 flex gap-1">
-                    <Badge variant="outline" className="h-5 px-1 text-[10px] text-muted-foreground">⌘</Badge>
-                    <Badge variant="outline" className="h-5 px-1 text-[10px] text-muted-foreground">K</Badge>
-                </div>
             </div>
 
             {/* Notifications */}
@@ -73,7 +91,7 @@ export function Header() {
                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             </Button>
 
-            <div className="h-6 w-px bg-border mx-2" />
+            <div className="h-6 w-px bg-border mx-1" />
 
             <div className="flex items-center gap-2">
                 <LanguageSwitcher />

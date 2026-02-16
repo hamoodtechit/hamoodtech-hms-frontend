@@ -124,3 +124,36 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles */
+@media print {
+  /* Hide toast notifications */
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+  
+  /* Make receipt text bold and improve readability */
+  body {
+    font-weight: 500;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  
+  /* Ensure receipt content is visible */
+  .bg-secondary\/10,
+  .bg-card {
+    background: #fff !important;
+  }
+  
+  /* Make important text bolder */
+  h1, h2, h3, h4, h5, h6,
+  .font-bold,
+  .font-semibold {
+    font-weight: 700 !important;
+  }
+  
+  /* Improve text contrast */
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+}

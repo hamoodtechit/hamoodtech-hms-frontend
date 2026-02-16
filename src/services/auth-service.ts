@@ -1,53 +1,40 @@
-import axios from 'axios';
+import { api } from '@/lib/api';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv.hamoodtech.com/api/v1';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add the auth token header to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get('accessToken');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle 401 errors (e.g., token expired)
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token might be invalid or expired. Clear storage and redirect to login if not already there.
-      Cookies.remove('accessToken');
-      Cookies.remove('refreshToken');
-      // Optional: Redirect to login page
-      // window.location.href = '/login'; 
-    }
-    return Promise.reject(error);
-  }
-);
-
 export interface SetupPayload {
-  hospitalName: string;
-  hospitalAddress: string;
-  hospitalPhone: string;
-  adminUsername: string;
-  adminEmail: string;
-  adminPassword: string;
+  hospital: {
+    name: string;
+    nameBangla?: string;
+    address: string;
+    phone: string;
+    email: string;
+    logoUrl?: string;
+    website?: string;
+    licenseNumber?: string;
+    taxRegistration?: string;
+  };
+  settings: {
+    currency: string;
+    currencySymbol: string;
+    timezone: string;
+    vatPercentage: number;
+    lowStockThreshold: number;
+  };
+  admin: {
+    username: string;
+    email: string;
+    password: string;
+    fullName: string;
+    fullNameBangla?: string;
+  };
+}
+
+export interface SetupStatusResponse {
+  success: boolean;
+  message: string;
+  data: {
+    isSetupComplete: boolean;
+  };
 }
 
 export interface ChangePasswordPayload {
@@ -72,13 +59,11 @@ export const authService = {
     return response.data;
   },
 
-  getSetupStatus: async () => {
-      // Based on user request, this is a GET request to /setup/status
+  getSetupStatus: async (): Promise<SetupStatusResponse> => {
       try {
-        const response = await api.get('/setup/status');
+        const response = await api.get<SetupStatusResponse>('/setup/status');
         return response.data;
       } catch (error) {
-          // If the endpoint doesn't exist or errors, we might assume setup is needed or handle it gracefully
           console.error("Failed to check setup status", error);
           throw error;
       }

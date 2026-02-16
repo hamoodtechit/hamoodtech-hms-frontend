@@ -13,7 +13,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js'
-import { ArrowDownRight, ArrowUpRight, DollarSign, Package, TrendingUp } from "lucide-react"
+import { DollarSign, Package, TrendingUp } from "lucide-react"
 import { Bar, Doughnut, Line } from "react-chartjs-2"
 
 // Register ChartJS components
@@ -29,44 +29,141 @@ ChartJS.register(
   ArcElement
 )
 
+import { Skeleton } from "@/components/ui/skeleton"
+import { usePharmacyGraph, usePharmacyStats, useTopSellingProducts } from "@/hooks/pharmacy-queries"
+import { useCurrency } from "@/hooks/use-currency"
+import { useStoreContext } from "@/store/use-store-context"
+import { TopSellingProduct } from "@/types/pharmacy"
+
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { addDays } from "date-fns"
+import { useState } from "react"
+import { DateRange } from "react-day-picker"
+
 export function AnalyticsDashboard() {
+  const { activeStoreId } = useStoreContext()
+  const { formatCurrency } = useCurrency()
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: addDays(new Date(), -7),
+    to: new Date(),
+  })
+
+  // Format dates for API
+  const startDate = date?.from ? date.from.toISOString() : undefined
+  const endDate = date?.to ? date.to.toISOString() : undefined
   
-  // Mock Data
+  const { data: stats, isLoading: statsLoading } = usePharmacyStats({ 
+    branchId: activeStoreId || undefined,
+    startDate,
+    endDate
+  })
+  
+  const { data: graphResponse, isLoading: graphLoading } = usePharmacyGraph({ 
+    branchId: activeStoreId || undefined,
+    startDate,
+    endDate,
+    // If no date range is selected, default to 7 days, otherwise don't send days
+    days: !startDate ? 7 : undefined 
+  })
+
+  const { data: topProductsResponse, isLoading: topProductsLoading } = useTopSellingProducts({
+    branchId: activeStoreId || undefined,
+    startDate,
+    endDate,
+    days: !startDate ? 30 : undefined
+  })
+
+  if (statsLoading || graphLoading || topProductsLoading) {
+    return (
+      <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                  <Card key={i}>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <Skeleton className="h-4 w-[100px]" />
+                          <Skeleton className="h-4 w-4" />
+                      </CardHeader>
+                      <CardContent>
+                          <Skeleton className="h-8 w-[120px] mb-2" />
+                          <Skeleton className="h-3 w-[150px]" />
+                      </CardContent>
+                  </Card>
+              ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4 h-[400px]">
+                  <CardHeader><Skeleton className="h-6 w-[200px]" /></CardHeader>
+                  <CardContent><Skeleton className="h-full w-full" /></CardContent>
+              </Card>
+              <Card className="col-span-3 h-[400px]">
+                  <CardHeader><Skeleton className="h-6 w-[150px]" /></CardHeader>
+                  <CardContent className="flex items-center justify-center">
+                    <Skeleton className="h-48 w-48 rounded-full" />
+                  </CardContent>
+              </Card>
+          </div>
+      </div>
+    )
+  }
+
+  const pStats = stats?.data
+  const graphDataItems = graphResponse?.data || []
+  const topProducts = topProductsResponse?.data || []
+
+  // Average Order Value
+  const avgOrderValue = pStats?.salesCount ? (pStats.totalSales / pStats.salesCount) : 0
+
   const salesData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: graphDataItems.map(d => new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })),
     datasets: [
       {
         label: 'Sales ($)',
-        data: [1200, 1900, 1500, 2200, 2800, 3500, 2100],
+        data: graphDataItems.map(d => d.sales),
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.5)',
         tension: 0.3,
+        fill: true,
+      },
+      {
+        label: 'Purchases ($)',
+        data: graphDataItems.map(d => d.purchases),
+        borderColor: 'rgb(244, 63, 94)',
+        backgroundColor: 'rgba(244, 63, 94, 0.5)',
+        tension: 0.3,
+        fill: true,
       },
     ],
   }
 
   const topProductsData = {
-    labels: ['Paracetamol', 'Amoxicillin', 'Insulin', 'Vitamin C', 'Masks'],
+    labels: topProducts.map((p: TopSellingProduct) => p.name),
     datasets: [
       {
         label: 'Units Sold',
-        data: [450, 320, 210, 180, 500],
+        data: topProducts.map((p: TopSellingProduct) => p.unitsSold),
         backgroundColor: [
           'rgba(255, 99, 132, 0.8)',
           'rgba(54, 162, 235, 0.8)',
           'rgba(255, 206, 86, 0.8)',
           'rgba(75, 192, 192, 0.8)',
           'rgba(153, 102, 255, 0.8)',
+          'rgba(255, 159, 64, 0.8)',
+          'rgba(199, 199, 199, 0.8)',
+          'rgba(83, 102, 255, 0.8)',
         ],
       },
     ],
   }
 
+  const outOfStock = pStats?.outOfStockCount || 0
+  const lowStock = pStats?.lowStockCount || 0
+  const sufficient = (pStats?.totalMedicines || 0) - lowStock - outOfStock
+
   const stockData = {
     labels: ['Sufficient', 'Low Stock', 'Out of Stock'],
     datasets: [
       {
-        data: [85, 12, 3],
+        data: [sufficient, lowStock, outOfStock],
         backgroundColor: [
           'rgba(34, 197, 94, 0.8)',
           'rgba(249, 115, 22, 0.8)',
@@ -79,18 +176,23 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
+        <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <div className="flex items-center space-x-2">
+                <DatePickerWithRange date={date} setDate={setDate} />
+            </div>
+        </div>
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue (Weekly)</CardTitle>
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">$15,200</div>
-                    <p className="text-xs text-muted-foreground flex items-center text-emerald-600">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                         +12.5% from last week
+                    <div className="text-2xl font-bold">{formatCurrency(pStats?.totalSales || 0)}</div>
+                    <p className="text-xs text-muted-foreground flex items-center">
+                         Cumulative sales performance
                     </p>
                 </CardContent>
             </Card>
@@ -100,10 +202,9 @@ export function AnalyticsDashboard() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">$45.50</div>
-                    <p className="text-xs text-muted-foreground flex items-center text-emerald-600">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                         +2.1% from last week
+                    <div className="text-2xl font-bold">{formatCurrency(avgOrderValue)}</div>
+                    <p className="text-xs text-muted-foreground flex items-center">
+                         Revenue per transaction
                     </p>
                 </CardContent>
             </Card>
@@ -113,10 +214,9 @@ export function AnalyticsDashboard() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">342</div>
-                     <p className="text-xs text-muted-foreground flex items-center text-rose-600">
-                        <ArrowDownRight className="h-4 w-4 mr-1" />
-                         -4% from last week
+                    <div className="text-2xl font-bold">{pStats?.salesCount || 0}</div>
+                     <p className="text-xs text-muted-foreground flex items-center">
+                        Total POS sales processed
                     </p>
                 </CardContent>
             </Card>
@@ -126,7 +226,7 @@ export function AnalyticsDashboard() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">12</div>
+                    <div className="text-2xl font-bold">{pStats?.lowStockCount || 0}</div>
                     <p className="text-xs text-muted-foreground">
                         Requires attention
                     </p>

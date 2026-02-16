@@ -1,77 +1,105 @@
-"use client"
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useInventoryStore } from "@/store/use-inventory-store"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useCurrency } from "@/hooks/use-currency"
+import { pharmacyService } from "@/services/pharmacy-service"
+import { useStoreContext } from "@/store/use-store-context"
+import { PharmacyStats } from "@/types/pharmacy"
 import { AlertTriangle, DollarSign, Package, TrendingDown } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export function InventoryStats() {
-    const { items, batches, getLowStockItems, getExpiringBatches } = useInventoryStore()
-    const [mounted, setMounted] = useState(false)
+    const { activeStoreId } = useStoreContext()
+    const { formatCurrency } = useCurrency()
+    const [stats, setStats] = useState<PharmacyStats | null>(null)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        setMounted(true)
-    }, [])
+        const loadStats = async () => {
+            try {
+                setLoading(true)
+                const response = await pharmacyService.getPharmacyStats({ 
+                    branchId: activeStoreId || undefined 
+                })
+                if (response.success) {
+                    setStats(response.data)
+                }
+            } catch (error) {
+                toast.error("Failed to load inventory stats")
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadStats()
+    }, [activeStoreId])
 
-    if (!mounted) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-pulse">
-        {[1,2,3,4].map(i => <div key={i} className="h-32 bg-secondary/20 rounded-xl" />)}
-    </div>
-
-    const totalStock = batches.reduce((acc, b) => acc + b.quantity, 0)
-    const totalValue = batches.reduce((acc, b) => acc + (b.quantity * b.costPrice), 0)
-    const lowStockCount = getLowStockItems().length
-    const expiringCount = getExpiringBatches(90).length // 90 days lookahead
+    if (loading) return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="shadow-sm border-l-4 border-l-muted bg-card/50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-4 w-[100px]" />
+                        <Skeleton className="h-4 w-4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-[100px] mb-2" />
+                        <Skeleton className="h-3 w-[120px]" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    )
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="shadow-md border-l-4 border-l-primary">
+            <Card className="shadow-sm border-l-4 border-l-primary/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{totalStock}</div>
-                    <p className="text-xs text-muted-foreground">
-                        {items.length} unique items
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalSales || 0)}</div>
+                    <p className="text-xs text-muted-foreground flex items-center mt-1">
+                        <span className="font-medium text-emerald-600 mr-1">{stats?.salesCount || 0}</span> sales total
                     </p>
                 </CardContent>
             </Card>
 
-            <Card className="shadow-md border-l-4 border-l-emerald-500">
+            <Card className="shadow-sm border-l-4 border-l-emerald-500/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">
-                        Cost price valuation
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalPurchases || 0)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {stats?.purchasesCount || 0} purchase orders
                     </p>
                 </CardContent>
             </Card>
             
-            <Card className="shadow-md border-l-4 border-l-orange-500">
+            <Card className="shadow-sm border-l-4 border-l-orange-500/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Low Stock Alerts</CardTitle>
                     <TrendingDown className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{lowStockCount}</div>
-                    <p className="text-xs text-muted-foreground">
-                        Items below min level
+                    <div className="text-2xl font-bold text-orange-600">{stats?.lowStockCount || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Requires reordering
                     </p>
                 </CardContent>
             </Card>
 
-            <Card className="shadow-md border-l-4 border-l-destructive">
+            <Card className="shadow-sm border-l-4 border-l-destructive/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+                    <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
                     <AlertTriangle className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-destructive">{expiringCount}</div>
-                    <p className="text-xs text-muted-foreground">
-                        Batches expiring in 90 days
+                    <div className="text-2xl font-bold text-destructive">{stats?.outOfStockCount || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Unavailable items
                     </p>
                 </CardContent>
             </Card>
