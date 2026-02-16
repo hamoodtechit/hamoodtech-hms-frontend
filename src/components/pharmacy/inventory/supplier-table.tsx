@@ -39,7 +39,7 @@ export function SupplierTable() {
         try {
             setLoading(true)
             const response = await pharmacyService.getSuppliers({ search, limit: 100 })
-            setSuppliers(response.data.suppliers)
+            setSuppliers(response.data || [])
         } catch (error) {
             toast.error("Failed to fetch suppliers")
         } finally {
@@ -112,7 +112,7 @@ export function SupplierTable() {
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ) : suppliers.length === 0 ? (
+                        ) : !suppliers || suppliers.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                                     No suppliers found.

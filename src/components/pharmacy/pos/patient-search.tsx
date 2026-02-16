@@ -13,9 +13,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { Skeleton } from "@/components/ui/skeleton"
 import { patientService } from "@/services/patient-service"
 import { Patient } from "@/types/pharmacy"
-import { Check, ChevronsUpDown, Loader2, Plus, User } from "lucide-react"
+import { Check, ChevronsUpDown, Plus, User } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useDebounce } from "use-debounce"
 import { CreatePatientDialog } from "./create-patient-dialog"
@@ -93,8 +94,21 @@ export function PatientSearch({ selectedPatient, onSelect }: PatientSearchProps)
           />
           <CommandEmpty>
               {loading ? (
-                  <div className="flex items-center justify-center p-4 text-sm text-muted-foreground">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...
+                  <div className="p-2 space-y-2">
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                          <Skeleton className="h-4 w-4 rounded-sm" />
+                          <div className="space-y-1 flex-1">
+                              <Skeleton className="h-4 w-24" />
+                              <Skeleton className="h-3 w-16" />
+                          </div>
+                      </div>
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                          <Skeleton className="h-4 w-4 rounded-sm" />
+                          <div className="space-y-1 flex-1">
+                              <Skeleton className="h-4 w-32" />
+                              <Skeleton className="h-3 w-20" />
+                          </div>
+                      </div>
                   </div>
               ) : (
                 <div className="p-2">

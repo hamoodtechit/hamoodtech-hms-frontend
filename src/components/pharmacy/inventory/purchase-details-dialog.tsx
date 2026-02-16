@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useCurrency } from "@/hooks/use-currency"
 import { Purchase } from "@/types/pharmacy"
 import { format } from "date-fns"
 import { Building2, FileText, MapPin, Phone, User } from "lucide-react"
@@ -28,6 +29,7 @@ interface PurchaseDetailsDialogProps {
 }
 
 export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: PurchaseDetailsDialogProps) {
+  const { formatCurrency } = useCurrency()
   if (!purchase) return null
 
   return (
@@ -127,15 +129,15 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
                     </TableCell>
                     <TableCell className="text-right">
                        <div className="space-y-0.5">
-                        <div>{Number(item.price).toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">MRP: {Number(item.mrp).toLocaleString()}</div>
+                        <div>{formatCurrency(item.price)}</div>
+                        <div className="text-xs text-muted-foreground">MRP: {formatCurrency(item.mrp)}</div>
                        </div>
                     </TableCell>
                     <TableCell className="text-right">
                       {Number(item.quantity).toLocaleString()} {item.unit}
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                      {formatCurrency(Number(item.price) * Number(item.quantity))}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -153,7 +155,7 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
             </div>
             <div className="flex justify-between items-center text-lg font-bold text-primary">
                 <span>Grand Total:</span>
-                <span>${Number(purchase.totalPrice || 0).toLocaleString()}</span>
+                <span>{formatCurrency(purchase.totalPrice || 0)}</span>
             </div>
           </div>
         </div>

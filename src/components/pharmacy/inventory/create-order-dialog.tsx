@@ -2,23 +2,23 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
@@ -42,7 +42,7 @@ export function CreateOrderDialog() {
         pharmacyService.getSuppliers({ limit: 100 }),
         pharmacyService.getMedicines({ limit: 100 })
       ])
-      setSuppliers(suppliersRes.data.suppliers)
+      setSuppliers(suppliersRes.data)
       setMedicines(medicinesRes.data)
     } catch (error) {
       console.error("Failed to fetch data:", error)
@@ -110,7 +110,7 @@ export function CreateOrderDialog() {
     
     const invalidItem = purchaseItems.find(item => 
       !item.medicineId || 
-      item.quantity <= 0 || 
+      Number(item.quantity) <= 0 || 
       !item.expiryDate
     )
     if (invalidItem) {

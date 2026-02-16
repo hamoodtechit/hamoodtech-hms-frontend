@@ -1,22 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useCurrency } from "@/hooks/use-currency"
 import { pharmacyService } from "@/services/pharmacy-service"
-import { Medicine } from "@/types/pharmacy"
+import { useStoreContext } from "@/store/use-store-context"
+import { PharmacyStats } from "@/types/pharmacy"
 import { AlertTriangle, DollarSign, Package, TrendingDown } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export function InventoryStats() {
-    const [medicines, setMedicines] = useState<Medicine[]>([])
+    const { activeStoreId } = useStoreContext()
+    const { formatCurrency } = useCurrency()
+    const [stats, setStats] = useState<PharmacyStats | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const loadStats = async () => {
             try {
                 setLoading(true)
-                // Fetching a large batch to calculate accurate totals for now
-                // Ideally this would be a dedicated stats endpoint
-                const response = await pharmacyService.getMedicines({ limit: 1000 })
-                setMedicines(response.data)
+                const response = await pharmacyService.getPharmacyStats({ 
+                    branchId: activeStoreId || undefined 
+                })
+                if (response.success) {
+                    setStats(response.data)
+                }
             } catch (error) {
                 toast.error("Failed to load inventory stats")
             } finally {
@@ -24,54 +31,49 @@ export function InventoryStats() {
             }
         }
         loadStats()
-    }, [])
+    }, [activeStoreId])
 
-    if (loading) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1,2,3,4].map(i => (
-            <Card key={i} className="h-32 animate-pulse bg-secondary/10" />
-        ))}
-    </div>
-
-    const totalStock = medicines.reduce((acc, m) => {
-        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
-        return acc + itemStock
-    }, 0)
-    
-    const totalValue = medicines.reduce((acc, m) => {
-        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
-        return acc + (itemStock * (Number(m.unitPrice) || 0))
-    }, 0)
-
-    const lowStockCount = medicines.filter(m => {
-        const itemStock = m.stocks?.reduce((sAcc, s) => sAcc + Number(s.quantity), 0) || Number(m.stock) || 0
-        return itemStock <= (Number(m.reorderLevel) || 0)
-    }).length
-    const expiringCount = 0 // Expiring batches data handled separately in deeper modules
+    if (loading) return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="shadow-sm border-l-4 border-l-muted bg-card/50">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-4 w-[100px]" />
+                        <Skeleton className="h-4 w-4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-[100px] mb-2" />
+                        <Skeleton className="h-3 w-[120px]" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    )
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="shadow-sm border-l-4 border-l-primary/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{totalStock.toLocaleString()}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalSales || 0)}</div>
                     <p className="text-xs text-muted-foreground flex items-center mt-1">
-                        <span className="font-medium text-emerald-600 mr-1">{medicines.length}</span> items in catalog
+                        <span className="font-medium text-emerald-600 mr-1">{stats?.salesCount || 0}</span> sales total
                     </p>
                 </CardContent>
             </Card>
 
             <Card className="shadow-sm border-l-4 border-l-emerald-500/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    <div className="text-2xl font-bold">{formatCurrency(stats?.totalPurchases || 0)}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Estimated cost valuation
+                        {stats?.purchasesCount || 0} purchase orders
                     </p>
                 </CardContent>
             </Card>
@@ -82,7 +84,7 @@ export function InventoryStats() {
                     <TrendingDown className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{lowStockCount}</div>
+                    <div className="text-2xl font-bold text-orange-600">{stats?.lowStockCount || 0}</div>
                     <p className="text-xs text-muted-foreground mt-1">
                         Requires reordering
                     </p>
@@ -91,13 +93,13 @@ export function InventoryStats() {
 
             <Card className="shadow-sm border-l-4 border-l-destructive/70 bg-card/50">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+                    <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
                     <AlertTriangle className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-destructive">{expiringCount}</div>
+                    <div className="text-2xl font-bold text-destructive">{stats?.outOfStockCount || 0}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Check batch details
+                        Unavailable items
                     </p>
                 </CardContent>
             </Card>

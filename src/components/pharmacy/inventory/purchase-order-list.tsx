@@ -10,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useCurrency } from "@/hooks/use-currency"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Purchase, PurchaseStatus } from "@/types/pharmacy"
 import { format } from "date-fns"
@@ -23,6 +24,7 @@ export function PurchaseOrderList() {
     const [loading, setLoading] = useState(true)
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
+    const { formatCurrency } = useCurrency()
 
     const fetchPurchases = async () => {
         try {
@@ -87,7 +89,7 @@ export function PurchaseOrderList() {
                                 <TableCell>{format(new Date(po.createdAt), "PPP")}</TableCell>
                                 <TableCell>{po.supplier?.name || 'Unknown Supplier'}</TableCell>
                                 <TableCell>
-                                    ${Number(po.totalPrice || 0).toLocaleString()}
+                                    {formatCurrency(po.totalPrice || 0)}
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant={

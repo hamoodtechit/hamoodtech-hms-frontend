@@ -32,6 +32,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Medicine, PharmacyMeta } from "@/types/pharmacy"
@@ -52,6 +53,7 @@ import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 
 export default function MedicinesPage() {
+  const { formatCurrency } = useCurrency()
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -220,8 +222,8 @@ export default function MedicinesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-col">
-                           <span className="font-bold text-emerald-600">${Number(medicine.salePrice).toFixed(2)}</span>
-                           <span className="text-[10px] text-muted-foreground line-through">MRP: ${Number(medicine.mrp).toFixed(2)}</span>
+                           <span className="font-bold text-emerald-600">{formatCurrency(medicine.salePrice)}</span>
+                           <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">

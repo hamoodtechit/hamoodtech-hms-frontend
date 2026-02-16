@@ -87,14 +87,14 @@ export interface SupplierPayload {
 export interface SupplierListResponse {
   success: boolean;
   message: string;
-  data: {
-    suppliers: Supplier[];
-    pagination: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    }
+  data: Supplier[];
+  meta: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
   }
 }
 
@@ -151,17 +151,28 @@ export interface PurchaseListResponse {
 
 export interface Stock {
   id: string;
+  sku?: string;
   medicineId: string;
   branchId: string;
-  branch?: { id: string; name: string };
   batchNumber: string;
   expiryDate: string;
   quantity: number;
   unitPrice: number | string;
   mrp: number | string;
   unit: string;
+  rackNumber?: string | null;
   createdAt: string;
   updatedAt: string;
+  medicine?: {
+    id: string;
+    name: string;
+    genericName?: string;
+    unit: string;
+  };
+  branch?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Medicine {
@@ -286,15 +297,22 @@ export interface SaleItem {
   unit: string;
   price: number;
   mrp: number;
+  discountPercentage?: number;
+  discountAmount?: number;
   quantity: number;
   batchNumber: string;
   expiryDate: string;
 }
 
+export type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer';
+
 export interface SalePayload {
   branchId: string;
   patientId?: string; // Optional if not registered/walk-in
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'completed' | 'rejected';
+  paymentMethod: PaymentMethod;
+  discountPercentage?: number;
+  discountAmount?: number;
   saleItems: SaleItem[];
 }
 
@@ -304,12 +322,24 @@ export interface Sale {
   patientId: string;
   invoiceNumber: string;
   totalPrice: number | string;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'completed' | 'rejected';
+  paymentMethod?: PaymentMethod;
+  discountPercentage?: number;
+  discountAmount?: number;
   createdAt: string;
   updatedAt: string;
   branch?: { name: string };
   patient?: { name: string };
   saleItems: SaleItemDetails[];
+}
+
+export interface UpdateSalePayload {
+  patientId?: string;
+  status?: 'pending' | 'completed' | 'rejected';
+  paymentMethod?: PaymentMethod;
+  discountPercentage?: number;
+  discountAmount?: number;
+  saleItems?: SaleItem[];
 }
 
 export interface SaleItemDetails {
@@ -351,8 +381,9 @@ export interface SaleReturnItemPayload {
   itemDescription?: string;
   unit: string;
   price: number;
-  mrp: number;
+  mrp?: number;
   quantity: number;
+  totalPrice?: number;
   batchNumber: string;
   expiryDate: string;
 }
@@ -360,9 +391,60 @@ export interface SaleReturnItemPayload {
 export interface SaleReturnPayload {
   branchId: string;
   patientId?: string;
-  invoiceNumber: string;
-  status: 'pending' | 'verified' | 'approved' | 'rejected';
+  invoiceNumber?: string;
+  status?: 'pending' | 'completed' | 'rejected';
+  paymentMethod?: PaymentMethod;
+  discountPercentage?: number;
+  discountAmount?: number;
   saleReturnItems: SaleReturnItemPayload[];
+}
+
+export interface SaleReturnItemDetails {
+  id: string;
+  saleReturnId: string;
+  medicineId: string;
+  itemName: string;
+  itemDescription?: string;
+  unit: string;
+  price: number;
+  mrp: number;
+  quantity: number;
+  totalPrice: number;
+  batchNumber: string;
+  expiryDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaleReturn {
+  id: string;
+  branchId: string;
+  patientId: string;
+  invoiceNumber: string;
+  totalPrice: number | string;
+  status: 'pending' | 'completed' | 'rejected';
+  paymentMethod?: PaymentMethod;
+  discountPercentage?: number;
+  discountAmount?: number;
+  createdAt: string;
+  updatedAt: string;
+  branch?: { name: string };
+  patient?: { name: string };
+  saleReturnItems: SaleReturnItemDetails[];
+}
+
+export interface SaleReturnListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    saleReturns: SaleReturn[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }
+  }
 }
 
 export interface CashRegister {
@@ -399,6 +481,34 @@ export interface CashRegister {
   }[];
 }
 
+export interface PharmacyStats {
+  totalSales: number;
+  salesCount: number;
+  totalPurchases: number;
+  purchasesCount: number;
+  totalMedicines: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+}
+
+export interface PharmacyGraphDataItem {
+  date: string;
+  sales: number;
+  purchases: number;
+}
+
+export interface PharmacyStatsResponse {
+  success: boolean;
+  message: string;
+  data: PharmacyStats;
+}
+
+export interface PharmacyGraphResponse {
+  success: boolean;
+  message: string;
+  data: PharmacyGraphDataItem[];
+}
+
 export interface CashRegisterOpenPayload {
   branchId: string;
   openingBalance: number;
@@ -427,5 +537,19 @@ export interface CashRegisterListResponse {
     totalItems: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;
-  }
+  };
+}
+
+export interface TopSellingProduct {
+  id: string;
+  name: string;
+  genericName?: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface TopSellingProductsResponse {
+  success: boolean;
+  message: string;
+  data: TopSellingProduct[];
 }

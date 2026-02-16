@@ -20,7 +20,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { pharmacyService } from "@/services/pharmacy-service"
-import { Sale } from "@/types/pharmacy"
+import { Sale, SaleReturnPayload } from "@/types/pharmacy"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -79,25 +79,38 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
     try {
       setLoading(true)
       
-      const saleReturnItems = itemsToReturn.map(item => ({
-        medicineId: item.medicineId,
-        itemName: item.itemName,
-        itemDescription: item.itemDescription || "",
-        unit: item.unit,
-        price: Number(item.price),
-        mrp: Number(item.mrp),
-        quantity: returnQuantities[item.id] || Number(item.quantity),
-        batchNumber: item.batchNumber,
-        expiryDate: item.expiryDate
-      }))
-
-      await pharmacyService.createSaleReturn({
-        branchId: sale.branchId,
-        patientId: sale.patientId, 
-        invoiceNumber: sale.invoiceNumber,
-        status: 'pending',
-        saleReturnItems
+      const saleReturnItems = itemsToReturn.map(item => {
+        const quantity = returnQuantities[item.id] || Number(item.quantity)
+        const price = Number(item.price)
+        
+        return {
+          medicineId: item.medicineId,
+          itemName: item.itemName,
+          itemDescription: item.itemDescription || undefined,
+          unit: item.unit,
+          price: price,
+          mrp: Number(item.mrp),
+          quantity: quantity,
+          totalPrice: price * quantity,
+          batchNumber: item.batchNumber,
+          expiryDate: item.expiryDate
+        }
       })
+
+      const payload: SaleReturnPayload = {
+        branchId: sale.branchId,
+        // Only include patientId if it exists and looks like a valid UUID
+        ...(sale.patientId && sale.patientId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) 
+          ? { patientId: sale.patientId } 
+          : {}),
+        invoiceNumber: sale.invoiceNumber,
+        status: 'pending' as const,
+        saleReturnItems
+      }
+
+      console.log('🔍 Sale Return Payload:', JSON.stringify(payload, null, 2))
+
+      await pharmacyService.createSaleReturn(payload)
 
       toast.success("Return created successfully")
       onSuccess()

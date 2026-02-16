@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import {
     Branch,
     BranchListResponse,
@@ -10,8 +11,10 @@ import {
     MedicinePayload,
     PharmacyEntity,
     PharmacyEntityType,
+    PharmacyGraphResponse,
     PharmacyPayload,
     PharmacyResponse,
+    PharmacyStatsResponse,
     Purchase,
     PurchaseListResponse,
     PurchasePayload,
@@ -25,33 +28,9 @@ import {
     StockTransferPayload,
     Supplier,
     SupplierListResponse,
-    SupplierPayload
+    SupplierPayload,
+    UpdateSalePayload
 } from '@/types/pharmacy';
-import axios from 'axios';
-import Cookies from 'js-cookie';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv.hamoodtech.com/api/v1';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add the auth token header to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get('accessToken');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 export const pharmacyService = {
   getEntities: async (
@@ -123,6 +102,7 @@ export const pharmacyService = {
     branchId?: string;
     page?: number; 
     limit?: number; 
+    search?: string;
   }): Promise<PharmacyResponse<Stock>> => {
     const response = await api.get<PharmacyResponse<Stock>>('/pharmacy/stocks', { params });
     return response.data;
@@ -245,6 +225,11 @@ export const pharmacyService = {
     return response.data;
   },
 
+  updateSale: async (id: string, data: UpdateSalePayload): Promise<{ success: boolean, message: string, data: Sale }> => {
+    const response = await api.patch<{ success: boolean, message: string, data: Sale }>(`/pharmacy/sales/${id}`, data);
+    return response.data;
+  },
+
   // Sale Returns APIs
   createSaleReturn: async (data: SaleReturnPayload): Promise<{ success: boolean, message: string, data: any }> => {
     const response = await api.post<{ success: boolean, message: string, data: any }>('/pharmacy/sale-returns', data);
@@ -257,8 +242,8 @@ export const pharmacyService = {
     branchId?: string;
     patientId?: string;
     status?: string;
-  }): Promise<any> => { // TODO: Define SaleReturnListResponse if needed
-    const response = await api.get('/pharmacy/sale-returns', { params });
+  }): Promise<SaleReturnListResponse> => {
+    const response = await api.get<SaleReturnListResponse>('/pharmacy/sale-returns', { params });
     return response.data;
   },
 
@@ -285,6 +270,65 @@ export const pharmacyService = {
 
   getCashRegister: async (id: string): Promise<CashRegisterResponse> => {
     const response = await api.get<CashRegisterResponse>(`/pharmacy/cash-register/${id}`);
+    return response.data;
+  },
+
+  // --- Reports ---
+  getPharmacyStats: async (params: { branchId?: string; startDate?: string; endDate?: string }): Promise<PharmacyStatsResponse> => {
+    const response = await api.get<PharmacyStatsResponse>('/reports/pharmacy/stats', { params });
+    return response.data;
+  },
+
+  getPharmacyGraph: async (params: { branchId?: string; startDate?: string; endDate?: string; days?: number }): Promise<PharmacyGraphResponse> => {
+    const response = await api.get<PharmacyGraphResponse>('/reports/pharmacy/graph', { params });
+    return response.data;
+  },
+
+  getTopSellingProducts: async (params: { branchId?: string; days?: number; startDate?: string; endDate?: string }): Promise<any> => {
+    const response = await api.get('/reports/pharmacy/top-selling', { params });
+    return response.data;
+  },
+
+  // --- Patients ---
+  getBrands: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+  }): Promise<PharmacyResponse<PharmacyEntity>> => {
+    const response = await api.get<PharmacyResponse<PharmacyEntity>>('/pharmacy/brands', { params });
+    return response.data;
+  },
+
+  // Patients
+  getPatients: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string;
+    name?: string;
+    phone?: string;
+    visitType?: 'ipd' | 'opd' | 'emergency';
+  }): Promise<any> => {
+    const response = await api.get('/patients', { params });
+    return response.data;
+  },
+
+  getPatient: async (id: string): Promise<any> => {
+    const response = await api.get(`/patients/${id}`);
+    return response.data;
+  },
+
+  createPatient: async (data: any): Promise<any> => {
+    const response = await api.post('/patients', data);
+    return response.data;
+  },
+
+  updatePatient: async (id: string, data: any): Promise<any> => {
+    const response = await api.put(`/patients/${id}`, data);
+    return response.data;
+  },
+
+  deletePatient: async (id: string): Promise<any> => {
+    const response = await api.delete(`/patients/${id}`);
     return response.data;
   },
 };

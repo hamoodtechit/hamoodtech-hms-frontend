@@ -2,23 +2,24 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useCurrency } from "@/hooks/use-currency"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { usePosStore } from "@/store/use-pos-store"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -50,6 +51,7 @@ export function CloseRegisterDialog({
 }: CloseRegisterDialogProps) {
   const [loading, setLoading] = useState(false)
   const { activeRegister, setActiveRegister } = usePosStore()
+  const { formatCurrency } = useCurrency()
 
   const form = useForm<CloseRegisterValues>({
     resolver: zodResolver(closeRegisterSchema) as any,
@@ -102,22 +104,22 @@ export function CloseRegisterDialog({
         <div className="bg-secondary/20 p-4 rounded-lg space-y-2 text-sm">
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Opening Balance:</span>
-                <span className="font-medium">${Number(activeRegister?.openingBalance || 0).toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(activeRegister?.openingBalance || 0)}</span>
             </div>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Sales ({activeRegister?.salesCount || 0}):</span>
-                <span className="font-medium text-emerald-600">+${Number(activeRegister?.salesAmount || 0).toFixed(2)}</span>
+                <span className="font-medium text-emerald-600">+{formatCurrency(activeRegister?.salesAmount || 0)}</span>
             </div>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Expenses ({activeRegister?.expensesCount || 0}):</span>
-                <span className="font-medium text-destructive">-${Number(activeRegister?.expensesAmount || 0).toFixed(2)}</span>
+                <span className="font-medium text-destructive">-{formatCurrency(activeRegister?.expensesAmount || 0)}</span>
             </div>
             <div className="border-t pt-2 flex justify-between font-bold text-base">
                 <span>Expected Balance:</span>
                 <span className="text-primary">
-                    ${(Number(activeRegister?.openingBalance || 0) + 
+                    {formatCurrency(Number(activeRegister?.openingBalance || 0) + 
                        Number(activeRegister?.salesAmount || 0) - 
-                       Number(activeRegister?.expensesAmount || 0)).toFixed(2)}
+                       Number(activeRegister?.expensesAmount || 0))}
                 </span>
             </div>
         </div>

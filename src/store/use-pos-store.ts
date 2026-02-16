@@ -1,4 +1,4 @@
-import { CashRegister } from '@/types/pharmacy'
+import { CashRegister, PaymentMethod } from '@/types/pharmacy'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -11,6 +11,9 @@ export interface Product {
     expiryDate?: string
     stockId?: string
     medicineId?: string
+    category?: string
+    discountPercentage?: number
+    discountAmount?: number
 }
 
 export interface Transaction {
@@ -23,7 +26,7 @@ export interface Transaction {
     tax: number
     discount: number
     status: 'Completed' | 'Refunded'
-    paymentMethod: 'Cash' | 'Card' | 'Mobile'
+    paymentMethod: PaymentMethod
 }
 
 interface PosState {
@@ -44,8 +47,8 @@ export const usePosStore = create<PosState>()(
         (set) => ({
             cart: [],
             transactions: [
-                 { id: "PH-1004", date: "2024-02-11 12:45", customerName: "John Doe", total: 45.50, status: "Completed", items: [], subtotal: 40, tax: 5.5, discount: 0, paymentMethod: 'Card' },
-                 { id: "PH-1003", date: "2024-02-11 11:30", customerName: "Guest", total: 12.00, status: "Completed", items: [], subtotal: 10, tax: 2, discount: 0, paymentMethod: 'Cash' },
+                 { id: "PH-1004", date: "2024-02-11 12:45", customerName: "John Doe", total: 45.50, status: "Completed", items: [], subtotal: 40, tax: 5.5, discount: 0, paymentMethod: 'card' },
+                 { id: "PH-1003", date: "2024-02-11 11:30", customerName: "Guest", total: 12.00, status: "Completed", items: [], subtotal: 10, tax: 2, discount: 0, paymentMethod: 'cash' },
             ],
             activeRegister: null,
             setActiveRegister: (register) => set({ activeRegister: register }),

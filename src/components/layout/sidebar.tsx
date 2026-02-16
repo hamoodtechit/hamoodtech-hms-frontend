@@ -49,11 +49,17 @@ export function Sidebar() {
       color: "text-orange-400",
     },
     {
-      label: "Roles & Permissions",
-      icon: Shield,
-      href: "/settings/roles",
-      color: "text-amber-400",
-    },
+      label: "User Management",
+        icon: Users,
+        href: "/settings/users",
+        color: "text-indigo-400",
+      },
+      {
+        label: "Roles & Permissions",
+        icon: Shield,
+        href: "/settings/roles",
+        color: "text-amber-400",
+      },
     {
       label: t("settings"),
       icon: Settings,
