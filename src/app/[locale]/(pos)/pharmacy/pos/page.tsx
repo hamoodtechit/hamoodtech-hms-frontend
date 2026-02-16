@@ -233,6 +233,12 @@ export default function POSPage() {
 
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<import("@/types/pharmacy").PaymentMethod>('cash')
+  const [paidAmount, setPaidAmount] = useState(0)
+
+  // Sync paidAmount with total when total changes (default to full payment)
+  useEffect(() => {
+    setPaidAmount(total)
+  }, [total])
 
   const handleCheckout = () => {
       if (cart.length === 0) return
@@ -256,11 +262,23 @@ export default function POSPage() {
       }
 
       try {
+          const dueAmount = Math.max(0, total - paidAmount)
+          let paymentStatus: 'paid' | 'due' | 'partial' = 'paid'
+          
+          if (dueAmount >= total) {
+              paymentStatus = 'due'
+          } else if (dueAmount > 0) {
+              paymentStatus = 'partial'
+          }
+
           const salePayload = {
               branchId: activeStoreId,
               patientId: selectedCustomer?.id,
               status: "completed" as const,
+              paymentStatus,
               paymentMethod, // Include selected payment method
+              paidAmount,
+              dueAmount,
               discountPercentage: discount,
               discountAmount: discountAmount,
               saleItems: cart.map(item => ({
@@ -287,7 +305,10 @@ export default function POSPage() {
               total,
               subtotal,
               tax,
+              taxPercentage: pharmacy?.vatPercentage || 0,
               discount,
+              paidAmount,
+              dueAmount,
               date: new Date().toLocaleString(),
               status: "Completed" as const,
               paymentMethod // Use state value
@@ -398,6 +419,8 @@ export default function POSPage() {
                         setDiscountFixedAmount={setDiscountFixedAmount}
                         paymentMethod={paymentMethod}
                         setPaymentMethod={setPaymentMethod}
+                        paidAmount={paidAmount}
+                        setPaidAmount={setPaidAmount}
                     />
                 </SheetContent>
             </Sheet>
@@ -518,6 +541,23 @@ export default function POSPage() {
                                                 ))}
                                                 {activeRegister.sales.length > 5 && (
                                                     <p className="text-[10px] text-center text-muted-foreground italic">Showing last 5 sales</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeRegister.purchases && activeRegister.purchases.length > 0 && (
+                                        <div className="space-y-2 pt-2 border-t">
+                                            <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent Purchases</h5>
+                                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                {activeRegister.purchases.slice(0, 5).map((purchase) => (
+                                                    <div key={purchase.id} className="flex justify-between text-xs">
+                                                        <span className="font-mono">{purchase.poNumber || 'N/A'}</span>
+                                                        <span className="font-medium">{formatCurrency(purchase.totalPrice)}</span>
+                                                    </div>
+                                                ))}
+                                                {activeRegister.purchases.length > 5 && (
+                                                    <p className="text-[10px] text-center text-muted-foreground italic">Showing last 5 purchases</p>
                                                 )}
                                             </div>
                                         </div>
@@ -673,6 +713,8 @@ export default function POSPage() {
             setDiscountFixedAmount={setDiscountFixedAmount}
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
+            paidAmount={paidAmount}
+            setPaidAmount={setPaidAmount}
         />
       </div>
     </div>

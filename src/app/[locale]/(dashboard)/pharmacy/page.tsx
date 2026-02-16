@@ -7,7 +7,6 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { Sale } from "@/types/pharmacy"
 import {
     Activity,
     AlertTriangle,
@@ -22,6 +21,7 @@ import {
 import { useEffect, useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { cn } from "@/lib/utils"
 import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -176,13 +176,13 @@ export default function PharmacyPage() {
 
         <Card className="col-span-4 md:col-span-2 lg:col-span-3 h-full">
              <CardHeader>
-                <CardTitle>Recent Sales</CardTitle>
+                <CardTitle>Recent Transactions</CardTitle>
                 <CardDescription>
-                    Latest transactions from POS
+                    Latest sales and purchases from pharmacy
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <RecentSalesList />
+                <RecentTransactionsList />
             </CardContent>
         </Card>
       </div>
@@ -190,49 +190,96 @@ export default function PharmacyPage() {
   )
 }
 
-function RecentSalesList() {
-    const [sales, setSales] = useState<Sale[]>([])
+function RecentTransactionsList() {
+    const [transactions, setTransactions] = useState<{
+        id: string;
+        type: 'sale' | 'purchase';
+        number: string;
+        party: string;
+        amount: number;
+        date: string;
+    }[]>([])
     const [loading, setLoading] = useState(true)
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
 
     useEffect(() => {
-        const fetchSales = async () => {
+        const fetchTransactions = async () => {
             try {
-                const response = await pharmacyService.getSales({ 
-                    limit: 5,
-                    branchId: activeStoreId || undefined 
-                })
-                setSales(response.data.sales)
+                const [salesRes, purchasesRes] = await Promise.all([
+                    pharmacyService.getSales({ 
+                        limit: 5,
+                        branchId: activeStoreId || undefined 
+                    }),
+                    pharmacyService.getPurchases({
+                        limit: 5,
+                        branchId: activeStoreId || undefined
+                    })
+                ])
+
+                const formattedSales = (salesRes.data.sales || []).map(s => ({
+                    id: s.id,
+                    type: 'sale' as const,
+                    number: s.invoiceNumber,
+                    party: s.patient?.name || 'Walk-in',
+                    amount: Number(s.totalPrice || 0),
+                    date: s.createdAt
+                }))
+
+                const formattedPurchases = (purchasesRes.data.purchases || []).map(p => ({
+                    id: p.id,
+                    type: 'purchase' as const,
+                    number: p.poNumber || 'PO-N/A',
+                    party: p.supplier?.name || 'Unknown Supplier',
+                    amount: Number(p.totalPrice || 0),
+                    date: p.createdAt
+                }))
+
+                const combined = [...formattedSales, ...formattedPurchases]
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .slice(0, 5)
+
+                setTransactions(combined)
             } catch (error) {
-                console.error("Failed to fetch recent sales", error)
+                console.error("Failed to fetch recent transactions", error)
             } finally {
                 setLoading(false)
             }
         }
-        fetchSales()
+        fetchTransactions()
     }, [activeStoreId])
 
     if (loading) {
         return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
     }
 
-    if (sales.length === 0) {
-        return <div className="text-sm text-muted-foreground text-center py-4">No recent sales found.</div>
+    if (transactions.length === 0) {
+        return <div className="text-sm text-muted-foreground text-center py-4">No recent transactions found.</div>
     }
 
     return (
         <div className="space-y-4">
-            {sales.map((sale: Sale) => (
-                <div key={sale.id} className="flex items-center">
+            {transactions.map((tx) => (
+                <div key={`${tx.type}-${tx.id}`} className="flex items-center">
                     <div className="space-y-1 overflow-hidden">
-                        <p className="text-sm font-medium leading-none truncate">{sale.invoiceNumber}</p>
+                        <p className="text-sm font-medium leading-none truncate flex items-center gap-2">
+                            {tx.number}
+                            <span className={cn(
+                                "text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider",
+                                tx.type === 'sale' ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                            )}>
+                                {tx.type}
+                            </span>
+                        </p>
                         <p className="text-xs text-muted-foreground truncate">
-                            {new Date(sale.createdAt).toLocaleTimeString()} - {sale.patient?.name || 'Walk-in'}
+                            {new Date(tx.date).toLocaleTimeString()} - {tx.party}
                         </p>
                     </div>
-                    <div className="ml-auto font-medium whitespace-nowrap pl-2">
-                        +{formatCurrency(sale.totalPrice || 0)}
+                    <div className={cn(
+                        "ml-auto font-medium whitespace-nowrap pl-2",
+                        tx.type === 'sale' ? "text-emerald-600" : "text-orange-600"
+                    )}>
+                        {tx.type === 'sale' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </div>
                 </div>
             ))}

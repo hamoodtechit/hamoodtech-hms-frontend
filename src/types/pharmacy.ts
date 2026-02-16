@@ -1,7 +1,7 @@
 export interface PharmacyEntity {
   id: string;
   name: string;
-  nameBangla: string;
+  nameBangla: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -98,6 +98,23 @@ export interface SupplierListResponse {
   }
 }
 
+// ... existing Supplier interfaces ...
+
+export interface Manufacturer {
+  id: string;
+  name: string;
+  nameBangla: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManufacturerPayload {
+  name: string;
+  nameBangla?: string;
+}
+
+export interface ManufacturerListResponse extends PharmacyResponse<Manufacturer> {}
+
 export interface PurchaseItem {
   id?: string;
   medicineId: string;
@@ -106,6 +123,7 @@ export interface PurchaseItem {
   unit: string;
   price: number | string;
   mrp: number | string;
+  salePrice?: number | string;
   quantity: number | string;
   totalPrice?: number | string;
   batchNumber?: string;
@@ -192,8 +210,13 @@ export interface Medicine {
   medicineUnitId: string;
   medicineUnit?: { id: string; name: string };
   unitPrice: number | string;
+  purchasePrice?: number | string;
   salePrice: number | string;
   mrp: number | string;
+  dosageForm?: string;
+  medicineManufacturerId?: string;
+  medicineManufacturer?: Manufacturer;
+  strength?: string;
   reorderLevel: number;
   isActive: boolean;
   rackNumber?: string;
@@ -215,8 +238,12 @@ export interface MedicinePayload {
   groupId?: string;
   medicineUnitId?: string;
   unitPrice?: number;
+  purchasePrice?: number;
   salePrice?: number;
   mrp?: number;
+  dosageForm?: string;
+  strength?: string;
+  medicineManufacturerId?: string;
   reorderLevel?: number;
   isActive?: boolean;
   rackNumber?: string;
@@ -240,7 +267,7 @@ export interface StockTransferPayload {
   note: string;
 }
 
-export type PharmacyEntityType = 'brands' | 'categories' | 'groups' | 'units' | 'branches';
+export type PharmacyEntityType = 'brands' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
 
 export interface Patient {
   id: string;
@@ -311,7 +338,10 @@ export interface SalePayload {
   branchId: string;
   patientId?: string; // Optional if not registered/walk-in
   status: 'pending' | 'completed' | 'rejected';
+  paymentStatus?: 'paid' | 'due' | 'partial';
   paymentMethod: PaymentMethod;
+  paidAmount?: number;
+  dueAmount?: number;
   discountPercentage?: number;
   discountAmount?: number;
   saleItems: SaleItem[];
@@ -324,9 +354,15 @@ export interface Sale {
   invoiceNumber: string;
   totalPrice: number | string;
   status: 'pending' | 'completed' | 'rejected';
+  paymentStatus?: 'paid' | 'due' | 'partial';
   paymentMethod?: PaymentMethod;
-  discountPercentage?: number;
-  discountAmount?: number;
+  paidAmount?: number;
+  dueAmount?: number;
+  discountPercentage?: number | string;
+  discountAmount?: number | string;
+  taxPercentage?: number | string;
+  taxAmount?: number | string;
+  cashRegisterSessionId?: string;
   createdAt: string;
   updatedAt: string;
   branch?: { name: string };
@@ -337,7 +373,10 @@ export interface Sale {
 export interface UpdateSalePayload {
   patientId?: string;
   status?: 'pending' | 'completed' | 'rejected';
+  paymentStatus?: 'paid' | 'due' | 'partial';
   paymentMethod?: PaymentMethod;
+  paidAmount?: number;
+  dueAmount?: number;
   discountPercentage?: number;
   discountAmount?: number;
   saleItems?: SaleItem[];
@@ -355,6 +394,8 @@ export interface SaleItemDetails {
   mrp: number | string;
   quantity: number | string;
   totalPrice: number | string;
+  discountPercentage?: number | string;
+  discountAmount?: number | string;
   batchNumber: string;
   expiryDate: string;
   createdAt: string;
@@ -390,13 +431,7 @@ export interface SaleReturnItemPayload {
 }
 
 export interface SaleReturnPayload {
-  branchId: string;
-  patientId?: string;
-  invoiceNumber?: string;
-  status?: 'pending' | 'completed' | 'rejected';
-  paymentMethod?: PaymentMethod;
-  discountPercentage?: number;
-  discountAmount?: number;
+  saleId: string;
   saleReturnItems: SaleReturnItemPayload[];
 }
 
@@ -479,6 +514,17 @@ export interface CashRegister {
     createdAt: string;
     updatedAt: string;
     cashRegisterSessionId: string;
+  }[];
+  purchases?: {
+    id: string;
+    branchId: string;
+    supplierId: string;
+    poNumber?: string;
+    totalPrice: string | number;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    supplier?: { name: string };
   }[];
 }
 

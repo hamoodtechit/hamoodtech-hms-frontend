@@ -24,6 +24,8 @@ interface CartContentsProps {
     setDiscountFixedAmount: (amount: number) => void
     paymentMethod: PaymentMethod
     setPaymentMethod: (method: PaymentMethod) => void
+    paidAmount: number
+    setPaidAmount: (amount: number) => void
 }
 
 export function CartContents({
@@ -37,7 +39,9 @@ export function CartContents({
     discountFixedAmount,
     setDiscountFixedAmount,
     paymentMethod,
-    setPaymentMethod
+    setPaymentMethod,
+    paidAmount,
+    setPaidAmount
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart } = usePosStore()
@@ -259,6 +263,16 @@ export function CartContents({
                     </div>
                 </div>
 
+                <div className="space-y-2">
+                    <span className="text-sm font-medium">Amount Paid</span>
+                    <Input 
+                        type="number" 
+                        value={paidAmount} 
+                        onChange={(e) => setPaidAmount(Number(e.target.value))}
+                        className="h-10 text-lg font-bold"
+                    />
+                </div>
+
                 <div className="space-y-1.5 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
@@ -279,6 +293,20 @@ export function CartContents({
                         <span>Total</span>
                         <span className="text-primary">{formatCurrency(total)}</span>
                     </div>
+                    
+                    {paidAmount > 0 && (
+                        <>
+                            <Separator className="my-2" />
+                            <div className="flex justify-between items-center">
+                                <span className={paidAmount >= total ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
+                                    {paidAmount >= total ? "Change" : "Due"}
+                                </span>
+                                <span className={`text-lg font-bold ${paidAmount >= total ? "text-emerald-600" : "text-destructive"}`}>
+                                    {formatCurrency(Math.abs(paidAmount - total))}
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
                 
                 <Button 

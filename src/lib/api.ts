@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv.hamoodtech.com/api/v1';
 
@@ -24,19 +25,21 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 errors (e.g., token expired)
+// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token might be invalid or expired. Clear storage.
-      // We avoid window.location.href here to let the auth store/middleware handle redirects if needed
-      // or simply let the error propagate so the UI can react.
-      // However, commonly we might want to clear cookies here.
-      Cookies.remove('accessToken');
-      Cookies.remove('refreshToken');
+    if (error.response) {
+      if (error.response.status === 401) {
+        // Token might be invalid or expired. Clear storage.
+        Cookies.remove('accessToken');
+        Cookies.remove('refreshToken');
+      } else if (error.response.status === 403) {
+        // Permission denied
+        toast.error("You do not have permission to perform this action.");
+      }
     }
     return Promise.reject(error);
   }

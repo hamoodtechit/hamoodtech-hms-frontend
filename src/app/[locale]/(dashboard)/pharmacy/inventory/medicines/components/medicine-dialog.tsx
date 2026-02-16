@@ -2,30 +2,46 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
 import { Medicine, MedicinePayload, PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
-import { Loader2, Plus } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { MasterDataDialog } from "../../../setup/components/master-data-dialog"
+import { ImportMedicinesDialog } from "./import-medicines-dialog"
 
 interface MedicineDialogProps {
   open: boolean
@@ -56,9 +72,13 @@ export function MedicineDialog({
     brandId: "",
     groupId: "",
     medicineUnitId: "",
+    medicineManufacturerId: "",
     unitPrice: 0,
+    purchasePrice: 0,
     salePrice: 0,
     mrp: 0,
+    dosageForm: "",
+    strength: "",
     reorderLevel: 5,
     isActive: true,
     rackNumber: "",
@@ -72,6 +92,7 @@ export function MedicineDialog({
   const [brands, setBrands] = useState<PharmacyEntity[]>([])
   const [groups, setGroups] = useState<PharmacyEntity[]>([])
   const [units, setUnits] = useState<PharmacyEntity[]>([])
+  const [manufacturers, setManufacturers] = useState<PharmacyEntity[]>([])
 
   useEffect(() => {
     if (open) {
@@ -88,9 +109,13 @@ export function MedicineDialog({
           brandId: medicineToEdit.brandId || "",
           groupId: medicineToEdit.groupId || "",
           medicineUnitId: medicineToEdit.medicineUnitId || "",
+          medicineManufacturerId: medicineToEdit.medicineManufacturerId || "",
           unitPrice: Number(medicineToEdit.unitPrice) || 0,
+          purchasePrice: Number(medicineToEdit.purchasePrice) || 0,
           salePrice: Number(medicineToEdit.salePrice) || 0,
           mrp: Number(medicineToEdit.mrp) || 0,
+          dosageForm: medicineToEdit.dosageForm || "",
+          strength: medicineToEdit.strength || "",
           reorderLevel: Number(medicineToEdit.reorderLevel) || 5,
           isActive: medicineToEdit.isActive ?? true,
           rackNumber: medicineToEdit.rackNumber || "",
@@ -110,9 +135,13 @@ export function MedicineDialog({
           brandId: "",
           groupId: "",
           medicineUnitId: "",
+          medicineManufacturerId: "",
           unitPrice: 0,
+          purchasePrice: 0,
           salePrice: 0,
           mrp: 0,
+          dosageForm: "",
+          strength: "",
           reorderLevel: 5,
           isActive: true,
           rackNumber: "",
@@ -127,16 +156,18 @@ export function MedicineDialog({
   const loadMasterData = async () => {
     try {
       setLoading(true)
-      const [catRes, brandRes, groupRes, unitRes] = await Promise.all([
+      const [catRes, brandRes, groupRes, unitRes, manufacturerRes] = await Promise.all([
         pharmacyService.getEntities('categories', { limit: 100 }),
         pharmacyService.getEntities('brands', { limit: 100 }),
         pharmacyService.getEntities('groups', { limit: 100 }),
         pharmacyService.getEntities('units', { limit: 100 }),
+        pharmacyService.getManufacturers({ limit: 100 }),
       ])
       setCategories(catRes.data)
       setBrands(brandRes.data)
       setGroups(groupRes.data)
       setUnits(unitRes.data)
+      setManufacturers(manufacturerRes.data)
     } catch (error) {
       toast.error("Failed to load master data")
     } finally {
@@ -146,7 +177,7 @@ export function MedicineDialog({
 
   const handleInputChange = (field: keyof MedicinePayload, value: any) => {
     let finalValue = value;
-    if (['unitPrice', 'salePrice', 'mrp', 'reorderLevel', 'openingStock'].includes(field)) {
+    if (['unitPrice', 'purchasePrice', 'salePrice', 'mrp', 'reorderLevel', 'openingStock'].includes(field)) {
       finalValue = (value === "" || isNaN(value)) ? 0 : value;
     }
     setFormData(prev => ({ ...prev, [field]: finalValue }))
@@ -154,8 +185,10 @@ export function MedicineDialog({
 
   // Quick Add State
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [quickAddType, setQuickAddType] = useState<PharmacyEntityType>('brands')
   const [quickAddTitle, setQuickAddTitle] = useState("")
+  const [manufacturerSearchOpen, setManufacturerSearchOpen] = useState(false)
 
   const openQuickAdd = (type: PharmacyEntityType, title: string) => {
     setQuickAddType(type)
@@ -168,8 +201,13 @@ export function MedicineDialog({
   }
 
   const handleSave = async () => {
-    if (!formData.name || !formData.genericName || !formData.unit || !formData.categoryId || !formData.brandId) {
-      toast.error("Required fields are missing")
+    if (!formData.name || !formData.dosageForm) {
+      toast.error("Required fields are missing: Name and Dosage Form are required")
+      return
+    }
+
+    if (formData.openingStock && formData.openingStock > 0 && !formData.batchNumber) {
+      toast.error("Batch number is required for opening stock")
       return
     }
 
@@ -184,18 +222,22 @@ export function MedicineDialog({
       // Sanitize payload: convert empty strings to undefined for optional fields
       const payload: any = {
         name: formData.name,
-        genericName: formData.genericName,
+        genericName: formData.genericName || undefined,
         unit: formData.unit || 'Pcs',
-        categoryId: formData.categoryId,
-        brandId: formData.brandId,
+        categoryId: formData.categoryId || undefined,
+        brandId: formData.brandId || undefined,
         nameBangla: formData.nameBangla || undefined,
         genericNameBangla: formData.genericNameBangla || undefined,
         barcode: formData.barcode || undefined,
         groupId: formData.groupId || undefined,
         medicineUnitId: formData.medicineUnitId || undefined,
+        medicineManufacturerId: formData.medicineManufacturerId || undefined,
         unitPrice: Number(formData.unitPrice) || 0,
+        purchasePrice: Number(formData.purchasePrice) || 0,
         salePrice: Number(formData.salePrice) || 0,
         mrp: Number(formData.mrp) || 0,
+        dosageForm: formData.dosageForm || undefined,
+        strength: formData.strength || undefined,
         reorderLevel: Number(formData.reorderLevel) || 10,
         isActive: formData.isActive ?? true,
         rackNumber: formData.rackNumber || undefined,
@@ -246,242 +288,270 @@ export function MedicineDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2 shrink-0">
-          <DialogTitle>{medicineToEdit ? "Edit Medicine" : "Register New Medicine"}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{medicineToEdit ? "Edit Medicine" : "Register New Medicine"}</DialogTitle>
+            {!medicineToEdit && (
+                <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)} className="h-8">
+                    <Loader2 className="mr-2 h-3 w-3 hidden" /> {/* Dummy hidden loader for layout stability if needed, using Upload here */}
+                    <span className="flex items-center">Import Excel</span>
+                </Button>
+            )}
+          </div>
           <DialogDescription>
             Configure medicine details, pricing, and initial stock levels.
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-2 min-h-0 custom-scrollbar">
-          <div className="grid gap-6 pb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Medicine Name (English) *</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name} 
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="e.g. Napa Extend"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nameBangla">Medicine Name (Bangla)</Label>
-                <Input 
-                  id="nameBangla" 
-                  value={formData.nameBangla} 
-                  onChange={(e) => handleInputChange('nameBangla', e.target.value)}
-                  placeholder="যেমন: নাপা এক্সটেন্ড"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="genericName">Generic Name (English) *</Label>
-                <Input 
-                  id="genericName" 
-                  value={formData.genericName} 
-                  onChange={(e) => handleInputChange('genericName', e.target.value)}
-                  placeholder="e.g. Paracetamol"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="genericNameBangla">Generic Name (Bangla)</Label>
-                <Input 
-                  id="genericNameBangla" 
-                  value={formData.genericNameBangla} 
-                  onChange={(e) => handleInputChange('genericNameBangla', e.target.value)}
-                  placeholder="যেমন: প্যারাসিটামল"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="barcode">Barcode</Label>
-                <Input 
-                  id="barcode" 
-                  value={formData.barcode} 
-                  onChange={(e) => handleInputChange('barcode', e.target.value)}
-                  placeholder="Scan or enter barcode"
-                />
-              </div>
-              <div className="space-y-2">
-                 <Label htmlFor="rackNumber">Rack / Self No.</Label>
-                 <Input 
-                   id="rackNumber" 
-                   value={formData.rackNumber} 
-                   onChange={(e) => handleInputChange('rackNumber', e.target.value)}
-                   placeholder="e.g. A-12"
-                 />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-                <Label htmlFor="unit">Base Unit (e.g. Pcs, Strip) *</Label>
-                <Input 
-                  id="unit" 
-                  value={formData.unit} 
-                  onChange={(e) => handleInputChange('unit', e.target.value)}
-                  placeholder="e.g. Pcs"
-                />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Category *</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-1 md:px-2 text-xs text-primary"
-                    onClick={() => openQuickAdd('categories', 'Category')}
-                  >
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">Add New</span>
-                  </Button>
+        <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-6 border-b">
+            <TabsList className="w-full justify-start h-12 bg-transparent p-0 gap-6">
+              <TabsTrigger 
+                value="info" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 h-12"
+              >
+                Product Information
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stock" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 h-12"
+              >
+                Stock & Storage
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 min-h-0 custom-scrollbar">
+            <TabsContent value="info" className="mt-0 space-y-6 pb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Medicine Name (English) *</Label>
+                  <Input 
+                    id="name" 
+                    value={formData.name} 
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="e.g. Napa Extend"
+                  />
                 </div>
-                <Select 
-                  value={formData.categoryId} 
-                  onValueChange={(v) => handleInputChange('categoryId', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Brand *</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-1 md:px-2 text-xs text-primary"
-                    onClick={() => openQuickAdd('brands', 'Brand')}
-                  >
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">Add New</span>
-                  </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="nameBangla">Medicine Name (Bangla)</Label>
+                  <Input 
+                    id="nameBangla" 
+                    value={formData.nameBangla} 
+                    onChange={(e) => handleInputChange('nameBangla', e.target.value)}
+                    placeholder="যেমন: নাপা এক্সটেন্ড"
+                  />
                 </div>
-                <Select 
-                  value={formData.brandId} 
-                  onValueChange={(v) => handleInputChange('brandId', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map(b => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Group</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-1 md:px-2 text-xs text-primary"
-                    onClick={() => openQuickAdd('groups', 'Group')}
-                  >
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">Add New</span>
-                  </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="genericName">Generic Name (English)</Label>
+                  <Input 
+                    id="genericName" 
+                    value={formData.genericName} 
+                    onChange={(e) => handleInputChange('genericName', e.target.value)}
+                    placeholder="e.g. Paracetamol"
+                  />
                 </div>
-                <Select 
-                  value={formData.groupId} 
-                  onValueChange={(v) => handleInputChange('groupId', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groups.map(g => (
-                      <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Medicine Type (Unit)</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-1 md:px-2 text-xs text-primary"
-                    onClick={() => openQuickAdd('units', 'Unit')}
-                  >
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">Add New</span>
-                  </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="genericNameBangla">Generic Name (Bangla)</Label>
+                  <Input 
+                    id="genericNameBangla" 
+                    value={formData.genericNameBangla} 
+                    onChange={(e) => handleInputChange('genericNameBangla', e.target.value)}
+                    placeholder="যেমন: প্যারাসিটামল"
+                  />
                 </div>
-                <Select 
-                  value={formData.medicineUnitId} 
-                  onValueChange={(v) => handleInputChange('medicineUnitId', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Unit Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map(u => (
-                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="unitPrice">Unit Price</Label>
-                <Input 
-                  id="unitPrice" 
-                  type="number" 
-                  value={formData.unitPrice} 
-                  onChange={(e) => handleInputChange('unitPrice', parseFloat(e.target.value))}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="barcode">Barcode</Label>
+                  <Input 
+                    id="barcode" 
+                    value={formData.barcode} 
+                    onChange={(e) => handleInputChange('barcode', e.target.value)}
+                    placeholder="Scan or enter barcode"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="salePrice">Sale Price</Label>
-                <Input 
-                  id="salePrice" 
-                  type="number" 
-                  value={formData.salePrice} 
-                  onChange={(e) => handleInputChange('salePrice', parseFloat(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mrp">MRP</Label>
-                <Input 
-                  id="mrp" 
-                  type="number" 
-                  value={formData.mrp} 
-                  onChange={(e) => handleInputChange('mrp', parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="reorderLevel">Reorder Level</Label>
-                <Input 
-                  id="reorderLevel" 
-                  type="number" 
-                  value={formData.reorderLevel} 
-                  onChange={(e) => handleInputChange('reorderLevel', parseInt(e.target.value))}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Category</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-1 md:px-2 text-xs text-primary"
+                      onClick={() => openQuickAdd('categories', 'Category')}
+                    >
+                      <Plus className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Add New</span>
+                    </Button>
+                  </div>
+                  <Select 
+                    value={formData.categoryId} 
+                    onValueChange={(v) => handleInputChange('categoryId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Unit</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-1 md:px-2 text-xs text-primary"
+                      onClick={() => openQuickAdd('units', 'Unit')}
+                    >
+                      <Plus className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Add New</span>
+                    </Button>
+                  </div>
+                  <Select 
+                    value={formData.medicineUnitId} 
+                    onValueChange={(v) => handleInputChange('medicineUnitId', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Unit Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {units.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 pt-4 md:pt-8">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dosageForm">Dosage Form *</Label>
+                  <Input 
+                    id="dosageForm" 
+                    value={formData.dosageForm} 
+                    onChange={(e) => handleInputChange('dosageForm', e.target.value)}
+                    placeholder="e.g. Tablet, Syrup"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="strength">Strength</Label>
+                  <Input 
+                    id="strength" 
+                    value={formData.strength} 
+                    onChange={(e) => handleInputChange('strength', e.target.value)}
+                    placeholder="e.g. 500mg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Manufacturer</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-1 md:px-2 text-xs text-primary"
+                      onClick={() => openQuickAdd('manufacturers', 'Manufacturer')}
+                    >
+                      <Plus className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Add New</span>
+                    </Button>
+                  </div>
+                <Popover open={manufacturerSearchOpen} onOpenChange={setManufacturerSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={manufacturerSearchOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {formData.medicineManufacturerId
+                        ? manufacturers.find((m) => m.id === formData.medicineManufacturerId)?.name
+                        : "Select Manufacturer..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search manufacturer..." />
+                      <CommandList>
+                        <CommandEmpty>No manufacturer found.</CommandEmpty>
+                        <CommandGroup>
+                          {manufacturers.map((m) => (
+                            <CommandItem
+                              key={m.id}
+                              value={m.name}
+                              onSelect={() => {
+                                handleInputChange('medicineManufacturerId', m.id)
+                                setManufacturerSearchOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.medicineManufacturerId === m.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {m.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="hidden">
+                    <Label htmlFor="unitPrice">Unit Price</Label>
+                    <Input 
+                        id="unitPrice" 
+                        type="number" 
+                        value={formData.unitPrice} 
+                        onChange={(e) => handleInputChange('unitPrice', parseFloat(e.target.value))}
+                    />
+                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="purchasePrice">Purchase Price</Label>
+                  <Input 
+                    id="purchasePrice" 
+                    type="number" 
+                    value={formData.purchasePrice} 
+                    onChange={(e) => handleInputChange('purchasePrice', parseFloat(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salePrice">Sale Price</Label>
+                  <Input 
+                    id="salePrice" 
+                    type="number" 
+                    value={formData.salePrice} 
+                    onChange={(e) => handleInputChange('salePrice', parseFloat(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mrp">MRP</Label>
+                  <Input 
+                    id="mrp" 
+                    type="number" 
+                    value={formData.mrp} 
+                    onChange={(e) => handleInputChange('mrp', parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
                 <Switch 
                   id="isActive" 
                   checked={formData.isActive} 
@@ -489,42 +559,71 @@ export function MedicineDialog({
                 />
                 <Label htmlFor="isActive">Active for Sale</Label>
               </div>
-            </div>
+            </TabsContent>
 
-            {!medicineToEdit && (
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3">Initial Stock (Optional)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="openingStock">Opening Stock</Label>
-                    <Input 
-                      id="openingStock" 
-                      type="number" 
-                      value={formData.openingStock} 
-                      onChange={(e) => handleInputChange('openingStock', parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="batchNumber">Batch Number</Label>
-                    <Input 
-                      id="batchNumber" 
-                      value={formData.batchNumber} 
-                      onChange={(e) => handleInputChange('batchNumber', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input 
-                      id="expiryDate" 
-                      type="date" 
-                      value={formData.expiryDate} 
-                      onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                    />
-                  </div>
+            <TabsContent value="stock" className="mt-0 space-y-6 pb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                   <Label htmlFor="rackNumber">Rack / Self No.</Label>
+                   <Input 
+                     id="rackNumber" 
+                     value={formData.rackNumber} 
+                     onChange={(e) => handleInputChange('rackNumber', e.target.value)}
+                     placeholder="e.g. A-12"
+                   />
                 </div>
               </div>
-            )}
+
+              {!medicineToEdit && (
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Opening Stock Details</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="openingStock">Opening Stock (Qty)</Label>
+                      <Input 
+                        id="openingStock" 
+                        type="number" 
+                        value={formData.openingStock} 
+                        onChange={(e) => handleInputChange('openingStock', parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="batchNumber">
+                          Batch Number
+                          {formData.openingStock && formData.openingStock > 0 ? <span className="text-destructive ml-1">*</span> : ""}
+                      </Label>
+                      <Input 
+                        id="batchNumber" 
+                        value={formData.batchNumber} 
+                        onChange={(e) => handleInputChange('batchNumber', e.target.value)}
+                        required={!!(formData.openingStock && formData.openingStock > 0)}
+                        placeholder="Batch Number"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expiryDate">Expiry Date</Label>
+                      <Input 
+                        id="expiryDate" 
+                        type="date" 
+                        value={formData.expiryDate} 
+                        onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {medicineToEdit && (
+                <div className="p-8 text-center border-2 border-dashed rounded-lg bg-muted/50">
+                  <p className="text-sm text-muted-foreground">
+                    Opening stock can only be set during medicine registration. 
+                    Use the Stock In/Out or Purchase features to update current inventory levels.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
           </div>
+        </Tabs>
         </div>
 
         <DialogFooter className="p-6 pt-2 border-t shrink-0">
@@ -544,6 +643,19 @@ export function MedicineDialog({
         onSuccess={handleQuickAddSuccess}
         type={quickAddType}
         title={quickAddTitle}
+      />
+      
+      <ImportMedicinesDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={() => {
+            onSuccess(); // Refresh list
+            onOpenChange(false); // Close this dialog too? Maybe just refresh master data?
+            // User probably wants to see the list. So let's close the create dialog?
+            // Actually better to just refresh the list in background if possible, but here onSuccess implies checking list.
+            // Let's close the create dialog if import is successful so they can see the list.
+             onOpenChange(false);
+        }}
       />
     </Dialog>
   )

@@ -2,54 +2,60 @@
 
 import { BatchList } from "@/components/pharmacy/inventory/batch-list"
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
-import { Medicine, PharmacyMeta } from "@/types/pharmacy"
+import { Medicine, PharmacyEntity, PharmacyMeta } from "@/types/pharmacy"
 import {
-    ArrowLeft,
-    Edit,
-    Eye,
-    Loader2,
-    MoreHorizontal,
-    Plus,
-    RefreshCw,
-    Search,
-    Trash2
+  ArrowLeft,
+  Edit,
+  Eye,
+  Filter,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Upload
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { ImportMedicinesDialog } from "./components/import-medicines-dialog"
 import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 
@@ -63,6 +69,7 @@ export default function MedicinesPage() {
   const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
@@ -71,13 +78,62 @@ export default function MedicinesPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [selectedMedicineForStock, setSelectedMedicineForStock] = useState<Medicine | null>(null)
 
+  // Filter State
+  const [filterName, setFilterName] = useState("")
+  const [filterGeneric, setFilterGeneric] = useState("")
+  const [filterBarcode, setFilterBarcode] = useState("")
+  const [filterCategoryId, setFilterCategoryId] = useState("all")
+  const [filterBrandId, setFilterBrandId] = useState("all")
+  const [filterGroupId, setFilterGroupId] = useState("all")
+  const [filterManufacturerId, setFilterManufacturerId] = useState("all")
+  const [filterDosageForm, setFilterDosageForm] = useState("")
+  const [filterStrength, setFilterStrength] = useState("")
+  const [filterActive, setFilterActive] = useState<boolean | undefined>(undefined)
+
+  // Master Data State
+  const [categories, setCategories] = useState<PharmacyEntity[]>([])
+  const [brands, setBrands] = useState<PharmacyEntity[]>([])
+  const [groups, setGroups] = useState<PharmacyEntity[]>([])
+  const [manufacturers, setManufacturers] = useState<PharmacyEntity[]>([])
+
+  useEffect(() => {
+    loadMasterData()
+  }, [])
+
+  const loadMasterData = async () => {
+    try {
+        const [catRes, brandRes, groupRes, manufacturerRes] = await Promise.all([
+            pharmacyService.getEntities('categories', { limit: 100 }),
+            pharmacyService.getEntities('brands', { limit: 100 }),
+            pharmacyService.getEntities('groups', { limit: 100 }),
+            pharmacyService.getManufacturers({ limit: 100 }),
+        ])
+        setCategories(catRes.data)
+        setBrands(brandRes.data)
+        setGroups(groupRes.data)
+        setManufacturers(manufacturerRes.data)
+    } catch (error) {
+        console.error("Failed to load master data", error)
+    }
+  }
+
   const loadMedicines = async () => {
     try {
       setLoading(true)
       const response = await pharmacyService.getMedicines({ 
         page, 
         limit: 10, 
-        search 
+        search,
+        name: filterName || undefined,
+        genericName: filterGeneric || undefined,
+        barcode: filterBarcode || undefined,
+        categoryId: filterCategoryId === 'all' ? undefined : filterCategoryId,
+        brandId: filterBrandId === 'all' ? undefined : filterBrandId,
+        groupId: filterGroupId === 'all' ? undefined : filterGroupId,
+        medicineManufacturerId: filterManufacturerId === 'all' ? undefined : filterManufacturerId,
+        dosageForm: filterDosageForm || undefined,
+        strength: filterStrength || undefined,
+        isActive: filterActive
       })
       setMedicines(response.data)
       setMeta(response.meta)
@@ -88,13 +144,42 @@ export default function MedicinesPage() {
     }
   }
 
+  const resetFilters = () => {
+    setFilterName("")
+    setFilterGeneric("")
+    setFilterBarcode("")
+    setFilterCategoryId("all")
+    setFilterBrandId("all")
+    setFilterGroupId("all")
+    setFilterManufacturerId("all")
+    setFilterDosageForm("")
+    setFilterStrength("")
+    setFilterActive(undefined)
+    setSearch("")
+    setPage(1)
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       loadMedicines()
     }, 500)
     return () => clearTimeout(timer)
-  }, [page, search])
+  }, [
+    page, 
+    search, 
+    filterName, 
+    filterGeneric, 
+    filterBarcode, 
+    filterCategoryId, 
+    filterBrandId, 
+    filterGroupId, 
+    filterManufacturerId, 
+    filterDosageForm, 
+    filterStrength, 
+    filterActive
+  ])
 
+  // ... existing handlers ...
   const handleCreate = () => {
     setEditingMedicine(null)
     setDialogOpen(true)
@@ -145,12 +230,15 @@ export default function MedicinesPage() {
         </div>
 
         {hasPermission('medicine:create') && (
-            <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Add Medicine
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" /> Import
+                </Button>
+                <Button onClick={handleCreate}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Medicine
+                </Button>
+            </div>
         )}
-
-
       </div>
       <Card>
         <CardHeader className="pb-3">
@@ -161,17 +249,109 @@ export default function MedicinesPage() {
                 A list of all registered medicines in the system.
               </CardDescription>
             </div>
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, generic, or barcode..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setPage(1)
-                }}
-              />
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:w-60">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Quick search..."
+                  className="pl-9"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPage(1)
+                  }}
+                />
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                        <Filter className="h-4 w-4" />
+                        Filters
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[800px] p-4" align="end">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium leading-none">Filter Medicines</h4>
+                            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-auto p-0 text-muted-foreground hover:text-primary">
+                                Reset Filters
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="filName">Medicine Name</Label>
+                                <Input id="filName" value={filterName} onChange={e => setFilterName(e.target.value)} placeholder="Filter by name" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="filGeneric">Generic Name</Label>
+                                <Input id="filGeneric" value={filterGeneric} onChange={e => setFilterGeneric(e.target.value)} placeholder="Filter by generic" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="filBarcode">Barcode</Label>
+                                <Input id="filBarcode" value={filterBarcode} onChange={e => setFilterBarcode(e.target.value)} placeholder="Filter by barcode" />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Brand</Label>
+                                <Select value={filterBrandId} onValueChange={setFilterBrandId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Brands" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Brands</SelectItem>
+                                        {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Group</Label>
+                                <Select value={filterGroupId} onValueChange={setFilterGroupId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Groups" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Groups</SelectItem>
+                                        {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="filDosage">Dosage Form</Label>
+                                <Input id="filDosage" value={filterDosageForm} onChange={e => setFilterDosageForm(e.target.value)} placeholder="e.g. Tablet" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="filStrength">Strength</Label>
+                                <Input id="filStrength" value={filterStrength} onChange={e => setFilterStrength(e.target.value)} placeholder="e.g. 500mg" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Manufacturer</Label>
+                                <Select value={filterManufacturerId} onValueChange={setFilterManufacturerId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All Manufacturers" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Manufacturers</SelectItem>
+                                        {manufacturers.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardHeader>
@@ -201,7 +381,7 @@ export default function MedicinesPage() {
                 ) : medicines.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                      No medicines found.
+                      No medicines found matching filters.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -327,6 +507,12 @@ export default function MedicinesPage() {
         onOpenChange={setDialogOpen} 
         onSuccess={loadMedicines}
         medicineToEdit={editingMedicine}
+      />
+
+      <ImportMedicinesDialog 
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen} 
+        onSuccess={loadMedicines}
       />
 
       <MedicineDetailsDialog 

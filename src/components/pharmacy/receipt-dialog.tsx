@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -91,11 +91,27 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                {transaction.tax > 0 && (
                  <div className="flex justify-between text-sm">
                    <span className="text-muted-foreground">
-                     VAT {pharmacy?.vatPercentage ? `(${pharmacy.vatPercentage}%)` : ''}
+                     VAT {transaction.taxPercentage ? `(${transaction.taxPercentage}%)` : ''}
                    </span>
                    <span>{formatCurrency(transaction.tax)}</span>
                  </div>
                )}
+
+               <Separator className="my-1" />
+
+               {/* Paid & Due */}
+               <div className="space-y-1 pt-1">
+                   <div className="flex justify-between text-xs">
+                       <span className="text-muted-foreground">Paid Amount</span>
+                       <span className="font-medium">{formatCurrency(transaction.paidAmount || 0)}</span>
+                   </div>
+                   {Number(transaction.dueAmount) > 0 && (
+                       <div className="flex justify-between text-xs text-destructive">
+                           <span className="text-muted-foreground">Due Amount</span>
+                           <span className="font-medium">{formatCurrency(transaction.dueAmount || 0)}</span>
+                       </div>
+                   )}
+               </div>
                
                <Separator className="my-2" />
                

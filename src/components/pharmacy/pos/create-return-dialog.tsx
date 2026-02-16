@@ -98,13 +98,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
       })
 
       const payload: SaleReturnPayload = {
-        branchId: sale.branchId,
-        // Only include patientId if it exists and looks like a valid UUID
-        ...(sale.patientId && sale.patientId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) 
-          ? { patientId: sale.patientId } 
-          : {}),
-        invoiceNumber: sale.invoiceNumber,
-        status: 'pending' as const,
+        saleId: sale.id,
         saleReturnItems
       }
 

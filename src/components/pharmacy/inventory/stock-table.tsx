@@ -12,6 +12,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
@@ -26,7 +28,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
 import { PharmacyMeta, Stock } from "@/types/pharmacy"
-import { Eye, MoreHorizontal, Search } from "lucide-react"
+import { Eye, Filter, MoreHorizontal, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -41,6 +43,10 @@ export function StockTable() {
   const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   const [detailsItem, setDetailsItem] = useState<any | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+
+  // Filter State
+  const [filterBatch, setFilterBatch] = useState("")
+  const [filterRack, setFilterRack] = useState("")
 
   const handleViewDetails = (item: Stock) => {
     // Construct a proper Medicine object from Stock data
@@ -76,7 +82,9 @@ export function StockTable() {
         page,
         limit: 10,
         search: debouncedSearch,
-        branchId: activeStoreId || undefined
+        branchId: activeStoreId || undefined,
+        batchNumber: filterBatch || undefined,
+        rackNumber: filterRack || undefined
       })
       if (response.success) {
         setStocks(response.data)
@@ -89,24 +97,58 @@ export function StockTable() {
     }
   }
 
+  const resetFilters = () => {
+    setFilterBatch("")
+    setFilterRack("")
+    setSearch("")
+    setPage(1)
+  }
+
   useEffect(() => {
     loadStock()
-  }, [page, debouncedSearch, activeStoreId])
+  }, [page, debouncedSearch, activeStoreId, filterBatch, filterRack])
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-                placeholder="Search stocks (SKU, batch, medicine)..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => {
-                    setSearch(e.target.value)
-                    setPage(1)
-                }}
-            />
+        <div className="flex items-center gap-2 flex-1 max-w-lg">
+            <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search stocks (SKU, batch, medicine)..."
+                    className="pl-9"
+                    value={search}
+                    onChange={(e) => {
+                        setSearch(e.target.value)
+                        setPage(1)
+                    }}
+                />
+            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <Filter className="h-4 w-4" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="start">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium leading-none">Filter Stock</h4>
+                            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-auto p-0 text-muted-foreground hover:text-primary">
+                                Reset
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="filBatch">Batch Number</Label>
+                            <Input id="filBatch" value={filterBatch} onChange={e => setFilterBatch(e.target.value)} placeholder="Filter by batch" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="filRack">Rack Number</Label>
+                            <Input id="filRack" value={filterRack} onChange={e => setFilterRack(e.target.value)} placeholder="Filter by rack" />
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
         </div>
       </div>
 

@@ -22,21 +22,33 @@ import {
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/pharmacy"
-import { ChevronLeft, ChevronRight, Eye, History, Printer, RotateCcw, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 
+type UnifiedTransaction = {
+    id: string;
+    type: 'sale' | 'purchase';
+    number: string;
+    party: string;
+    total: number;
+    status: string;
+    date: string;
+    original: any;
+}
+
 export function TransactionHistory() {
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebounce(search, 500)
   const { formatCurrency } = useCurrency()
-  const [sales, setSales] = useState<Sale[]>([])
+  const [transactions, setTransactions] = useState<UnifiedTransaction[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -47,26 +59,63 @@ export function TransactionHistory() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
 
-  const fetchSales = async () => {
+  const fetchTransactions = async () => {
     if (!activeStoreId) return
     
     try {
         setLoading(true)
-        const response = await pharmacyService.getSales({
-            branchId: activeStoreId,
-            limit: 10,
-            page,
-            // Assuming search logic is handled or we rely on page/sort for now.
-            // If backend supports search param in future, we add: search: debouncedSearch
-        })
-        if (response.success) {
-            setSales(response.data.sales)
-            if (response.data.pagination) {
-                setTotalPages(response.data.pagination.totalPages)
-            }
-        }
+        // We fetch both sales and purchases. 
+        // For unified pagination, it's complex, so we'll fetch a balanced set or just first page for now.
+        // User's request implies showing "history", so merging latest of both is appropriate.
+        const [salesRes, purchasesRes] = await Promise.all([
+            pharmacyService.getSales({
+                branchId: activeStoreId,
+                limit: 10,
+                page,
+            }),
+            pharmacyService.getPurchases({
+                branchId: activeStoreId,
+                limit: 10,
+                page,
+            })
+        ])
+
+        const formattedSales: UnifiedTransaction[] = (salesRes.data.sales || []).map(s => ({
+            id: s.id,
+            type: 'sale',
+            number: s.invoiceNumber,
+            party: s.patient?.name || 'Walk-in',
+            total: Number(s.totalPrice || 0),
+            status: s.status,
+            date: s.createdAt,
+            original: s
+        }))
+
+        const formattedPurchases: UnifiedTransaction[] = (purchasesRes.data.purchases || []).map(p => ({
+            id: p.id,
+            type: 'purchase',
+            number: p.poNumber || 'PO-N/A',
+            party: p.supplier?.name || 'Unknown Supplier',
+            total: Number(p.totalPrice || 0),
+            status: p.status,
+            date: p.createdAt,
+            original: p
+        }))
+
+        const combined = [...formattedSales, ...formattedPurchases]
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        
+        setTransactions(combined)
+        
+        // Approximate total pages based on the larger record set
+        const maxPages = Math.max(
+            salesRes.data.pagination?.totalPages || 1,
+            purchasesRes.data.pagination?.totalPages || 1
+        )
+        setTotalPages(maxPages)
+
     } catch (error) {
-        console.error("Failed to fetch sales", error)
+        console.error("Failed to fetch transactions", error)
         toast.error("Failed to load transaction history")
     } finally {
         setLoading(false)
@@ -75,11 +124,16 @@ export function TransactionHistory() {
 
   useEffect(() => {
     if (isOpen && activeStoreId) {
-        fetchSales()
+        fetchTransactions()
     }
   }, [isOpen, activeStoreId, debouncedSearch, page])
 
-  const handleReprint = (sale: Sale) => {
+  const handleReprint = (tx: UnifiedTransaction) => {
+    if (tx.type !== 'sale') {
+        toast.info("Purchase order printing integration coming soon")
+        return
+    }
+    const sale = tx.original as Sale
     // Calculate breakdown
     const subtotal = sale.saleItems.reduce((sum, item) => sum + Number(item.totalPrice), 0)
     const discount = Number(sale.discountAmount) || 0
@@ -169,13 +223,21 @@ export function TransactionHistory() {
     }
   }
 
-  const handleRefund = (sale: Sale) => {
-    setSelectedSale(sale)
+  const handleRefund = (tx: UnifiedTransaction) => {
+    if (tx.type !== 'sale') {
+        toast.info("Purchase returns are managed in the Inventory module")
+        return
+    }
+    setSelectedSale(tx.original)
     setReturnDialogOpen(true)
   }
 
-  const handleViewDetails = (sale: Sale) => {
-    setSelectedSaleForDetails(sale)
+  const handleViewDetails = (tx: UnifiedTransaction) => {
+    if (tx.type !== 'sale') {
+        toast.info("Detailed Purchase view coming to POS soon. Please use Inventory module.")
+        return
+    }
+    setSelectedSaleForDetails(tx.original)
     setDetailsDialogOpen(true)
   }
 
@@ -185,14 +247,14 @@ export function TransactionHistory() {
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="h-9">
           <History className="mr-2 h-4 w-4" />
-          Recent Sales
+          Register History
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
           <SheetTitle>Transaction History</SheetTitle>
           <SheetDescription>
-            View recent sales, reprint receipts, or process refunds.
+            View latest sales and purchases recorded in the system.
           </SheetDescription>
         </SheetHeader>
         
@@ -200,7 +262,7 @@ export function TransactionHistory() {
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
-                    placeholder="Search by Invoice..." 
+                    placeholder="Search by Invoice/PO..." 
                     className="pl-9" 
                     value={search}
                     onChange={(e) => {
@@ -214,8 +276,8 @@ export function TransactionHistory() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Invoice</TableHead>
-                            <TableHead>Customer</TableHead>
+                            <TableHead>Type/ID</TableHead>
+                            <TableHead>Party</TableHead>
                             <TableHead>Total</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -241,30 +303,41 @@ export function TransactionHistory() {
                                     </TableCell>
                                 </TableRow>
                             ))
-                        ) : sales.length === 0 ? (
+                        ) : transactions.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                                     No transactions found.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            sales.map((sale) => (
-                                <TableRow key={sale.id}>
+                            transactions.map((tx) => (
+                                <TableRow key={`${tx.type}-${tx.id}`}>
                                     <TableCell className="font-medium">
-                                        {sale.invoiceNumber}
+                                        <div className="flex items-center gap-2">
+                                            {tx.type === 'sale' ? <ShoppingCart className="h-3 w-3 text-emerald-500" /> : <ShoppingBag className="h-3 w-3 text-orange-500" />}
+                                            {tx.number}
+                                        </div>
                                         <div className="text-xs text-muted-foreground">
-                                            {new Date(sale.createdAt).toLocaleDateString()}
+                                            {new Date(tx.date).toLocaleDateString()}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        {sale.patient?.name || 'Walk-in'}
+                                        {tx.party}
                                         <div className="mt-1">
-                                            <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'} className="text-[10px] h-5">
-                                                {sale.status}
+                                            <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'} className={cn(
+                                                "text-[10px] h-5 capitalize",
+                                                tx.type === 'purchase' && tx.status === 'completed' && "bg-orange-500 hover:bg-orange-600"
+                                            )}>
+                                                {tx.type}: {tx.status}
                                             </Badge>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{formatCurrency(sale.totalPrice)}</TableCell>
+                                    <TableCell className={cn(
+                                        "font-semibold",
+                                        tx.type === 'sale' ? "text-emerald-600" : "text-orange-600"
+                                    )}>
+                                        {tx.type === 'sale' ? '+' : '-'}{formatCurrency(tx.total)}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
                                             <Button 
@@ -272,7 +345,8 @@ export function TransactionHistory() {
                                                 size="icon" 
                                                 className="h-8 w-8" 
                                                 title="View Details"
-                                                onClick={() => handleViewDetails(sale)}
+                                                onClick={() => handleViewDetails(tx)}
+                                                disabled={tx.type !== 'sale'}
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
@@ -281,7 +355,8 @@ export function TransactionHistory() {
                                                 size="icon" 
                                                 className="h-8 w-8" 
                                                 title="Reprint Receipt"
-                                                onClick={() => handleReprint(sale)}
+                                                onClick={() => handleReprint(tx)}
+                                                disabled={tx.type !== 'sale'}
                                             >
                                                 <Printer className="h-4 w-4" />
                                             </Button>
@@ -290,7 +365,8 @@ export function TransactionHistory() {
                                                 size="icon" 
                                                 className="h-8 w-8 text-destructive hover:text-destructive" 
                                                 title="Refund"
-                                                onClick={() => handleRefund(sale)}
+                                                onClick={() => handleRefund(tx)}
+                                                disabled={tx.type !== 'sale'}
                                             >
                                                 <RotateCcw className="h-4 w-4" />
                                             </Button>
@@ -310,7 +386,10 @@ export function TransactionHistory() {
                          <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            onClick={() => {
+                                setPage(p => Math.max(1, p - 1))
+                                fetchTransactions()
+                            }}
                             disabled={page === 1 || loading}
                          >
                              <ChevronLeft className="h-4 w-4" />
@@ -318,7 +397,10 @@ export function TransactionHistory() {
                          <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            onClick={() => {
+                                setPage(p => Math.min(totalPages, p + 1))
+                                fetchTransactions()
+                            }}
                             disabled={page === totalPages || loading}
                          >
                              <ChevronRight className="h-4 w-4" />
@@ -335,7 +417,7 @@ export function TransactionHistory() {
         onOpenChange={setReturnDialogOpen}
         sale={selectedSale}
         onSuccess={() => {
-            fetchSales()
+            fetchTransactions()
         }}
     />
 
@@ -344,7 +426,7 @@ export function TransactionHistory() {
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
         onSuccess={() => {
-            fetchSales()
+            fetchTransactions()
             setDetailsDialogOpen(false)
         }}
     />
