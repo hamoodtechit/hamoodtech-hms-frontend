@@ -71,6 +71,18 @@ export function SupplierDialog({
       toast.error("Supplier name is required")
       return
     }
+    if (!formData.address) {
+      toast.error("Address is required")
+      return
+    }
+    if (!formData.phone) {
+      toast.error("Phone number is required")
+      return
+    }
+    if (!formData.email) {
+      toast.error("Email is required")
+      return
+    }
 
     try {
       setSaving(true)
@@ -120,7 +132,7 @@ export function SupplierDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="s-address">Address</Label>
+              <Label htmlFor="s-address">Address *</Label>
               <Input
                 id="s-address"
                 value={formData.address}
@@ -129,7 +141,7 @@ export function SupplierDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="s-phone">Phone</Label>
+              <Label htmlFor="s-phone">Phone *</Label>
               <Input
                 id="s-phone"
                 value={formData.phone}
@@ -138,7 +150,7 @@ export function SupplierDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="s-email">Email</Label>
+              <Label htmlFor="s-email">Email *</Label>
               <Input
                 id="s-email"
                 type="email"

@@ -24,7 +24,10 @@ export interface Transaction {
     total: number
     subtotal: number
     tax: number
+    taxPercentage?: number
     discount: number
+    paidAmount?: number
+    dueAmount?: number
     status: 'Completed' | 'Refunded'
     paymentMethod: PaymentMethod
 }

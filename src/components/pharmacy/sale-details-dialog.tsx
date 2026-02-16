@@ -3,30 +3,30 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -73,8 +73,8 @@ export function SaleDetailsDialog({
     if (sale) {
       setStatus(sale.status)
       setPaymentMethod(sale.paymentMethod || 'cash')
-      setDiscountPercentage(sale.discountPercentage || 0)
-      setDiscountAmount(sale.discountAmount || 0)
+      setDiscountPercentage(Number(sale.discountPercentage) || 0)
+      setDiscountAmount(Number(sale.discountAmount) || 0)
       setIsEditMode(false)
     }
   }, [sale])
@@ -107,8 +107,8 @@ export function SaleDetailsDialog({
     if (sale) {
       setStatus(sale.status)
       setPaymentMethod(sale.paymentMethod || 'cash')
-      setDiscountPercentage(sale.discountPercentage || 0)
-      setDiscountAmount(sale.discountAmount || 0)
+      setDiscountPercentage(Number(sale.discountPercentage) || 0)
+      setDiscountAmount(Number(sale.discountAmount) || 0)
     }
     setIsEditMode(false)
   }
@@ -157,6 +157,12 @@ export function SaleDetailsDialog({
               <p className="font-medium">{sale.patient?.name || 'Walk-in'}</p>
             </div>
             <div>
+              <p className="text-sm text-muted-foreground">Session ID</p>
+              <p className="font-mono text-xs truncate max-w-[150px]" title={sale.cashRegisterSessionId}>
+                {sale.cashRegisterSessionId || 'N/A'}
+              </p>
+            </div>
+            <div>
               <p className="text-sm text-muted-foreground">Status</p>
               {!isEditMode ? (
                 <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'}>
@@ -195,7 +201,14 @@ export function SaleDetailsDialog({
                 <TableBody>
                   {sale.saleItems.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.itemName}</TableCell>
+                      <TableCell className="font-medium">
+                        <div>{item.itemName}</div>
+                        {(Number(item.discountAmount) > 0 || Number(item.discountPercentage) > 0) && (
+                          <div className="text-[10px] text-emerald-600">
+                            Disc: {Number(item.discountPercentage) > 0 ? `${item.discountPercentage}%` : formatCurrency(Number(item.discountAmount))}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
                       <TableCell className="text-right">{item.quantity}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.totalPrice)}</TableCell>
@@ -281,14 +294,30 @@ export function SaleDetailsDialog({
             </div>
             {(discountPercentage > 0 || discountAmount > 0) && (
               <div className="flex justify-between text-sm text-emerald-600">
-                <span>Discount {discountPercentage > 0 ? `(${discountPercentage}%)` : ''}</span>
+                <span>Sale Discount {discountPercentage > 0 ? `(${discountPercentage}%)` : ''}</span>
                 <span>-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            {Number(sale.taxAmount) > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax ({sale.taxPercentage}%)</span>
+                <span>{formatCurrency(sale.taxAmount || 0)}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span className="text-primary">{formatCurrency(total)}</span>
+              <span className="text-primary">{formatCurrency(sale.totalPrice)}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-dashed">
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Paid Amount</span>
+                    <span className="font-semibold text-emerald-600">{formatCurrency(sale.paidAmount || 0)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Due Amount</span>
+                    <span className="font-semibold text-destructive">{formatCurrency(sale.dueAmount || 0)}</span>
+                </div>
             </div>
           </div>
         </div>

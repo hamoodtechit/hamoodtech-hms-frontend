@@ -87,6 +87,19 @@ export function PatientSearch({ selectedPatient, onSelect }: PatientSearchProps)
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <Command shouldFilter={false}>
+          <div className="p-2 border-b">
+            <Button 
+                variant="outline" 
+                className="w-full justify-start font-normal text-primary hover:text-primary hover:bg-primary/5 border-dashed" 
+                size="sm"
+                onClick={() => {
+                    setOpen(false)
+                    setCreateDialogOpen(true)
+                }}
+            >
+                <Plus className="mr-2 h-4 w-4" /> Create New Patient
+            </Button>
+          </div>
           <CommandInput 
             placeholder="Search patient by name or phone..." 
             value={query}
@@ -111,20 +124,7 @@ export function PatientSearch({ selectedPatient, onSelect }: PatientSearchProps)
                       </div>
                   </div>
               ) : (
-                <div className="p-2">
-                    <p className="text-sm text-center text-muted-foreground py-2">No patient found.</p>
-                    <Button 
-                        variant="outline" 
-                        className="w-full" 
-                        size="sm"
-                        onClick={() => {
-                            setOpen(false)
-                            setCreateDialogOpen(true)
-                        }}
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Create New Patient
-                    </Button>
-                </div>
+                <p className="text-sm text-center text-muted-foreground py-6">No patient found.</p>
               )}
           </CommandEmpty>
           <CommandGroup>

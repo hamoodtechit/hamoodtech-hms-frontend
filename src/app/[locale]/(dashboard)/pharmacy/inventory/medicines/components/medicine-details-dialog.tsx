@@ -7,21 +7,21 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { Medicine } from "@/types/pharmacy"
@@ -46,7 +46,7 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
         setFullMedicine(null) 
         
         pharmacyService.getMedicine(medicine.id)
-            .then((res) => {
+            .then(async (res) => {
                 // The API returns { data: Medicine }, so we need res.data
                 setFullMedicine(res.data)
             })
@@ -65,8 +65,8 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
   const displayMedicine = fullMedicine || medicine
 
   // Calculate totals
-  const totalStock = displayMedicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || Number(displayMedicine.stock) || 0
-  const stockValue = totalStock * Number(displayMedicine.unitPrice)
+  const totalStock = displayMedicine.stocks?.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0) || (Number(displayMedicine.stock) || 0)
+  const stockValue = totalStock * (Number(displayMedicine.unitPrice) || 0)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,13 +96,29 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-2">
           <div className="p-3 bg-muted/30 rounded-lg space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Tag className="h-3.5 w-3.5" /> Category
             </div>
             <div className="font-medium text-sm truncate" title={displayMedicine.category?.name}>
               {displayMedicine.category?.name || "N/A"}
+            </div>
+          </div>
+          <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Activity className="h-3.5 w-3.5" /> Strength
+            </div>
+            <div className="font-medium text-sm truncate">
+              {displayMedicine.strength || "N/A"}
+            </div>
+          </div>
+          <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Archive className="h-3.5 w-3.5" /> Dosage Form
+            </div>
+            <div className="font-medium text-sm truncate">
+              {displayMedicine.dosageForm || "N/A"}
             </div>
           </div>
           <div className="p-3 bg-muted/30 rounded-lg space-y-1">
@@ -122,11 +138,27 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
             </div>
           </div>
           <div className="p-3 bg-muted/30 rounded-lg space-y-1">
-             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Barcode className="h-3.5 w-3.5" /> Barcode
             </div>
             <div className="font-medium text-sm truncate font-mono">
               {displayMedicine.barcode || "N/A"}
+            </div>
+          </div>
+          <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Box className="h-3.5 w-3.5" /> Manufacturer
+            </div>
+            <div className="font-medium text-sm truncate" title={displayMedicine.medicineManufacturer?.name}>
+              {displayMedicine.medicineManufacturer?.name || "N/A"}
+            </div>
+          </div>
+          <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Layers className="h-3.5 w-3.5" /> Group
+            </div>
+            <div className="font-medium text-sm truncate" title={displayMedicine.group?.name}>
+              {displayMedicine.group?.name || "N/A"}
             </div>
           </div>
         </div>
@@ -138,15 +170,15 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
            <div className="grid grid-cols-3 gap-4 border rounded-lg p-4">
               <div>
                  <div className="text-xs text-muted-foreground mb-1">Unit Price (Buy)</div>
-                 <div className="font-semibold">{formatCurrency(displayMedicine.unitPrice)}</div>
+                 <div className="font-semibold">{formatCurrency(Number(displayMedicine.unitPrice) || 0)}</div>
               </div>
               <div>
                  <div className="text-xs text-muted-foreground mb-1">MRP</div>
-                 <div className="font-semibold">{formatCurrency(displayMedicine.mrp)}</div>
+                 <div className="font-semibold">{formatCurrency(Number(displayMedicine.mrp) || 0)}</div>
               </div>
               <div>
                  <div className="text-xs text-muted-foreground mb-1">Total Value</div>
-                 <div className="font-semibold text-emerald-600">{formatCurrency(stockValue)}</div>
+                 <div className="font-semibold text-emerald-600">{formatCurrency(stockValue || 0)}</div>
               </div>
            </div>
         </div>

@@ -46,6 +46,9 @@ export default function PharmacySetupPage() {
               <TabsTrigger value="units" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
                 <Pill className="mr-2 h-4 w-4" /> Units
               </TabsTrigger>
+              <TabsTrigger value="manufacturers" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                <Database className="mr-2 h-4 w-4" /> Manufacturers
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="brands" className="mt-0 animate-in fade-in-50">
@@ -62,6 +65,10 @@ export default function PharmacySetupPage() {
             
             <TabsContent value="units" className="mt-0 animate-in fade-in-50">
               <MasterDataTable type="units" title="Unit" />
+            </TabsContent>
+
+            <TabsContent value="manufacturers" className="mt-0 animate-in fade-in-50">
+              <MasterDataTable type="manufacturers" title="Manufacturer" />
             </TabsContent>
           </Tabs>
         </CardContent>
