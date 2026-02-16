@@ -46,14 +46,27 @@ export function SetupForm() {
     setIsLoading(true)
 
     try {
-      // API expects: hospitalName, hospitalAddress, hospitalPhone, adminUsername, adminEmail, adminPassword
+      // API expects nested structure: hospital, settings, admin
       await authService.setupSystem({
-          hospitalName: formData.hospitalName,
-          hospitalAddress: formData.hospitalAddress,
-          hospitalPhone: formData.hospitalPhone,
-          adminUsername: formData.adminUsername,
-          adminEmail: formData.adminEmail,
-          adminPassword: formData.adminPassword
+          hospital: {
+            name: formData.hospitalName,
+            address: formData.hospitalAddress,
+            phone: formData.hospitalPhone,
+            email: formData.adminEmail, // Using admin email as hospital email
+          },
+          settings: {
+            currency: 'BDT',
+            currencySymbol: '৳',
+            timezone: 'Asia/Dhaka',
+            vatPercentage: 5,
+            lowStockThreshold: 10,
+          },
+          admin: {
+            username: formData.adminUsername,
+            email: formData.adminEmail,
+            password: formData.adminPassword,
+            fullName: "Super Admin",
+          }
       })
 
       toast.success("System setup complete! Please login.")

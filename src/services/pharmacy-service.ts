@@ -22,6 +22,7 @@ import {
     Sale,
     SaleListResponse,
     SalePayload,
+    SaleReturnListResponse,
     SaleReturnPayload,
     Stock,
     StockAdjustmentPayload,
