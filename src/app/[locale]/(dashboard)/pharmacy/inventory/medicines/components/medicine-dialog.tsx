@@ -2,24 +2,25 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { pharmacyService } from "@/services/pharmacy-service"
+import { useStoreContext } from "@/store/use-store-context"
 import { Medicine, MedicinePayload, PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
 import { Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -39,6 +40,7 @@ export function MedicineDialog({
   onSuccess,
   medicineToEdit
 }: MedicineDialogProps) {
+  const { activeStoreId } = useStoreContext()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   
@@ -204,6 +206,9 @@ export function MedicineDialog({
         if (formData.openingStock && formData.openingStock > 0) {
           payload.openingStock = Number(formData.openingStock);
           payload.batchNumber = formData.batchNumber || undefined;
+          if (activeStoreId) {
+            payload.branchId = activeStoreId;
+          }
           if (formData.expiryDate) {
             // Backend expects ISO 8601 datetime string
             payload.expiryDate = new Date(formData.expiryDate).toISOString();

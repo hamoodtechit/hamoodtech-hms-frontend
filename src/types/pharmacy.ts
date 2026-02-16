@@ -223,6 +223,7 @@ export interface MedicinePayload {
   openingStock?: number;
   batchNumber?: string;
   expiryDate?: string;
+  branchId?: string;
 }
 
 export interface StockAdjustmentPayload {
