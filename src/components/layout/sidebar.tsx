@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link, usePathname } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import { useSidebarStore } from "@/store/use-sidebar-store"
@@ -23,50 +24,59 @@ export function Sidebar() {
   const { isOpen, toggle } = useSidebarStore()
   const t = useTranslations("Sidebar")
 
+  const { hasPermission } = usePermissions()
+
   const routes = [
     {
       label: t("dashboard"),
       icon: LayoutDashboard,
       href: "/dashboard",
       color: "text-sky-400",
+      permission: "dashboard:read",
     },
     {
       label: t("patients"),
       icon: Users,
       href: "/patients",
       color: "text-violet-400",
+      permission: "patient:read",
     },
     {
       label: "Pharmacy",
       icon: Pill,
       href: "/pharmacy",
       color: "text-pink-400",
+      permission: "medicine:read",
     },
     {
       label: t("appointments"),
       icon: CalendarDays,
       href: "/appointments",
       color: "text-orange-400",
+      // permission: "appointment:read",
     },
     {
       label: "User Management",
-        icon: Users,
-        href: "/settings/users",
-        color: "text-indigo-400",
-      },
-      {
-        label: "Roles & Permissions",
-        icon: Shield,
-        href: "/settings/roles",
-        color: "text-amber-400",
-      },
+      icon: Users,
+      href: "/settings/users",
+      color: "text-indigo-400",
+      permission: "user:read",
+    },
+    {
+      label: "Roles & Permissions",
+      icon: Shield,
+      href: "/settings/roles",
+      color: "text-amber-400",
+      permission: "role:read",
+    },
     {
       label: t("settings"),
       icon: Settings,
       href: "/settings",
       color: "text-emerald-400",
+      permission: "settings:read",
     },
-  ]
+  ].filter(route => !route.permission || hasPermission(route.permission))
 
   return (
     <div className={cn(

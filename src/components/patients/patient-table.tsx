@@ -21,11 +21,13 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { usePatients } from "@/hooks/pharmacy-queries"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Edit, Eye, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
 
 export function PatientTable() {
+    const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [debouncedSearch] = useDebounce(search, 500)
     const [page, setPage] = useState(1)
@@ -60,9 +62,12 @@ export function PatientTable() {
                         </div>
                     )}
                 </div>
-                <Button className="gap-2">
-                    <UserPlus className="h-4 w-4" /> Add Patient
-                </Button>
+
+                {hasPermission('patient:create') && (
+                    <Button className="gap-2">
+                        <UserPlus className="h-4 w-4" /> Add Patient
+                    </Button>
+                )}
             </div>
 
             <div className="rounded-md border bg-card overflow-x-auto">
@@ -135,13 +140,17 @@ export function PatientTable() {
                                                 <DropdownMenuItem>
                                                     <Eye className="mr-2 h-4 w-4" /> View History
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem>
-                                                    <Edit className="mr-2 h-4 w-4" /> Edit Details
-                                                </DropdownMenuItem>
+                                                {hasPermission('patient:update') && (
+                                                    <DropdownMenuItem>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                                    </DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive">
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Record
-                                                </DropdownMenuItem>
+                                                {hasPermission('patient:delete') && (
+                                                    <DropdownMenuItem className="text-destructive">
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete Record
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

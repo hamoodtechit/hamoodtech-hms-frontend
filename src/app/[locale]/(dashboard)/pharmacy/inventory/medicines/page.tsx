@@ -33,6 +33,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Medicine, PharmacyMeta } from "@/types/pharmacy"
@@ -53,6 +54,7 @@ import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 
 export default function MedicinesPage() {
+  const { hasPermission } = usePermissions()
   const { formatCurrency } = useCurrency()
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [loading, setLoading] = useState(true)
@@ -141,11 +143,15 @@ export default function MedicinesPage() {
             <p className="text-muted-foreground">Manage medicine definitions and configurations.</p>
           </div>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add Medicine
-        </Button>
-      </div>
 
+        {hasPermission('medicine:create') && (
+            <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" /> Add Medicine
+            </Button>
+        )}
+
+
+      </div>
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -255,19 +261,25 @@ export default function MedicinesPage() {
                               <DropdownMenuItem onClick={() => handleViewDetails(medicine)}>
                                 <Eye className="mr-2 h-4 w-4" /> View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(medicine)}>
-                                <Edit className="mr-2 h-4 w-4" /> Edit Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setSelectedMedicineForStock(medicine)}>
-                                <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
-                              </DropdownMenuItem>
+                              {hasPermission('medicine:update') && (
+                                <>
+                                    <DropdownMenuItem onClick={() => handleEdit(medicine)}>
+                                        <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSelectedMedicineForStock(medicine)}>
+                                        <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
+                                    </DropdownMenuItem>
+                                </>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => handleDeleteClick(medicine)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete Medicine
-                              </DropdownMenuItem>
+                              {hasPermission('medicine:delete') && (
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteClick(medicine)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Medicine
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

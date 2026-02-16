@@ -2,16 +2,16 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { authService } from "@/services/auth-service"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
@@ -152,7 +152,7 @@ export function SetupForm() {
                     onChange={handleChange}
                 />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 pb-6">
                 <div className="grid gap-2">
                     <Label htmlFor="adminPassword">Password</Label>
                     <Input 
@@ -177,12 +177,18 @@ export function SetupForm() {
                 </div>
             </div>
           </div>
+
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-4">
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? "Setting up..." : "Complete Setup"}
           </Button>
+          <div className="text-center text-sm text-muted-foreground">
+            <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary">
+                Back to Login
+            </Link>
+          </div>
         </CardFooter>
       </form>
     </Card>

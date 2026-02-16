@@ -3,6 +3,7 @@
 import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link, usePathname } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -44,14 +45,15 @@ export function MobileSidebar() {
 function SidebarBase() {
     // Custom mobile implementation to avoid store conflict and collapse button
   const pathname = usePathname()
+  const { hasPermission } = usePermissions()
   
   const routes = [
-    { label: "Dashboard",   icon: LayoutDashboard, href: "/dashboard", color: "text-sky-400" },
-    { label: "Patients",    icon: Users,           href: "/patients",  color: "text-violet-400" },
-    { label: "Pharmacy",    icon: Pill,            href: "/pharmacy",  color: "text-pink-400" },
+    { label: "Dashboard",   icon: LayoutDashboard, href: "/dashboard", color: "text-sky-400", permission: "dashboard:read" },
+    { label: "Patients",    icon: Users,           href: "/patients",  color: "text-violet-400", permission: "patient:read" },
+    { label: "Pharmacy",    icon: Pill,            href: "/pharmacy",  color: "text-pink-400", permission: "medicine:read" },
     { label: "Appointments",icon: CalendarDays,    href: "/appointments",color: "text-orange-400" },
-    { label: "Settings",    icon: Settings,        href: "/settings",  color: "text-emerald-400" },
-  ]
+    { label: "Settings",    icon: Settings,        href: "/settings",  color: "text-emerald-400", permission: "settings:read" },
+  ].filter(route => !route.permission || hasPermission(route.permission))
 
   return (
     <div className="flex flex-col h-full bg-[#111827] text-white">

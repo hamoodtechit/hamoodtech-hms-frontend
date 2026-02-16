@@ -31,6 +31,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useDebounce } from "@/hooks/use-debounce"
+import { usePermissions } from "@/hooks/use-permissions"
 import { userService } from "@/services/user-service"
 import { User } from "@/types/user"
 import { Edit, Eye, Loader2, MoreHorizontal, Plus, Search, Trash2, User as UserIcon } from "lucide-react"
@@ -40,6 +41,7 @@ import { UserDetailsDialog } from "./components/user-details-dialog"
 import { UserDialog } from "./components/user-dialog"
 
 export default function UsersPage() {
+  const { hasPermission } = usePermissions()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -113,9 +115,11 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">Manage system users, employees, and their access roles.</p>
         </div>
+        {hasPermission('user:create') && (
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" /> Add New User
         </Button>
+        )}
       </div>
 
       <Card>
@@ -203,15 +207,19 @@ export default function UsersPage() {
                             <DropdownMenuItem onClick={() => setViewUser(user)}>
                                 <Eye className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
+                            {hasPermission('user:update') && (
                             <DropdownMenuItem onClick={() => handleEdit(user)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit User
                             </DropdownMenuItem>
+                            )}
+                            {hasPermission('user:delete') && (
                             <DropdownMenuItem 
                                 className="text-destructive focus:text-destructive"
                                 onClick={() => handleDeleteClick(user)}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete User
                             </DropdownMenuItem>
+                            )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                         </TableCell>

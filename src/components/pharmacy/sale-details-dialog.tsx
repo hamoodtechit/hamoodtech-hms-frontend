@@ -29,6 +29,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
+import { usePermissions } from "@/hooks/use-permissions"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useAuthStore } from "@/store/use-auth-store"
 import { Patient, PaymentMethod, Sale } from "@/types/pharmacy"
@@ -64,45 +65,8 @@ export function SaleDetailsDialog({
 
   const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
-  const [canEditSales, setCanEditSales] = useState(false)
-  const [permissionsLoading, setPermissionsLoading] = useState(true)
-
-  // Fetch role permissions on mount
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!user?.role?.id) {
-        setCanEditSales(false)
-        setPermissionsLoading(false)
-        return
-      }
-
-      try {
-        // Import roleService dynamically to avoid circular dependencies
-        const { roleService } = await import('@/services/role-service')
-        
-        // Fetch role details to get permissions
-        const response = await roleService.getRole(user.role.id)
-        
-        if (response.success && response.data.permissionsByModule) {
-          // Flatten permissionsByModule to get all permission keys
-          const allPermissionKeys = Object.values(response.data.permissionsByModule)
-            .flat()
-            .map((p: any) => p.key)
-          
-          // Check if user has medicine:sell permission
-          const hasPermission = allPermissionKeys.includes('medicine:sell')
-          setCanEditSales(hasPermission)
-        }
-      } catch (error) {
-        console.error('Failed to fetch role permissions:', error)
-        setCanEditSales(false)
-      } finally {
-        setPermissionsLoading(false)
-      }
-    }
-
-    checkPermissions()
-  }, [user?.role?.id])
+  const { hasPermission } = usePermissions()
+  const canEditSales = hasPermission('medicine:sell')
 
   // Reset form when sale changes
   useEffect(() => {
