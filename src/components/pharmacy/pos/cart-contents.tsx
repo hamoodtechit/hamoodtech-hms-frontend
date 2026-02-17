@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -63,25 +64,27 @@ export function CartContents({
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
     return (
-        <div className="flex flex-col h-full bg-card">
-            <div className="p-6 border-b bg-secondary/10 flex justify-between items-center">
-                <h2 className="font-semibold flex items-center gap-2 text-lg">
-                    <ShoppingCart className="w-5 h-5 text-primary" />
+        <div className="flex flex-col h-full bg-card overflow-hidden">
+            {/* Header - Compact */}
+            <div className="p-3 border-b bg-secondary/10 flex justify-between items-center shrink-0">
+                <h2 className="font-semibold flex items-center gap-2 text-base">
+                    <ShoppingCart className="w-4 h-4 text-primary" />
                     Current Order
                 </h2>
-                <Badge variant="secondary" className="px-2 py-1">{cart.length} items</Badge>
+                <Badge variant="secondary" className="px-2 py-0.5 text-xs">{cart.length} items</Badge>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            {/* Scrollable Items List - maximize height */}
+            <div className="flex-1 overflow-y-auto p-2 custom-scrollbar min-h-0">
                 {cart.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-4 opacity-50">
-                        <div className="p-4 bg-secondary rounded-full">
-                            <ShoppingCart className="h-8 w-8" />
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2 opacity-50">
+                        <div className="p-3 bg-secondary rounded-full">
+                            <ShoppingCart className="h-6 w-6" />
                         </div>
-                        <p>No items added yet</p>
+                        <p className="text-sm">No items added yet</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {cart.map((item) => {
                             const itemSubtotal = item.price * item.quantity
                             const itemDiscountAmount = item.discountAmount || 
@@ -89,21 +92,23 @@ export function CartContents({
                             const itemTotal = itemSubtotal - itemDiscountAmount
                             
                             return (
-                            <div key={`${item.id}-${item.batchNumber}`} className="bg-card border rounded-lg shadow-sm hover:border-primary/20 transition-colors">
-                                <div className="flex gap-3 p-3">
+                            <div key={`${item.id}-${item.batchNumber}`} className="bg-card border rounded-md shadow-sm hover:border-primary/20 transition-colors">
+                                <div className="flex gap-2 p-2">
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-sm truncate">{item.name}</p>
-                                        <p className="text-xs text-muted-foreground mt-1">{formatCurrency(item.price)} each</p>
-                                        {(item.discountPercentage || item.discountAmount) && (
-                                            <p className="text-xs text-emerald-600 mt-1">
-                                                Discount: {item.discountPercentage ? `${item.discountPercentage}%` : formatCurrency(item.discountAmount || 0)}
-                                            </p>
-                                        )}
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
+                                            {(item.discountPercentage || item.discountAmount) && (
+                                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 text-emerald-600 border-emerald-200">
+                                                    -{item.discountPercentage ? `${item.discountPercentage}%` : formatCurrency(item.discountAmount || 0)}
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <div className="text-right">
+                                    <div className="flex flex-col items-end gap-1">
+                                        <div className="text-right leading-tight">
                                             {itemDiscountAmount > 0 && (
-                                                <span className="text-xs text-muted-foreground line-through block">{formatCurrency(itemSubtotal)}</span>
+                                                <span className="text-[10px] text-muted-foreground line-through block">{formatCurrency(itemSubtotal)}</span>
                                             )}
                                             <span className="font-bold text-sm">{formatCurrency(itemTotal)}</span>
                                         </div>
@@ -111,16 +116,16 @@ export function CartContents({
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
-                                                className="h-6 w-6 rounded-sm hover:bg-background"
+                                                className="h-5 w-5 rounded-sm hover:bg-background"
                                                 onClick={() => updateQuantity(item.id, -1, item.batchNumber)}
                                             >
                                                 <Minus className="h-3 w-3" />
                                             </Button>
-                                            <span className="text-xs w-6 text-center font-medium">{item.quantity}</span>
+                                            <span className="text-xs w-5 text-center font-medium">{item.quantity}</span>
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
-                                                className="h-6 w-6 rounded-sm hover:bg-background"
+                                                className="h-5 w-5 rounded-sm hover:bg-background"
                                                 onClick={() => updateQuantity(item.id, 1, item.batchNumber)}
                                             >
                                                 <Plus className="h-3 w-3" />
@@ -128,7 +133,7 @@ export function CartContents({
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
-                                                className="h-6 w-6 rounded-sm hover:bg-background text-destructive hover:text-destructive"
+                                                className="h-5 w-5 rounded-sm hover:bg-background text-destructive hover:text-destructive"
                                                 onClick={() => removeFromCart(item.id, item.batchNumber)}
                                             >
                                                 <Trash2 className="h-3 w-3" />
@@ -137,18 +142,18 @@ export function CartContents({
                                     </div>
                                 </div>
                                 
-                                {/* Item Discount Input */}
-                                <div className="px-3 pb-3 pt-0">
+                                {/* Item Discount Input (Compact) */}
+                                <div className="px-2 pb-2 pt-0">
                                     <details className="group">
-                                        <summary className="text-xs text-muted-foreground cursor-pointer hover:text-primary flex items-center gap-1">
+                                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-primary flex items-center gap-1 w-fit">
                                             <Tag className="h-3 w-3" />
-                                            <span>Item discount</span>
+                                            <span>Discount</span>
                                         </summary>
-                                        <div className="mt-2 flex gap-2">
+                                        <div className="mt-1 flex gap-2">
                                             <Input 
                                                 type="number"
-                                                placeholder="% off"
-                                                className="h-8 text-xs"
+                                                placeholder="%"
+                                                className="h-6 text-xs w-16"
                                                 min="0"
                                                 max="100"
                                                 value={item.discountPercentage || ""}
@@ -162,11 +167,10 @@ export function CartContents({
                                                     usePosStore.setState({ cart: updatedCart })
                                                 }}
                                             />
-                                            <span className="text-xs self-center text-muted-foreground">or</span>
                                             <Input 
                                                 type="number"
-                                                placeholder="Fixed amount"
-                                                className="h-8 text-xs"
+                                                placeholder="Amt"
+                                                className="h-6 text-xs w-20"
                                                 min="0"
                                                 value={item.discountAmount || ""}
                                                 onChange={(e) => {
@@ -188,135 +192,141 @@ export function CartContents({
                 )}
             </div>
 
-            <div className="p-6 bg-secondary/5 border-t space-y-4">
-                
-                {/* Customer Selection */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Customer / Patient</span>
-                    </div>
+            {/* Footer Section - Scrollable if needed, but likely fixed */}
+            <div className="p-3 bg-secondary/5 border-t shrink-0">
+                <ScrollArea className="max-h-[50vh]">
+                <div className="space-y-3">
                     
-                    <PatientSearch 
-                        selectedPatient={selectedCustomer} 
-                        onSelect={setSelectedCustomer} 
-                    />
-
-                    {selectedCustomer?.bloodGroup && (
-                         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/20 p-2 rounded">
-                            <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
+                    {/* Customer Selection */}
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</span>
                         </div>
-                    )}
-                </div>
-
-                <Separator />
-
-                {/* Payment Method Selector */}
-                 <div className="space-y-2">
-                    <span className="text-sm font-medium">Payment Method</span>
-                    <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {paymentMethods.map(method => (
-                                <SelectItem key={method} value={method}>
-                                    <span className="capitalize">{method}</span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <Separator />
-
-                {/* Sale Discount Input */}
-                <div className="space-y-2">
-                    <span className="text-sm font-medium flex items-center gap-1">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        Sale Discount
-                    </span>
-                    <div className="flex gap-2">
-                        <Input 
-                            placeholder="% off" 
-                            type="number" 
-                            className="h-9 text-sm" 
-                            min="0" 
-                            max="100"
-                            value={discount === 0 ? "" : discount}
-                            onChange={(e) => {
-                                setDiscount(Number(e.target.value) || 0)
-                                setDiscountFixedAmount(0)
-                            }}
+                        <PatientSearch 
+                            selectedPatient={selectedCustomer} 
+                            onSelect={setSelectedCustomer} 
                         />
-                        <span className="text-xs self-center text-muted-foreground">or</span>
-                        <Input 
-                            placeholder="Fixed amount" 
-                            type="number" 
-                            className="h-9 text-sm" 
-                            min="0"
-                            value={discountFixedAmount === 0 ? "" : discountFixedAmount}
-                            onChange={(e) => {
-                                setDiscountFixedAmount(Number(e.target.value) || 0)
-                                setDiscount(0)
-                            }}
-                        />
+                        {selectedCustomer?.bloodGroup && (
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-secondary/20 p-1 rounded px-2">
+                                <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
+                            </div>
+                        )}
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <span className="text-sm font-medium">Amount Paid</span>
-                    <Input 
-                        type="number" 
-                        value={paidAmount} 
-                        onChange={(e) => setPaidAmount(Number(e.target.value))}
-                        className="h-10 text-lg font-bold"
-                    />
-                </div>
-
-                <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span>{formatCurrency(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tax ({vatPercentage}%)</span>
-                        <span>{formatCurrency(tax)}</span>
-                    </div>
-                    {(discount > 0 || discountFixedAmount > 0) && (
-                        <div className="flex justify-between text-emerald-600">
-                            <span>Sale Discount {discount > 0 ? `(${discount}%)` : ''}</span>
-                            <span>-{formatCurrency(discountAmount)}</span>
+                    {/* Inline Payment & Amount */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Method</span>
+                            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue placeholder="Method" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {paymentMethods.map(method => (
+                                        <SelectItem key={method} value={method}>
+                                            <span className="capitalize">{method}</span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                    )}
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold text-xl">
-                        <span>Total</span>
-                        <span className="text-primary">{formatCurrency(total)}</span>
+                         <div className="space-y-1">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Paid</span>
+                            <Input 
+                                type="number" 
+                                value={paidAmount}
+                                onFocus={(e) => e.target.select()} 
+                                onChange={(e) => setPaidAmount(Number(e.target.value))}
+                                className="h-9 text-sm font-bold"
+                            />
+                        </div>
                     </div>
-                    
-                    {paidAmount > 0 && (
-                        <>
-                            <Separator className="my-2" />
-                            <div className="flex justify-between items-center">
+
+                    {/* Sale Discount */}
+                    <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
+                            Discount
+                        </span>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Input 
+                                    placeholder="%" 
+                                    type="number" 
+                                    className="h-8 text-xs pr-6" 
+                                    min="0" 
+                                    max="100"
+                                    value={discount === 0 ? "" : discount}
+                                    onChange={(e) => {
+                                        setDiscount(Number(e.target.value) || 0)
+                                        setDiscountFixedAmount(0)
+                                    }}
+                                />
+                                <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">%</span>
+                            </div>
+                            <div className="relative flex-1">
+                                <Input 
+                                    placeholder="Amount" 
+                                    type="number" 
+                                    className="h-8 text-xs pr-8" 
+                                    min="0"
+                                    value={discountFixedAmount === 0 ? "" : discountFixedAmount}
+                                    onChange={(e) => {
+                                        setDiscountFixedAmount(Number(e.target.value) || 0)
+                                        setDiscount(0)
+                                    }}
+                                />
+                                <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">Tk</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator className="my-1" />
+
+                    {/* Totals */}
+                    <div className="space-y-1 text-sm">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span>{formatCurrency(subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Tax ({vatPercentage}%)</span>
+                            <span>{formatCurrency(tax)}</span>
+                        </div>
+                        {(discount > 0 || discountFixedAmount > 0) && (
+                            <div className="flex justify-between text-xs text-emerald-600">
+                                <span>Discount</span>
+                                <span>-{formatCurrency(discountAmount)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between font-bold text-lg pt-1 border-t mt-1">
+                            <span>Total</span>
+                            <span className="text-primary">{formatCurrency(total)}</span>
+                        </div>
+                        
+                        {paidAmount > 0 && (
+                            <div className="flex justify-between items-center text-sm pt-1">
                                 <span className={paidAmount >= total ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
                                     {paidAmount >= total ? "Change" : "Due"}
                                 </span>
-                                <span className={`text-lg font-bold ${paidAmount >= total ? "text-emerald-600" : "text-destructive"}`}>
+                                <span className={`font-bold ${paidAmount >= total ? "text-emerald-600" : "text-destructive"}`}>
                                     {formatCurrency(Math.abs(paidAmount - total))}
                                 </span>
                             </div>
-                        </>
-                    )}
+                        )}
+                    </div>
                 </div>
+                </ScrollArea>
                 
-                <Button 
-                    className="w-full h-12 text-lg shadow-primary/20 shadow-lg" 
-                    disabled={cart.length === 0}
-                    onClick={onCheckout}
-                >
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Pay {formatCurrency(total)}
-                </Button>
+                <div className="mt-3">
+                    <Button 
+                        className="w-full h-10 text-base shadow-lg" 
+                        disabled={cart.length === 0}
+                        onClick={onCheckout}
+                    >
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Pay {formatCurrency(total)}
+                    </Button>
+                </div>
             </div>
         </div>
     )
