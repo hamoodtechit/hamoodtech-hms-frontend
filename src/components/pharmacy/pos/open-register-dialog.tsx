@@ -19,11 +19,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { pharmacyService } from "@/services/pharmacy-service"
+import { useOpenCashRegister } from "@/hooks/pharmacy-queries"
 import { usePosStore } from "@/store/use-pos-store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -39,7 +38,7 @@ interface OpenRegisterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   branchId: string
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function OpenRegisterDialog({
@@ -48,8 +47,8 @@ export function OpenRegisterDialog({
   branchId,
   onSuccess
 }: OpenRegisterDialogProps) {
-  const [loading, setLoading] = useState(false)
   const { setActiveRegister } = usePosStore()
+  const openRegisterMutation = useOpenCashRegister()
 
   const form = useForm<OpenRegisterValues>({
     resolver: zodResolver(openRegisterSchema) as any,
@@ -66,17 +65,16 @@ export function OpenRegisterDialog({
     }
 
     try {
-      setLoading(true)
-      const response = await pharmacyService.openCashRegister({
+      const response = await openRegisterMutation.mutateAsync({
         branchId,
         openingBalance: data.openingBalance,
         openingNote: data.openingNote,
-      })
+      } as any)
       
       if (response.success) {
         toast.success("Cash register opened successfully")
         setActiveRegister(response.data)
-        onSuccess()
+        onSuccess?.()
         onOpenChange(false)
       } else {
         toast.error(response.message || "Failed to open register")
@@ -84,8 +82,6 @@ export function OpenRegisterDialog({
     } catch (error) {
       console.error(error)
       toast.error("Failed to open cash register")
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -134,8 +130,8 @@ export function OpenRegisterDialog({
             />
 
             <DialogFooter>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={openRegisterMutation.isPending}>
+                {openRegisterMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Open Register
               </Button>
             </DialogFooter>

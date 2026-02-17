@@ -1,47 +1,40 @@
 import { api } from '@/lib/api';
 import {
-  Branch,
-  BranchListResponse,
-  BranchPayload,
-  CashRegisterClosePayload,
-  CashRegisterListResponse,
-  CashRegisterOpenPayload,
-  CashRegisterResponse,
-  Manufacturer,
-  ManufacturerListResponse,
-  ManufacturerPayload,
-  Medicine,
-  MedicinePayload,
-  PharmacyEntity,
-  PharmacyEntityType,
-  PharmacyGraphResponse,
-  PharmacyPayload,
-  PharmacyResponse,
-  PharmacyStatsResponse,
-  Purchase,
-  PurchaseListResponse,
-  PurchasePayload,
-  PurchaseStatus,
-  Sale,
-  SaleListResponse,
-  SalePayload,
-  SaleReturnListResponse,
-  SaleReturnPayload,
-  Stock,
-  StockAdjustmentPayload,
-  StockTransferPayload,
-  Supplier,
-  SupplierListResponse,
-  SupplierPayload,
-  UpdateSalePayload
+    Branch,
+    BranchListResponse,
+    BranchPayload,
+    CashRegisterClosePayload,
+    CashRegisterListResponse,
+    CashRegisterOpenPayload,
+    CashRegisterResponse,
+    Manufacturer,
+    ManufacturerListResponse,
+    ManufacturerPayload,
+    Medicine,
+    MedicinePayload,
+    PharmacyEntity,
+    PharmacyEntityType,
+    PharmacyGraphResponse,
+    PharmacyPayload,
+    PharmacyResponse,
+    PharmacyStatsResponse,
+    Purchase,
+    PurchaseListResponse,
+    PurchasePayload,
+    PurchaseStatus,
+    Sale,
+    SaleListResponse,
+    SalePayload,
+    SaleReturnListResponse,
+    SaleReturnPayload,
+    Stock,
+    StockAdjustmentPayload,
+    StockTransferPayload,
+    Supplier,
+    SupplierListResponse,
+    SupplierPayload,
+    UpdateSalePayload
 } from '@/types/pharmacy';
-
-// In-memory cache for pharmacy medicines
-const medicineCache = new Map<string, PharmacyResponse<Medicine>>();
-
-const clearMedicineCache = () => {
-  medicineCache.clear();
-};
 
 export const pharmacyService = {
   getEntities: async (
@@ -57,9 +50,6 @@ export const pharmacyService = {
     data: PharmacyPayload
   ): Promise<PharmacyEntity> => {
     const response = await api.post(`/pharmacy/${type}`, data);
-    if (['categories', 'brands', 'groups', 'units'].includes(type)) {
-      clearMedicineCache();
-    }
     return response.data;
   },
 
@@ -69,9 +59,6 @@ export const pharmacyService = {
     data: PharmacyPayload
   ): Promise<PharmacyEntity> => {
     const response = await api.patch(`/pharmacy/${type}/${id}`, data);
-    if (['categories', 'brands', 'groups', 'units'].includes(type)) {
-      clearMedicineCache();
-    }
     return response.data;
   },
 
@@ -91,9 +78,6 @@ export const pharmacyService = {
     id: string
   ): Promise<void> => {
     await api.delete(`/pharmacy/${type}/${id}`);
-    if (['categories', 'brands', 'groups', 'units'].includes(type)) {
-      clearMedicineCache();
-    }
   },
 
   // Medicine APIs
@@ -114,13 +98,7 @@ export const pharmacyService = {
     medicineManufacturerId?: string;
     isActive?: boolean;
   }): Promise<PharmacyResponse<Medicine>> => {
-    const cacheKey = JSON.stringify(params || {});
-    if (medicineCache.has(cacheKey)) {
-      return medicineCache.get(cacheKey)!;
-    }
-
     const response = await api.get<PharmacyResponse<Medicine>>('/pharmacy/medicines', { params });
-    medicineCache.set(cacheKey, response.data);
     return response.data;
   },
 
@@ -131,19 +109,16 @@ export const pharmacyService = {
 
   createMedicine: async (data: MedicinePayload): Promise<Medicine> => {
     const response = await api.post('/pharmacy/medicines', data);
-    clearMedicineCache();
     return response.data;
   },
 
   updateMedicine: async (id: string, data: Partial<MedicinePayload>): Promise<Medicine> => {
     const response = await api.patch(`/pharmacy/medicines/${id}`, data);
-    clearMedicineCache();
     return response.data;
   },
 
   deleteMedicine: async (id: string): Promise<void> => {
     await api.delete(`/pharmacy/medicines/${id}`);
-    clearMedicineCache();
   },
 
   importMedicines: async (file: File): Promise<{ success: boolean; message: string; data?: any }> => {
@@ -154,7 +129,6 @@ export const pharmacyService = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    clearMedicineCache();
     return response.data;
   },
 
@@ -247,6 +221,7 @@ export const pharmacyService = {
     branchId?: string;
     supplierId?: string;
     status?: PurchaseStatus;
+    search?: string;
   }): Promise<PurchaseListResponse> => {
     const response = await api.get<PurchaseListResponse>('/pharmacy/purchases', { params });
     return response.data;
@@ -279,6 +254,7 @@ export const pharmacyService = {
     branchId?: string;
     patientId?: string;
     status?: string;
+    search?: string;
   }): Promise<SaleListResponse> => {
     const response = await api.get<SaleListResponse>('/pharmacy/sales', { params });
     return response.data;

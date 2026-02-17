@@ -19,12 +19,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useCloseCashRegister } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { usePosStore } from "@/store/use-pos-store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -40,7 +39,7 @@ interface CloseRegisterDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   registerId: string
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function CloseRegisterDialog({
@@ -49,9 +48,9 @@ export function CloseRegisterDialog({
   registerId,
   onSuccess
 }: CloseRegisterDialogProps) {
-  const [loading, setLoading] = useState(false)
   const { activeRegister, setActiveRegister } = usePosStore()
   const { formatCurrency } = useCurrency()
+  const closeRegisterMutation = useCloseCashRegister()
 
   const form = useForm<CloseRegisterValues>({
     resolver: zodResolver(closeRegisterSchema) as any,
@@ -68,16 +67,16 @@ export function CloseRegisterDialog({
     }
 
     try {
-      setLoading(true)
-      const response = await pharmacyService.closeCashRegister(registerId, {
+      const response = await closeRegisterMutation.mutateAsync({
+        registerId,
         actualBalance: data.actualBalance,
         closingNote: data.closingNote,
-      })
+      } as any)
       
       if (response.success) {
         toast.success("Cash register closed successfully")
         setActiveRegister(null)
-        onSuccess()
+        onSuccess?.()
         onOpenChange(false)
       } else {
         toast.error(response.message || "Failed to close register")
@@ -85,8 +84,6 @@ export function CloseRegisterDialog({
     } catch (error) {
       console.error(error)
       toast.error("Failed to close cash register")
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -155,11 +152,11 @@ export function CloseRegisterDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={closeRegisterMutation.isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={closeRegisterMutation.isPending}>
+                {closeRegisterMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Close Register
               </Button>
             </DialogFooter>

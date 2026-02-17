@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { pharmacyService } from "@/services/pharmacy-service"
+import { useCreateEntity, useCreateManufacturer, useUpdateEntity, useUpdateManufacturer } from "@/hooks/pharmacy-queries"
 import { PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -20,7 +20,6 @@ import { toast } from "sonner"
 interface MasterDataDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
   entityToEdit?: PharmacyEntity | null
   type: PharmacyEntityType
   title: string
@@ -29,14 +28,22 @@ interface MasterDataDialogProps {
 export function MasterDataDialog({
   open,
   onOpenChange,
-  onSuccess,
   entityToEdit,
   type,
   title
 }: MasterDataDialogProps) {
   const [name, setName] = useState("")
   const [nameBangla, setNameBangla] = useState("")
-  const [saving, setSaving] = useState(false)
+  
+  const createEntityMutation = useCreateEntity()
+  const updateEntityMutation = useUpdateEntity()
+  const createManufacturerMutation = useCreateManufacturer()
+  const updateManufacturerMutation = useUpdateManufacturer()
+
+  const saving = createEntityMutation.isPending || 
+                 updateEntityMutation.isPending || 
+                 createManufacturerMutation.isPending || 
+                 updateManufacturerMutation.isPending
 
   useEffect(() => {
     if (entityToEdit) {
@@ -55,22 +62,28 @@ export function MasterDataDialog({
     }
 
     try {
-      setSaving(true)
       const payload = { name, nameBangla }
 
-      if (entityToEdit) {
-        await pharmacyService.updateEntity(type, entityToEdit.id, payload)
-        toast.success(`${title} updated successfully`)
+      if (type === 'manufacturers') {
+        if (entityToEdit) {
+          await updateManufacturerMutation.mutateAsync({ id: entityToEdit.id, data: payload })
+          toast.success(`${title} updated successfully`)
+        } else {
+          await createManufacturerMutation.mutateAsync(payload)
+          toast.success(`${title} created successfully`)
+        }
       } else {
-        await pharmacyService.createEntity(type, payload)
-        toast.success(`${title} created successfully`)
+        if (entityToEdit) {
+          await updateEntityMutation.mutateAsync({ type, id: entityToEdit.id, data: payload })
+          toast.success(`${title} updated successfully`)
+        } else {
+          await createEntityMutation.mutateAsync({ type, data: payload })
+          toast.success(`${title} created successfully`)
+        }
       }
-      onSuccess()
       onOpenChange(false)
     } catch (error) {
       toast.error(`Failed to save ${title.toLowerCase()}`)
-    } finally {
-      setSaving(false)
     }
   }
 

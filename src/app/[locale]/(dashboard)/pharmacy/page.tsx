@@ -2,10 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { usePharmacyStats } from "@/hooks/pharmacy-queries"
+import { usePharmacyStats, usePurchases, useSales } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
 import {
     Activity,
@@ -18,7 +17,7 @@ import {
     Settings,
     ShoppingCart
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { cn } from "@/lib/utils"
@@ -191,63 +190,41 @@ export default function PharmacyPage() {
 }
 
 function RecentTransactionsList() {
-    const [transactions, setTransactions] = useState<{
-        id: string;
-        type: 'sale' | 'purchase';
-        number: string;
-        party: string;
-        amount: number;
-        date: string;
-    }[]>([])
-    const [loading, setLoading] = useState(true)
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const [salesRes, purchasesRes] = await Promise.all([
-                    pharmacyService.getSales({ 
-                        limit: 5,
-                        branchId: activeStoreId || undefined 
-                    }),
-                    pharmacyService.getPurchases({
-                        limit: 5,
-                        branchId: activeStoreId || undefined
-                    })
-                ])
+    const { data: salesRes, isLoading: loadingSales } = useSales({ 
+        limit: 5,
+        branchId: activeStoreId || undefined 
+    })
+    const { data: purchasesRes, isLoading: loadingPurchases } = usePurchases({
+        limit: 5,
+        branchId: activeStoreId || undefined
+    })
 
-                const formattedSales = (salesRes.data.sales || []).map(s => ({
-                    id: s.id,
-                    type: 'sale' as const,
-                    number: s.invoiceNumber,
-                    party: s.patient?.name || 'Walk-in',
-                    amount: Number(s.totalPrice || 0),
-                    date: s.createdAt
-                }))
+    const loading = loadingSales || loadingPurchases
 
-                const formattedPurchases = (purchasesRes.data.purchases || []).map(p => ({
-                    id: p.id,
-                    type: 'purchase' as const,
-                    number: p.poNumber || 'PO-N/A',
-                    party: p.supplier?.name || 'Unknown Supplier',
-                    amount: Number(p.totalPrice || 0),
-                    date: p.createdAt
-                }))
+    const formattedSales = (salesRes?.data?.sales || []).map(s => ({
+        id: s.id,
+        type: 'sale' as const,
+        number: s.invoiceNumber,
+        party: s.patient?.name || 'Walk-in',
+        amount: Number(s.totalPrice || 0),
+        date: s.createdAt
+    }))
 
-                const combined = [...formattedSales, ...formattedPurchases]
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    .slice(0, 5)
+    const formattedPurchases = (purchasesRes?.data?.purchases || []).map(p => ({
+        id: p.id,
+        type: 'purchase' as const,
+        number: p.poNumber || 'PO-N/A',
+        party: p.supplier?.name || 'Unknown Supplier',
+        amount: Number(p.totalPrice || 0),
+        date: p.createdAt
+    }))
 
-                setTransactions(combined)
-            } catch (error) {
-                console.error("Failed to fetch recent transactions", error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchTransactions()
-    }, [activeStoreId])
+    const transactions = [...formattedSales, ...formattedPurchases]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
 
     if (loading) {
         return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>

@@ -20,7 +20,7 @@ import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, FileText, Info, LogOut, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileText, Info, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -28,161 +28,109 @@ import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { CloseRegisterDialog } from "@/components/pharmacy/pos/close-register-dialog"
 import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useActiveCashRegister, useCreateSale, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { patientService } from "@/services/patient-service"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { Medicine, Patient } from "@/types/pharmacy"
 
 export default function POSPage() {
-  const { cart, addToCart, clearCart, addTransaction, activeRegister, setActiveRegister } = usePosStore()
+  const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister } = usePosStore()
   
   // State
   const [isMounted, setIsMounted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [categories, setCategories] = useState<string[]>(["All"])
   const [searchQuery, setSearchQuery] = useState("")
-  // Debounce search query
   const [debouncedSearch] = useDebounce(searchQuery, 500)
   const [activeCategory, setActiveCategory] = useState("All")
   const [discount, setDiscount] = useState(0)
   const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
-  
-  // Pagination State
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const limit = 12
   
   const tabsListRef = useRef<HTMLDivElement>(null)
 
   const { activeStoreId } = useStoreContext()
   const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
   const [closeRegisterOpen, setCloseRegisterOpen] = useState(false)
-  const { fetchSettings } = useSettingsStore()
+  const { fetchSettings, pharmacy } = useSettingsStore()
 
+  // React Query Hooks
+  const { data: categoriesRes } = usePharmacyEntities('categories', { limit: 100 })
+  const categories = ["All", ...(categoriesRes?.data?.map(c => c.name) || [])]
+
+  const { data: sessionRes, isLoading: loadingSession } = useActiveCashRegister(activeStoreId)
+  const activeRegister = sessionRes?.data || null
+
+  // Determine active category ID
+  const activeCategoryId = activeCategory === "All" 
+    ? undefined 
+    : categoriesRes?.data?.find(c => c.name === activeCategory)?.id
+
+  const { 
+    data: productsRes, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading: loadingProducts,
+  } = useInfiniteMedicines({ 
+    search: debouncedSearch, 
+    limit: 12,
+    categoryId: activeCategoryId,
+  })
+
+  const medicines = productsRes?.pages.flatMap(page => page.data) || []
+  const createSaleMutation = useCreateSale()
+
+  // Effects
   useEffect(() => {
     setIsMounted(true)
-    fetchSettings() // Load settings including VAT percentage
-    if (activeStoreId) {
-        checkSession()
-    }
-  }, [activeStoreId])
-
-  useEffect(() => {
-    loadCategories()
+    fetchSettings()
   }, [])
 
   useEffect(() => {
-      loadMedicines()
-  }, [page, debouncedSearch, activeCategory])
+    const loadDefaultPatient = async () => {
+        try {
+            // Try by ID first
+            let patientData = null
+            try {
+                const defaultPatientRes = await patientService.getPatient('default-opd-patient')
+                if (defaultPatientRes.success && defaultPatientRes.data) {
+                    patientData = defaultPatientRes.data
+                }
+            } catch (e) {
+                // Ignore if ID fetch fails
+            }
 
-  // Initialize default patient separately
-  useEffect(() => {
-      const loadDefaultPatient = async () => {
-          try {
-              const defaultPatientRes = await patientService.getPatient('default-opd-patient')
-              if (defaultPatientRes.success && defaultPatientRes.data) {
-                  setSelectedCustomer(defaultPatientRes.data)
-              }
-          } catch (err) {
-              console.warn("Could not load default patient", err)
-          }
-      }
-      loadDefaultPatient()
-  }, [])
+            // If not found by ID, try searching by name
+            if (!patientData) {
+                const searchRes = await patientService.getPatients({ name: 'OPD Patient', limit: 1 })
+                if (searchRes?.data && searchRes.data.length > 0) {
+                    patientData = searchRes.data[0]
+                }
+            }
 
-  const checkSession = async () => {
-    if (!activeStoreId) return
-    try {
-        const response = await pharmacyService.getActiveCashRegister(activeStoreId)
-        if (response.success && response.data) {
-            setActiveRegister(response.data)
-            setOpenRegisterOpen(false)
-        } else {
-            setActiveRegister(null)
-            setOpenRegisterOpen(true)
+            if (patientData) {
+                setSelectedCustomer(patientData)
+            } else {
+                console.warn("Default OPD Patient not found")
+            }
+        } catch (err) {
+            console.warn("Could not load default patient", err)
         }
-    } catch (error) {
-        console.error("Failed to check session", error)
-        setActiveRegister(null)
+    }
+    loadDefaultPatient()
+  }, [])
+
+  useEffect(() => {
+    if (sessionRes && !sessionRes.data) {
         setOpenRegisterOpen(true)
+    } else {
+        setOpenRegisterOpen(false)
     }
-  }
-
-  const loadCategories = async () => {
-      try {
-        const catRes = await pharmacyService.getEntities('categories', { limit: 100 })
-        setCategories(["All", ...catRes.data.map(c => c.name)])
-      } catch (error) {
-          console.error("Failed to load categories")
-      }
-  }
-
-  const loadMedicines = async () => {
-    try {
-      setLoading(true)
-      const params: any = { page, limit }
-      if (debouncedSearch) params.search = debouncedSearch
-      // Note: API expects category ID, but we only have name here from the simple array.
-      // If we want accurate filtering, we should map names to IDs or change state to store objects.
-      // For now, let's assume the API might support name or we accept client side filtering for category if API fails?
-      // Actually, let's look at `pharmacy-service`. getMedicines takes `categoryId`.
-      // Since we don't have the ID map handy without fetching, let's rely on search for now or 
-      // if `activeCategory` is not All, we might need to find the ID. 
-      // A better approach is to store categories as objects.
-      // Let's defer category filtering to client side for this iteration if ID is missing, BUT
-      // `getMedicines` returns paginated data, so client side filtering on a page is WRONG.
-      // We MUST filter by category on server.
-      // I'll update `loadCategories` to store objects in a separate state map if needed, or just finding it from the response.
-      // But `categories` state is string array.
-      // Let's just fetch all categories and keep them in a ref or another state to lookup ID.
-      
-      // For this step, I'll pass `search` and `page`. 
-      
-      const response = await pharmacyService.getMedicines(params)
-      if (response.success) {
-          let data = response.data
-          // Client-side category filter if we can't do it server side yet (due to missing ID)
-          // valid concern: filtering 12 items on client might result in 0 items.
-          // We need server side category filtering.
-          // Detailed Plan: I will fix the category state in a follow up. For now, let's get search+page working.
-          setMedicines(data)
-           if (response.meta) {
-              setTotalPages(response.meta.totalPages)
-          }
-      }
-    } catch (error) {
-      toast.error("Failed to load medicines")
-    } finally {
-      setLoading(false)
+    if (sessionRes?.data) {
+        setActiveRegister(sessionRes.data)
     }
-  }
+  }, [sessionRes])
 
-  const scrollTabs = (direction: 'left' | 'right') => {
-    if (tabsListRef.current) {
-        const scrollAmount = 200
-        tabsListRef.current.scrollBy({
-            left: direction === 'left' ? -scrollAmount : scrollAmount,
-            behavior: 'smooth'
-        })
-    }
-  }
-  
-  // Customer State
-  const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
-  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
 
-  // Receipt State
-  const [receiptOpen, setReceiptOpen] = useState(false)
-  const [lastTransaction, setLastTransaction] = useState<any>(null)
-
-  // Prescription Dialog State
-  const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
-
-  // Cart Sheet State (Controlled)
-  const [cartOpen, setCartOpen] = useState(false)
-
+  // Helpers
   const handleAddToCart = (medicine: Medicine) => {
-    // Find a suitable batch (first one with stock > 0)
     const activeBatch = medicine.stocks?.find(s => s.quantity > 0)
     
     if (!activeBatch && (medicine.stock || 0) <= 0) {
@@ -194,26 +142,19 @@ export default function POSPage() {
       id: medicine.id,
       name: medicine.name,
       price: Number(medicine.salePrice),
-      quantity: 1, // Start with 1
+      quantity: 1,
       stock: activeBatch?.quantity || medicine.stock || 0,
       batchNumber: activeBatch?.batchNumber,
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
       category: medicine.category?.name || 'Uncategorized'
-    } as any) // Cast to basic product structure expected by store, store then uses Product interface
+    } as any)
   }
 
-  const filteredProducts = medicines.filter((medicine) => {
-    const matchesCategory = activeCategory === "All" || medicine.category?.name === activeCategory
-    const matchesSearch = medicine.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         medicine.genericName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         medicine.barcode?.includes(searchQuery) ||
-                         medicine.rackNumber?.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  // Filtered products are now handled by the backend query
+  const filteredProducts = medicines
 
   // Calculations
-  const { pharmacy } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   const vatPercentage = pharmacy?.vatPercentage || 0
   const subtotal = cart.reduce((sum, item) => {
@@ -232,10 +173,10 @@ export default function POSPage() {
   const [currentInteractions, setCurrentInteractions] = useState<any[]>([])
 
   // Payment State
-  const [paymentMethod, setPaymentMethod] = useState<import("@/types/pharmacy").PaymentMethod>('cash')
+  const [paymentMethod, setPaymentMethod] = useState<any>('cash')
   const [paidAmount, setPaidAmount] = useState(0)
 
-  // Sync paidAmount with total when total changes (default to full payment)
+  // Sync paidAmount with total when total changes
   useEffect(() => {
     setPaidAmount(total)
   }, [total])
@@ -276,17 +217,17 @@ export default function POSPage() {
               patientId: selectedCustomer?.id,
               status: "completed" as const,
               paymentStatus,
-              paymentMethod, // Include selected payment method
+              paymentMethod,
               paidAmount,
               dueAmount,
               discountPercentage: discount,
               discountAmount: discountAmount,
               saleItems: cart.map(item => ({
-                  medicineId: item.id, // Store uses 'id' as medicineId usually
+                  medicineId: item.id,
                   itemName: item.name,
-                  unit: "pcs", // Defaulting, ideally from medicine
+                  unit: "pcs",
                   price: item.price,
-                  mrp: item.price, // Assuming MRP same as sale price for now if not available
+                  mrp: item.price,
                   quantity: item.quantity,
                   discountPercentage: item.discountPercentage,
                   discountAmount: item.discountAmount,
@@ -295,8 +236,7 @@ export default function POSPage() {
               }))
           }
 
-          setLoading(true)
-          const response = await pharmacyService.createSale(salePayload as any) // Cast to match stricter type if needed
+          const response = await createSaleMutation.mutateAsync(salePayload)
           
           const transaction = {
               id: response.data?.id || `TRX-${Date.now()}`,
@@ -311,7 +251,7 @@ export default function POSPage() {
               dueAmount,
               date: new Date().toLocaleString(),
               status: "Completed" as const,
-              paymentMethod // Use state value
+              paymentMethod
           }
           
           addTransaction(transaction)
@@ -324,18 +264,36 @@ export default function POSPage() {
           setDiscountFixedAmount(0)
           setCartOpen(false) 
           
-          // Refresh products and session to update stock and register totals
-          loadMedicines() // Changed from loadData()
-          checkSession()
-
       } catch (error) {
           console.error(error)
           toast.error("Failed to process sale")
-      } finally {
-          setLoading(false)
       }
   }
 
+  // Customer State
+  const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
+
+  // Receipt State
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [lastTransaction, setLastTransaction] = useState<any>(null)
+
+  // Prescription Dialog State
+  const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
+
+  // Cart Sheet State (Controlled)
+  const [cartOpen, setCartOpen] = useState(false)
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsListRef.current) {
+        const scrollAmount = 200
+        tabsListRef.current.scrollBy({
+            left: direction === 'left' ? -scrollAmount : scrollAmount,
+            behavior: 'smooth'
+        })
+    }
+  }
+  
   const handleLinkPrescription = (id: string) => {
       // In a real app, you'd fetch prescription details here
       console.log("Linked prescription:", id)
@@ -343,7 +301,7 @@ export default function POSPage() {
 
   if (!isMounted) return null
 
-  if (!activeStoreId && !loading) {
+  if (!activeStoreId && !loadingProducts) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
             <h2 className="text-2xl font-bold">No Branch Selected</h2>
@@ -386,21 +344,12 @@ export default function POSPage() {
                 open={openRegisterOpen}
                 onOpenChange={setOpenRegisterOpen}
                 branchId={activeStoreId || ""}
-                onSuccess={() => {
-                    setOpenRegisterOpen(false)
-                    loadMedicines() // Changed from loadData()
-                }}
             />
 
             <CloseRegisterDialog 
                 open={closeRegisterOpen}
                 onOpenChange={setCloseRegisterOpen}
                 registerId={activeRegister?.id || ""}
-                onSuccess={() => {
-                    setCloseRegisterOpen(false)
-                    setActiveRegister(null)
-                    setOpenRegisterOpen(true)
-                }}
             />
 
             {/* Mobile Cart Sheet (Controlled) */}
@@ -611,7 +560,7 @@ export default function POSPage() {
 
         {/* Scrollable Product Grid */}
         <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
-            {loading ? (
+            {loadingProducts && medicines.length === 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
                     {Array.from({ length: 12 }).map((_, i) => (
                         <Card key={i} className="overflow-hidden border-transparent shadow-sm">
@@ -636,6 +585,7 @@ export default function POSPage() {
                     No medicines found.
                 </div>
             ) : (
+                <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
                     {filteredProducts.map((product) => {
                         const cartItem = cart.find(item => item.id === product.id)
@@ -668,6 +618,14 @@ export default function POSPage() {
 
                             <CardContent className="p-3 sm:p-4">
                                 <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
+                                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 space-y-0.5 ml-1">
+                                    <p className="truncate" title={product.genericName}>{product.genericName || 'No Generic'}</p>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="text-[10px] px-1 h-4 font-normal">{product.strength || 'N/A'}</Badge>
+                                        <span className="text-muted-foreground">•</span>
+                                        <span>{product.dosageForm || 'Unit'}</span>
+                                    </div>
+                                </div>
                                 <div className="mt-2 flex items-end justify-between">
                                     <span className="text-base sm:text-lg font-bold text-primary">{formatCurrency(salePrice)}</span>
                                     <span className="text-xs text-muted-foreground">
@@ -679,6 +637,27 @@ export default function POSPage() {
                         )
                     })}
                 </div>
+                {/* Load More Button */}
+                {hasNextPage && (
+                     <div className="py-4 flex justify-center w-full">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => fetchNextPage()} 
+                            disabled={isFetchingNextPage}
+                            className="min-w-[150px]"
+                        >
+                            {isFetchingNextPage ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Loading...
+                                </>
+                            ) : (
+                                "Load More Medicines"
+                            )}
+                        </Button>
+                     </div>
+                )}
+                </>
             )}
         </ScrollArea>
       </div>

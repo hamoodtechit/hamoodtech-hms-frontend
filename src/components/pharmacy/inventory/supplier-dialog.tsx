@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { pharmacyService } from "@/services/pharmacy-service"
+import { useCreateSupplier, useUpdateSupplier } from "@/hooks/pharmacy-queries"
 import { Supplier, SupplierPayload } from "@/types/pharmacy"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -21,7 +21,7 @@ import { toast } from "sonner"
 interface SupplierDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onSuccess?: () => void
   supplierToEdit?: Supplier | null
 }
 
@@ -31,7 +31,9 @@ export function SupplierDialog({
   onSuccess,
   supplierToEdit
 }: SupplierDialogProps) {
-  const [saving, setSaving] = useState(false)
+  const createMutation = useCreateSupplier()
+  const updateMutation = useUpdateSupplier()
+  const saving = createMutation.isPending || updateMutation.isPending
   const [formData, setFormData] = useState<SupplierPayload>({
     name: "",
     nameBangla: "",
@@ -85,20 +87,17 @@ export function SupplierDialog({
     }
 
     try {
-      setSaving(true)
       if (supplierToEdit) {
-        await pharmacyService.updateSupplier(supplierToEdit.id, formData)
+        await updateMutation.mutateAsync({ id: supplierToEdit.id, data: formData })
         toast.success("Supplier updated successfully")
       } else {
-        await pharmacyService.createSupplier(formData)
+        await createMutation.mutateAsync(formData)
         toast.success("Supplier created successfully")
       }
-      onSuccess()
+      onSuccess?.()
       onOpenChange(false)
     } catch (error) {
       toast.error("Failed to save supplier")
-    } finally {
-      setSaving(false)
     }
   }
 

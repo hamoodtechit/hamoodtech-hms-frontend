@@ -37,7 +37,7 @@ export default function InventoryPage() {
         <Tabs defaultValue="stock" className="space-y-4">
             <TabsList>
                 <TabsTrigger value="stock">Current Stock</TabsTrigger>
-                <TabsTrigger value="po">Purchase Orders</TabsTrigger>
+                <TabsTrigger value="po">Purchase</TabsTrigger>
                 <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
             </TabsList>
             <TabsContent value="stock" className="space-y-4">

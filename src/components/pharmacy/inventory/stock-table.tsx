@@ -23,32 +23,40 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useStocks } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { PharmacyMeta, Stock } from "@/types/pharmacy"
 import { Eye, Filter, MoreHorizontal, Search } from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { useState } from "react"
 
 export function StockTable() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
-  const [stocks, setStocks] = useState<Stock[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [debouncedSearch] = useDebounce(search, 500)
-  const [page, setPage] = useState(1)
-  const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   const [detailsItem, setDetailsItem] = useState<any | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
 
+  const [search, setSearch] = useState("")
+  const [debouncedSearch] = useDebounce(search, 500)
+  const [page, setPage] = useState(1)
+  
   // Filter State
   const [filterBatch, setFilterBatch] = useState("")
   const [filterRack, setFilterRack] = useState("")
 
-  const handleViewDetails = (item: Stock) => {
+  const { data: stocksRes, isLoading: loading } = useStocks({
+    page,
+    limit: 10,
+    search: debouncedSearch,
+    branchId: activeStoreId || undefined,
+    batchNumber: filterBatch || undefined,
+    rackNumber: filterRack || undefined
+  })
+
+  const stocks = stocksRes?.data || []
+  const meta = stocksRes?.meta || null
+
+  const handleViewDetails = (item: any) => {
     // Construct a proper Medicine object from Stock data
     const medicineData = {
       ...item.medicine,
@@ -75,38 +83,12 @@ export function StockTable() {
     setDetailsOpen(true)
   }
 
-  const loadStock = async () => {
-    try {
-      setLoading(true)
-      const response = await pharmacyService.getStocks({
-        page,
-        limit: 10,
-        search: debouncedSearch,
-        branchId: activeStoreId || undefined,
-        batchNumber: filterBatch || undefined,
-        rackNumber: filterRack || undefined
-      })
-      if (response.success) {
-        setStocks(response.data)
-        setMeta(response.meta)
-      }
-    } catch (error) {
-      toast.error("Failed to load inventory data")
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const resetFilters = () => {
     setFilterBatch("")
     setFilterRack("")
     setSearch("")
     setPage(1)
   }
-
-  useEffect(() => {
-    loadStock()
-  }, [page, debouncedSearch, activeStoreId, filterBatch, filterRack])
 
   return (
     <div className="space-y-4">

@@ -2,41 +2,41 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
 } from "@/components/ui/command"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useCreateMedicine, useManufacturers, usePharmacyEntities, useUpdateMedicine } from "@/hooks/pharmacy-queries"
 import { cn } from "@/lib/utils"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { Medicine, MedicinePayload, PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
+import { Medicine, MedicinePayload, PharmacyEntityType } from "@/types/pharmacy"
 import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -46,18 +46,15 @@ import { ImportMedicinesDialog } from "./import-medicines-dialog"
 interface MedicineDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
   medicineToEdit?: Medicine | null
 }
 
 export function MedicineDialog({
   open,
   onOpenChange,
-  onSuccess,
   medicineToEdit
 }: MedicineDialogProps) {
   const { activeStoreId } = useStoreContext()
-  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   
   // Form State
@@ -87,16 +84,29 @@ export function MedicineDialog({
     expiryDate: ""
   })
 
-  // Master Data State
-  const [categories, setCategories] = useState<PharmacyEntity[]>([])
-  const [brands, setBrands] = useState<PharmacyEntity[]>([])
-  const [groups, setGroups] = useState<PharmacyEntity[]>([])
-  const [units, setUnits] = useState<PharmacyEntity[]>([])
-  const [manufacturers, setManufacturers] = useState<PharmacyEntity[]>([])
+  // Data Fetching Hooks
+  const { data: categoriesRes, isLoading: loadingCategories } = usePharmacyEntities('categories')
+  const categories = categoriesRes?.data || []
+
+  const { data: brandsRes, isLoading: loadingBrands } = usePharmacyEntities('brands')
+  const brands = brandsRes?.data || []
+
+  const { data: groupsRes, isLoading: loadingGroups } = usePharmacyEntities('groups')
+  const groups = groupsRes?.data || []
+
+  const { data: unitsRes, isLoading: loadingUnits } = usePharmacyEntities('units')
+  const units = unitsRes?.data || []
+
+  const { data: manufacturersRes, isLoading: loadingManufacturers } = useManufacturers()
+  const manufacturers = manufacturersRes?.data || []
+
+  const loading = loadingCategories || loadingBrands || loadingGroups || loadingUnits || loadingManufacturers
+
+  const createMutation = useCreateMedicine()
+  const updateMutation = useUpdateMedicine()
 
   useEffect(() => {
     if (open) {
-      loadMasterData()
       if (medicineToEdit) {
         setFormData({
           name: medicineToEdit.name || "",
@@ -153,28 +163,6 @@ export function MedicineDialog({
     }
   }, [open, medicineToEdit])
 
-  const loadMasterData = async () => {
-    try {
-      setLoading(true)
-      const [catRes, brandRes, groupRes, unitRes, manufacturerRes] = await Promise.all([
-        pharmacyService.getEntities('categories', { limit: 100 }),
-        pharmacyService.getEntities('brands', { limit: 100 }),
-        pharmacyService.getEntities('groups', { limit: 100 }),
-        pharmacyService.getEntities('units', { limit: 100 }),
-        pharmacyService.getManufacturers({ limit: 100 }),
-      ])
-      setCategories(catRes.data)
-      setBrands(brandRes.data)
-      setGroups(groupRes.data)
-      setUnits(unitRes.data)
-      setManufacturers(manufacturerRes.data)
-    } catch (error) {
-      toast.error("Failed to load master data")
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleInputChange = (field: keyof MedicinePayload, value: any) => {
     let finalValue = value;
     if (['unitPrice', 'purchasePrice', 'salePrice', 'mrp', 'reorderLevel', 'openingStock'].includes(field)) {
@@ -194,10 +182,6 @@ export function MedicineDialog({
     setQuickAddType(type)
     setQuickAddTitle(title)
     setQuickAddOpen(true)
-  }
-
-  const handleQuickAddSuccess = () => {
-    loadMasterData()
   }
 
   const handleSave = async () => {
@@ -261,13 +245,12 @@ export function MedicineDialog({
       console.log("Submitting Optimized Medicine Payload:", payload);
 
       if (medicineToEdit) {
-        await pharmacyService.updateMedicine(medicineToEdit.id, payload as Partial<MedicinePayload>)
+        await updateMutation.mutateAsync({ id: medicineToEdit.id, data: payload as Partial<MedicinePayload> })
         toast.success("Medicine updated successfully")
       } else {
-        await pharmacyService.createMedicine(payload)
+        await createMutation.mutateAsync(payload)
         toast.success("Medicine created successfully")
       }
-      onSuccess()
       onOpenChange(false)
     } catch (error: any) {
       console.error("Medicine Save Error Response:", error.response?.data)
@@ -640,7 +623,6 @@ export function MedicineDialog({
       <MasterDataDialog
         open={quickAddOpen}
         onOpenChange={setQuickAddOpen}
-        onSuccess={handleQuickAddSuccess}
         type={quickAddType}
         title={quickAddTitle}
       />
@@ -648,14 +630,6 @@ export function MedicineDialog({
       <ImportMedicinesDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        onSuccess={() => {
-            onSuccess(); // Refresh list
-            onOpenChange(false); // Close this dialog too? Maybe just refresh master data?
-            // User probably wants to see the list. So let's close the create dialog?
-            // Actually better to just refresh the list in background if possible, but here onSuccess implies checking list.
-            // Let's close the create dialog if import is successful so they can see the list.
-             onOpenChange(false);
-        }}
       />
     </Dialog>
   )
