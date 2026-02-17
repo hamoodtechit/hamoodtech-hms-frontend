@@ -20,39 +20,23 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { pharmacyService } from "@/services/pharmacy-service"
+import { useDeleteSupplier, useSuppliers } from "@/hooks/pharmacy-queries"
 import { Supplier } from "@/types/pharmacy"
 import { Edit, Plus, Search, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { SupplierDialog } from "./supplier-dialog"
 
 export function SupplierTable() {
-    const [suppliers, setSuppliers] = useState<Supplier[]>([])
-    const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
     const [dialogOpen, setDialogOpen] = useState(false)
     const [supplierToEdit, setSupplierToEdit] = useState<Supplier | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
-    const fetchSuppliers = async () => {
-        try {
-            setLoading(true)
-            const response = await pharmacyService.getSuppliers({ search, limit: 100 })
-            setSuppliers(response.data || [])
-        } catch (error) {
-            toast.error("Failed to fetch suppliers")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchSuppliers()
-        }, 300)
-        return () => clearTimeout(timer)
-    }, [search])
+    const { data: suppliersRes, isLoading: loading } = useSuppliers({ search, limit: 100 })
+    const suppliers = suppliersRes?.data || []
+    
+    const deleteMutation = useDeleteSupplier()
 
     const handleEdit = (supplier: Supplier) => {
         setSupplierToEdit(supplier)
@@ -62,9 +46,8 @@ export function SupplierTable() {
     const handleDelete = async () => {
         if (!deleteId) return
         try {
-            await pharmacyService.deleteSupplier(deleteId)
+            await deleteMutation.mutateAsync(deleteId)
             toast.success("Supplier deleted successfully")
-            fetchSuppliers()
         } catch (error) {
             toast.error("Failed to delete supplier")
         } finally {
@@ -164,7 +147,6 @@ export function SupplierTable() {
             <SupplierDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
-                onSuccess={fetchSuppliers}
                 supplierToEdit={supplierToEdit}
             />
 

@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { usePharmacyGraph, usePharmacyStats, usePurchases, useSales } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { PharmacyGraphDataItem, PharmacyStats } from "@/types/pharmacy"
 import {
     BarElement,
     CategoryScale,
@@ -20,9 +19,11 @@ import {
     Title,
     Tooltip
 } from 'chart.js'
+import { addDays, formatDistanceToNow } from "date-fns"
 import { AlertTriangle, CreditCard, DollarSign, Users } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Line } from "react-chartjs-2"
+import { DateRange } from "react-day-picker"
 
 ChartJS.register(
   CategoryScale,
@@ -51,42 +52,38 @@ const revenueData = {
 }
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
-import { addDays } from "date-fns"
-import { DateRange } from "react-day-picker"
 
 export function Overview() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
-  const [stats, setStats] = useState<PharmacyStats | null>(null)
-  const [graphData, setGraphData] = useState<PharmacyGraphDataItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -7),
     to: new Date(),
   })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const startDate = date?.from ? date.from.toISOString() : undefined
-        const endDate = date?.to ? date.to.toISOString() : undefined
+  const startDate = date?.from ? date.from.toISOString() : undefined
+  const endDate = date?.to ? date.to.toISOString() : undefined
 
-        const [statsRes, graphRes] = await Promise.all([
-          pharmacyService.getPharmacyStats({ branchId: activeStoreId || undefined, startDate, endDate }),
-          pharmacyService.getPharmacyGraph({ branchId: activeStoreId || undefined, startDate, endDate, days: !startDate ? 7 : undefined })
-        ])
-        
-        if (statsRes.success) setStats(statsRes.data)
-        if (graphRes.success) setGraphData(graphRes.data)
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [activeStoreId, date])
+  const { data: statsRes, isLoading: loadingStats } = usePharmacyStats({ 
+    branchId: activeStoreId || undefined, 
+    startDate, 
+    endDate 
+  })
+  
+  const { data: graphRes, isLoading: loadingGraph } = usePharmacyGraph({ 
+    branchId: activeStoreId || undefined, 
+    startDate, 
+    endDate, 
+    days: !startDate ? 7 : undefined 
+  })
+
+  // Recent Activity Data
+  const { data: salesRes, isLoading: loadingSales } = useSales({ limit: 5, branchId: activeStoreId || undefined })
+  const { data: purchasesRes, isLoading: loadingPurchases } = usePurchases({ limit: 5, branchId: activeStoreId || undefined })
+
+  const stats = statsRes?.data
+  const graphData = graphRes?.data || []
+  const loading = loadingStats || loadingGraph
 
   const chartData = {
     labels: graphData.map(d => new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
@@ -234,7 +231,7 @@ export function Overview() {
                                 y: { 
                                     beginAtZero: true, 
                                     grid: { color: 'rgba(0,0,0,0.05)' },
-                                    ticks: { callback: (value) => `$${value}` } 
+                                    ticks: { callback: (value) => formatCurrency(Number(value)) } 
                                 },
                                 x: { grid: { display: false } }
                             },
@@ -256,7 +253,7 @@ export function Overview() {
                                     bodyFont: { size: 12 },
                                     displayColors: true,
                                     callbacks: {
-                                        label: (context) => `${context.dataset.label}: $${context.parsed.y}`
+                                        label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
                                     }
                                 }
                             }
@@ -272,11 +269,11 @@ export function Overview() {
             <CardDescription>Latest system events.</CardDescription>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {loading || loadingSales || loadingPurchases ? (
                 <div className="space-y-8">
                     {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="flex items-center">
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 <Skeleton className="h-4 w-[150px]" />
                                 <Skeleton className="h-3 w-[100px]" />
                             </div>
@@ -285,29 +282,60 @@ export function Overview() {
                     ))}
                 </div>
             ) : (
-                <div className="space-y-8">
-                    {[
-                        { title: "New Sale #TRX-9821", desc: "Sold to John Doe", time: "2 min ago", amount: "+$120.00" },
-                        { title: "Stock Alert", desc: "Paracetamol below limit", time: "15 min ago", color: "text-red-500" },
-                        { title: "New Patient", desc: "Sarah Smith registered", time: "1 hour ago", amount: "+1 Patient" },
-                        { title: "Purchase Order #PO-99", desc: "Sent to PharmaCorp", time: "3 hours ago", amount: "$4,500.00" },
-                        { title: "Insurance Claim", desc: "Approved for Claim #CL-88", time: "5 hours ago", amount: "+$350.00" },
-                    ].map((item, i) => (
-                        <div key={i} className="flex items-center">
-                            <div className="space-y-1 overflow-hidden">
-                                <p className="text-sm font-medium leading-none truncate">{item.title}</p>
-                                <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
-                            </div>
-                            <div className={`ml-auto font-medium text-sm whitespace-nowrap pl-2 ${item.color || ""}`}>
-                                {item.amount || item.time}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <ActivityFeed 
+                    sales={salesRes?.data?.sales || []} 
+                    purchases={purchasesRes?.data?.purchases || []}
+                    formatCurrency={formatCurrency}
+                />
             )}
           </CardContent>
         </Card>
       </div>
     </div>
   )
+}
+function ActivityFeed({ sales, purchases, formatCurrency }: { sales: any[], purchases: any[], formatCurrency: any }) {
+    // Merge and format activities
+    const activities = [
+        ...sales.map(s => ({
+            id: s.id,
+            title: `Sale ${s.invoiceNumber}`,
+            desc: `Sold to ${s.patient?.name || 'Walk-in'}`,
+            time: new Date(s.createdAt),
+            amount: `+${formatCurrency(s.totalPrice)}`,
+            color: "text-emerald-600"
+        })),
+        ...purchases.map(p => ({
+            id: p.id,
+            title: `Purchase ${p.poNumber || 'Order'}`,
+            desc: `From ${p.supplier?.name || 'Unknown'}`,
+            time: new Date(p.createdAt),
+            amount: `-${formatCurrency(p.totalPrice)}`,
+            color: "text-orange-600"
+        }))
+    ]
+    .sort((a, b) => b.time.getTime() - a.time.getTime())
+    .slice(0, 5)
+
+    if (activities.length === 0) {
+        return <div className="text-sm text-muted-foreground text-center py-4">No recent activity detected.</div>
+    }
+
+    return (
+        <div className="space-y-8">
+            {activities.map((item) => (
+                <div key={item.id} className="flex items-center">
+                    <div className="space-y-1 overflow-hidden">
+                        <p className="text-sm font-medium leading-none truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                            {item.desc} • {formatDistanceToNow(item.time, { addSuffix: true })}
+                        </p>
+                    </div>
+                    <div className={`ml-auto font-medium text-sm whitespace-nowrap pl-2 ${item.color || ""}`}>
+                        {item.amount}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
 }

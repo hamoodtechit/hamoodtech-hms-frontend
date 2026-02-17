@@ -35,7 +35,7 @@ import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 
 type UnifiedTransaction = {
     id: string;
-    type: 'sale' | 'purchase';
+    type: 'sale' | 'purchase' | 'return';
     number: string;
     party: string;
     total: number;
@@ -58,29 +58,58 @@ export function TransactionHistory() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
+  const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
 
   const fetchTransactions = async () => {
     if (!activeStoreId) return
     
     try {
         setLoading(true)
-        // We fetch both sales and purchases. 
-        // For unified pagination, it's complex, so we'll fetch a balanced set or just first page for now.
-        // User's request implies showing "history", so merging latest of both is appropriate.
-        const [salesRes, purchasesRes] = await Promise.all([
-            pharmacyService.getSales({
+        
+        // Prepare promises based on active tab or fetch all
+        // Note: For "All" we fetch everything and merge. Ideally backend should support unified history.
+        const promises = []
+        
+        if (activeTab === 'all' || activeTab === 'sale') {
+            promises.push(pharmacyService.getSales({
                 branchId: activeStoreId,
                 limit: 10,
                 page,
-            }),
-            pharmacyService.getPurchases({
-                branchId: activeStoreId,
-                limit: 10,
-                page,
-            })
-        ])
+                search: debouncedSearch
+            }).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
+        } else {
+            promises.push(Promise.resolve({ type: 'sale', data: [], meta: { totalPages: 0 } }))
+        }
 
-        const formattedSales: UnifiedTransaction[] = (salesRes.data.sales || []).map(s => ({
+        if (activeTab === 'all' || activeTab === 'purchase') {
+            promises.push(pharmacyService.getPurchases({
+                branchId: activeStoreId,
+                limit: 10,
+                page,
+                search: debouncedSearch // Backend might not support search yet for POs same way, but let's pass it
+            }).then(res => ({ type: 'purchase', data: res.data.purchases, meta: res.data.pagination })))
+        } else {
+             promises.push(Promise.resolve({ type: 'purchase', data: [], meta: { totalPages: 0 } }))
+        }
+
+        if (activeTab === 'all' || activeTab === 'return') {
+            // Note: Search for returns might need specific implementation if not supported by getSaleReturns generic 'params'
+            promises.push(pharmacyService.getSaleReturns({
+                branchId: activeStoreId,
+                limit: 10,
+                page,
+            }).then(res => ({ type: 'return', data: res.data.saleReturns, meta: res.data.pagination })))
+        } else {
+             promises.push(Promise.resolve({ type: 'return', data: [], meta: { totalPages: 0 } }))
+        }
+
+        const results = await Promise.all(promises)
+        
+        const salesData = results.find(r => r.type === 'sale')
+        const purchasesData = results.find(r => r.type === 'purchase')
+        const returnsData = results.find(r => r.type === 'return')
+
+        const formattedSales: UnifiedTransaction[] = (salesData?.data || []).map((s: any) => ({
             id: s.id,
             type: 'sale',
             number: s.invoiceNumber,
@@ -91,7 +120,7 @@ export function TransactionHistory() {
             original: s
         }))
 
-        const formattedPurchases: UnifiedTransaction[] = (purchasesRes.data.purchases || []).map(p => ({
+        const formattedPurchases: UnifiedTransaction[] = (purchasesData?.data || []).map((p: any) => ({
             id: p.id,
             type: 'purchase',
             number: p.poNumber || 'PO-N/A',
@@ -102,15 +131,26 @@ export function TransactionHistory() {
             original: p
         }))
 
-        const combined = [...formattedSales, ...formattedPurchases]
+        const formattedReturns: UnifiedTransaction[] = (returnsData?.data || []).map((r: any) => ({
+            id: r.id,
+            type: 'return',
+            number: r.invoiceNumber,
+            party: r.patient?.name || 'Walk-in',
+            total: Number(r.totalPrice || 0),
+            status: r.status,
+            date: r.createdAt,
+            original: r
+        }))
+
+        const combined = [...formattedSales, ...formattedPurchases, ...formattedReturns]
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         
         setTransactions(combined)
         
-        // Approximate total pages based on the larger record set
         const maxPages = Math.max(
-            salesRes.data.pagination?.totalPages || 1,
-            purchasesRes.data.pagination?.totalPages || 1
+            salesData?.meta?.totalPages || 1,
+            purchasesData?.meta?.totalPages || 1,
+            returnsData?.meta?.totalPages || 1
         )
         setTotalPages(maxPages)
 
@@ -126,9 +166,13 @@ export function TransactionHistory() {
     if (isOpen && activeStoreId) {
         fetchTransactions()
     }
-  }, [isOpen, activeStoreId, debouncedSearch, page])
+  }, [isOpen, activeStoreId, debouncedSearch, page, activeTab])
 
   const handleReprint = (tx: UnifiedTransaction) => {
+    if (tx.type === 'return') {
+        toast.info("Return receipt printing coming soon")
+        return
+    }
     if (tx.type !== 'sale') {
         toast.info("Purchase order printing integration coming soon")
         return
@@ -259,6 +303,41 @@ export function TransactionHistory() {
         </SheetHeader>
         
         <div className="py-4 space-y-4">
+            <div className="flex items-center gap-2">
+                <Button 
+                    variant={activeTab === 'all' ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => { setActiveTab('all'); setPage(1); }}
+                    className="h-7 text-xs"
+                >
+                    All
+                </Button>
+                <Button 
+                    variant={activeTab === 'sale' ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => { setActiveTab('sale'); setPage(1); }}
+                    className="h-7 text-xs"
+                >
+                    Sales
+                </Button>
+                <Button 
+                    variant={activeTab === 'return' ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => { setActiveTab('return'); setPage(1); }}
+                    className="h-7 text-xs"
+                >
+                    Returns
+                </Button>
+                <Button 
+                    variant={activeTab === 'purchase' ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => { setActiveTab('purchase'); setPage(1); }}
+                    className="h-7 text-xs"
+                >
+                    Purchases
+                </Button>
+            </div>
+
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -272,7 +351,7 @@ export function TransactionHistory() {
                 />
             </div>
 
-            <div className="border rounded-md h-[calc(100vh-200px)] overflow-y-auto">
+            <div className="border rounded-md h-[calc(100vh-240px)] overflow-y-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -314,7 +393,9 @@ export function TransactionHistory() {
                                 <TableRow key={`${tx.type}-${tx.id}`}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-2">
-                                            {tx.type === 'sale' ? <ShoppingCart className="h-3 w-3 text-emerald-500" /> : <ShoppingBag className="h-3 w-3 text-orange-500" />}
+                                            {tx.type === 'sale' && <ShoppingCart className="h-3 w-3 text-emerald-500" />}
+                                            {tx.type === 'purchase' && <ShoppingBag className="h-3 w-3 text-orange-500" />}
+                                            {tx.type === 'return' && <RotateCcw className="h-3 w-3 text-red-500" />}
                                             {tx.number}
                                         </div>
                                         <div className="text-xs text-muted-foreground">
@@ -326,7 +407,8 @@ export function TransactionHistory() {
                                         <div className="mt-1">
                                             <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'} className={cn(
                                                 "text-[10px] h-5 capitalize",
-                                                tx.type === 'purchase' && tx.status === 'completed' && "bg-orange-500 hover:bg-orange-600"
+                                                tx.type === 'purchase' && tx.status === 'completed' && "bg-orange-500 hover:bg-orange-600",
+                                                tx.type === 'return' && "bg-destructive/10 text-destructive hover:bg-destructive/20"
                                             )}>
                                                 {tx.type}: {tx.status}
                                             </Badge>
@@ -334,7 +416,9 @@ export function TransactionHistory() {
                                     </TableCell>
                                     <TableCell className={cn(
                                         "font-semibold",
-                                        tx.type === 'sale' ? "text-emerald-600" : "text-orange-600"
+                                        tx.type === 'sale' ? "text-emerald-600" : 
+                                        tx.type === 'purchase' ? "text-orange-600" :
+                                        "text-red-600" // return
                                     )}>
                                         {tx.type === 'sale' ? '+' : '-'}{formatCurrency(tx.total)}
                                     </TableCell>

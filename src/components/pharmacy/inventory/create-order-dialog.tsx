@@ -34,61 +34,36 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
 import { cn } from "@/lib/utils"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { Medicine, PurchaseItem, Supplier } from "@/types/pharmacy"
+import { PurchaseItem } from "@/types/pharmacy"
 import { Check, ChevronsUpDown, Loader2, Plus, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 export function CreateOrderDialog() {
   const { activeStoreId } = useStoreContext()
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [medicines, setMedicines] = useState<Medicine[]>([])
+  const { data: suppliersRes } = useSuppliers({ limit: 100 })
+  const { data: medicinesRes } = useMedicines({ limit: 100 })
+  
+  const suppliers = suppliersRes?.data || []
+  const medicines = medicinesRes?.data || []
+
+  const createMutation = useCreatePurchase()
+  const loading = createMutation.isPending
+
   const [selectedSupplier, setSelectedSupplier] = useState("")
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([])
   
   // Combobox states
   const [openComboboxes, setOpenComboboxes] = useState<{ [key: number]: boolean }>({})
+  const [openSupplierCombobox, setOpenSupplierCombobox] = useState(false)
 
   // Create Supplier Dialog State
   const [createSupplierOpen, setCreateSupplierOpen] = useState(false)
   const [status, setStatus] = useState<'pending' | 'completed'>('pending')
-
-  const fetchInitialData = async () => {
-    try {
-      const [suppliersRes, medicinesRes] = await Promise.all([
-        pharmacyService.getSuppliers({ limit: 100 }),
-        pharmacyService.getMedicines({ limit: 100 })
-      ])
-      setSuppliers(suppliersRes.data)
-      setMedicines(medicinesRes.data)
-    } catch (error) {
-      console.error("Failed to fetch data:", error)
-    }
-  }
-
-  const reloadSuppliers = async () => {
-      try {
-          const res = await pharmacyService.getSuppliers({ limit: 100 })
-          setSuppliers(res.data)
-          // If we just created a supplier, we might want to select it, 
-          // but for now we'll just refresh the list so it appears.
-      } catch (error) {
-          console.error("Failed to reload suppliers", error)
-      }
-  }
-
-  useEffect(() => {
-    if (open) {
-      fetchInitialData()
-      setPurchaseItems([])
-      setSelectedSupplier("")
-    }
-  }, [open])
 
   const addItem = () => {
     setPurchaseItems([...purchaseItems, {
@@ -159,8 +134,6 @@ export function CreateOrderDialog() {
     }
 
     try {
-      setLoading(true)
-      
       const payload = {
         branchId: activeStoreId,
         supplierId: selectedSupplier,
@@ -177,12 +150,11 @@ export function CreateOrderDialog() {
 
       console.log("Creating Purchase with payload:", payload)
 
-      await pharmacyService.createPurchase(payload)
+      await createMutation.mutateAsync(payload)
       toast.success("Purchase Order created successfully")
       setOpen(false)
-      if (typeof window !== 'undefined') {
-        window.location.reload()
-      }
+      setPurchaseItems([])
+      setSelectedSupplier("")
     } catch (error: any) {
       console.error("Failed to create purchase order:", error.response?.data)
       const message = error.response?.data?.message || "Failed to create purchase order"
@@ -195,8 +167,6 @@ export function CreateOrderDialog() {
       toast.error(`${message}${details ? `: ${details}` : ""}`, {
         duration: 8000
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -220,16 +190,49 @@ export function CreateOrderDialog() {
             <div className="grid gap-2">
                 <Label>Supplier</Label>
                 <div className="flex gap-2">
-                    <Select onValueChange={setSelectedSupplier} value={selectedSupplier}>
-                        <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select supplier..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {suppliers.map(s => (
-                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Popover open={openSupplierCombobox} onOpenChange={setOpenSupplierCombobox}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openSupplierCombobox}
+                                className="flex-1 justify-between"
+                            >
+                                {selectedSupplier
+                                    ? suppliers.find((supplier) => supplier.id === selectedSupplier)?.name
+                                    : "Select supplier..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search supplier..." />
+                                <CommandList>
+                                    <CommandEmpty>No supplier found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {suppliers.map((supplier) => (
+                                            <CommandItem
+                                                key={supplier.id}
+                                                value={supplier.name}
+                                                onSelect={() => {
+                                                    setSelectedSupplier(supplier.id)
+                                                    setOpenSupplierCombobox(false)
+                                                }}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                {supplier.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
                     <Button variant="outline" onClick={() => setCreateSupplierOpen(true)}>
                         <Plus className="h-4 w-4" />
                     </Button>
@@ -400,7 +403,6 @@ export function CreateOrderDialog() {
         <SupplierDialog 
             open={createSupplierOpen} 
             onOpenChange={setCreateSupplierOpen}
-            onSuccess={reloadSuppliers}
         />
     </>
   )

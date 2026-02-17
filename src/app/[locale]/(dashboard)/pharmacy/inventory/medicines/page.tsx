@@ -2,59 +2,60 @@
 
 import { BatchList } from "@/components/pharmacy/inventory/batch-list"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
+import { useDeleteMedicine, useManufacturers, useMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
-import { pharmacyService } from "@/services/pharmacy-service"
-import { Medicine, PharmacyEntity, PharmacyMeta } from "@/types/pharmacy"
+import { Medicine } from "@/types/pharmacy"
 import {
-  ArrowLeft,
-  Edit,
-  Eye,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  Upload
+    ArrowLeft,
+    Edit,
+    Eye,
+    Filter,
+    Loader2,
+    MoreHorizontal,
+    Plus,
+    RefreshCw,
+    Search,
+    Trash2,
+    Upload
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { useDebounce } from "use-debounce"
 import { ImportMedicinesDialog } from "./components/import-medicines-dialog"
 import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
@@ -62,11 +63,9 @@ import { MedicineDialog } from "./components/medicine-dialog"
 export default function MedicinesPage() {
   const { hasPermission } = usePermissions()
   const { formatCurrency } = useCurrency()
-  const [medicines, setMedicines] = useState<Medicine[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [debouncedSearch] = useDebounce(search, 500)
   const [page, setPage] = useState(1)
-  const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
@@ -90,59 +89,40 @@ export default function MedicinesPage() {
   const [filterStrength, setFilterStrength] = useState("")
   const [filterActive, setFilterActive] = useState<boolean | undefined>(undefined)
 
-  // Master Data State
-  const [categories, setCategories] = useState<PharmacyEntity[]>([])
-  const [brands, setBrands] = useState<PharmacyEntity[]>([])
-  const [groups, setGroups] = useState<PharmacyEntity[]>([])
-  const [manufacturers, setManufacturers] = useState<PharmacyEntity[]>([])
-
-  useEffect(() => {
-    loadMasterData()
-  }, [])
-
-  const loadMasterData = async () => {
-    try {
-        const [catRes, brandRes, groupRes, manufacturerRes] = await Promise.all([
-            pharmacyService.getEntities('categories', { limit: 100 }),
-            pharmacyService.getEntities('brands', { limit: 100 }),
-            pharmacyService.getEntities('groups', { limit: 100 }),
-            pharmacyService.getManufacturers({ limit: 100 }),
-        ])
-        setCategories(catRes.data)
-        setBrands(brandRes.data)
-        setGroups(groupRes.data)
-        setManufacturers(manufacturerRes.data)
-    } catch (error) {
-        console.error("Failed to load master data", error)
-    }
+  const queryParams = {
+    page,
+    limit: 10,
+    search: debouncedSearch,
+    name: filterName || undefined,
+    genericName: filterGeneric || undefined,
+    barcode: filterBarcode || undefined,
+    categoryId: filterCategoryId === 'all' ? undefined : filterCategoryId,
+    brandId: filterBrandId === 'all' ? undefined : filterBrandId,
+    groupId: filterGroupId === 'all' ? undefined : filterGroupId,
+    medicineManufacturerId: filterManufacturerId === 'all' ? undefined : filterManufacturerId,
+    dosageForm: filterDosageForm || undefined,
+    strength: filterStrength || undefined,
+    isActive: filterActive
   }
 
-  const loadMedicines = async () => {
-    try {
-      setLoading(true)
-      const response = await pharmacyService.getMedicines({ 
-        page, 
-        limit: 10, 
-        search,
-        name: filterName || undefined,
-        genericName: filterGeneric || undefined,
-        barcode: filterBarcode || undefined,
-        categoryId: filterCategoryId === 'all' ? undefined : filterCategoryId,
-        brandId: filterBrandId === 'all' ? undefined : filterBrandId,
-        groupId: filterGroupId === 'all' ? undefined : filterGroupId,
-        medicineManufacturerId: filterManufacturerId === 'all' ? undefined : filterManufacturerId,
-        dosageForm: filterDosageForm || undefined,
-        strength: filterStrength || undefined,
-        isActive: filterActive
-      })
-      setMedicines(response.data)
-      setMeta(response.meta)
-    } catch (error) {
-      toast.error("Failed to load medicines")
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Data Fetching Hooks
+  const { data: medicinesRes, isLoading: loading } = useMedicines(queryParams)
+  const medicines = medicinesRes?.data || []
+  const meta = medicinesRes?.meta || null
+
+  const { data: categoriesRes } = usePharmacyEntities('categories')
+  const categories = categoriesRes?.data || []
+
+  const { data: brandsRes } = usePharmacyEntities('brands')
+  const brands = brandsRes?.data || []
+
+  const { data: groupsRes } = usePharmacyEntities('groups')
+  const groups = groupsRes?.data || []
+
+  const { data: manufacturersRes } = useManufacturers()
+  const manufacturers = manufacturersRes?.data || []
+
+  const deleteMutation = useDeleteMedicine()
 
   const resetFilters = () => {
     setFilterName("")
@@ -158,26 +138,6 @@ export default function MedicinesPage() {
     setSearch("")
     setPage(1)
   }
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadMedicines()
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [
-    page, 
-    search, 
-    filterName, 
-    filterGeneric, 
-    filterBarcode, 
-    filterCategoryId, 
-    filterBrandId, 
-    filterGroupId, 
-    filterManufacturerId, 
-    filterDosageForm, 
-    filterStrength, 
-    filterActive
-  ])
 
   // ... existing handlers ...
   const handleCreate = () => {
@@ -203,9 +163,8 @@ export default function MedicinesPage() {
   const confirmDelete = async () => {
     if (!deletingMedicine) return
     try {
-      await pharmacyService.deleteMedicine(deletingMedicine.id)
+      await deleteMutation.mutateAsync(deletingMedicine.id)
       toast.success("Medicine deleted successfully")
-      loadMedicines()
     } catch (error) {
       toast.error("Failed to delete medicine")
     } finally {
@@ -361,7 +320,9 @@ export default function MedicinesPage() {
               <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="font-semibold">Medicine Info</TableHead>
-                  <TableHead className="font-semibold">Category/Brand</TableHead>
+                  <TableHead className="font-semibold">Strength</TableHead>
+                  <TableHead className="font-semibold">Dosage Form</TableHead>
+                  <TableHead className="font-semibold">Manufacturer</TableHead>
                   <TableHead className="font-semibold text-center">Price (Sale)</TableHead>
                   <TableHead className="font-semibold text-center">Stock</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
@@ -371,7 +332,7 @@ export default function MedicinesPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 className="h-8 w-8 animate-spin" />
                         <span>Fetching medicines...</span>
@@ -380,7 +341,7 @@ export default function MedicinesPage() {
                   </TableRow>
                 ) : medicines.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                       No medicines found matching filters.
                     </TableCell>
                   </TableRow>
@@ -399,12 +360,13 @@ export default function MedicinesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge variant="secondary" className="w-fit font-normal text-[10px]">
-                            {medicine.category?.name || 'N/A'}
-                          </Badge>
-                          <span className="text-xs font-medium text-muted-foreground">{medicine.brand?.name || 'N/A'}</span>
-                        </div>
+                        <span className="text-xs font-medium">{medicine.strength || 'N/A'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs font-medium">{medicine.dosageForm || 'N/A'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs font-medium">{medicine.medicineManufacturer?.name || 'N/A'}</span>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-col">
@@ -505,14 +467,12 @@ export default function MedicinesPage() {
       <MedicineDialog 
         open={dialogOpen} 
         onOpenChange={setDialogOpen} 
-        onSuccess={loadMedicines}
         medicineToEdit={editingMedicine}
       />
 
       <ImportMedicinesDialog 
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen} 
-        onSuccess={loadMedicines}
       />
 
       <MedicineDetailsDialog 

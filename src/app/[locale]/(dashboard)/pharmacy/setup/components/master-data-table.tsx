@@ -26,11 +26,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { pharmacyService } from "@/services/pharmacy-service"
-import { PharmacyEntity, PharmacyEntityType, PharmacyMeta } from "@/types/pharmacy"
+import { useDeleteEntity, useManufacturers, usePharmacyEntities } from "@/hooks/pharmacy-queries"
+import { PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
 import { ChevronLeft, ChevronRight, Edit, Loader2, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { useDebounce } from "use-debounce"
 import { MasterDataDialog } from "./master-data-dialog"
 
 interface MasterDataTableProps {
@@ -39,40 +40,26 @@ interface MasterDataTableProps {
 }
 
 export function MasterDataTable({ type, title }: MasterDataTableProps) {
-  const [entities, setEntities] = useState<PharmacyEntity[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [debouncedSearch] = useDebounce(search, 500)
   const [page, setPage] = useState(1)
-  const [meta, setMeta] = useState<PharmacyMeta | null>(null)
   
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingEntity, setEditingEntity] = useState<PharmacyEntity | null>(null)
   const [deletingEntity, setDeletingEntity] = useState<PharmacyEntity | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
-  const loadEntities = async () => {
-    try {
-      setLoading(true)
-      const response = await pharmacyService.getEntities(type, { 
-        page, 
-        limit: 10, 
-        search 
-      })
-      setEntities(response.data)
-      setMeta(response.meta)
-    } catch (error) {
-      toast.error(`Failed to load ${title.toLowerCase()}s`)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const queryParams = { page, limit: 10, search: debouncedSearch }
+  
+  // Data Fetching Hooks
+  const { data: response, isLoading: loading } = type === 'manufacturers' 
+    ? useManufacturers(queryParams) 
+    : usePharmacyEntities(type, queryParams)
+  
+  const entities = response?.data || []
+  const meta = response?.meta || null
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-        loadEntities()
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [type, page, search])
+  const deleteMutation = useDeleteEntity()
 
   const handleCreate = () => {
     setEditingEntity(null)
@@ -92,9 +79,8 @@ export function MasterDataTable({ type, title }: MasterDataTableProps) {
   const confirmDelete = async () => {
     if (!deletingEntity) return
     try {
-      await pharmacyService.deleteEntity(type, deletingEntity.id)
+      await deleteMutation.mutateAsync({ type, id: deletingEntity.id })
       toast.success(`${title} deleted successfully`)
-      loadEntities()
     } catch (error) {
       toast.error(`Failed to delete ${title.toLowerCase()}`)
     } finally {
@@ -210,7 +196,6 @@ export function MasterDataTable({ type, title }: MasterDataTableProps) {
       <MasterDataDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={loadEntities}
         entityToEdit={editingEntity}
         type={type}
         title={title}

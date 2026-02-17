@@ -10,43 +10,29 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { usePurchases, useUpdatePurchaseStatus } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { Purchase, PurchaseStatus } from "@/types/pharmacy"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { PurchaseDetailsDialog } from "./purchase-details-dialog"
 
 export function PurchaseOrderList() {
-    const [purchases, setPurchases] = useState<Purchase[]>([])
-    const [loading, setLoading] = useState(true)
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
     const { formatCurrency } = useCurrency()
 
-    const fetchPurchases = async () => {
-        try {
-            setLoading(true)
-            const response = await pharmacyService.getPurchases({ limit: 50 })
-            setPurchases(response.data.purchases)
-        } catch (error) {
-            toast.error("Failed to fetch purchase orders")
-        } finally {
-            setLoading(false)
-        }
-    }
+    const { data: purchasesRes, isLoading: loading } = usePurchases({ limit: 50 })
+    const purchases = purchasesRes?.data?.purchases || []
 
-    useEffect(() => {
-        fetchPurchases()
-    }, [])
+    const statusMutation = useUpdatePurchaseStatus()
 
     const handleStatusUpdate = async (id: string, status: PurchaseStatus) => {
         try {
-            await pharmacyService.updatePurchaseStatus(id, status)
+            await statusMutation.mutateAsync({ id, status })
             toast.success(`Order marked as ${status}`)
-            fetchPurchases()
         } catch (error) {
             toast.error("Failed to update status")
         }

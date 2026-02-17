@@ -1,37 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { usePharmacyStats } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { useStoreContext } from "@/store/use-store-context"
-import { PharmacyStats } from "@/types/pharmacy"
 import { AlertTriangle, DollarSign, Package, TrendingDown } from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
 
 export function InventoryStats() {
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
-    const [stats, setStats] = useState<PharmacyStats | null>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const loadStats = async () => {
-            try {
-                setLoading(true)
-                const response = await pharmacyService.getPharmacyStats({ 
-                    branchId: activeStoreId || undefined 
-                })
-                if (response.success) {
-                    setStats(response.data)
-                }
-            } catch (error) {
-                toast.error("Failed to load inventory stats")
-            } finally {
-                setLoading(false)
-            }
-        }
-        loadStats()
-    }, [activeStoreId])
+    const { data: statsRes, isLoading: loading } = usePharmacyStats({ 
+        branchId: activeStoreId || undefined 
+    })
+    const stats = statsRes?.data
 
     if (loading) return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
