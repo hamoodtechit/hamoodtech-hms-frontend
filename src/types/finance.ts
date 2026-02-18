@@ -16,13 +16,20 @@ export interface FinanceAccount {
 
 export interface FinanceTransaction {
     id: string;
+    txnId: string;
     accountId: string;
-    amount: number;
-    type: 'DEPOSIT' | 'WITHDRAW' | 'EXPENSE' | 'INCOME'; // Adjust based on actual API
+    accountBalanceBefore: string;
+    accountBalanceNow: string;
+    saleId: string | null;
+    purchaseId: string | null;
+    expenseId: string | null;
+    flowType: 'in' | 'out';
+    txnType: 'sale' | 'purchase' | 'expense' | 'income' | 'withdraw' | 'deposit';
     paymentMethod: string;
+    amount: string;
     note?: string;
-    date: string;
-    // Add other fields as per API response if known
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface AccountListResponse {

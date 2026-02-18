@@ -299,7 +299,8 @@ export default function POSPage() {
               dueAmount,
               date: new Date().toLocaleString(),
               status: "Completed" as const,
-              paymentMethod
+              paymentMethod,
+              invoiceNumber: response.data?.invoiceNumber || response.data?.id
           }
           
           addTransaction(transaction)

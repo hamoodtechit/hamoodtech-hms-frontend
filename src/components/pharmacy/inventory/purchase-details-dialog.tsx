@@ -18,9 +18,10 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
+import { cn } from "@/lib/utils"
 import { Purchase } from "@/types/pharmacy"
 import { format } from "date-fns"
-import { Building2, FileText, MapPin, Phone, User } from "lucide-react"
+import { Building2, DollarSign, FileText, MapPin, Phone, User } from "lucide-react"
 
 interface PurchaseDetailsDialogProps {
   open: boolean
@@ -146,17 +147,63 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
           </div>
         </div>
 
+        {/* Payment Details */}
+        {(purchase.paymentMethod || purchase.paidAmount !== undefined) && (
+          <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-3">
+             <h3 className="font-semibold flex items-center gap-2 text-sm text-primary uppercase tracking-wider">
+               <DollarSign className="h-4 w-4" /> Payment Information
+             </h3>
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-0.5">
+                    <span className="text-xs text-muted-foreground block">Method</span>
+                    <span className="font-bold capitalize">{purchase.paymentMethod || "N/A"}</span>
+                </div>
+                <div className="space-y-0.5">
+                    <span className="text-xs text-muted-foreground block">Paid Amount</span>
+                    <span className="font-bold text-emerald-600">{formatCurrency(Number(purchase.paidAmount || 0))}</span>
+                </div>
+                <div className="space-y-0.5">
+                    <span className="text-xs text-muted-foreground block">Balance Due</span>
+                    <span className={cn(
+                        "font-bold",
+                        Number(purchase.dueAmount || 0) > 0 ? "text-destructive" : "text-emerald-600"
+                    )}>
+                        {Number(purchase.dueAmount || 0) > 0 
+                            ? formatCurrency(Number(purchase.dueAmount)) 
+                            : "Fully Paid"
+                        }
+                    </span>
+                </div>
+             </div>
+          </div>
+        )}
+
         {/* Footer Totals */}
-        <div className="flex justify-end pt-4 border-t mt-2">
-          <div className="bg-muted p-4 rounded-lg min-w-[200px] space-y-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t mt-2">
+          <div className="text-xs text-muted-foreground italic">
+            * All prices are in local currency
+          </div>
+          <div className="bg-muted p-4 rounded-lg min-w-[280px] space-y-2 ml-auto">
             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Total Items:</span>
-                <span className="font-medium">{purchase.purchaseItems?.length || 0}</span>
+                <span className="text-muted-foreground">Subtotal:</span>
+                <span className="font-medium">{formatCurrency(Number(purchase.totalPrice || 0))}</span>
             </div>
-            <div className="flex justify-between items-center text-lg font-bold text-primary">
+            <div className="flex justify-between items-center text-lg font-bold text-primary pt-1 border-t border-black/5">
                 <span>Grand Total:</span>
-                <span>{formatCurrency(purchase.totalPrice || 0)}</span>
+                <span>{formatCurrency(Number(purchase.totalPrice || 0))}</span>
             </div>
+            {Number(purchase.paidAmount || 0) > 0 && (
+                <div className="flex justify-between items-center text-sm text-emerald-600 font-medium">
+                    <span>Total Paid:</span>
+                    <span>-{formatCurrency(Number(purchase.paidAmount))}</span>
+                </div>
+            )}
+            {Number(purchase.dueAmount || 0) > 0 && (
+                <div className="flex justify-between items-center text-sm text-destructive font-bold pt-1 border-t border-black/5">
+                    <span>Outstanding Due:</span>
+                    <span>{formatCurrency(Number(purchase.dueAmount))}</span>
+                </div>
+            )}
           </div>
         </div>
         

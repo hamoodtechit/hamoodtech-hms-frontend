@@ -13,10 +13,11 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
+import { Link } from "@/i18n/navigation"
 import { financeService } from "@/services/finance-service"
 import { FinanceAccount } from "@/types/finance"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Loader2, Wallet } from "lucide-react"
+import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Eye, Loader2, Wallet } from "lucide-react"
 import { useState } from "react"
 
 export default function FinancePage() {
@@ -121,14 +122,22 @@ export default function FinancePage() {
                                             {formatCurrency(Number(account.currentBalance))}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm"
-                                                onClick={() => setWithdrawAccount(account)}
-                                            >
-                                                <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                Withdraw
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                <Link href={`/finance/accounts/${account.id}`}>
+                                                    <Button variant="outline" size="sm">
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View
+                                                    </Button>
+                                                </Link>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => setWithdrawAccount(account)}
+                                                >
+                                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                    Withdraw
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))

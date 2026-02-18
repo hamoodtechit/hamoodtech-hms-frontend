@@ -30,6 +30,7 @@ export interface Transaction {
     dueAmount?: number
     status: 'Completed' | 'Refunded'
     paymentMethod: PaymentMethod
+    invoiceNumber?: string
 }
 
 interface PosState {

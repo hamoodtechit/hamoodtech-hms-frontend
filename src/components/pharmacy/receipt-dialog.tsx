@@ -62,7 +62,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                    {/* Add more patient info if available in transaction object */}
                 </div>
                 <div className="text-right">
-                    <span className="text-zinc-500 block">Invoice #: <span className="text-black font-semibold">{transaction.id}</span></span>
+                    <span className="text-zinc-500 block">Invoice #: <span className="text-black font-semibold">{transaction.invoiceNumber || transaction.id}</span></span>
                     <span className="text-zinc-500 block">Date: <span className="text-black font-semibold">{transaction.date}</span></span>
                     <span className="text-zinc-500 block">Mode: <span className="text-black font-semibold uppercase">{transaction.paymentMethod}</span></span>
                 </div>
@@ -158,7 +158,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         </div>
 
         <DialogFooter className="p-4 bg-zinc-50 print:hidden flex-col gap-2">
-          <Button className="w-full" onClick={() => window.print()}>
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => window.print()}>
             <Printer className="mr-2 h-4 w-4" /> Print Receipt
           </Button>
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
