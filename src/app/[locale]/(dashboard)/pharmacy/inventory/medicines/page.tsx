@@ -183,7 +183,14 @@ export default function MedicinesPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Medicine List</h1>
+            <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">Medicine List</h1>
+                {meta?.totalItems !== undefined && (
+                    <Badge variant="outline" className="text-base px-2 py-0.5 border-primary/20 bg-primary/5 text-primary">
+                        {meta.totalItems}
+                    </Badge>
+                )}
+            </div>
             <p className="text-muted-foreground">Manage medicine definitions and configurations.</p>
           </div>
         </div>
@@ -320,6 +327,7 @@ export default function MedicinesPage() {
               <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="font-semibold">Medicine Info</TableHead>
+                  <TableHead className="font-semibold">Generic Name</TableHead>
                   <TableHead className="font-semibold">Strength</TableHead>
                   <TableHead className="font-semibold">Dosage Form</TableHead>
                   <TableHead className="font-semibold">Manufacturer</TableHead>
@@ -351,13 +359,15 @@ export default function MedicinesPage() {
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
                           <span className="font-semibold text-primary">{medicine.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono">{medicine.genericName || 'No Generic'}</span>
                           {medicine.barcode && (
                              <Badge variant="outline" className="w-fit text-[10px] h-4 px-1 mt-1 font-mono">
                                 {medicine.barcode}
                              </Badge>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                         <span className="text-xs text-muted-foreground font-medium">{medicine.genericName || '-'}</span>
                       </TableCell>
                       <TableCell>
                         <span className="text-xs font-medium">{medicine.strength || 'N/A'}</span>

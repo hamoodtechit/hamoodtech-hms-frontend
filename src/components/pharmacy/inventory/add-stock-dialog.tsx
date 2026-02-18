@@ -3,24 +3,25 @@
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { cn } from "@/lib/utils"
 import { useInventoryStore } from "@/store/use-inventory-store"
 import { format } from "date-fns"
@@ -104,13 +105,21 @@ export function AddStockDialog() {
              </div>
              <div className="grid gap-2">
                 <Label>Quantity</Label>
-                <Input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0" />
+                <SmartNumberInput 
+                    value={quantity ? Number(quantity) : undefined} 
+                    onChange={(val: number | undefined) => setQuantity(val?.toString() || "")} 
+                    placeholder="0" 
+                />
              </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
              <div className="grid gap-2">
                 <Label>Cost Price (Per Unit)</Label>
-                <Input type="number" value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="0.00" />
+                <SmartNumberInput 
+                    value={costPrice ? Number(costPrice) : undefined} 
+                    onChange={(val: number | undefined) => setCostPrice(val?.toString() || "")} 
+                    placeholder="0.00" 
+                />
              </div>
              <div className="grid gap-2">
                 <Label>Expiry Date</Label>

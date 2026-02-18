@@ -1,4 +1,4 @@
-import { CashRegister, PaymentMethod } from '@/types/pharmacy'
+import { Branch, CashRegister, PaymentMethod } from '@/types/pharmacy'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -36,7 +36,9 @@ interface PosState {
     cart: Product[]
     transactions: Transaction[]
     activeRegister: CashRegister | null
+    activeBranch: Branch | null
     setActiveRegister: (register: CashRegister | null) => void
+    setActiveBranch: (branch: Branch | null) => void
     addToCart: (product: Product) => void
     removeFromCart: (id: string, batchNumber?: string) => void
     updateQuantity: (id: string, delta: number, batchNumber?: string) => void
@@ -54,7 +56,9 @@ export const usePosStore = create<PosState>()(
                  { id: "PH-1003", date: "2024-02-11 11:30", customerName: "Guest", total: 12.00, status: "Completed", items: [], subtotal: 10, tax: 2, discount: 0, paymentMethod: 'cash' },
             ],
             activeRegister: null,
+            activeBranch: null,
             setActiveRegister: (register) => set({ activeRegister: register }),
+            setActiveBranch: (branch) => set({ activeBranch: branch }),
             addToCart: (product) => set((state) => {
                 // Check if item with same ID AND same batch exists
                 const existing = state.cart.find((item) => 
@@ -97,7 +101,6 @@ export const usePosStore = create<PosState>()(
         {
             name: 'pos-storage',
             storage: createJSONStorage(() => localStorage),
-            skipHydration: true, // We will handle hydration manually if needed to avoid errors
         }
     )
 )

@@ -17,7 +17,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useOpenCashRegister } from "@/hooks/pharmacy-queries"
 import { usePosStore } from "@/store/use-pos-store"
@@ -108,7 +108,7 @@ export function OpenRegisterDialog({
                 <FormItem>
                   <FormLabel>Opening Balance ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <SmartNumberInput placeholder="0.00" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -3,21 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Sale, SaleReturnPayload } from "@/types/pharmacy"
@@ -168,13 +168,12 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
                     <TableCell>{item.batchNumber}</TableCell>
                     <TableCell>{Number(item.quantity)} {item.unit}</TableCell>
                     <TableCell>
-                        <Input 
-                            type="number"
-                            min="1"
+                        <SmartNumberInput 
+                            min={1}
                             max={Number(item.quantity)}
                             className="w-16 h-8"
                             value={returnQuantities[item.id] || Number(item.quantity)}
-                            onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
+                            onChange={(val) => handleQuantityChange(item.id, val || 0)}
                             disabled={!selectedItems[item.id]}
                         />
                     </TableCell>

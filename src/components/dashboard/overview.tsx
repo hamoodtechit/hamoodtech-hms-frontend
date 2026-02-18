@@ -8,20 +8,21 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-    BarElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Filler,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip
 } from 'chart.js'
-import { addDays, formatDistanceToNow } from "date-fns"
+
+import { formatDistanceToNow } from "date-fns"
 import { AlertTriangle, CreditCard, DollarSign, Users } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Line } from "react-chartjs-2"
 import { DateRange } from "react-day-picker"
 
@@ -56,10 +57,14 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 export function Overview() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: addDays(new Date(), -7),
-    to: new Date(),
-  })
+  const [date, setDate] = useState<DateRange | undefined>()
+
+  useEffect(() => {
+    setDate({
+        from: new Date(),
+        to: new Date(),
+    })
+  }, [])
 
   const startDate = date?.from ? date.from.toISOString() : undefined
   const endDate = date?.to ? date.to.toISOString() : undefined
@@ -69,6 +74,17 @@ export function Overview() {
     startDate, 
     endDate 
   })
+
+  // Memoize all-time params to prevent infinite loop
+  // using branchId: undefined to get GLOBAL medicine count
+  const allTimeParams = useMemo(() => ({
+    branchId: undefined,
+    startDate: '2000-01-01',
+    endDate: new Date().toISOString().split('T')[0]
+  }), [])
+
+  // Fetch all-time stats for inventory counts
+  const { data: allTimeStatsRes } = usePharmacyStats(allTimeParams)
   
   const { data: graphRes, isLoading: loadingGraph } = usePharmacyGraph({ 
     branchId: activeStoreId || undefined, 
@@ -82,6 +98,7 @@ export function Overview() {
   const { data: purchasesRes, isLoading: loadingPurchases } = usePurchases({ limit: 5, branchId: activeStoreId || undefined })
 
   const stats = statsRes?.data
+  const allTimeStats = allTimeStatsRes?.data
   const graphData = graphRes?.data || []
   const loading = loadingStats || loadingGraph
 
@@ -111,7 +128,7 @@ export function Overview() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <DatePickerWithRange date={date} setDate={setDate} />
             <Button asChild>
                 <Link href="/pharmacy/pos">New Sale</Link>
@@ -120,7 +137,7 @@ export function Overview() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -155,7 +172,7 @@ export function Overview() {
                 </div>
             ) : (
               <>
-                <div className="text-2xl font-bold">{stats?.totalMedicines || 0} Items</div>
+                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
                 <p className="text-xs text-muted-foreground flex items-center mt-1">
                   Across all categories
                 </p>
@@ -207,8 +224,8 @@ export function Overview() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 md:col-span-2 lg:col-span-4 overflow-hidden">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-1 md:col-span-2 lg:col-span-4 overflow-hidden">
           <CardHeader>
             <CardTitle>Revenue Overview</CardTitle>
             <CardDescription>Monthly revenue performance for the current year.</CardDescription>
@@ -263,7 +280,7 @@ export function Overview() {
             )}
           </CardContent>
         </Card>
-        <Card className="col-span-4 md:col-span-2 lg:col-span-3">
+        <Card className="col-span-1 md:col-span-2 lg:col-span-3">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>Latest system events.</CardDescription>

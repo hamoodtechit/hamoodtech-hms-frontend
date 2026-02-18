@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useInsuranceStore } from "@/store/use-insurance-store"
 import { PlusCircle, Upload } from "lucide-react"
@@ -102,7 +103,11 @@ export function NewClaimDialog() {
 
           <div className="grid gap-2">
              <Label>Claim Amount ($)</Label>
-             <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+             <SmartNumberInput 
+                value={amount ? Number(amount) : undefined} 
+                onChange={(val: number | undefined) => setAmount(val?.toString() || "")} 
+                placeholder="0.00" 
+             />
           </div>
 
           <div className="grid gap-2">

@@ -4,8 +4,8 @@ import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClie
 
 export const PHARMACY_KEYS = {
   all: ["pharmacy"] as const,
-  stats: (branchId?: string) => [...PHARMACY_KEYS.all, "stats", branchId] as const,
-  graph: (branchId?: string, days?: number) => [...PHARMACY_KEYS.all, "graph", branchId, days] as const,
+  stats: (params: any) => [...PHARMACY_KEYS.all, "stats", params] as const,
+  graph: (params: any) => [...PHARMACY_KEYS.all, "graph", params] as const,
   topSelling: (branchId?: string, days?: number) => [...PHARMACY_KEYS.all, "topSelling", branchId, days] as const,
   patients: (params: any) => [...PHARMACY_KEYS.all, "patients", params] as const,
   activeSession: (branchId?: string) => [...PHARMACY_KEYS.all, "session", "active", branchId] as const,
@@ -30,7 +30,7 @@ export function useCashRegisters(params: any = {}) {
 
 export function usePharmacyStats(params: { branchId?: string; startDate?: string; endDate?: string }) {
   return useQuery({
-    queryKey: PHARMACY_KEYS.stats(params.branchId),
+    queryKey: PHARMACY_KEYS.stats(params),
     queryFn: () => pharmacyService.getPharmacyStats(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -38,7 +38,7 @@ export function usePharmacyStats(params: { branchId?: string; startDate?: string
 
 export function usePharmacyGraph(params: { branchId?: string; startDate?: string; endDate?: string; days?: number }) {
   return useQuery({
-    queryKey: PHARMACY_KEYS.graph(params.branchId, params.days),
+    queryKey: PHARMACY_KEYS.graph(params),
     queryFn: () => pharmacyService.getPharmacyGraph(params),
     staleTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,

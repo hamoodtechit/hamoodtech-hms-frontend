@@ -36,17 +36,20 @@ import { useStoreContext } from "@/store/use-store-context"
 import { TopSellingProduct } from "@/types/pharmacy"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
-import { addDays } from "date-fns"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 
 export function AnalyticsDashboard() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: addDays(new Date(), -7),
-    to: new Date(),
-  })
+  const [date, setDate] = useState<DateRange | undefined>()
+
+  useEffect(() => {
+    setDate({
+        from: new Date(),
+        to: new Date(),
+    })
+  }, [])
 
   // Format dates for API
   const startDate = date?.from ? date.from.toISOString() : undefined

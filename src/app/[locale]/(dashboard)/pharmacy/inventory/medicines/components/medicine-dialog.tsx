@@ -31,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCreateMedicine, useManufacturers, usePharmacyEntities, useUpdateMedicine } from "@/hooks/pharmacy-queries"
@@ -498,38 +499,34 @@ export function MedicineDialog({
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="hidden">
                     <Label htmlFor="unitPrice">Unit Price</Label>
-                    <Input 
+                    <SmartNumberInput 
                         id="unitPrice" 
-                        type="number" 
-                        value={formData.unitPrice} 
-                        onChange={(e) => handleInputChange('unitPrice', parseFloat(e.target.value))}
+                        value={formData.unitPrice || undefined} 
+                        onChange={(val: number | undefined) => handleInputChange('unitPrice', val)}
                     />
                   </div>
                 <div className="space-y-2">
                   <Label htmlFor="purchasePrice">Purchase Price</Label>
-                  <Input 
+                  <SmartNumberInput 
                     id="purchasePrice" 
-                    type="number" 
-                    value={formData.purchasePrice} 
-                    onChange={(e) => handleInputChange('purchasePrice', parseFloat(e.target.value))}
+                    value={formData.purchasePrice || undefined} 
+                    onChange={(val: number | undefined) => handleInputChange('purchasePrice', val)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="salePrice">Sale Price</Label>
-                  <Input 
+                  <SmartNumberInput 
                     id="salePrice" 
-                    type="number" 
-                    value={formData.salePrice} 
-                    onChange={(e) => handleInputChange('salePrice', parseFloat(e.target.value))}
+                    value={formData.salePrice || undefined} 
+                    onChange={(val: number | undefined) => handleInputChange('salePrice', val)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mrp">MRP</Label>
-                  <Input 
+                  <SmartNumberInput 
                     id="mrp" 
-                    type="number" 
-                    value={formData.mrp} 
-                    onChange={(e) => handleInputChange('mrp', parseFloat(e.target.value))}
+                    value={formData.mrp || undefined} 
+                    onChange={(val: number | undefined) => handleInputChange('mrp', val)}
                   />
                 </div>
               </div>
@@ -563,11 +560,10 @@ export function MedicineDialog({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="openingStock">Opening Stock (Qty)</Label>
-                      <Input 
+                      <SmartNumberInput 
                         id="openingStock" 
-                        type="number" 
-                        value={formData.openingStock} 
-                        onChange={(e) => handleInputChange('openingStock', parseInt(e.target.value))}
+                        value={formData.openingStock || undefined} 
+                        onChange={(val: number | undefined) => handleInputChange('openingStock', val)}
                       />
                     </div>
                     <div className="space-y-2">
