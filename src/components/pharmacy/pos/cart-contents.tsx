@@ -2,10 +2,10 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -46,7 +46,7 @@ export function CartContents({
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart } = usePosStore()
-    const { pharmacy } = useSettingsStore()
+    const { pharmacy, finance } = useSettingsStore()
     const { formatCurrency } = useCurrency()
     const vatPercentage = pharmacy?.vatPercentage || 0
 
@@ -69,7 +69,7 @@ export function CartContents({
             <div className="p-3 border-b bg-secondary/10 flex justify-between items-center shrink-0">
                 <h2 className="font-semibold flex items-center gap-2 text-base">
                     <ShoppingCart className="w-4 h-4 text-primary" />
-                    Current Order
+                    Cart Items
                 </h2>
                 <Badge variant="secondary" className="px-2 py-0.5 text-xs">{cart.length} items</Badge>
             </div>
@@ -150,34 +150,30 @@ export function CartContents({
                                             <span>Discount</span>
                                         </summary>
                                         <div className="mt-1 flex gap-2">
-                                            <Input 
-                                                type="number"
+                                            <SmartNumberInput 
                                                 placeholder="%"
                                                 className="h-6 text-xs w-16"
-                                                min="0"
-                                                max="100"
-                                                value={item.discountPercentage || ""}
-                                                onChange={(e) => {
-                                                    const val = Number(e.target.value)
+                                                min={0}
+                                                max={100}
+                                                value={item.discountPercentage}
+                                                onChange={(val: number | undefined) => {
                                                     const updatedCart = cart.map(c => 
                                                         c.id === item.id && c.batchNumber === item.batchNumber
-                                                            ? { ...c, discountPercentage: val || undefined, discountAmount: undefined }
+                                                            ? { ...c, discountPercentage: val, discountAmount: undefined }
                                                             : c
                                                     )
                                                     usePosStore.setState({ cart: updatedCart })
                                                 }}
                                             />
-                                            <Input 
-                                                type="number"
+                                            <SmartNumberInput 
                                                 placeholder="Amt"
                                                 className="h-6 text-xs w-20"
-                                                min="0"
-                                                value={item.discountAmount || ""}
-                                                onChange={(e) => {
-                                                    const val = Number(e.target.value)
+                                                min={0}
+                                                value={item.discountAmount}
+                                                onChange={(val: number | undefined) => {
                                                     const updatedCart = cart.map(c => 
                                                         c.id === item.id && c.batchNumber === item.batchNumber
-                                                            ? { ...c, discountAmount: val || undefined, discountPercentage: undefined }
+                                                            ? { ...c, discountAmount: val, discountPercentage: undefined }
                                                             : c
                                                     )
                                                     usePosStore.setState({ cart: updatedCart })
@@ -232,13 +228,20 @@ export function CartContents({
                         </div>
                          <div className="space-y-1">
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Paid</span>
-                            <Input 
-                                type="number" 
+                            <SmartNumberInput 
                                 value={paidAmount}
-                                onFocus={(e) => e.target.select()} 
-                                onChange={(e) => setPaidAmount(Number(e.target.value))}
+                                onFocus={(e: any) => e.target.select()} 
+                                onChange={(val: number | undefined) => setPaidAmount(val || 0)}
                                 className="h-9 text-sm font-bold"
                             />
+                        </div>
+                        <div className="col-span-2 space-y-1">
+                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Target Account</span>
+                             <div className="text-xs px-3 py-2 bg-muted rounded border font-medium">
+                                {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
+                                    <span className="text-destructive">No account mapped (Check Settings)</span>
+                                )}
+                             </div>
                         </div>
                     </div>
 
@@ -249,29 +252,27 @@ export function CartContents({
                         </span>
                         <div className="flex gap-2">
                             <div className="relative flex-1">
-                                <Input 
+                                <SmartNumberInput 
                                     placeholder="%" 
-                                    type="number" 
                                     className="h-8 text-xs pr-6" 
-                                    min="0" 
-                                    max="100"
-                                    value={discount === 0 ? "" : discount}
-                                    onChange={(e) => {
-                                        setDiscount(Number(e.target.value) || 0)
+                                    min={0}
+                                    max={100}
+                                    value={discount === 0 ? undefined : discount}
+                                    onChange={(val: number | undefined) => {
+                                        setDiscount(val || 0)
                                         setDiscountFixedAmount(0)
                                     }}
                                 />
                                 <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">%</span>
                             </div>
                             <div className="relative flex-1">
-                                <Input 
+                                <SmartNumberInput 
                                     placeholder="Amount" 
-                                    type="number" 
                                     className="h-8 text-xs pr-8" 
-                                    min="0"
-                                    value={discountFixedAmount === 0 ? "" : discountFixedAmount}
-                                    onChange={(e) => {
-                                        setDiscountFixedAmount(Number(e.target.value) || 0)
+                                    min={0}
+                                    value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
+                                    onChange={(val: number | undefined) => {
+                                        setDiscountFixedAmount(val || 0)
                                         setDiscount(0)
                                     }}
                                 />

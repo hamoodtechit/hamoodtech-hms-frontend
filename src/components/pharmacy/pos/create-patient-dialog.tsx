@@ -25,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
 import { Patient } from "@/types/pharmacy"
@@ -121,7 +122,7 @@ export function CreatePatientDialog({
                     <FormItem>
                     <FormLabel>Age *</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="30" {...field} />
+                        <SmartNumberInput placeholder="30" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>

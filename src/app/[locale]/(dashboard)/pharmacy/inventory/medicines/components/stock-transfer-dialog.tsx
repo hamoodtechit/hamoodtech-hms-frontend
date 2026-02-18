@@ -2,22 +2,22 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { PharmacyEntity, Stock } from "@/types/pharmacy"
@@ -124,11 +124,10 @@ export function StockTransferDialog({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="quantity">Transfer Quantity</Label>
-            <Input
+            <SmartNumberInput
               id="quantity"
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(parseFloat(e.target.value))}
+              value={quantity || undefined}
+              onChange={(val: number | undefined) => setQuantity(val || 0)}
               max={stock?.quantity || 100}
             />
           </div>

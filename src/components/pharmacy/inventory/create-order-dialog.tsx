@@ -34,6 +34,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
@@ -314,39 +315,35 @@ export function CreateOrderDialog() {
                     </div>
                     <div className="col-span-1 space-y-2">
                         <Label className="text-xs font-semibold">Qty</Label>
-                        <Input 
-                        type="number" 
+                        <SmartNumberInput 
                         className="h-9" 
-                        value={item.quantity} 
-                        onChange={(e) => updateItem(index, { quantity: parseInt(e.target.value) || 0 })}
+                        value={Number(item.quantity)} 
+                        onChange={(val: number | undefined) => updateItem(index, { quantity: val || 0 })}
                         />
                     </div>
                     <div className="col-span-1 space-y-2">
                         <Label className="text-xs font-semibold">Purchase Price</Label>
-                        <Input 
-                        type="number" 
+                        <SmartNumberInput 
                         className="h-9" 
-                        value={item.price} 
-                        onChange={(e) => updateItem(index, { price: parseFloat(e.target.value) || 0 })}
+                        value={Number(item.price)} 
+                        onChange={(val: number | undefined) => updateItem(index, { price: val || 0 })}
                         />
                     </div>
                     <div className="col-span-1 space-y-2">
                         <Label className="text-xs font-semibold">MRP</Label>
-                        <Input 
-                        type="number" 
+                        <SmartNumberInput 
                         className="h-9" 
-                        value={item.mrp} 
-                        onChange={(e) => updateItem(index, { mrp: parseFloat(e.target.value) || 0 })}
+                        value={Number(item.mrp)} 
+                        onChange={(val: number | undefined) => updateItem(index, { mrp: val || 0 })}
                         />
                     </div>
                     {/* Added Sale Price Field */}
                     <div className="col-span-1 space-y-2">
                         <Label className="text-xs font-semibold">Sale</Label>
-                        <Input 
-                        type="number" 
+                        <SmartNumberInput 
                         className="h-9" 
-                        value={item.salePrice} 
-                        onChange={(e) => updateItem(index, { salePrice: parseFloat(e.target.value) || 0 })}
+                        value={Number(item.salePrice)} 
+                        onChange={(val: number | undefined) => updateItem(index, { salePrice: val || 0 })}
                         />
                     </div>
                     <div className="col-span-2 space-y-2">

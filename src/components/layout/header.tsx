@@ -1,7 +1,6 @@
 "use client"
 
 import { MobileSidebar } from "@/components/layout/mobile-sidebar"
-import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { UserNav } from "@/components/layout/user-nav"
 import {
     Breadcrumb,
@@ -31,27 +30,36 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-8 gap-2 md:gap-4">
         <MobileSidebar />
-        <StoreSwitcher className="hidden md:flex mr-2" />
+        {/* StoreSwitcher moved to Settings page */}
         
         {/* Breadcrumbs */}
         <div className="hidden lg:flex items-center text-sm text-muted-foreground mr-4">
              <Breadcrumb>
                 <BreadcrumbList>
                     <BreadcrumbItem>
-                        <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                        <BreadcrumbLink asChild>
+                            <Link href="/dashboard">Dashboard</Link>
+                        </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {paths.filter(p => p !== "dashboard").map((path, index) => (
-                        <div key={path} className="flex items-center">
-                            <BreadcrumbSeparator />
-                            <BreadcrumbItem>
-                                {index === paths.length - 2 ? (
-                                    <BreadcrumbPage className="capitalize font-semibold text-primary">{path}</BreadcrumbPage>
-                                ) : (
-                                    <BreadcrumbLink href={`/${path}`} className="capitalize">{path}</BreadcrumbLink>
-                                )}
-                            </BreadcrumbItem>
-                        </div>
-                    ))}
+                    {paths.filter(p => p !== "dashboard").map((path, index, arr) => {
+                        const href = `/${arr.slice(0, index + 1).join('/')}`;
+                        const isLast = index === arr.length - 1;
+                        
+                        return (
+                            <div key={path} className="flex items-center">
+                                <BreadcrumbSeparator />
+                                <BreadcrumbItem>
+                                    {isLast ? (
+                                        <BreadcrumbPage className="capitalize font-semibold text-primary">{path}</BreadcrumbPage>
+                                    ) : (
+                                        <BreadcrumbLink asChild>
+                                            <Link href={href} className="capitalize">{path}</Link>
+                                        </BreadcrumbLink>
+                                    )}
+                                </BreadcrumbItem>
+                            </div>
+                        );
+                    })}
                 </BreadcrumbList>
             </Breadcrumb>
         </div>

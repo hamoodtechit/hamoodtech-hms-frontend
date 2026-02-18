@@ -20,7 +20,7 @@ import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, FileText, Info, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, FileText, Info, LayoutGrid, List, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -40,7 +40,8 @@ export default function POSPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch] = useDebounce(searchQuery, 500)
   const [activeCategory, setActiveCategory] = useState("All")
-  const [discount, setDiscount] = useState(0)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [discount, setDiscount] = useState(5) // Default 5% discount
   const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
   
   const tabsListRef = useRef<HTMLDivElement>(null)
@@ -48,7 +49,8 @@ export default function POSPage() {
   const { activeStoreId } = useStoreContext()
   const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
   const [closeRegisterOpen, setCloseRegisterOpen] = useState(false)
-  const { fetchSettings, pharmacy } = useSettingsStore()
+  const { fetchSettings, pharmacy, finance } = useSettingsStore()
+  const pharmacyFinance = finance // Alias for clarity if needed, or just use finance directly
 
   // React Query Hooks
   const { data: categoriesRes } = usePharmacyEntities('categories', { limit: 100 })
@@ -233,7 +235,14 @@ export default function POSPage() {
                   discountAmount: item.discountAmount,
                   batchNumber: item.batchNumber || "BATCH-N/A",
                   expiryDate: item.expiryDate || new Date().toISOString()
-              }))
+              })),
+              payments: [{
+                  accountId: pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
+                  amount: paidAmount,
+                  paymentMethod: paymentMethod,
+                  note: ""
+              }],
+
           }
 
           const response = await createSaleMutation.mutateAsync(salePayload)
@@ -425,6 +434,29 @@ export default function POSPage() {
                  </div>
 
                 <div className="flex gap-2 flex-none">
+                     {/* View Toggle */}
+                    <div className="flex items-center bg-secondary/20 p-1 rounded-lg border">
+                        <Button
+                            variant={viewMode === "grid" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setViewMode("grid")}
+                            title="Grid View"
+                        >
+                            <LayoutGrid className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant={viewMode === "list" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setViewMode("list")}
+                            title="List View"
+                        >
+                            <List className="h-4 w-4" />
+                        </Button>
+                    </div>
+
+                    {/* Link Prescription Button - Commented out for future use
                     <Button 
                         variant="outline" 
                         size="icon" 
@@ -433,12 +465,13 @@ export default function POSPage() {
                     >
                         <FileText className="h-4 w-4" />
                     </Button>
+                    */}
                     <Link href="/pharmacy">
                         <Button variant="ghost" size="icon" className="text-muted-foreground mr-2" title="Exit POS">
                             <ChevronLeft className="h-5 w-5" />
                         </Button>
                     </Link>
-                    <StoreSwitcher />
+                    {/* StoreSwitcher removed as per user request */}
                     <TransactionHistory />
                     
                     {activeRegister && (
@@ -561,22 +594,34 @@ export default function POSPage() {
         {/* Scrollable Product Grid */}
         <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
             {loadingProducts && medicines.length === 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                <div className={`grid gap-4 pb-2 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
                     {Array.from({ length: 12 }).map((_, i) => (
                         <Card key={i} className="overflow-hidden border-transparent shadow-sm">
-                            <CardHeader className="p-3 sm:p-4 bg-secondary/10">
-                                <div className="flex justify-between items-start">
-                                    <Skeleton className="h-5 w-16" />
-                                    <Skeleton className="h-4 w-10" />
+                            {viewMode === 'grid' ? (
+                                <>
+                                    <CardHeader className="p-3 sm:p-4 bg-secondary/10">
+                                        <div className="flex justify-between items-start">
+                                            <Skeleton className="h-5 w-16" />
+                                            <Skeleton className="h-4 w-10" />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-3 sm:p-4 space-y-2">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <div className="flex items-end justify-between pt-2">
+                                            <Skeleton className="h-6 w-16" />
+                                            <Skeleton className="h-3 w-10" />
+                                        </div>
+                                    </CardContent>
+                                </>
+                            ) : (
+                                <div className="p-3 flex justify-between items-center">
+                                    <div className="space-y-2 w-full">
+                                        <Skeleton className="h-4 w-1/3" />
+                                        <Skeleton className="h-3 w-1/4" />
+                                    </div>
+                                    <Skeleton className="h-6 w-20" />
                                 </div>
-                            </CardHeader>
-                            <CardContent className="p-3 sm:p-4 space-y-2">
-                                <Skeleton className="h-4 w-3/4" />
-                                <div className="flex items-end justify-between pt-2">
-                                    <Skeleton className="h-6 w-16" />
-                                    <Skeleton className="h-3 w-10" />
-                                </div>
-                            </CardContent>
+                            )}
                         </Card>
                     ))}
                 </div>
@@ -586,7 +631,7 @@ export default function POSPage() {
                 </div>
             ) : (
                 <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                <div className={`gap-4 pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'flex flex-col space-y-2'}`}>
                     {filteredProducts.map((product) => {
                         const cartItem = cart.find(item => item.id === product.id)
                         const quantity = cartItem ? cartItem.quantity : 0
@@ -595,44 +640,89 @@ export default function POSPage() {
                         return (
                         <Card 
                             key={product.id} 
-                            className={`cursor-pointer transition-all group overflow-hidden border-2 ${quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
+                            className={`cursor-pointer transition-all group overflow-hidden border-2 ${
+                                quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'
+                            }`}
                             onClick={() => handleAddToCart(product)}
                         >
-                            <CardHeader className="p-3 sm:p-4 bg-secondary/10 group-hover:bg-primary/5 transition-colors relative">
-                                <div className="flex justify-between items-start">
-                                    <Badge variant="outline" className="text-[10px] sm:text-xs bg-background/80 backdrop-blur-sm truncate max-w-[80%]">
-                                        {product.category?.name || 'N/A'}
-                                    </Badge>
-                                    <div className="flex flex-col items-end gap-1">
-                                        {(product.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || product.stock || 0) < 30 && <Badge variant="destructive" className="text-[10px] animate-pulse">Low</Badge>}
-                                        {product.rackNumber && <span className="text-[10px] text-muted-foreground font-mono bg-muted/50 px-1 rounded">Rack: {product.rackNumber}</span>}
+                            {viewMode === 'grid' ? (
+                                // GRID VIEW RENDER
+                                <>
+                                    <CardHeader className="p-3 sm:p-4 bg-secondary/10 relative">
+                                        <div className="flex justify-between items-start">
+                                            <Badge variant="secondary" className="text-[10px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm">
+                                                <Info className="h-3 w-3 text-primary" />
+                                                {product.category?.name || 'Gen'}
+                                            </Badge>
+                                            {quantity > 0 && (
+                                                <Badge className="bg-primary text-primary-foreground text-xs shadow-sm animate-in zoom-in">
+                                                    {quantity} in cart
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-3 sm:p-4">
+                                        <div className="space-y-1 mb-3">
+                                            <h3 className="font-bold text-sm sm:text-base line-clamp-1 group-hover:text-primary transition-colors" title={product.name}>
+                                                {product.name}
+                                            </h3>
+                                            <div className="flex items-center text-xs text-muted-foreground">
+                                                <span className="truncate">{product.genericName}</span>
+                                                <span className="mx-1">•</span>
+                                                <span className="font-medium">{product.strength}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-end justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-muted-foreground">Price</span>
+                                                <span className="font-bold text-lg text-primary">{formatCurrency(salePrice)}</span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] text-muted-foreground">{product.stock} left</span>
+                                                <Button size="sm" className="h-7 w-7 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <ShoppingCart className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </>
+                            ) : (
+                                // LIST VIEW RENDER
+                                <div className="p-3 flex items-center gap-4 hover:bg-secondary/5">
+                                    <div className="h-10 w-10 rounded-lg bg-secondary/20 flex items-center justify-center shrink-0">
+                                        <FileText className="h-5 w-5 text-muted-foreground/50" />
                                     </div>
-                                </div>
-                                
-                                {quantity > 0 && (
-                                    <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm animate-in zoom-in">
-                                        {quantity}
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-sm truncate group-hover:text-primary transition-colors">{product.name}</h3>
+                                            <Badge variant="outline" className="text-[10px] h-4 px-1 py-0 border-muted">
+                                                {product.strength}
+                                            </Badge>
+                                            {product.category && (
+                                                <Badge variant="secondary" className="text-[10px] h-4 px-1 py-0 hidden sm:inline-flex">
+                                                    {product.category.name}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+                                            <span className="truncate">{product.genericName}</span>
+                                        </div>
                                     </div>
-                                )}
-                            </CardHeader>
+    
+                                    <div className="text-right shrink-0">
+                                        <div className="font-bold text-primary">{formatCurrency(salePrice)}</div>
+                                        <div className="text-[10px] text-muted-foreground">{product.stock} in stock</div>
+                                    </div>
 
-                            <CardContent className="p-3 sm:p-4">
-                                <h3 className="font-semibold text-sm sm:text-base truncate" title={product.name}>{product.name}</h3>
-                                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 space-y-0.5 ml-1">
-                                    <p className="truncate" title={product.genericName}>{product.genericName || 'No Generic'}</p>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="text-[10px] px-1 h-4 font-normal">{product.strength || 'N/A'}</Badge>
-                                        <span className="text-muted-foreground">•</span>
-                                        <span>{product.dosageForm || 'Unit'}</span>
-                                    </div>
+                                    {quantity > 0 && (
+                                        <Badge className="bg-primary text-primary-foreground text-xs shadow-sm h-6 px-2">
+                                            {quantity}
+                                        </Badge>
+                                    )}
                                 </div>
-                                <div className="mt-2 flex items-end justify-between">
-                                    <span className="text-base sm:text-lg font-bold text-primary">{formatCurrency(salePrice)}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {product.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || product.stock || 0} left
-                                    </span>
-                                </div>
-                            </CardContent>
+                            )}
                         </Card>
                         )
                     })}
@@ -662,24 +752,9 @@ export default function POSPage() {
         </ScrollArea>
       </div>
 
-      {/* Fixed Mobile Cart Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50">
-          <Button 
-            className="w-full h-14 text-lg shadow-lg flex justify-between items-center px-6" 
-            onClick={() => setCartOpen(true)}
-          >
-              <div className="flex items-center gap-2">
-                  <div className="bg-white/20 p-2 rounded-full">
-                    <ShoppingCart className="h-5 w-5" />
-                  </div>
-                  <span className="font-semibold">{itemCount} Items</span>
-              </div>
-              <span className="font-bold text-xl">{formatCurrency(total)}</span>
-          </Button>
-      </div>
+      {/* Desktop Cart Sidebar */}
+      <div className="hidden md:flex flex-col w-[350px] lg:w-[400px] border-l bg-card rounded-xl shadow-sm overflow-hidden h-full"> 
 
-      {/* Desktop Cart Section - Fixed Height */}
-      <div className="hidden md:flex flex-none w-[350px] lg:w-[400px] flex-col bg-card border rounded-xl shadow-lg h-full overflow-hidden">
          <CartContents 
             onCheckout={handleCheckout}
             customerDialogOpen={customerDialogOpen}
@@ -694,7 +769,25 @@ export default function POSPage() {
             setPaymentMethod={setPaymentMethod}
             paidAmount={paidAmount}
             setPaidAmount={setPaidAmount}
-        />
+         />
+      </div>
+
+      {/* Fixed Mobile Cart Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50">
+          <Button 
+            className="w-full h-14 text-lg shadow-lg flex justify-between items-center px-6" 
+            onClick={() => setCartOpen(true)}
+          >
+              <div className="flex items-center gap-2">
+                  <div className="bg-white/20 p-2 rounded-full">
+                    <ShoppingCart className="h-5 w-5" />
+                  </div>
+                  <span className="font-semibold">{itemCount} Items</span>
+              </div>
+              <span className="font-bold bg-white/20 px-3 py-1 rounded-md">
+                {formatCurrency(total)}
+              </span>
+          </Button>
       </div>
     </div>
   )

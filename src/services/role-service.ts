@@ -61,7 +61,7 @@ export const roleService = {
   },
 
   updateRole: async (id: string, data: Partial<RolePayload>): Promise<Role> => {
-    const response = await api.patch(`/roles/${id}`, data);
+    const response = await api.put(`/roles/${id}`, data);
     return response.data;
   },
 

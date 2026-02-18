@@ -7,30 +7,32 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-    Activity,
-    AlertTriangle,
-    ArrowRight,
-    DollarSign,
-    Loader2,
-    Package,
-    Pill,
-    Settings,
-    ShoppingCart
+  Activity,
+  AlertTriangle,
+  DollarSign,
+  Loader2,
+  Package,
+  Pill,
+  Settings,
+  ShoppingCart
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { cn } from "@/lib/utils"
-import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 
 export default function PharmacyPage() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: addDays(new Date(), -7),
-    to: new Date(),
-  })
+  const [date, setDate] = useState<DateRange | undefined>()
+
+  useEffect(() => {
+    setDate({
+        from: new Date(),
+        to: new Date(),
+    })
+  }, [])
 
   // Format dates for API
   const startDate = date?.from ? date.from.toISOString() : undefined
@@ -41,7 +43,20 @@ export default function PharmacyPage() {
     startDate,
     endDate
   })
+  
+  // Memoize the all-time stats params to prevent infinite refetching
+  // using branchId: undefined to get GLOBAL medicine count, ignoring current branch selection
+  const allTimeParams = useMemo(() => ({
+    branchId: undefined, 
+    startDate: '2000-01-01',
+    endDate: new Date().toISOString().split('T')[0] 
+  }), [])
+
+  // Fetch all-time stats for inventory counts (ignores date filter)
+  const { data: allTimeStatsRes } = usePharmacyStats(allTimeParams)
+
   const stats = statsResponse?.data
+  const allTimeStats = allTimeStatsRes?.data
 
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-500">
@@ -54,8 +69,11 @@ export default function PharmacyPage() {
             Real-time inventory tracking and point of sale management.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-4 md:mt-0">
             <DatePickerWithRange date={date} setDate={setDate} />
+            
+
+
             <Link href="/pharmacy/pos">
             <Button size="lg" className="shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
                 <ShoppingCart className="mr-2 h-5 w-5" />
@@ -65,7 +83,7 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-card to-secondary/10 border-l-4 border-l-emerald-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -87,7 +105,7 @@ export default function PharmacyPage() {
         
         <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Medicines</CardTitle>
+            <CardTitle className="text-sm font-medium">Registered Medicines</CardTitle>
             <Package className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -95,7 +113,7 @@ export default function PharmacyPage() {
                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <>
-                <div className="text-2xl font-bold">{stats?.totalMedicines || 0}</div>
+                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Unique products in inventory
                 </p>
@@ -141,39 +159,29 @@ export default function PharmacyPage() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 md:col-span-2 lg:col-span-4 bg-gradient-to-br from-card to-accent/5">
-            <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-                <Link href="/pharmacy/inventory">
-                    <div className="flex flex-col items-center justify-center p-6 bg-background rounded-xl border border-dashed hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
-                        <Pill className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">Manage Inventory</h3>
-                        <p className="text-xs text-center text-muted-foreground mt-1">Update stock levels & prices</p>
-                    </div>
-                </Link>
-                <Link href="/pharmacy/reports">
-                    <div className="flex flex-col items-center justify-center p-6 bg-background rounded-xl border border-dashed hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
-                        <ArrowRight className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">View Reports</h3>
-                        <p className="text-xs text-center text-muted-foreground mt-1">Sales & inventory analytics</p>
-                    </div>
-                </Link>
-                <Link href="/pharmacy/setup">
-                     <div className="flex flex-col items-center justify-center p-6 bg-background rounded-xl border border-dashed hover:border-primary hover:bg-primary/5 cursor-pointer transition-all group">
-                        <Settings className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-3 transition-colors" />
-                        <h3 className="font-semibold group-hover:text-primary transition-colors">Pharmacy Setup</h3>
-                        <p className="text-xs text-center text-muted-foreground mt-1">Manage Master Data</p>
-                    </div>
-                </Link>
-            </CardContent>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-cyan-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cash in Hand</CardTitle>
+            <DollarSign className="h-4 w-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{formatCurrency(stats?.totalCashInHand || 0)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Current drawer balance
+                </p>
+              </>
+            )}
+          </CardContent>
         </Card>
 
-        <Card className="col-span-4 md:col-span-2 lg:col-span-3 h-full">
+      </div>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-7 lg:grid-cols-7">
+        <Card className="col-span-1 md:col-span-4 lg:col-span-5 h-full">
              <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
                 <CardDescription>
@@ -182,6 +190,51 @@ export default function PharmacyPage() {
             </CardHeader>
             <CardContent>
                 <RecentTransactionsList />
+            </CardContent>
+        </Card>
+        
+        <Card className="col-span-1 md:col-span-3 lg:col-span-2 h-full border-l-4 border-l-primary/20">
+            <CardHeader>
+                <CardTitle>Quick Access</CardTitle>
+                <CardDescription>Common tasks</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+                <Link href="/pharmacy/inventory">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3">
+                        <Pill className="mr-3 h-5 w-5 text-blue-500" />
+                        <div className="flex flex-col items-start">
+                            <span className="font-semibold">Inventory</span>
+                            <span className="text-xs text-muted-foreground">Manage medicines & stock</span>
+                        </div>
+                    </Button>
+                </Link>
+                <Link href="/pharmacy/reports">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3">
+                        <Activity className="mr-3 h-5 w-5 text-purple-500" />
+                        <div className="flex flex-col items-start">
+                             <span className="font-semibold">Reports</span>
+                             <span className="text-xs text-muted-foreground">Sales & detailed analytics</span>
+                        </div>
+                    </Button>
+                </Link>
+                <Link href="/pharmacy/setup">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3">
+                        <Settings className="mr-3 h-5 w-5 text-slate-500" />
+                        <div className="flex flex-col items-start">
+                             <span className="font-semibold">Setup</span>
+                             <span className="text-xs text-muted-foreground">Categories, units & settings</span>
+                        </div>
+                    </Button>
+                </Link>
+                <Link href="/pharmacy/pos">
+                    <Button className="w-full justify-start h-auto py-3 mt-2 shadow-md">
+                        <ShoppingCart className="mr-3 h-5 w-5" />
+                         <div className="flex flex-col items-start">
+                             <span className="font-semibold">POS System</span>
+                             <span className="text-xs opacity-90">Open Point of Sale</span>
+                        </div>
+                    </Button>
+                </Link>
             </CardContent>
         </Card>
       </div>

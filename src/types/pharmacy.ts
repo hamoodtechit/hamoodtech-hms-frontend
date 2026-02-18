@@ -334,16 +334,24 @@ export interface SaleItem {
 
 export type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer';
 
+export interface SalePayment {
+  accountId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  note?: string;
+}
+
 export interface SalePayload {
   branchId: string;
-  patientId?: string; // Optional if not registered/walk-in
+  patientId: string;
   status: 'pending' | 'completed' | 'rejected';
   paymentStatus?: 'paid' | 'due' | 'partial';
   paymentMethod: PaymentMethod;
-  paidAmount?: number;
-  dueAmount?: number;
-  discountPercentage?: number;
-  discountAmount?: number;
+  paidAmount: number;
+  dueAmount: number;
+  discountPercentage: number;
+  discountAmount: number;
+  payments: SalePayment[];
   saleItems: SaleItem[];
 }
 
@@ -536,6 +544,7 @@ export interface PharmacyStats {
   totalMedicines: number;
   lowStockCount: number;
   outOfStockCount: number;
+  totalCashInHand: number;
 }
 
 export interface PharmacyGraphDataItem {

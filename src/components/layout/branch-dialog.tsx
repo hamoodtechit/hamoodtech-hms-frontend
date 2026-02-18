@@ -1,5 +1,6 @@
 "use client"
 
+import { MediaPicker } from "@/components/media/media-picker"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -107,6 +108,15 @@ export function BranchDialog({
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-4 mt-4">
           <div className="grid gap-4 py-4">
+            <div className="flex flex-col items-center justify-center gap-4 mb-4">
+              <div className="flex flex-col items-center gap-2">
+                 <Label>Branch Logo</Label>
+                 <MediaPicker 
+                    value={formData.logoUrl}
+                    onChange={(url) => setFormData(prev => ({ ...prev, logoUrl: url }))}
+                 />
+              </div>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Branch Name (English) *</Label>
               <Input

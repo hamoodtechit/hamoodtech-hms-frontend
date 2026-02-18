@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { pharmacyService } from "@/services/pharmacy-service"
+import { usePosStore } from "@/store/use-pos-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Branch } from "@/types/pharmacy"
 import { toast } from "sonner"
@@ -45,6 +46,17 @@ export function StoreSwitcher({ className }: { className?: string }) {
   React.useEffect(() => {
     fetchStores()
   }, [])
+
+  // Sync active store with POS store for global access (like sidebar logo)
+  const { setActiveBranch } = usePosStore()
+  React.useEffect(() => {
+    if (stores.length > 0 && activeStoreId) {
+        const currentBranch = stores.find(s => s.id === activeStoreId)
+        if (currentBranch) {
+            setActiveBranch(currentBranch)
+        }
+    }
+  }, [activeStoreId, stores, setActiveBranch])
 
   const selectedStore = stores.find((store) => store.id === activeStoreId)
 

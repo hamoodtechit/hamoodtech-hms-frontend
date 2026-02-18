@@ -2,15 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
-import { Transaction } from "@/store/use-pos-store"
+import { Transaction, usePosStore } from "@/store/use-pos-store"
 import { CheckCircle2, Printer, Share2 } from "lucide-react"
 
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -22,7 +22,8 @@ interface ReceiptDialogProps {
 }
 
 export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialogProps) {
-  const { general, pharmacy } = useSettingsStore()
+  const { general } = useSettingsStore()
+  const { activeBranch } = usePosStore()
   const { formatCurrency } = useCurrency()
   
   if (!transaction) return null
@@ -31,10 +32,19 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader className="items-center text-center">
-            <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
-                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            <div className="flex flex-col items-center justify-center mb-4">
+                {activeBranch?.logoUrl ? (
+                    <div className="h-16 w-16 mb-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={activeBranch.logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                    </div>
+                ) : (
+                    <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
+                        <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                    </div>
+                )}
+                <DialogTitle className="text-xl text-emerald-600">Payment Successful</DialogTitle>
             </div>
-            <DialogTitle className="text-xl text-emerald-600">Payment Successful</DialogTitle>
         </DialogHeader>
         
         <div className="bg-secondary/10 p-4 rounded-lg space-y-3 text-sm">

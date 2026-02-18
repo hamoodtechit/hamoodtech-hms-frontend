@@ -17,7 +17,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCloseCashRegister } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -130,7 +130,7 @@ export function CloseRegisterDialog({
                 <FormItem>
                   <FormLabel>Actual Cash in Drawer ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <SmartNumberInput placeholder="0.00" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
