@@ -86,7 +86,7 @@ export const pharmacyService = {
     limit?: number; 
     search?: string;
     categoryId?: string;
-    brandId?: string;
+    genericId?: string;
     name?: string;
     nameBangla?: string;
     genericName?: string;
@@ -330,12 +330,13 @@ export const pharmacyService = {
   },
 
   // --- Patients ---
-  getBrands: async (params?: { 
+  // Generics
+  getGenerics: async (params?: { 
     page?: number; 
     limit?: number; 
     search?: string;
   }): Promise<PharmacyResponse<PharmacyEntity>> => {
-    const response = await api.get<PharmacyResponse<PharmacyEntity>>('/pharmacy/brands', { params });
+    const response = await api.get<PharmacyResponse<PharmacyEntity>>('/pharmacy/generics', { params });
     return response.data;
   },
 

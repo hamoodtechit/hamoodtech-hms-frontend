@@ -203,8 +203,8 @@ export interface Medicine {
   unit: string;
   categoryId: string;
   category?: { id: string; name: string };
-  brandId: string;
-  brand?: { id: string; name: string };
+  genericId: string;
+  generic?: { id: string; name: string };
   groupId: string;
   group?: { id: string; name: string };
   medicineUnitId: string;
@@ -234,7 +234,7 @@ export interface MedicinePayload {
   barcode?: string;
   unit: string;
   categoryId: string;
-  brandId: string;
+  genericId: string;
   groupId?: string;
   medicineUnitId?: string;
   unitPrice?: number;
@@ -267,7 +267,7 @@ export interface StockTransferPayload {
   note: string;
 }
 
-export type PharmacyEntityType = 'brands' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
+export type PharmacyEntityType = 'generics' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
 
 export interface Patient {
   id: string;

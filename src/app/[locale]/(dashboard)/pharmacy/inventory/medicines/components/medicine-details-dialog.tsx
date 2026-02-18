@@ -7,21 +7,21 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { Medicine } from "@/types/pharmacy"
@@ -123,10 +123,10 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
           </div>
           <div className="p-3 bg-muted/30 rounded-lg space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Box className="h-3.5 w-3.5" /> Brand
+              <Box className="h-3.5 w-3.5" /> Generic
             </div>
-            <div className="font-medium text-sm truncate" title={displayMedicine.brand?.name}>
-              {displayMedicine.brand?.name || "N/A"}
+            <div className="font-medium text-sm truncate" title={displayMedicine.generic?.name}>
+              {displayMedicine.generic?.name || "N/A"}
             </div>
           </div>
           <div className="p-3 bg-muted/30 rounded-lg space-y-1">

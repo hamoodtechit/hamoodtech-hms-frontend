@@ -28,14 +28,14 @@ export default function PharmacySetupPage() {
         <CardHeader>
           <CardTitle>Master Data Management</CardTitle>
           <CardDescription>
-            Configure brands, categories, groups, and units used across the pharmacy system.
+            Configure generics, categories, groups, and units used across the pharmacy system.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="brands" className="w-full">
+          <Tabs defaultValue="generics" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 h-auto p-1 bg-muted/50">
-              <TabsTrigger value="brands" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Tag className="mr-2 h-4 w-4" /> Brands
+              <TabsTrigger value="generics" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                <Tag className="mr-2 h-4 w-4" /> Generics
               </TabsTrigger>
               <TabsTrigger value="categories" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
                 <Layers className="mr-2 h-4 w-4" /> Categories
@@ -51,8 +51,8 @@ export default function PharmacySetupPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="brands" className="mt-0 animate-in fade-in-50">
-              <MasterDataTable type="brands" title="Brand" />
+            <TabsContent value="generics" className="mt-0 animate-in fade-in-50">
+              <MasterDataTable type="generics" title="Generic" />
             </TabsContent>
             
             <TabsContent value="categories" className="mt-0 animate-in fade-in-50">
