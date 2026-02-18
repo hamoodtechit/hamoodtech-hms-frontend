@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCurrency } from "@/hooks/use-currency"
+import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
@@ -188,143 +189,151 @@ export function CartContents({
                 )}
             </div>
 
-            {/* Footer Section - Scrollable if needed, but likely fixed */}
-            <div className="p-3 bg-secondary/5 border-t shrink-0">
-                <ScrollArea className="max-h-[50vh]">
-                <div className="space-y-3">
-                    
-                    {/* Customer Selection */}
-                    <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</span>
-                        </div>
-                        <PatientSearch 
-                            selectedPatient={selectedCustomer} 
-                            onSelect={setSelectedCustomer} 
-                        />
-                        {selectedCustomer?.bloodGroup && (
-                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-secondary/20 p-1 rounded px-2">
-                                <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Inline Payment & Amount */}
-                    <div className="grid grid-cols-2 gap-3">
+            {/* Footer Section - Optimized for various screen sizes */}
+            <div className="p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[70%]">
+                <ScrollArea className="flex-1 min-h-0 pr-3">
+                    <div className="space-y-3 pb-2">
+                        {/* Customer Selection */}
                         <div className="space-y-1">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Method</span>
-                            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                <SelectTrigger className="h-9 text-sm">
-                                    <SelectValue placeholder="Method" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {paymentMethods.map(method => (
-                                        <SelectItem key={method} value={method}>
-                                            <span className="capitalize">{method}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="space-y-1">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Paid</span>
-                            <SmartNumberInput 
-                                value={paidAmount}
-                                onFocus={(e: any) => e.target.select()} 
-                                onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                className="h-9 text-sm font-bold"
+                            <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+                                <span>Customer</span>
+                            </div>
+                            <PatientSearch 
+                                selectedPatient={selectedCustomer} 
+                                onSelect={setSelectedCustomer} 
                             />
+                            {selectedCustomer?.bloodGroup && (
+                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-secondary/20 p-1 rounded px-2">
+                                    <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
+                                </div>
+                            )}
                         </div>
-                        <div className="col-span-2 space-y-1">
-                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Target Account</span>
-                             <div className="text-xs px-3 py-2 bg-muted rounded border font-medium">
-                                {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                                    <span className="text-destructive">No account mapped (Check Settings)</span>
-                                )}
-                             </div>
-                        </div>
-                    </div>
 
-                    {/* Sale Discount */}
-                    <div className="space-y-1">
-                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
-                            Discount
-                        </span>
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
+                        {/* Inline Payment & Amount */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
+                                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                    <SelectTrigger className="h-9 text-sm">
+                                        <SelectValue placeholder="Method" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {paymentMethods.map(method => (
+                                            <SelectItem key={method} value={method}>
+                                                <span className="capitalize">{method}</span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
                                 <SmartNumberInput 
-                                    placeholder="%" 
-                                    className="h-8 text-xs pr-6" 
-                                    min={0}
-                                    max={100}
-                                    value={discount === 0 ? undefined : discount}
-                                    onChange={(val: number | undefined) => {
-                                        setDiscount(val || 0)
-                                        setDiscountFixedAmount(0)
-                                    }}
+                                    value={paidAmount}
+                                    onFocus={(e: any) => e.target.select()} 
+                                    onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                                    className="h-9 text-sm font-bold"
                                 />
-                                <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">%</span>
                             </div>
-                            <div className="relative flex-1">
-                                <SmartNumberInput 
-                                    placeholder="Amount" 
-                                    className="h-8 text-xs pr-8" 
-                                    min={0}
-                                    value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
-                                    onChange={(val: number | undefined) => {
-                                        setDiscountFixedAmount(val || 0)
-                                        setDiscount(0)
-                                    }}
-                                />
-                                <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">Tk</span>
+                            <div className="col-span-2 space-y-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</span>
+                                <div className="text-xs px-3 py-2 bg-muted rounded border font-medium truncate">
+                                    {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
+                                        <span className="text-destructive text-[10px]">No account mapped</span>
+                                    )}
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Sale Discount */}
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                Discount
+                            </span>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <SmartNumberInput 
+                                        placeholder="%" 
+                                        className="h-8 text-xs pr-6" 
+                                        min={0}
+                                        max={100}
+                                        value={discount === 0 ? undefined : discount}
+                                        onChange={(val: number | undefined) => {
+                                            setDiscount(val || 0)
+                                            setDiscountFixedAmount(0)
+                                        }}
+                                    />
+                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">%</span>
+                                </div>
+                                <div className="relative flex-1">
+                                    <SmartNumberInput 
+                                        placeholder="Amount" 
+                                        className="h-8 text-xs pr-8" 
+                                        min={0}
+                                        value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
+                                        onChange={(val: number | undefined) => {
+                                            setDiscountFixedAmount(val || 0)
+                                            setDiscount(0)
+                                        }}
+                                    />
+                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">Tk</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Separator className="my-1" />
+
+                        {/* Totals */}
+                        <div className="space-y-1 text-sm bg-background/50 p-2 rounded-md border border-primary/5">
+                            <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Subtotal</span>
+                                <span className="font-medium">{formatCurrency(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Tax ({vatPercentage}%)</span>
+                                <span className="font-medium">{formatCurrency(tax)}</span>
+                            </div>
+                            {(discount > 0 || discountFixedAmount > 0) && (
+                                <div className="flex justify-between text-xs text-emerald-600 font-medium">
+                                    <span>Discount</span>
+                                    <span>-{formatCurrency(discountAmount)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between font-bold text-lg pt-1 border-t mt-1">
+                                <span>Total</span>
+                                <span className="text-primary">{formatCurrency(total)}</span>
+                            </div>
+                            
+                            {paidAmount > 0 && (
+                                <div className="flex justify-between items-center pt-1 border-t border-dashed mt-1">
+                                    <span className={cn(
+                                        "text-xs font-bold uppercase tracking-wider",
+                                        paidAmount >= total ? "text-emerald-600" : "text-destructive"
+                                    )}>
+                                        {paidAmount >= total ? "Change" : "Balance Due"}
+                                    </span>
+                                    <span className={cn(
+                                        "font-bold",
+                                        paidAmount >= total ? "text-emerald-600" : "text-destructive font-black text-lg underline underline-offset-4 decoration-2"
+                                    )}>
+                                        {formatCurrency(Math.abs(paidAmount - total))}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
-
-                    <Separator className="my-1" />
-
-                    {/* Totals */}
-                    <div className="space-y-1 text-sm">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Subtotal</span>
-                            <span>{formatCurrency(subtotal)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Tax ({vatPercentage}%)</span>
-                            <span>{formatCurrency(tax)}</span>
-                        </div>
-                        {(discount > 0 || discountFixedAmount > 0) && (
-                            <div className="flex justify-between text-xs text-emerald-600">
-                                <span>Discount</span>
-                                <span>-{formatCurrency(discountAmount)}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between font-bold text-lg pt-1 border-t mt-1">
-                            <span>Total</span>
-                            <span className="text-primary">{formatCurrency(total)}</span>
-                        </div>
-                        
-                        {paidAmount > 0 && (
-                            <div className="flex justify-between items-center text-sm pt-1">
-                                <span className={paidAmount >= total ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
-                                    {paidAmount >= total ? "Change" : "Due"}
-                                </span>
-                                <span className={`font-bold ${paidAmount >= total ? "text-emerald-600" : "text-destructive"}`}>
-                                    {formatCurrency(Math.abs(paidAmount - total))}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
                 </ScrollArea>
                 
-                <div className="mt-3">
+                <div className="pt-3 mt-auto shrink-0 border-t border-primary/10">
                     <Button 
-                        className="w-full h-10 text-base shadow-lg" 
+                        className={cn(
+                            "w-full h-12 text-lg font-bold shadow-xl transition-all active:scale-[0.98]",
+                            paidAmount < total && total > 0 ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+                        )}
                         disabled={cart.length === 0}
                         onClick={onCheckout}
                     >
-                        <CreditCard className="mr-2 h-4 w-4" />
+                        <CreditCard className="mr-3 h-5 w-5" />
                         Pay {formatCurrency(total)}
                     </Button>
                 </div>
