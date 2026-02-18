@@ -338,6 +338,7 @@ export default function POSPage() {
 
   if (!isMounted) return null
 
+
   if (!activeStoreId && !loadingProducts) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">

@@ -18,7 +18,7 @@ import {
   Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -26,6 +26,12 @@ export function Sidebar() {
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
   const t = useTranslations("Sidebar")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   interface Route {
     label: string
     icon: typeof LayoutDashboard
@@ -141,7 +147,7 @@ export function Sidebar() {
       {/* Brand Header */}
       <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900">
         <Link href="/dashboard" className="flex items-center gap-3 w-full">
-            {activeBranch?.logoUrl ? (
+            {isMounted && activeBranch?.logoUrl ? (
                 <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={activeBranch.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
@@ -156,7 +162,7 @@ export function Sidebar() {
           {isOpen && (
              <div className="flex flex-col animate-in fade-in duration-300 overflow-hidden">
                 <h1 className="text-lg font-bold tracking-tight truncate w-full">
-                    {general?.hospitalName || "Patwary general hospital"}
+                    {general?.hospitalName || "Patwary General hospital"}
                 </h1>
                 {/* <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Pro Admin</p> */}
              </div>
