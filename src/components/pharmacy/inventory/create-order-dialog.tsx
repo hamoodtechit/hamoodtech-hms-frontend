@@ -36,11 +36,13 @@ import {
 } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
+import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
+import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { PurchaseItem } from "@/types/pharmacy"
-import { Check, ChevronsUpDown, Loader2, Plus, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { PaymentMethod, PurchaseItem } from "@/types/pharmacy"
+import { Banknote, Check, ChevronsUpDown, Loader2, Plus, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export function CreateOrderDialog() {
@@ -48,6 +50,8 @@ export function CreateOrderDialog() {
   const [open, setOpen] = useState(false)
   const { data: suppliersRes } = useSuppliers({ limit: 100 })
   const { data: medicinesRes } = useMedicines({ limit: 100 })
+  const { finance, fetchSettings } = useSettingsStore()
+  const { formatCurrency } = useCurrency()
   
   const suppliers = suppliersRes?.data || []
   const medicines = medicinesRes?.data || []
@@ -57,6 +61,8 @@ export function CreateOrderDialog() {
 
   const [selectedSupplier, setSelectedSupplier] = useState("")
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [paidAmount, setPaidAmount] = useState(0)
   
   // Combobox states
   const [openComboboxes, setOpenComboboxes] = useState<{ [key: number]: boolean }>({})
@@ -65,6 +71,21 @@ export function CreateOrderDialog() {
   // Create Supplier Dialog State
   const [createSupplierOpen, setCreateSupplierOpen] = useState(false)
   const [status, setStatus] = useState<'pending' | 'completed'>('pending')
+
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  // Calculations
+  const subtotal = purchaseItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
+  const total = subtotal // Add tax/discount logic here if needed in future
+
+  // Sync paidAmount with total when total changes if status is completed
+  useEffect(() => {
+    if (status === 'completed') {
+        setPaidAmount(total)
+    }
+  }, [total, status])
 
   const addItem = () => {
     setPurchaseItems([...purchaseItems, {
@@ -135,10 +156,21 @@ export function CreateOrderDialog() {
     }
 
     try {
+      const dueAmount = Math.max(0, total - paidAmount)
+      
       const payload = {
         branchId: activeStoreId,
         supplierId: selectedSupplier,
         status: status,
+        paymentMethod,
+        paidAmount,
+        dueAmount,
+        payments: [{
+            accountId: finance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
+            amount: paidAmount,
+            paymentMethod,
+            note: "Initial payment for purchase"
+        }],
         purchaseItems: purchaseItems.map(item => ({
           ...item,
           price: Number(item.price),
@@ -240,17 +272,57 @@ export function CreateOrderDialog() {
                 </div>
             </div>
 
-            <div className="grid gap-2">
-                <Label>Status</Label>
-                <Select onValueChange={(value: any) => setStatus(value)} value={status}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select status..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                </Select>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label>Status</Label>
+                    <Select onValueChange={(value: any) => setStatus(value)} value={status}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label>Payment Method</Label>
+                    <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                <SelectItem key={method} value={method}>
+                                    <span className="capitalize">{method}</span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label>Amount Paid</Label>
+                    <SmartNumberInput 
+                        value={paidAmount}
+                        onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                        className="h-9"
+                    />
+                </div>
+                <div className="grid gap-2">
+                    <Label className="flex items-center gap-2">
+                        Target Account
+                        <Banknote className="h-3 w-3 text-muted-foreground" />
+                    </Label>
+                    <div className="text-sm px-3 py-2 bg-muted rounded border font-medium truncate h-9 flex items-center">
+                        {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
+                            <span className="text-destructive text-xs">No account mapped (Check Settings)</span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="flex items-center justify-between border-t pt-4">
@@ -383,6 +455,28 @@ export function CreateOrderDialog() {
                 )}
                 </div>
             </ScrollArea>
+
+            {/* Totals Summary */}
+            <div className="bg-muted/30 p-4 rounded-lg border space-y-2">
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground font-medium">Subtotal:</span>
+                    <span className="font-bold">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-base border-t pt-2">
+                    <span className="font-bold uppercase tracking-wider">Total Amount:</span>
+                    <span className="font-bold text-primary">{formatCurrency(total)}</span>
+                </div>
+                {total > 0 && (
+                    <div className="flex justify-between text-xs pt-1">
+                        <span className={paidAmount >= total ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
+                            {paidAmount >= total ? "Fully Paid" : "Due Amount:"}
+                        </span>
+                        <span className={`font-bold ${paidAmount >= total ? "text-emerald-600" : "text-destructive"}`}>
+                            {paidAmount >= total ? "✓" : formatCurrency(total - paidAmount)}
+                        </span>
+                    </div>
+                )}
+            </div>
             </div>
 
             <DialogFooter className="border-t pt-4">

@@ -140,6 +140,10 @@ export interface Purchase {
   totalPrice?: number | string;
   status: PurchaseStatus;
   purchaseItems: PurchaseItem[];
+  paymentMethod?: PaymentMethod;
+  paidAmount?: number | string;
+  dueAmount?: number | string;
+  payments?: any[];
   createdAt: string;
   updatedAt: string;
   branch?: Branch;
@@ -150,6 +154,15 @@ export interface PurchasePayload {
   branchId: string;
   supplierId: string;
   status: PurchaseStatus;
+  paymentMethod: PaymentMethod;
+  paidAmount: number;
+  dueAmount: number;
+  payments: {
+    accountId: string;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    note?: string;
+  }[];
   purchaseItems: PurchaseItem[];
 }
 
