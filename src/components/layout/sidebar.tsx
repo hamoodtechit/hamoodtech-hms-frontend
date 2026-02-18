@@ -34,18 +34,29 @@ export function Sidebar() {
 
   interface Route {
     label: string
-    icon: typeof LayoutDashboard
+    icon: any
     href?: string
     color?: string
     permission?: string
+    module?: string
     children?: {
         label: string
         href: string
         permission?: string
+        module?: string
     }[]
   }
 
-  const { hasPermission } = usePermissions() // Ensure hasPermission is used
+  const { hasPermission, hasModuleAccess, user } = usePermissions() // Ensure hasPermission is used
+
+  // DEBUG LOGGING
+  useEffect(() => {
+    if (user) {
+        console.log("Sidebar User Full:", JSON.stringify(user, null, 2));
+    } else {
+        console.log("Sidebar User is NULL");
+    }
+  }, [user]);
 
   // State for expanded menus (using pathname to auto-expand on load?)
   // Simple approach: toggle state object { [label]: boolean }
@@ -69,14 +80,14 @@ export function Sidebar() {
       icon: Users,
       href: "/patients",
       color: "text-violet-400",
-      permission: "patient:read",
+      module: "patients",
     },
     {
       label: "Pharmacy",
       icon: Pill,
       href: "/pharmacy",
       color: "text-pink-400",
-      permission: "medicine:read",
+      module: "pharmacy",
     },
     // {
     //   label: t("appointments"),
@@ -96,8 +107,6 @@ export function Sidebar() {
       label: "User Management",
       icon: Users,
       color: "text-indigo-400",
-      // Parent permission: visible if any child is visible or explicit permission?
-      // For now, let's say "user:read" covers it, or check children.
       permission: "user:read", 
       children: [
           {
@@ -128,14 +137,50 @@ export function Sidebar() {
   // The user asked "is that you show menu... based on permission right?". 
   // Yes, I should ensure it.
   
-  const filterRoutes = (items: typeof routes) => {
-      return items.filter(route => {
-          if (route.permission && !hasPermission(route.permission)) return false
+  const filterRoutes = (items: typeof routes): typeof routes => {
+      // Helper to check access for a single route item
+      const checkAccess = (route: { permission?: string; module?: string }) => {
+          if (route.module) {
+              if (hasModuleAccess(route.module)) return true
+          }
+           
+          if (route.permission) {
+              return hasPermission(route.permission)
+          }
           
-          // If children exists, filter them too?
-          // For now, simple implementation assuming parent permission controls visibility of the block
-          return true
-      })
+          if (!route.module && !route.permission) return true
+          
+          return false
+      }
+
+      return items.reduce<typeof routes>((acc, route) => {
+          if (route.children) {
+              const filteredChildren = route.children.filter(child => checkAccess(child))
+
+              if (filteredChildren.length > 0) {
+                   if ((route.permission || route.module) && !checkAccess(route)) {
+                       return acc
+                   }
+                   
+                   acc.push({ ...route, children: filteredChildren })
+                   return acc
+              }
+
+              if (route.href && checkAccess(route)) {
+                  const { children, ...rest } = route
+                  acc.push(rest as any)
+                  return acc
+              }
+              
+              return acc
+          }
+
+          if (checkAccess(route)) {
+              acc.push(route)
+          }
+
+          return acc
+      }, [])
   }
 
   const visibleRoutes = filterRoutes(routes)

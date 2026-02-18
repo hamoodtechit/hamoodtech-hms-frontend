@@ -58,6 +58,15 @@ const getGenericColor = (name: string) => {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     return colors[Math.abs(hash) % colors.length];
+    return colors[Math.abs(hash) % colors.length];
+}
+
+const getStock = (medicine: Medicine) => {
+    if (medicine.stock && medicine.stock > 0) return medicine.stock
+    if (medicine.stocks && medicine.stocks.length > 0) {
+        return medicine.stocks.reduce((acc, s) => acc + Number(s.quantity), 0)
+    }
+    return 0
 }
 
 export default function POSPage() {
@@ -162,8 +171,9 @@ export default function POSPage() {
   // Helpers
   const handleAddToCart = (medicine: Medicine) => {
     const activeBatch = medicine.stocks?.find(s => s.quantity > 0)
+    const availableStock = getStock(medicine)
     
-    if (!activeBatch && (medicine.stock || 0) <= 0) {
+    if (!activeBatch && availableStock <= 0) {
         toast.error("Item is out of stock")
         return
     }
@@ -173,7 +183,8 @@ export default function POSPage() {
       name: medicine.name,
       price: Number(medicine.salePrice),
       quantity: 1,
-      stock: activeBatch?.quantity || medicine.stock || 0,
+      
+      stock: activeBatch?.quantity || availableStock,
       batchNumber: activeBatch?.batchNumber,
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
@@ -714,7 +725,7 @@ export default function POSPage() {
                                                 <span className="font-bold text-base text-primary leading-none">{formatCurrency(salePrice)}</span>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[9px] text-muted-foreground mb-0.5">{(product.stock || 0)} left</span>
+                                                <span className="text-[9px] text-muted-foreground mb-0.5">{getStock(product)} left</span>
                                                 <Button size="sm" className="h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <ShoppingCart className="h-3 w-3" />
                                                 </Button>
@@ -738,15 +749,15 @@ export default function POSPage() {
                                         </div>
                                         <div className="flex items-center text-[10px] text-muted-foreground mt-0.5">
                                             <span className="truncate max-w-[200px] font-bold text-zinc-600 dark:text-zinc-400">{product.genericName}</span>
-                                            {(product.stock || 0) <= 10 && (
-                                                <span className="ml-2 text-amber-600 font-bold text-[9px] uppercase">{product.stock || 0} left</span>
+                                            {getStock(product) <= 10 && (
+                                                <span className="ml-2 text-amber-600 font-bold text-[9px] uppercase">{getStock(product)} left</span>
                                             )}
                                         </div>
                                     </div>
     
                                     <div className="text-right shrink-0 flex flex-col items-end">
                                         <div className="font-bold text-primary text-sm leading-none">{formatCurrency(salePrice)}</div>
-                                        <div className="text-[9px] text-muted-foreground mt-0.5">{(product.stock || 0)} in stock</div>
+                                        <div className="text-[9px] text-muted-foreground mt-0.5">{getStock(product)} in stock</div>
                                     </div>
 
                                     {quantity > 0 && (

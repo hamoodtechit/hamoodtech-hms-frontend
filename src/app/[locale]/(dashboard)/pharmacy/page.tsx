@@ -19,6 +19,7 @@ import { useEffect, useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { cn } from "@/lib/utils"
+import { endOfDay, startOfMonth } from "date-fns"
 import { DateRange } from "react-day-picker"
 
 export default function PharmacyPage() {
@@ -28,8 +29,8 @@ export default function PharmacyPage() {
 
   useEffect(() => {
     setDate({
-        from: new Date(),
-        to: new Date(),
+        from: startOfMonth(new Date()),
+        to: endOfDay(new Date()),
     })
   }, [])
 

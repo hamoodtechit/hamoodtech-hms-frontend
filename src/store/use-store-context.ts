@@ -1,4 +1,5 @@
 import { pharmacyService } from '@/services/pharmacy-service'
+import { useAuthStore } from '@/store/use-auth-store'
 import { Branch } from '@/types/pharmacy'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
@@ -19,6 +20,18 @@ export const useStoreContext = create<StoreContextState>()(
             loading: false,
             setActiveStore: (id) => set({ activeStoreId: id }),
             fetchStores: async () => {
+                const user = useAuthStore.getState().user
+                const hasBranchAccess = user?.role?.name === 'Super Admin' || 
+                                      user?.role?.name === 'Admin' || 
+                                      user?.role?.name === 'PRO ADMIN' ||
+                                      user?.role?.permissions?.some(p => p.key === 'branch:read') ||
+                                      user?.permissions?.includes('*');
+
+                if (!hasBranchAccess) {
+                    set({ loading: false })
+                    return
+                }
+
                 try {
                     set({ loading: true })
                     const response = await pharmacyService.getBranches({ limit: 100 })

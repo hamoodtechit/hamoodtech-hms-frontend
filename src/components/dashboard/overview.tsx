@@ -20,7 +20,7 @@ import {
   Tooltip
 } from 'chart.js'
 
-import { formatDistanceToNow } from "date-fns"
+import { endOfDay, formatDistanceToNow, startOfMonth } from "date-fns"
 import { AlertTriangle, CreditCard, DollarSign, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Line } from "react-chartjs-2"
@@ -61,8 +61,8 @@ export function Overview() {
 
   useEffect(() => {
     setDate({
-        from: new Date(),
-        to: new Date(),
+        from: startOfMonth(new Date()),
+        to: endOfDay(new Date()),
     })
   }, [])
 

@@ -1,4 +1,5 @@
 import { settingsService } from '@/services/settings-service';
+import { useAuthStore } from '@/store/use-auth-store';
 import { AppointmentConfig, FinanceConfig, GeneralConfig, PharmacyConfig, Setting, TaxConfig } from '@/types/settings';
 import { create } from 'zustand';
 
@@ -24,6 +25,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     error: null,
 
     fetchSettings: async () => {
+        const user = useAuthStore.getState().user
+        const hasSettingsAccess = user?.role?.name === 'Super Admin' || 
+                                user?.role?.name === 'Admin' || 
+                                user?.role?.name === 'PRO ADMIN' ||
+                                user?.role?.permissions?.some(p => p.key === 'settings:read') ||
+                                user?.permissions?.includes('*');
+
+        if (!hasSettingsAccess) {
+            // If no access, we just don't fetch. UI should handle nulls gracefully.
+            return
+        }
+
         try {
             set({ loading: true, error: null });
             const response = await settingsService.getSettings();
