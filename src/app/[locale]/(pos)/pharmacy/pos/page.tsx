@@ -20,7 +20,7 @@ import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, FileText, Info, LayoutGrid, List, Loader2, LogOut, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Info, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -31,6 +31,34 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useActiveCashRegister, useCreateSale, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { patientService } from "@/services/patient-service"
 import { Medicine, Patient } from "@/types/pharmacy"
+
+const getGenericColor = (name: string) => {
+    const colors = [
+        'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20 hover:border-red-200 dark:hover:border-red-900/40',
+        'bg-orange-50/50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-900/20 hover:border-orange-200 dark:hover:border-orange-900/40',
+        'bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/20 hover:border-amber-200 dark:hover:border-amber-900/40',
+        'bg-yellow-50/50 dark:bg-yellow-900/10 border-yellow-100 dark:border-yellow-900/20 hover:border-yellow-200 dark:hover:border-yellow-900/40',
+        'bg-lime-50/50 dark:bg-lime-900/10 border-lime-100 dark:border-lime-900/20 hover:border-lime-200 dark:hover:border-lime-900/40',
+        'bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20 hover:border-green-200 dark:hover:border-green-900/40',
+        'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-900/40',
+        'bg-teal-50/50 dark:bg-teal-900/10 border-teal-100 dark:border-teal-900/20 hover:border-teal-200 dark:hover:border-teal-900/40',
+        'bg-cyan-50/50 dark:bg-cyan-900/10 border-cyan-100 dark:border-cyan-900/20 hover:border-cyan-200 dark:hover:border-cyan-900/40',
+        'bg-sky-50/50 dark:bg-sky-900/10 border-sky-100 dark:border-sky-900/20 hover:border-sky-200 dark:hover:border-sky-900/40',
+        'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20 hover:border-blue-200 dark:hover:border-blue-900/40',
+        'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/20 hover:border-indigo-200 dark:hover:border-indigo-900/40',
+        'bg-violet-50/50 dark:bg-violet-900/10 border-violet-100 dark:border-violet-900/20 hover:border-violet-200 dark:hover:border-violet-900/40',
+        'bg-purple-50/50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-900/20 hover:border-purple-200 dark:hover:border-purple-900/40',
+        'bg-fuchsia-50/50 dark:bg-fuchsia-900/10 border-fuchsia-100 dark:border-fuchsia-900/20 hover:border-fuchsia-200 dark:hover:border-fuchsia-900/40',
+        'bg-pink-50/50 dark:bg-pink-900/10 border-pink-100 dark:border-pink-900/20 hover:border-pink-200 dark:hover:border-pink-900/40',
+        'bg-rose-50/50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/20 hover:border-rose-200 dark:hover:border-rose-900/40',
+    ];
+    if (!name) return 'bg-zinc-50/50 dark:bg-zinc-900/10 border-zinc-200 dark:border-zinc-800'; // Default
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
 
 export default function POSPage() {
   const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister } = usePosStore()
@@ -631,42 +659,48 @@ export default function POSPage() {
                 </div>
             ) : (
                 <>
-                <div className={`gap-4 pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'flex flex-col space-y-2'}`}>
+                <div className={`pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'flex flex-col space-y-1'}`}>
                     {filteredProducts.map((product) => {
                         const cartItem = cart.find(item => item.id === product.id)
                         const quantity = cartItem ? cartItem.quantity : 0
                         const salePrice = Number(product.salePrice)
+                        const colorClass = getGenericColor(product.genericName || '')
+                        const showHeader = product.category?.name || quantity > 0
 
                         return (
                         <Card 
                             key={product.id} 
-                            className={`cursor-pointer transition-all group overflow-hidden border-2 ${
-                                quantity > 0 ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50 hover:shadow-md'
+                            className={`cursor-pointer transition-all group overflow-hidden border shadow-sm ${
+                                quantity > 0 ? 'border-primary ring-1 ring-primary/20' : colorClass
                             }`}
                             onClick={() => handleAddToCart(product)}
                         >
                             {viewMode === 'grid' ? (
                                 // GRID VIEW RENDER
                                 <>
-                                    <CardHeader className="p-3 sm:p-4 bg-secondary/10 relative">
-                                        <div className="flex justify-between items-start">
-                                            <Badge variant="secondary" className="text-[10px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm">
-                                                <Info className="h-3 w-3 text-primary" />
-                                                {product.category?.name || 'Gen'}
-                                            </Badge>
+                                    {showHeader && (
+                                    <CardHeader className="p-2.5 bg-transparent relative border-b border-black/5 dark:border-white/5">
+                                        <div className="flex justify-between items-start h-5">
+                                            {product.category?.name && (
+                                                <Badge variant="secondary" className="text-[10px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm px-1.5 h-5">
+                                                    <Info className="h-3 w-3 text-primary" />
+                                                    {product.category.name}
+                                                </Badge>
+                                            )}
                                             {quantity > 0 && (
-                                                <Badge className="bg-primary text-primary-foreground text-xs shadow-sm animate-in zoom-in">
-                                                    {quantity} in cart
+                                                <Badge className="bg-primary text-primary-foreground text-[10px] shadow-sm animate-in zoom-in px-1.5 h-5 ml-auto">
+                                                    {quantity}
                                                 </Badge>
                                             )}
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="p-3 sm:p-4">
-                                        <div className="space-y-1 mb-3">
-                                            <h3 className="font-bold text-sm sm:text-base line-clamp-1 group-hover:text-primary transition-colors" title={product.name}>
+                                    )}
+                                    <CardContent className={`p-2.5 ${!showHeader ? 'pt-3' : ''}`}>
+                                        <div className="space-y-0.5 mb-2">
+                                            <h3 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
                                                 {product.name}
                                             </h3>
-                                            <div className="flex items-center text-xs text-muted-foreground">
+                                            <div className="flex items-center text-[10px] text-muted-foreground">
                                                 <span className="truncate">{product.genericName}</span>
                                                 <span className="mx-1">•</span>
                                                 <span className="font-medium">{product.strength}</span>
@@ -675,12 +709,12 @@ export default function POSPage() {
                                         
                                         <div className="flex items-end justify-between">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] text-muted-foreground">Price</span>
-                                                <span className="font-bold text-lg text-primary">{formatCurrency(salePrice)}</span>
+                                                <span className="text-[9px] text-muted-foreground leading-none mb-0.5">Price</span>
+                                                <span className="font-bold text-base text-primary leading-none">{formatCurrency(salePrice)}</span>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[10px] text-muted-foreground">{product.stock} left</span>
-                                                <Button size="sm" className="h-7 w-7 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="text-[9px] text-muted-foreground mb-0.5">{(product.stock || 0)} left</span>
+                                                <Button size="sm" className="h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <ShoppingCart className="h-3 w-3" />
                                                 </Button>
                                             </div>
@@ -689,35 +723,33 @@ export default function POSPage() {
                                 </>
                             ) : (
                                 // LIST VIEW RENDER
-                                <div className="p-3 flex items-center gap-4 hover:bg-secondary/5">
-                                    <div className="h-10 w-10 rounded-lg bg-secondary/20 flex items-center justify-center shrink-0">
-                                        <FileText className="h-5 w-5 text-muted-foreground/50" />
+                                <div className={`p-1.5 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${quantity > 0 ? 'bg-primary/5' : ''}`}>
+                                    <div className={`h-8 w-8 rounded flex items-center justify-center shrink-0 border shadow-sm ${colorClass}`}>
+                                        <Pill className="h-4 w-4 text-muted-foreground/70" />
                                     </div>
                                     
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-sm truncate group-hover:text-primary transition-colors">{product.name}</h3>
-                                            <Badge variant="outline" className="text-[10px] h-4 px-1 py-0 border-muted">
+                                            <h3 className="font-bold text-sm truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
+                                            <Badge variant="outline" className="text-[10px] h-3.5 px-1 py-0 border-muted bg-background/50">
                                                 {product.strength}
                                             </Badge>
-                                            {product.category && (
-                                                <Badge variant="secondary" className="text-[10px] h-4 px-1 py-0 hidden sm:inline-flex">
-                                                    {product.category.name}
-                                                </Badge>
-                                            )}
                                         </div>
-                                        <div className="flex items-center text-xs text-muted-foreground mt-0.5">
-                                            <span className="truncate">{product.genericName}</span>
+                                        <div className="flex items-center text-[10px] text-muted-foreground mt-0.5">
+                                            <span className="truncate max-w-[200px] font-bold text-zinc-600 dark:text-zinc-400">{product.genericName}</span>
+                                            {(product.stock || 0) <= 10 && (
+                                                <span className="ml-2 text-amber-600 font-bold text-[9px] uppercase">{product.stock || 0} left</span>
+                                            )}
                                         </div>
                                     </div>
     
-                                    <div className="text-right shrink-0">
-                                        <div className="font-bold text-primary">{formatCurrency(salePrice)}</div>
-                                        <div className="text-[10px] text-muted-foreground">{product.stock} in stock</div>
+                                    <div className="text-right shrink-0 flex flex-col items-end">
+                                        <div className="font-bold text-primary text-sm leading-none">{formatCurrency(salePrice)}</div>
+                                        <div className="text-[9px] text-muted-foreground mt-0.5">{(product.stock || 0)} in stock</div>
                                     </div>
 
                                     {quantity > 0 && (
-                                        <Badge className="bg-primary text-primary-foreground text-xs shadow-sm h-6 px-2">
+                                        <Badge className="bg-primary text-primary-foreground text-[10px] shadow-sm h-5 px-1.5 min-w-[20px] justify-center ml-1">
                                             {quantity}
                                         </Badge>
                                     )}

@@ -11,12 +11,11 @@ import {
   AlertTriangle,
   DollarSign,
   Loader2,
-  Package,
   Pill,
   Settings,
   ShoppingCart
 } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { cn } from "@/lib/utils"
@@ -44,19 +43,7 @@ export default function PharmacyPage() {
     endDate
   })
   
-  // Memoize the all-time stats params to prevent infinite refetching
-  // using branchId: undefined to get GLOBAL medicine count, ignoring current branch selection
-  const allTimeParams = useMemo(() => ({
-    branchId: undefined, 
-    startDate: '2000-01-01',
-    endDate: new Date().toISOString().split('T')[0] 
-  }), [])
-
-  // Fetch all-time stats for inventory counts (ignores date filter)
-  const { data: allTimeStatsRes } = usePharmacyStats(allTimeParams)
-
   const stats = statsResponse?.data
-  const allTimeStats = allTimeStatsRes?.data
 
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-500">
@@ -83,7 +70,7 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-card to-secondary/10 border-l-4 border-l-emerald-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -103,24 +90,7 @@ export default function PharmacyPage() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registered Medicines</CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Unique products in inventory
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+
 
         <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
