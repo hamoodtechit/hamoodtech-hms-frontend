@@ -20,8 +20,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hospital Management System",
-  description: "Modern Hospital Management System",
+  title: "Patwary General Hospital",
+  description: "Advanced Hospital Management System",
+  icons: {
+    icon: "/Logo.png",
+    shortcut: "/Logo.png",
+    apple: "/Logo.png",
+  },
 };
 
 export default async function RootLayout({

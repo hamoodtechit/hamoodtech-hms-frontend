@@ -62,12 +62,11 @@ export function MedicineDialog({
   const [formData, setFormData] = useState<Partial<MedicinePayload>>({
     name: "",
     nameBangla: "",
-    genericName: "",
+    genericId: "",
     genericNameBangla: "",
     barcode: "",
     unit: "",
     categoryId: "",
-    brandId: "",
     groupId: "",
     medicineUnitId: "",
     medicineManufacturerId: "",
@@ -89,8 +88,8 @@ export function MedicineDialog({
   const { data: categoriesRes, isLoading: loadingCategories } = usePharmacyEntities('categories')
   const categories = categoriesRes?.data || []
 
-  const { data: brandsRes, isLoading: loadingBrands } = usePharmacyEntities('brands')
-  const brands = brandsRes?.data || []
+  const { data: genericsRes, isLoading: loadingGenerics } = usePharmacyEntities('generics')
+  const generics = genericsRes?.data || []
 
   const { data: groupsRes, isLoading: loadingGroups } = usePharmacyEntities('groups')
   const groups = groupsRes?.data || []
@@ -101,7 +100,7 @@ export function MedicineDialog({
   const { data: manufacturersRes, isLoading: loadingManufacturers } = useManufacturers()
   const manufacturers = manufacturersRes?.data || []
 
-  const loading = loadingCategories || loadingBrands || loadingGroups || loadingUnits || loadingManufacturers
+  const loading = loadingCategories || loadingGenerics || loadingGroups || loadingUnits || loadingManufacturers
 
   const createMutation = useCreateMedicine()
   const updateMutation = useUpdateMedicine()
@@ -112,12 +111,11 @@ export function MedicineDialog({
         setFormData({
           name: medicineToEdit.name || "",
           nameBangla: medicineToEdit.nameBangla || "",
-          genericName: medicineToEdit.genericName || "",
+          genericId: medicineToEdit.genericId || "",
           genericNameBangla: medicineToEdit.genericNameBangla || "",
           barcode: medicineToEdit.barcode || "",
           unit: medicineToEdit.unit || "",
           categoryId: medicineToEdit.categoryId || "",
-          brandId: medicineToEdit.brandId || "",
           groupId: medicineToEdit.groupId || "",
           medicineUnitId: medicineToEdit.medicineUnitId || "",
           medicineManufacturerId: medicineToEdit.medicineManufacturerId || "",
@@ -138,12 +136,11 @@ export function MedicineDialog({
         setFormData({
           name: "",
           nameBangla: "",
-          genericName: "",
+          genericId: "",
           genericNameBangla: "",
           barcode: "",
           unit: "",
           categoryId: "",
-          brandId: "",
           groupId: "",
           medicineUnitId: "",
           medicineManufacturerId: "",
@@ -175,9 +172,10 @@ export function MedicineDialog({
   // Quick Add State
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [quickAddType, setQuickAddType] = useState<PharmacyEntityType>('brands')
+  const [quickAddType, setQuickAddType] = useState<PharmacyEntityType>('generics')
   const [quickAddTitle, setQuickAddTitle] = useState("")
   const [manufacturerSearchOpen, setManufacturerSearchOpen] = useState(false)
+  const [genericSearchOpen, setGenericSearchOpen] = useState(false)
 
   const openQuickAdd = (type: PharmacyEntityType, title: string) => {
     setQuickAddType(type)
@@ -186,8 +184,8 @@ export function MedicineDialog({
   }
 
   const handleSave = async () => {
-    if (!formData.name || !formData.dosageForm) {
-      toast.error("Required fields are missing: Name and Dosage Form are required")
+    if (!formData.name || !formData.dosageForm || !formData.genericId) {
+      toast.error("Required fields are missing: Name, Generic, and Dosage Form are required")
       return
     }
 
@@ -207,10 +205,9 @@ export function MedicineDialog({
       // Sanitize payload: convert empty strings to undefined for optional fields
       const payload: any = {
         name: formData.name,
-        genericName: formData.genericName || undefined,
+        genericId: formData.genericId || undefined,
         unit: formData.unit || 'Pcs',
         categoryId: formData.categoryId || undefined,
-        brandId: formData.brandId || undefined,
         nameBangla: formData.nameBangla || undefined,
         genericNameBangla: formData.genericNameBangla || undefined,
         barcode: formData.barcode || undefined,
@@ -309,7 +306,7 @@ export function MedicineDialog({
             <TabsContent value="info" className="mt-0 space-y-6 pb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Medicine Name (English) *</Label>
+                  <Label htmlFor="name">Medicine Name *</Label>
                   <Input 
                     id="name" 
                     value={formData.name} 
@@ -317,35 +314,65 @@ export function MedicineDialog({
                     placeholder="e.g. Napa Extend"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="nameBangla">Medicine Name (Bangla)</Label>
-                  <Input 
-                    id="nameBangla" 
-                    value={formData.nameBangla} 
-                    onChange={(e) => handleInputChange('nameBangla', e.target.value)}
-                    placeholder="যেমন: নাপা এক্সটেন্ড"
-                  />
-                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="genericName">Generic Name (English)</Label>
-                  <Input 
-                    id="genericName" 
-                    value={formData.genericName} 
-                    onChange={(e) => handleInputChange('genericName', e.target.value)}
-                    placeholder="e.g. Paracetamol"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="genericNameBangla">Generic Name (Bangla)</Label>
-                  <Input 
-                    id="genericNameBangla" 
-                    value={formData.genericNameBangla} 
-                    onChange={(e) => handleInputChange('genericNameBangla', e.target.value)}
-                    placeholder="যেমন: প্যারাসিটামল"
-                  />
+                   <div className="flex items-center justify-between">
+                    <Label htmlFor="genericId">Generic Name *</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-1 md:px-2 text-xs text-primary"
+                      onClick={() => openQuickAdd('generics', 'Generic')}
+                    >
+                      <Plus className="h-3 w-3 md:mr-1" />
+                      <span className="hidden md:inline">Add New</span>
+                    </Button>
+                  </div>
+                   <Popover open={genericSearchOpen} onOpenChange={setGenericSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={genericSearchOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {formData.genericId
+                        ? generics.find((g) => g.id === formData.genericId)?.name
+                        : "Select Generic..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search generic..." />
+                      <CommandList>
+                        <CommandEmpty>No generic found.</CommandEmpty>
+                        <CommandGroup>
+                          {generics.map((g) => (
+                            <CommandItem
+                              key={g.id}
+                              value={g.name}
+                              onSelect={() => {
+                                handleInputChange('genericId', g.id)
+                                setGenericSearchOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.genericId === g.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {g.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 </div>
               </div>
 

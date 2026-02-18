@@ -1,5 +1,4 @@
 import { LoginForm } from "@/components/auth/login-form"
-import { Building2, Stethoscope } from "lucide-react"
 
 export default function LoginPage() {
   return (
@@ -24,10 +23,11 @@ export default function LoginPage() {
         </div>
         
         <div className="relative z-10 flex items-center gap-2 text-lg font-medium">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-zinc-900">
-            <Stethoscope className="h-5 w-5" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          HMS Pro
+          <span className="text-2xl font-bold tracking-tight">Patwary general hospital</span>
         </div>
 
         <div className="relative z-10 max-w-md">
@@ -36,13 +36,13 @@ export default function LoginPage() {
               &ldquo;Streamlining healthcare management for better patient outcomes. 
               Our platform provides the tools you need to deliver excellence.&rdquo;
             </p>
-            <footer className="text-sm text-zinc-400">The HMS Team</footer>
+            <footer className="text-sm text-zinc-400">The HT Team</footer>
           </blockquote>
         </div>
 
         <div className="relative z-10 flex items-center gap-2 text-sm text-zinc-400">
-           <Building2 className="h-4 w-4" />
-           <span>Trusted by leading hospitals</span>
+           {/* <Building2 className="h-4 w-4" /> */}
+           <span>Develop By <a href="https://www.hamoodtech.com/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 transition-colors">Hamood Tech</a></span>
         </div>
       </div>
 

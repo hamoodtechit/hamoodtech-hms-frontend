@@ -82,7 +82,7 @@ export default function MedicinesPage() {
   const [filterGeneric, setFilterGeneric] = useState("")
   const [filterBarcode, setFilterBarcode] = useState("")
   const [filterCategoryId, setFilterCategoryId] = useState("all")
-  const [filterBrandId, setFilterBrandId] = useState("all")
+  const [filterGenericId, setFilterGenericId] = useState("all")
   const [filterGroupId, setFilterGroupId] = useState("all")
   const [filterManufacturerId, setFilterManufacturerId] = useState("all")
   const [filterDosageForm, setFilterDosageForm] = useState("")
@@ -97,7 +97,7 @@ export default function MedicinesPage() {
     genericName: filterGeneric || undefined,
     barcode: filterBarcode || undefined,
     categoryId: filterCategoryId === 'all' ? undefined : filterCategoryId,
-    brandId: filterBrandId === 'all' ? undefined : filterBrandId,
+    genericId: filterGenericId === 'all' ? undefined : filterGenericId,
     groupId: filterGroupId === 'all' ? undefined : filterGroupId,
     medicineManufacturerId: filterManufacturerId === 'all' ? undefined : filterManufacturerId,
     dosageForm: filterDosageForm || undefined,
@@ -113,8 +113,8 @@ export default function MedicinesPage() {
   const { data: categoriesRes } = usePharmacyEntities('categories')
   const categories = categoriesRes?.data || []
 
-  const { data: brandsRes } = usePharmacyEntities('brands')
-  const brands = brandsRes?.data || []
+  const { data: genericsRes } = usePharmacyEntities('generics')
+  const generics = genericsRes?.data || []
 
   const { data: groupsRes } = usePharmacyEntities('groups')
   const groups = groupsRes?.data || []
@@ -126,10 +126,11 @@ export default function MedicinesPage() {
 
   const resetFilters = () => {
     setFilterName("")
-    setFilterGeneric("")
+    setFilterName("")
+    setFilterGeneric("") // Keep this for text search? Or remove?
     setFilterBarcode("")
     setFilterCategoryId("all")
-    setFilterBrandId("all")
+    setFilterGenericId("all")
     setFilterGroupId("all")
     setFilterManufacturerId("all")
     setFilterDosageForm("")
@@ -270,14 +271,14 @@ export default function MedicinesPage() {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Brand</Label>
-                                <Select value={filterBrandId} onValueChange={setFilterBrandId}>
+                                <Label>Generic</Label>
+                                <Select value={filterGenericId} onValueChange={setFilterGenericId}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="All Brands" />
+                                        <SelectValue placeholder="All Generics" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Brands</SelectItem>
-                                        {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                                        <SelectItem value="all">All Generics</SelectItem>
+                                        {generics.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>

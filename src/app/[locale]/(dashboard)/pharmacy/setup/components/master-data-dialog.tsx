@@ -2,12 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,7 +33,6 @@ export function MasterDataDialog({
   title
 }: MasterDataDialogProps) {
   const [name, setName] = useState("")
-  const [nameBangla, setNameBangla] = useState("")
   
   const createEntityMutation = useCreateEntity()
   const updateEntityMutation = useUpdateEntity()
@@ -48,10 +47,8 @@ export function MasterDataDialog({
   useEffect(() => {
     if (entityToEdit) {
       setName(entityToEdit.name || "")
-      setNameBangla(entityToEdit.nameBangla || "")
     } else {
       setName("")
-      setNameBangla("")
     }
   }, [entityToEdit, open])
 
@@ -62,7 +59,7 @@ export function MasterDataDialog({
     }
 
     try {
-      const payload = { name, nameBangla }
+      const payload = { name }
 
       if (type === 'manufacturers') {
         if (entityToEdit) {
@@ -98,21 +95,12 @@ export function MasterDataDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Name (English)</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Paracetamol"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="nameBangla">Name (Bangla)</Label>
-            <Input
-              id="nameBangla"
-              value={nameBangla}
-              onChange={(e) => setNameBangla(e.target.value)}
-              placeholder="যেমন: প্যারাসিটামল"
             />
           </div>
         </div>

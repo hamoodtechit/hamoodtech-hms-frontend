@@ -9,7 +9,6 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
-  Activity,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
@@ -19,7 +18,7 @@ import {
   Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -27,6 +26,12 @@ export function Sidebar() {
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
   const t = useTranslations("Sidebar")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   interface Route {
     label: string
     icon: typeof LayoutDashboard
@@ -137,26 +142,27 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-        "hidden md:flex relative flex-col h-full bg-[#111827] text-white border-r border-white/10 transition-all duration-300 w-full"
+        "hidden md:flex relative flex-col h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-white/10 transition-all duration-300 w-full"
     )}>
       {/* Brand Header */}
-      <div className="flex items-center h-20 px-6 border-b border-white/10 bg-[#111827]">
+      <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900">
         <Link href="/dashboard" className="flex items-center gap-3 w-full">
-            {activeBranch?.logoUrl ? (
-                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
+            {isMounted && activeBranch?.logoUrl ? (
+                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={activeBranch.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             ) : (
-                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20", !isOpen && "mx-auto")}>
-                     <Activity className="w-6 h-6 text-white" />
+                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             )}
           
           {isOpen && (
              <div className="flex flex-col animate-in fade-in duration-300 overflow-hidden">
                 <h1 className="text-lg font-bold tracking-tight truncate w-full">
-                    {general?.hospitalName || activeBranch?.name || "MediCare"}
+                    {general?.hospitalName || "Patwary General hospital"}
                 </h1>
                 {/* <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Pro Admin</p> */}
              </div>
@@ -180,8 +186,8 @@ export function Sidebar() {
                         <button
                             onClick={() => toggleExpand(route.label)}
                             className={cn(
-                                "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-400 hover:text-white hover:bg-white/5",
-                                (isActiveParent || isExpanded) && "text-white bg-white/5"
+                                "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
+                                (isActiveParent || isExpanded) && "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/5"
                             )}
                         >
                             <div className={cn("flex items-center flex-1", !isOpen && "justify-center")}>
@@ -208,8 +214,8 @@ export function Sidebar() {
                                             className={cn(
                                                 "block p-2 text-sm rounded-lg transition-colors",
                                                 isChildActive 
-                                                    ? "text-white bg-white/10 font-medium" 
-                                                    : "text-zinc-500 hover:text-white hover:bg-white/5"
+                                                    ? "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium" 
+                                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                                             )}
                                         >
                                             {child.label}
@@ -230,8 +236,8 @@ export function Sidebar() {
                 className={cn(
                     "relative flex items-center p-3 rounded-xl transition-all duration-200 group overflow-hidden",
                     isActive 
-                        ? "bg-white/10 text-white shadow-md backdrop-blur-sm" 
-                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm dark:shadow-md backdrop-blur-sm" 
+                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                 )}
                 >
                 {isActive && (
@@ -254,11 +260,11 @@ export function Sidebar() {
       </ScrollArea>
 
       {/* Footer / Toggle */}
-      <div className="p-4 border-t border-white/10 bg-[#0f1523]">
+      <div className="p-4 border-t border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950">
         <Button 
             variant="ghost" 
             className={cn(
-                "w-full text-zinc-400 hover:text-white hover:bg-white/5", 
+                "w-full text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5", 
                 !isOpen && "px-2"
             )}
             onClick={toggle}
