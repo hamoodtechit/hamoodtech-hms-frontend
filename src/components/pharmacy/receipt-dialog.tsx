@@ -3,8 +3,7 @@
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
-    DialogContent,
-    DialogFooter,
+    DialogContent
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -157,14 +156,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             </div>
         </div>
 
-        <DialogFooter className="p-4 bg-zinc-50 print:hidden flex-col gap-2">
+        <div className="p-4 bg-zinc-50 print:hidden flex flex-col gap-2 border-t">
           <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => window.print()}>
             <Printer className="mr-2 h-4 w-4" /> Print Receipt
           </Button>
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
              Close
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
