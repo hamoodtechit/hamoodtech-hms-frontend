@@ -36,6 +36,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { TopSellingProduct } from "@/types/pharmacy"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { endOfDay, startOfMonth } from "date-fns"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 
@@ -46,8 +47,8 @@ export function AnalyticsDashboard() {
 
   useEffect(() => {
     setDate({
-        from: new Date(),
-        to: new Date(),
+        from: startOfMonth(new Date()),
+        to: endOfDay(new Date()),
     })
   }, [])
 

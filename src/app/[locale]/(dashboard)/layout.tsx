@@ -3,6 +3,7 @@
 import DashboardShell from "@/components/layout/dashboard-shell"
 import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
+import { useAuthStore } from "@/store/use-auth-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useEffect } from "react"
 
@@ -12,8 +13,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { fetchSettings } = useSettingsStore()
+  const { checkAuth } = useAuthStore()
 
   useEffect(() => {
+    checkAuth()
     fetchSettings()
   }, [])
   return (
