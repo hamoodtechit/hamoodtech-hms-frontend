@@ -282,7 +282,7 @@ export function Overview() {
         </Card>
         <Card className="col-span-1 md:col-span-2 lg:col-span-3">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Recent Sales</CardTitle>
             <CardDescription>Latest system events.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -319,7 +319,7 @@ function ActivityFeed({ sales, purchases, formatCurrency }: { sales: any[], purc
             title: `Sale ${s.invoiceNumber}`,
             desc: `Sold to ${s.patient?.name || 'Walk-in'}`,
             time: new Date(s.createdAt),
-            amount: `+${formatCurrency(s.totalPrice)}`,
+            amount: `+${formatCurrency(s.netPrice || s.totalPrice)}`,
             color: "text-emerald-600"
         })),
         ...purchases.map(p => ({
@@ -327,7 +327,7 @@ function ActivityFeed({ sales, purchases, formatCurrency }: { sales: any[], purc
             title: `Purchase ${p.poNumber || 'Order'}`,
             desc: `From ${p.supplier?.name || 'Unknown'}`,
             time: new Date(p.createdAt),
-            amount: `-${formatCurrency(p.totalPrice)}`,
+            amount: `-${formatCurrency(p.netPrice || p.totalPrice)}`,
             color: "text-orange-600"
         }))
     ]

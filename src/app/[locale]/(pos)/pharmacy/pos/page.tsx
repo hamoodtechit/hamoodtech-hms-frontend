@@ -195,7 +195,7 @@ export default function POSPage() {
   // Filtered products are now handled by the backend query
   const filteredProducts = medicines
 
-  // Calculations
+  // Calculations: Discount Applied FIRST, then Tax on the discounted amount
   const { formatCurrency } = useCurrency()
   const vatPercentage = pharmacy?.vatPercentage || 0
   const subtotal = cart.reduce((sum, item) => {
@@ -204,9 +204,11 @@ export default function POSPage() {
       (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
     return sum + (itemSubtotal - itemDiscountAmount)
   }, 0)
-  const tax = subtotal * (vatPercentage / 100) 
+  
   const discountAmount = discountFixedAmount || (subtotal * discount) / 100
-  const total = subtotal + tax - discountAmount
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount)
+  const tax = discountedSubtotal * (vatPercentage / 100)
+  const total = discountedSubtotal + tax
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0)
 
   const { checkInteractions } = useDrugInteraction()
@@ -244,7 +246,8 @@ export default function POSPage() {
       }
 
       try {
-          const dueAmount = Math.max(0, total - paidAmount)
+          const actuallyPaid = Math.min(paidAmount, total)
+          const dueAmount = Math.max(0, total - actuallyPaid)
           let paymentStatus: 'paid' | 'due' | 'partial' = 'paid'
           
           if (dueAmount >= total) {
@@ -259,7 +262,7 @@ export default function POSPage() {
               status: "completed" as const,
               paymentStatus,
               paymentMethod,
-              paidAmount,
+              paidAmount: actuallyPaid,
               dueAmount,
               discountPercentage: discount,
               discountAmount: discountAmount,
@@ -277,7 +280,7 @@ export default function POSPage() {
               })),
               payments: [{
                   accountId: pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
-                  amount: paidAmount,
+                  amount: actuallyPaid,
                   paymentMethod: paymentMethod,
                   note: ""
               }],

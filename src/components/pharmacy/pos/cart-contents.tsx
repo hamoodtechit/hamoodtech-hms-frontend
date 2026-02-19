@@ -51,16 +51,18 @@ export function CartContents({
     const { formatCurrency } = useCurrency()
     const vatPercentage = pharmacy?.vatPercentage || 0
 
-    // Calculations
+    // Calculations: Discount Applied FIRST, then Tax on the discounted amount
     const subtotal = cart.reduce((sum, item) => {
         const itemSubtotal = item.price * item.quantity
         const itemDiscountAmount = item.discountAmount || 
             (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
         return sum + (itemSubtotal - itemDiscountAmount)
     }, 0)
-    const tax = subtotal * (vatPercentage / 100)
+    
     const discountAmount = discountFixedAmount || (subtotal * discount) / 100
-    const total = subtotal + tax - discountAmount
+    const discountedSubtotal = Math.max(0, subtotal - discountAmount)
+    const tax = discountedSubtotal * (vatPercentage / 100)
+    const total = discountedSubtotal + tax
 
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
@@ -300,7 +302,7 @@ export function CartContents({
                                 </div>
                             )}
                             <div className="flex justify-between font-bold text-lg pt-1 border-t mt-1">
-                                <span>Total</span>
+                                <span>Total to Pay</span>
                                 <span className="text-primary">{formatCurrency(total)}</span>
                             </div>
                             
@@ -308,13 +310,13 @@ export function CartContents({
                                 <div className="flex justify-between items-center pt-1 border-t border-dashed mt-1">
                                     <span className={cn(
                                         "text-xs font-bold uppercase tracking-wider",
-                                        paidAmount >= total ? "text-emerald-600" : "text-destructive"
+                                        paidAmount >= (total - 0.01) ? "text-emerald-600" : "text-destructive"
                                     )}>
-                                        {paidAmount >= total ? "Change" : "Balance Due"}
+                                        {paidAmount >= (total - 0.01) ? "Return Change" : "Balance Due"}
                                     </span>
                                     <span className={cn(
                                         "font-bold",
-                                        paidAmount >= total ? "text-emerald-600" : "text-destructive font-black text-lg underline underline-offset-4 decoration-2"
+                                        paidAmount >= (total - 0.01) ? "text-emerald-600" : "text-destructive font-black text-lg underline underline-offset-4 decoration-2"
                                     )}>
                                         {formatCurrency(Math.abs(paidAmount - total))}
                                     </span>
@@ -328,13 +330,13 @@ export function CartContents({
                     <Button 
                         className={cn(
                             "w-full h-12 text-lg font-bold shadow-xl transition-all active:scale-[0.98]",
-                            paidAmount < total && total > 0 ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+                            paidAmount < (total - 0.01) && total > 0 ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
                         )}
                         disabled={cart.length === 0}
                         onClick={onCheckout}
                     >
                         <CreditCard className="mr-3 h-5 w-5" />
-                        Pay {formatCurrency(total)}
+                        Complete Payment
                     </Button>
                 </div>
             </div>

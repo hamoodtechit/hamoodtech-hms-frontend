@@ -7,13 +7,13 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-  Activity,
-  AlertTriangle,
-  DollarSign,
-  Loader2,
-  Pill,
-  Settings,
-  ShoppingCart
+    Activity,
+    AlertTriangle,
+    DollarSign,
+    Loader2,
+    Pill,
+    Settings,
+    ShoppingCart
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -233,7 +233,7 @@ function RecentTransactionsList() {
         type: 'sale' as const,
         number: s.invoiceNumber,
         party: s.patient?.name || 'Walk-in',
-        amount: Number(s.totalPrice || 0),
+        amount: Number(s.netPrice || s.totalPrice || 0),
         date: s.createdAt
     }))
 
@@ -242,7 +242,7 @@ function RecentTransactionsList() {
         type: 'purchase' as const,
         number: p.poNumber || 'PO-N/A',
         party: p.supplier?.name || 'Unknown Supplier',
-        amount: Number(p.totalPrice || 0),
+        amount: Number(p.netPrice || p.totalPrice || 0),
         date: p.createdAt
     }))
 
