@@ -24,7 +24,6 @@ export function Sidebar() {
   const pathname = usePathname()
   const { isOpen, toggle } = useSidebarStore()
   const { general } = useSettingsStore()
-  console.log("Sidebar General Settings:", general); // DEBUG
   const { activeBranch } = usePosStore()
   const t = useTranslations("Sidebar")
   const [isMounted, setIsMounted] = useState(false)

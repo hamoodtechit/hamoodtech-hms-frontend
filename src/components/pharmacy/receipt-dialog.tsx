@@ -85,7 +85,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                      return (
                         <div key={idx} className="grid grid-cols-12 text-[10px] items-start leading-tight py-0.5">
                             <div className="col-span-5 pr-1">
-                                <span className="block font-medium">{item.name}</span>
+                                <span className="block font-medium">
+                                    {item.name}
+                                    {item.dosageForm && <span className="text-[9px] font-normal text-zinc-500 ml-1">({item.dosageForm})</span>}
+                                </span>
                                 {item.batchNumber && <span className="block text-[8px] text-zinc-500">B: {item.batchNumber}</span>}
                             </div>
                             <div className="col-span-2 text-center">{item.quantity}</div>

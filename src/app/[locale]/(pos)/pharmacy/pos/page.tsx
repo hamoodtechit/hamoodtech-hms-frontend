@@ -188,7 +188,8 @@ export default function POSPage() {
       batchNumber: activeBatch?.batchNumber,
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
-      category: medicine.category?.name || 'Uncategorized'
+      category: medicine.category?.name || 'Uncategorized',
+      dosageForm: medicine.dosageForm
     } as any)
   }
 
@@ -276,7 +277,8 @@ export default function POSPage() {
                   discountPercentage: item.discountPercentage,
                   discountAmount: item.discountAmount,
                   batchNumber: item.batchNumber || "BATCH-N/A",
-                  expiryDate: item.expiryDate || new Date().toISOString()
+                  expiryDate: item.expiryDate || new Date().toISOString(),
+                  dosageForm: item.dosageForm
               })),
               payments: [{
                   accountId: pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",

@@ -14,6 +14,7 @@ export interface Product {
     category?: string
     discountPercentage?: number
     discountAmount?: number
+    dosageForm?: string
 }
 
 export interface Transaction {

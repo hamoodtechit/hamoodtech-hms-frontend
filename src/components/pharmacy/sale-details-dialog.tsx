@@ -3,30 +3,30 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -202,7 +202,10 @@ export function SaleDetailsDialog({
                   {sale.saleItems.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
-                        <div>{item.itemName}</div>
+                        <div>
+                            {item.itemName}
+                            {item.dosageForm && <span className="text-[10px] text-muted-foreground ml-1">({item.dosageForm})</span>}
+                        </div>
                         {(Number(item.discountAmount) > 0 || Number(item.discountPercentage) > 0) && (
                           <div className="text-[10px] text-emerald-600">
                             Disc: {Number(item.discountPercentage) > 0 ? `${item.discountPercentage}%` : formatCurrency(Number(item.discountAmount))}
