@@ -580,6 +580,7 @@ export interface PharmacyStats {
   lowStockCount: number;
   outOfStockCount: number;
   totalCashInHand: number;
+  expiringIn30Days: number;
 }
 
 export interface PharmacyGraphDataItem {

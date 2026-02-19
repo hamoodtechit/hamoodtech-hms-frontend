@@ -19,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useCurrency } from "@/hooks/use-currency"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Sale, SaleReturnPayload } from "@/types/pharmacy"
 import { Loader2 } from "lucide-react"
@@ -36,6 +37,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
   const [loading, setLoading] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({}) // Record<saleItemId, boolean>
   const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({}) // Record<saleItemId, quantity>
+  const { formatCurrency } = useCurrency()
 
   if (!sale) return null
 
@@ -178,9 +180,9 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
                             disabled={!selectedItems[item.id]}
                         />
                     </TableCell>
-                    <TableCell className="text-right">${Number(item.price).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(Number(item.price))}</TableCell>
                     <TableCell className="text-right">
-                        ${(Number(item.price) * (returnQuantities[item.id] || Number(item.quantity))).toFixed(2)}
+                        {formatCurrency(Number(item.price) * (returnQuantities[item.id] || Number(item.quantity)))}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -190,7 +192,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
 
           <div className="flex justify-end mt-4">
             <div className="text-lg font-bold">
-                Total Refund: ${totalRefund.toFixed(2)}
+                Total Refund: {formatCurrency(totalRefund)}
             </div>
           </div>
         </div>
