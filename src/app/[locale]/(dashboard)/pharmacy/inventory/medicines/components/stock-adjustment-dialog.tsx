@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Stock } from "@/types/pharmacy"
 import { Loader2 } from "lucide-react"
@@ -42,6 +43,11 @@ export function StockAdjustmentDialog({
   const [quantity, setQuantity] = useState(0)
   const [type, setType] = useState<'increase' | 'decrease'>('increase')
   const [note, setNote] = useState("")
+  const [recoverAmount, setRecoverAmount] = useState(0)
+  const [accountId, setAccountId] = useState("")
+
+  const { data: accountsRes } = useFinanceAccounts({ isActive: true })
+  const accounts = accountsRes?.data || []
 
   const handleSave = async () => {
     if (!stock || quantity <= 0) {
@@ -55,13 +61,17 @@ export function StockAdjustmentDialog({
         stockId: stock.id,
         quantity,
         type,
-        note
+        note,
+        recoverAmount: recoverAmount || undefined,
+        accountId: accountId || undefined
       })
       toast.success("Stock adjusted successfully")
       onSuccess()
       onOpenChange(false)
       setQuantity(0)
       setNote("")
+      setRecoverAmount(0)
+      setAccountId("")
     } catch (error) {
       toast.error("Failed to adjust stock")
     } finally {
@@ -110,6 +120,33 @@ export function StockAdjustmentDialog({
               onChange={(e) => setNote(e.target.value)}
               placeholder="e.g. Physical count correction, damaged items..."
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="recoverAmount">Recover Amount</Label>
+                <SmartNumberInput
+                    id="recoverAmount"
+                    value={recoverAmount || undefined}
+                    onChange={(val) => setRecoverAmount(val || 0)}
+                    placeholder="0.00"
+                />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="account">Target Account</Label>
+                <Select value={accountId} onValueChange={setAccountId}>
+                    <SelectTrigger id="account">
+                        <SelectValue placeholder="Select Account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {accounts.map(acc => (
+                            <SelectItem key={acc.id} value={acc.id}>
+                                {acc.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
         </div>
         <DialogFooter>

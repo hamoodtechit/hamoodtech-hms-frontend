@@ -14,7 +14,7 @@ import {
     Tooltip,
 } from 'chart.js'
 import { DollarSign, Package, TrendingUp } from "lucide-react"
-import { Bar, Doughnut, Line } from "react-chartjs-2"
+import { Doughnut, Line } from "react-chartjs-2"
 
 // Register ChartJS components
 ChartJS.register(
@@ -30,10 +30,9 @@ ChartJS.register(
 )
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePharmacyGraph, usePharmacyStats, useTopSellingProducts } from "@/hooks/pharmacy-queries"
+import { usePharmacyGraph, usePharmacyStats } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
-import { TopSellingProduct } from "@/types/pharmacy"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { endOfDay, startOfMonth } from "date-fns"
@@ -70,14 +69,7 @@ export function AnalyticsDashboard() {
     days: !startDate ? 7 : undefined 
   })
 
-  const { data: topProductsResponse, isLoading: topProductsLoading } = useTopSellingProducts({
-    branchId: activeStoreId || undefined,
-    startDate,
-    endDate,
-    days: !startDate ? 30 : undefined
-  })
-
-  if (statsLoading || graphLoading || topProductsLoading) {
+  if (statsLoading || graphLoading) {
     return (
       <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -112,7 +104,6 @@ export function AnalyticsDashboard() {
 
   const pStats = stats?.data
   const graphDataItems = graphResponse?.data || []
-  const topProducts = topProductsResponse?.data || []
 
   // Average Order Value
   const avgOrderValue = pStats?.salesCount ? (pStats.totalSales / pStats.salesCount) : 0
@@ -139,26 +130,6 @@ export function AnalyticsDashboard() {
     ],
   }
 
-  const topProductsData = {
-    labels: topProducts.map((p: TopSellingProduct) => p.name),
-    datasets: [
-      {
-        label: 'Units Sold',
-        data: topProducts.map((p: TopSellingProduct) => p.unitsSold),
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(255, 159, 64, 0.8)',
-          'rgba(199, 199, 199, 0.8)',
-          'rgba(83, 102, 255, 0.8)',
-        ],
-      },
-    ],
-  }
-
   const outOfStock = pStats?.outOfStockCount || 0
   const lowStock = pStats?.lowStockCount || 0
   const sufficient = (pStats?.totalMedicines || 0) - lowStock - outOfStock
@@ -180,7 +151,7 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
             <div className="flex items-center space-x-2">
                 <DatePickerWithRange date={date} setDate={setDate} />
@@ -239,41 +210,57 @@ export function AnalyticsDashboard() {
         </div>
 
         {/* Charts */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+            <Card className="lg:col-span-4">
                 <CardHeader>
                     <CardTitle>Sales Overview</CardTitle>
                     <CardDescription>Daily revenue for the current week.</CardDescription>
                 </CardHeader>
-                <CardContent className="pl-2">
-                    <div className="h-[300px] w-full">
+                <CardContent className="px-1 sm:px-4">
+                    <div className="h-[250px] sm:h-[300px] w-full">
                         <Line 
                             data={salesData} 
                             options={{
                                 responsive: true,
                                 maintainAspectRatio: false,
                                 plugins: {
-                                    legend: { position: 'top' as const },
+                                    legend: { 
+                                        position: 'top' as const,
+                                        labels: {
+                                            usePointStyle: true,
+                                            boxWidth: 6,
+                                            boxHeight: 6,
+                                            padding: 10,
+                                            font: { size: 10 }
+                                        }
+                                    },
                                 }
                             }} 
                         />
                     </div>
                 </CardContent>
             </Card>
-            <Card className="col-span-3">
+            <Card className="lg:col-span-3">
                 <CardHeader>
                     <CardTitle>Inventory Health</CardTitle>
                     <CardDescription>Stock status distribution.</CardDescription>
                 </CardHeader>
                  <CardContent>
-                    <div className="h-[300px] w-full flex items-center justify-center">
+                    <div className="h-[250px] sm:h-[300px] w-full flex items-center justify-center">
                         <Doughnut 
                             data={stockData} 
                             options={{
                                 responsive: true,
                                 maintainAspectRatio: false,
                                 plugins: {
-                                    legend: { position: 'bottom' as const },
+                                    legend: { 
+                                        position: 'bottom' as const,
+                                        labels: {
+                                            usePointStyle: true,
+                                            padding: 10,
+                                            font: { size: 10 }
+                                        }
+                                    },
                                 }
                             }} 
                         />
@@ -281,29 +268,7 @@ export function AnalyticsDashboard() {
                 </CardContent>
             </Card>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-             <Card className="col-span-7">
-                <CardHeader>
-                    <CardTitle>Top Selling Products</CardTitle>
-                    <CardDescription>Most popular items by units sold.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <div className="h-[300px] w-full">
-                        <Bar 
-                            data={topProductsData} 
-                             options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { display: false },
-                                }
-                            }} 
-                        />
-                    </div>
-                </CardContent>
-             </Card>
-        </div>
     </div>
   )
 }
+

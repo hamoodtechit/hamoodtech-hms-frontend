@@ -39,6 +39,7 @@ import { useDeleteMedicine, useManufacturers, useMedicines, usePharmacyEntities 
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
+import { useStoreContext } from "@/store/use-store-context"
 import { Medicine } from "@/types/pharmacy"
 import {
     ArrowLeft,
@@ -59,6 +60,7 @@ import { useDebounce } from "use-debounce"
 import { ImportMedicinesDialog } from "./components/import-medicines-dialog"
 import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
+import { OpeningStockDialog } from "./components/opening-stock-dialog"
 
 export default function MedicinesPage() {
   const { hasPermission } = usePermissions()
@@ -76,6 +78,9 @@ export default function MedicinesPage() {
   const [deletingMedicine, setDeletingMedicine] = useState<Medicine | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [selectedMedicineForStock, setSelectedMedicineForStock] = useState<Medicine | null>(null)
+  const [openingStockOpen, setOpeningStockOpen] = useState(false)
+  const [selectedMedicineForOpeningStock, setSelectedMedicineForOpeningStock] = useState<Medicine | null>(null)
+  const { activeStoreId } = useStoreContext()
 
   // Filter State
   const [filterName, setFilterName] = useState("")
@@ -422,6 +427,12 @@ export default function MedicinesPage() {
                                     <DropdownMenuItem onClick={() => setSelectedMedicineForStock(medicine)}>
                                         <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => {
+                                        setSelectedMedicineForOpeningStock(medicine)
+                                        setOpeningStockOpen(true)
+                                    }}>
+                                        <Plus className="mr-2 h-4 w-4" /> Add Opening Stock
+                                    </DropdownMenuItem>
                                 </>
                               )}
                               <DropdownMenuSeparator />
@@ -490,6 +501,13 @@ export default function MedicinesPage() {
         open={detailsOpen} 
         onOpenChange={setDetailsOpen} 
         medicine={selectedMedicine}
+      />
+
+      <OpeningStockDialog 
+        open={openingStockOpen}
+        onOpenChange={setOpeningStockOpen}
+        medicine={selectedMedicineForOpeningStock}
+        branchId={activeStoreId || ""}
       />
 
       <Dialog open={!!selectedMedicineForStock} onOpenChange={(open) => !open && setSelectedMedicineForStock(null)}>

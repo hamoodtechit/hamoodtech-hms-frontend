@@ -77,7 +77,7 @@ export default function POSPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch] = useDebounce(searchQuery, 500)
   const [activeCategory, setActiveCategory] = useState("All")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [discount, setDiscount] = useState(5) // Default 5% discount
   const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
   
@@ -109,7 +109,7 @@ export default function POSPage() {
     isLoading: loadingProducts,
   } = useInfiniteMedicines({ 
     search: debouncedSearch, 
-    limit: 12,
+    limit: 48,
     categoryId: activeCategoryId,
   })
 
@@ -640,7 +640,7 @@ export default function POSPage() {
         {/* Scrollable Product Grid */}
         <ScrollArea className="flex-1 -mx-2 px-2 overflow-y-auto">
             {loadingProducts && medicines.length === 0 ? (
-                <div className={`grid gap-4 pb-2 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+                <div className={`grid gap-3 sm:gap-4 pb-2 ${viewMode === 'grid' ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
                     {Array.from({ length: 12 }).map((_, i) => (
                         <Card key={i} className="overflow-hidden border-transparent shadow-sm">
                             {viewMode === 'grid' ? (
@@ -677,7 +677,7 @@ export default function POSPage() {
                 </div>
             ) : (
                 <>
-                <div className={`pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'flex flex-col space-y-1'}`}>
+                <div className={`pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2' : 'flex flex-col space-y-1'}`}>
                     {filteredProducts.map((product) => {
                         const cartItem = cart.find(item => item.id === product.id)
                         const quantity = cartItem ? cartItem.quantity : 0
@@ -697,77 +697,70 @@ export default function POSPage() {
                                 // GRID VIEW RENDER
                                 <>
                                     {showHeader && (
-                                    <CardHeader className="p-2.5 bg-transparent relative border-b border-black/5 dark:border-white/5">
-                                        <div className="flex justify-between items-start h-5">
+                                    <CardHeader className="p-1.5 bg-transparent relative border-b border-black/5 dark:border-white/5">
+                                        <div className="flex justify-between items-start h-4">
                                             {product.category?.name && (
-                                                <Badge variant="secondary" className="text-[10px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm px-1.5 h-5">
-                                                    <Info className="h-3 w-3 text-primary" />
+                                                <Badge variant="secondary" className="text-[9px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm px-1 h-4">
                                                     {product.category.name}
                                                 </Badge>
                                             )}
                                             {quantity > 0 && (
-                                                <Badge className="bg-primary text-primary-foreground text-[10px] shadow-sm animate-in zoom-in px-1.5 h-5 ml-auto">
+                                                <Badge className="bg-primary text-primary-foreground text-[9px] shadow-sm animate-in zoom-in px-1 h-4 ml-auto">
                                                     {quantity}
                                                 </Badge>
                                             )}
                                         </div>
                                     </CardHeader>
                                     )}
-                                    <CardContent className={`p-2.5 ${!showHeader ? 'pt-3' : ''}`}>
-                                        <div className="space-y-0.5 mb-2">
-                                            <h3 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
+                                    <CardContent className={`p-1.5 sm:p-2 ${!showHeader ? 'pt-1.5 sm:pt-2' : ''}`}>
+                                        <div className="space-y-0 mb-1">
+                                            <h3 className="font-bold text-[11px] sm:text-xs line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
                                                 {product.name}
                                             </h3>
-                                            <div className="flex items-center text-[10px] text-muted-foreground">
+                                            <div className="flex items-center text-[9px] text-muted-foreground">
                                                 <span className="truncate">{product.genericName}</span>
-                                                <span className="mx-1">•</span>
+                                                <span className="mx-0.5">•</span>
                                                 <span className="font-medium">{product.strength}</span>
                                             </div>
                                         </div>
                                         
                                         <div className="flex items-end justify-between">
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] text-muted-foreground leading-none mb-0.5">Price</span>
-                                                <span className="font-bold text-base text-primary leading-none">{formatCurrency(salePrice)}</span>
+                                                <span className="font-bold text-xs sm:text-sm text-primary leading-none">{formatCurrency(salePrice)}</span>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[9px] text-muted-foreground mb-0.5">{getStock(product)} left</span>
-                                                <Button size="sm" className="h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <ShoppingCart className="h-3 w-3" />
-                                                </Button>
+                                                <span className="text-[8px] sm:text-[9px] text-muted-foreground">{getStock(product)} left</span>
                                             </div>
                                         </div>
                                     </CardContent>
                                 </>
                             ) : (
                                 // LIST VIEW RENDER
-                                <div className={`p-1.5 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${quantity > 0 ? 'bg-primary/5' : ''}`}>
-                                    <div className={`h-8 w-8 rounded flex items-center justify-center shrink-0 border shadow-sm ${colorClass}`}>
-                                        <Pill className="h-4 w-4 text-muted-foreground/70" />
+                                <div className={`p-1 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${quantity > 0 ? 'bg-primary/5' : ''}`}>
+                                    <div className={`h-6 w-6 rounded flex items-center justify-center shrink-0 border shadow-xs ${colorClass}`}>
+                                        <Pill className="h-3 w-3 text-muted-foreground/70" />
                                     </div>
                                     
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-sm truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
-                                            <Badge variant="outline" className="text-[10px] h-3.5 px-1 py-0 border-muted bg-background/50">
-                                                {product.strength}
-                                            </Badge>
+                                        <div className="flex items-center gap-1.5">
+                                            <h3 className="font-bold text-xs truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
+                                            <span className="text-[10px] text-muted-foreground font-medium shrink-0">{product.strength}</span>
                                         </div>
-                                        <div className="flex items-center text-[10px] text-muted-foreground mt-0.5">
-                                            <span className="truncate max-w-[200px] font-bold text-zinc-600 dark:text-zinc-400">{product.genericName}</span>
+                                        <div className="flex items-center text-[9px] text-muted-foreground mt-0.5">
+                                            <span className="truncate max-w-[150px]">{product.genericName}</span>
                                             {getStock(product) <= 10 && (
-                                                <span className="ml-2 text-amber-600 font-bold text-[9px] uppercase">{getStock(product)} left</span>
+                                                <span className="ml-1.5 text-amber-600 font-bold uppercase text-[8px]">{getStock(product)} left</span>
                                             )}
                                         </div>
                                     </div>
     
                                     <div className="text-right shrink-0 flex flex-col items-end">
-                                        <div className="font-bold text-primary text-sm leading-none">{formatCurrency(salePrice)}</div>
-                                        <div className="text-[9px] text-muted-foreground mt-0.5">{getStock(product)} in stock</div>
+                                        <div className="font-bold text-primary text-xs leading-none">{formatCurrency(salePrice)}</div>
+                                        <div className="text-[8px] text-muted-foreground mt-0.5">{getStock(product)} in stock</div>
                                     </div>
 
                                     {quantity > 0 && (
-                                        <Badge className="bg-primary text-primary-foreground text-[10px] shadow-sm h-5 px-1.5 min-w-[20px] justify-center ml-1">
+                                        <Badge className="bg-primary text-primary-foreground text-[9px] shadow-sm h-4 px-1 min-w-[16px] justify-center ml-1">
                                             {quantity}
                                         </Badge>
                                     )}

@@ -3,21 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Sale, SaleReturnPayload } from "@/types/pharmacy"
@@ -99,6 +99,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
 
       const payload: SaleReturnPayload = {
         saleId: sale.id,
+        status: 'completed',
         saleReturnItems
       }
 

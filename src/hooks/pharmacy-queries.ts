@@ -15,7 +15,9 @@ export const PHARMACY_KEYS = {
   stocks: (params: any) => [...PHARMACY_KEYS.all, "stocks", params] as const,
   suppliers: (params: any) => [...PHARMACY_KEYS.all, "suppliers", params] as const,
   purchases: (params: any) => [...PHARMACY_KEYS.all, "purchases", params] as const,
+  purchase: (id: string) => [...PHARMACY_KEYS.all, "purchase", id] as const,
   sales: (params: any) => [...PHARMACY_KEYS.all, "sales", params] as const,
+  sale: (id: string) => [...PHARMACY_KEYS.all, "sale", id] as const,
   saleReturns: (params: any) => [...PHARMACY_KEYS.all, "saleReturns", params] as const,
   cashRegisters: (params: any) => [...PHARMACY_KEYS.all, "cash-registers", params] as const,
 };
@@ -277,6 +279,16 @@ export function useAdjustStock() {
   });
 }
 
+export function useAddOpeningStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => pharmacyService.addOpeningStock(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
+    },
+  });
+}
+
 // Supplier Hooks
 export function useSuppliers(params: any = {}) {
   return useQuery({
@@ -345,12 +357,28 @@ export function useUpdatePurchaseStatus() {
   });
 }
 
+export function usePurchase(id: string) {
+  return useQuery({
+    queryKey: PHARMACY_KEYS.purchase(id),
+    queryFn: () => pharmacyService.getPurchase(id),
+    enabled: !!id,
+  });
+}
+
 // Sales Hooks (for History/Dashboard)
 export function useSales(params: any = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.sales(params),
     queryFn: () => pharmacyService.getSales(params),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useSale(id: string) {
+  return useQuery({
+    queryKey: PHARMACY_KEYS.sale(id),
+    queryFn: () => pharmacyService.getSale(id),
+    enabled: !!id,
   });
 }
 

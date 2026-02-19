@@ -49,11 +49,11 @@ export default function PharmacyPage() {
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+        <div className="flex flex-col gap-1 min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent truncate">
             Pharmacy Overview
           </h2>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">
             Real-time inventory tracking and point of sale management.
           </p>
         </div>
@@ -62,8 +62,8 @@ export default function PharmacyPage() {
             
 
 
-            <Link href="/pharmacy/pos">
-            <Button size="lg" className="shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
+            <Link href="/pharmacy/pos" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Launch POS System
             </Button>
@@ -71,7 +71,7 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-card to-secondary/10 border-l-4 border-l-emerald-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -151,8 +151,8 @@ export default function PharmacyPage() {
         </Card>
 
       </div>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-7 lg:grid-cols-7">
-        <Card className="col-span-1 md:col-span-4 lg:col-span-5 h-full">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+        <Card className="col-span-1 lg:col-span-5 h-full">
              <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
                 <CardDescription>
@@ -164,45 +164,45 @@ export default function PharmacyPage() {
             </CardContent>
         </Card>
         
-        <Card className="col-span-1 md:col-span-3 lg:col-span-2 h-full border-l-4 border-l-primary/20">
+        <Card className="col-span-1 lg:col-span-2 h-full border-l-4 border-l-primary/20">
             <CardHeader>
                 <CardTitle>Quick Access</CardTitle>
                 <CardDescription>Common tasks</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-3">
-                <Link href="/pharmacy/inventory">
-                    <Button variant="outline" className="w-full justify-start h-auto py-3">
-                        <Pill className="mr-3 h-5 w-5 text-blue-500" />
-                        <div className="flex flex-col items-start">
+            <CardContent className="grid gap-3 grid-cols-1 xs:grid-cols-2 lg:grid-cols-1">
+                <Link href="/pharmacy/inventory" className="flex w-full">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3 transition-all hover:bg-primary/5 hover:border-primary/30 group">
+                        <Pill className="mr-3 h-5 w-5 text-blue-500 group-hover:scale-110 transition-transform" />
+                        <div className="flex flex-col items-start truncate overflow-hidden">
                             <span className="font-semibold">Inventory</span>
-                            <span className="text-xs text-muted-foreground">Manage medicines & stock</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground truncate">Manage medicines & stock</span>
                         </div>
                     </Button>
                 </Link>
-                <Link href="/pharmacy/reports">
-                    <Button variant="outline" className="w-full justify-start h-auto py-3">
-                        <Activity className="mr-3 h-5 w-5 text-purple-500" />
-                        <div className="flex flex-col items-start">
+                <Link href="/pharmacy/reports" className="flex w-full">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3 transition-all hover:bg-primary/5 hover:border-primary/30 group">
+                        <Activity className="mr-3 h-5 w-5 text-purple-500 group-hover:scale-110 transition-transform" />
+                        <div className="flex flex-col items-start truncate overflow-hidden">
                              <span className="font-semibold">Reports</span>
-                             <span className="text-xs text-muted-foreground">Sales & detailed analytics</span>
+                             <span className="text-[10px] sm:text-xs text-muted-foreground truncate">Sales & detailed analytics</span>
                         </div>
                     </Button>
                 </Link>
-                <Link href="/pharmacy/setup">
-                    <Button variant="outline" className="w-full justify-start h-auto py-3">
-                        <Settings className="mr-3 h-5 w-5 text-slate-500" />
-                        <div className="flex flex-col items-start">
+                <Link href="/pharmacy/setup" className="flex w-full">
+                    <Button variant="outline" className="w-full justify-start h-auto py-3 transition-all hover:bg-primary/5 hover:border-primary/30 group">
+                        <Settings className="mr-3 h-5 w-5 text-slate-500 group-hover:rotate-45 transition-transform" />
+                        <div className="flex flex-col items-start truncate overflow-hidden">
                              <span className="font-semibold">Setup</span>
-                             <span className="text-xs text-muted-foreground">Categories, units & settings</span>
+                             <span className="text-[10px] sm:text-xs text-muted-foreground truncate">Categories, units & settings</span>
                         </div>
                     </Button>
                 </Link>
-                <Link href="/pharmacy/pos">
-                    <Button className="w-full justify-start h-auto py-3 mt-2 shadow-md">
-                        <ShoppingCart className="mr-3 h-5 w-5" />
-                         <div className="flex flex-col items-start">
+                <Link href="/pharmacy/pos" className="flex w-full xs:col-span-2 lg:col-span-1">
+                    <Button className="w-full justify-start h-auto py-3 shadow-lg shadow-primary/20 transition-all active:scale-[0.98] group">
+                        <ShoppingCart className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
+                         <div className="flex flex-col items-start text-left">
                              <span className="font-semibold">POS System</span>
-                             <span className="text-xs opacity-90">Open Point of Sale</span>
+                             <span className="text-[10px] sm:text-xs opacity-90">Open Point of Sale</span>
                         </div>
                     </Button>
                 </Link>

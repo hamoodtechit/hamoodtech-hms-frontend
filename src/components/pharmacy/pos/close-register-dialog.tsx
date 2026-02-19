@@ -68,10 +68,14 @@ export function CloseRegisterDialog({
 
     try {
       const response = await closeRegisterMutation.mutateAsync({
-        registerId,
-        actualBalance: data.actualBalance,
-        closingNote: data.closingNote,
-      } as any)
+        id: registerId,
+        data: {
+          actualBalance: data.actualBalance,
+          closingNote: data.closingNote,
+          cashRegisterId: registerId,
+          sessionId: registerId,
+        },
+      })
       
       if (response.success) {
         toast.success("Cash register closed successfully")

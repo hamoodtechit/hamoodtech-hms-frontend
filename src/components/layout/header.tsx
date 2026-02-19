@@ -16,6 +16,7 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { ModeToggle } from "@/components/ui/theme-toggle"
 import { useActiveSession } from "@/hooks/pharmacy-queries"
 import { Link, usePathname } from "@/i18n/navigation"
+import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Bell, PlayCircle, Search } from "lucide-react"
 
@@ -33,10 +34,10 @@ export function Header() {
         {/* StoreSwitcher moved to Settings page */}
         
         {/* Breadcrumbs */}
-        <div className="hidden lg:flex items-center text-sm text-muted-foreground mr-4">
+        <div className="flex items-center text-sm text-muted-foreground mr-4 overflow-hidden">
              <Breadcrumb>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
+                <BreadcrumbList className="flex-nowrap">
+                    <BreadcrumbItem className="hidden sm:block">
                         <BreadcrumbLink asChild>
                             <Link href="/dashboard">Dashboard</Link>
                         </BreadcrumbLink>
@@ -44,13 +45,20 @@ export function Header() {
                     {paths.filter(p => p !== "dashboard").map((path, index, arr) => {
                         const href = `/${arr.slice(0, index + 1).join('/')}`;
                         const isLast = index === arr.length - 1;
+                        const isSecondToLast = index === arr.length - 2;
                         
                         return (
                             <div key={path} className="flex items-center">
-                                <BreadcrumbSeparator />
-                                <BreadcrumbItem>
+                                <BreadcrumbSeparator className={cn(
+                                    index === 0 && "hidden sm:block",
+                                    !isLast && !isSecondToLast && "hidden lg:block"
+                                )} />
+                                <BreadcrumbItem className={cn(
+                                    isLast ? "block" : "hidden lg:block",
+                                    isSecondToLast && "hidden sm:block"
+                                )}>
                                     {isLast ? (
-                                        <BreadcrumbPage className="capitalize font-semibold text-primary">{path}</BreadcrumbPage>
+                                        <BreadcrumbPage className="capitalize font-semibold text-primary max-w-[120px] truncate sm:max-w-none">{path}</BreadcrumbPage>
                                     ) : (
                                         <BreadcrumbLink asChild>
                                             <Link href={href} className="capitalize">{path}</Link>

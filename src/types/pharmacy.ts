@@ -267,11 +267,13 @@ export interface MedicinePayload {
   branchId?: string;
 }
 
-export interface StockAdjustmentPayload {
+export interface AdjustStockDto {
   stockId: string;
   quantity: number;
   type: 'increase' | 'decrease';
-  note: string;
+  note?: string;
+  recoverAmount?: number;
+  accountId?: string;
 }
 
 export interface StockTransferPayload {
@@ -279,6 +281,19 @@ export interface StockTransferPayload {
   toBranchId: string;
   quantity: number;
   note: string;
+}
+
+export interface AddOpeningStockDto {
+  medicineId: string;
+  branchId: string;
+  batchNumber: string;
+  expiryDate: string;
+  quantity: number;
+  unitPrice: number;
+  mrp: number;
+  unit?: string;
+  rackNumber?: string;
+  note?: string;
 }
 
 export type PharmacyEntityType = 'generics' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
@@ -457,6 +472,7 @@ export interface SaleReturnItemPayload {
 
 export interface SaleReturnPayload {
   saleId: string;
+  status?: 'pending' | 'completed' | 'rejected';
   saleReturnItems: SaleReturnItemPayload[];
 }
 
@@ -593,6 +609,8 @@ export interface CashRegisterOpenPayload {
 export interface CashRegisterClosePayload {
   actualBalance: number;
   closingNote?: string;
+  cashRegisterId?: string;
+  sessionId?: string;
 }
 
 export interface CashRegisterResponse {

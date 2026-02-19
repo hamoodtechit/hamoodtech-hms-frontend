@@ -34,6 +34,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -211,85 +212,88 @@ export function CreateOrderDialog() {
                 <Plus className="mr-2 h-4 w-4" /> Create Purchase
             </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[1000px] max-h-[90vh] flex flex-col">
-            <DialogHeader>
-            <DialogTitle>Create Purchase</DialogTitle>
+        <DialogContent className="sm:max-w-[1200px] h-[95vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
+            <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Create Purchase</DialogTitle>
             <DialogDescription>
-                Add a new purchase record to the system.
+                Add a new purchase record to the system with real-time stock updates.
             </DialogDescription>
             </DialogHeader>
             
-            <div className="grid gap-4 py-4 overflow-hidden">
-            <div className="grid gap-2">
-                <Label>Supplier</Label>
-                <div className="flex gap-2">
-                    <Popover open={openSupplierCombobox} onOpenChange={setOpenSupplierCombobox}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={openSupplierCombobox}
-                                className="flex-1 justify-between"
-                            >
-                                {selectedSupplier
-                                    ? suppliers.find((supplier) => supplier.id === selectedSupplier)?.name
-                                    : "Select supplier..."}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0">
-                            <Command>
-                                <CommandInput placeholder="Search supplier..." />
-                                <CommandList>
-                                    <CommandEmpty>No supplier found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {suppliers.map((supplier) => (
-                                            <CommandItem
-                                                key={supplier.id}
-                                                value={supplier.name}
-                                                onSelect={() => {
-                                                    setSelectedSupplier(supplier.id)
-                                                    setOpenSupplierCombobox(false)
-                                                }}
-                                            >
-                                                <Check
-                                                    className={cn(
-                                                        "mr-2 h-4 w-4",
-                                                        selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
-                                                    )}
-                                                />
-                                                {supplier.name}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
-                    <Button variant="outline" onClick={() => setCreateSupplierOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                    </Button>
+            <div className="flex-1 overflow-y-auto px-6 py-2">
+                <div className="grid gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="lg:col-span-8 flex flex-col gap-2">
+                    <Label className="font-semibold">Supplier</Label>
+                    <div className="flex gap-2">
+                        <Popover open={openSupplierCombobox} onOpenChange={setOpenSupplierCombobox}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openSupplierCombobox}
+                                    className="flex-1 justify-between h-10"
+                                >
+                                    {selectedSupplier
+                                        ? suppliers.find((supplier) => supplier.id === selectedSupplier)?.name
+                                        : "Select supplier..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Search supplier..." />
+                                    <CommandList>
+                                        <CommandEmpty>No supplier found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {suppliers.map((supplier) => (
+                                                <CommandItem
+                                                    key={supplier.id}
+                                                    value={supplier.name}
+                                                    onSelect={() => {
+                                                        setSelectedSupplier(supplier.id)
+                                                        setOpenSupplierCombobox(false)
+                                                    }}
+                                                >
+                                                    <Check
+                                                        className={cn(
+                                                            "mr-2 h-4 w-4",
+                                                            selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                                                        )}
+                                                    />
+                                                    {supplier.name}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        <Button variant="outline" className="h-10" onClick={() => setCreateSupplierOpen(true)}>
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label>Status</Label>
+                <div className="lg:col-span-4 flex flex-col gap-2">
+                    <Label className="font-semibold">Status</Label>
                     <Select onValueChange={(value: any) => setStatus(value)} value={status}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                             <SelectValue placeholder="Select status..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="pending">Pending (PO only)</SelectItem>
+                            <SelectItem value="completed">Completed (Adds Stock)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
+            </div>
 
-                <div className="grid gap-2">
-                    <Label>Payment Method</Label>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div className="lg:col-span-3 flex flex-col gap-2">
+                    <Label className="font-semibold">Payment Method</Label>
                     <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10">
                             <SelectValue placeholder="Select method" />
                         </SelectTrigger>
                         <SelectContent>
@@ -301,58 +305,67 @@ export function CreateOrderDialog() {
                         </SelectContent>
                     </Select>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label>Amount Paid</Label>
-                    <SmartNumberInput 
-                        value={paidAmount}
-                        onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                        className="h-9"
-                    />
+                <div className="lg:col-span-4 flex flex-col gap-2">
+                    <Label className="font-semibold">Amount Paid</Label>
+                    <div className="relative">
+                        <SmartNumberInput 
+                            value={paidAmount}
+                            onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                            className="h-10 pl-8 font-bold"
+                        />
+                         <Banknote className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
                 </div>
-                <div className="grid gap-2">
-                    <Label className="flex items-center gap-2">
+
+                <div className="lg:col-span-5 flex flex-col gap-2">
+                    <Label className="font-semibold flex items-center gap-2">
                         Target Account
-                        <Banknote className="h-3 w-3 text-muted-foreground" />
                     </Label>
-                    <div className="text-sm px-3 py-2 bg-muted rounded border font-medium truncate h-9 flex items-center">
+                    <div className="text-sm px-3 h-10 bg-muted/50 rounded-md border font-medium truncate flex items-center text-primary">
+                        <Check className="mr-2 h-4 w-4 opacity-70" />
                         {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                            <span className="text-destructive text-xs">No account mapped (Check Settings)</span>
+                            <span className="text-destructive text-xs italic">No account mapped (Check Settings)</span>
                         )}
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center justify-between border-t pt-4">
-                <Label className="text-base font-semibold">Items</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="mr-2 h-4 w-4" /> Add Item
+            <Separator className="my-2" />
+
+            <div className="flex items-center justify-between pb-2">
+                <div className="flex items-center gap-2">
+                    <div className="h-8 w-1 bg-primary rounded-full" />
+                    <Label className="text-lg font-bold">Purchase Items</Label>
+                </div>
+                <Button type="button" variant="default" size="sm" onClick={addItem} className="h-8 shadow-sm">
+                <Plus className="mr-2 h-4 w-4" /> Add Line
                 </Button>
             </div>
 
             <ScrollArea className="flex-1 max-h-[400px] border rounded-md p-4">
                 <div className="space-y-4">
                 {purchaseItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-3 items-end border-b pb-4 last:border-0 last:pb-0">
-                    <div className="col-span-3 space-y-2">
-                        <Label className="text-xs font-semibold">Medicine</Label>
+                    <div key={index} className="grid grid-cols-[3.2fr_0.7fr_1fr_1.2fr_1fr_1fr_1.3fr_1.6fr_0.5fr] gap-2 items-end border-b pb-4 last:border-0 last:pb-0">
+                    <div className="space-y-1.5 overflow-hidden">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1">Medicine *</Label>
                         <Popover open={openComboboxes[index]} onOpenChange={(isOpen) => toggleCombobox(index, isOpen)}>
                             <PopoverTrigger asChild>
                                 <Button
                                 variant="outline"
                                 role="combobox"
                                 aria-expanded={openComboboxes[index]}
-                                className="w-full justify-between h-9 px-3 font-normal"
+                                className="w-full justify-between h-9 px-2 font-normal text-xs"
                                 >
-                                {item.medicineId
-                                    ? medicines.find((medicine) => medicine.id === item.medicineId)?.name
-                                    : "Select medicine..."}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                <span className="truncate">
+                                    {item.medicineId
+                                        ? medicines.find((medicine) => medicine.id === item.medicineId)?.name
+                                        : "Select..."}
+                                </span>
+                                <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0">
+                            <PopoverContent className="w-[300px] p-0" align="start">
                                 <Command>
                                     <CommandInput placeholder="Search medicine..." />
                                     <CommandList>
@@ -374,7 +387,7 @@ export function CreateOrderDialog() {
                                                     )}
                                                 />
                                                 <div className="flex flex-col">
-                                                    <span>{medicine.name}</span>
+                                                    <span className="font-medium">{medicine.name}</span>
                                                     <span className="text-[10px] text-muted-foreground">{medicine.genericName}</span>
                                                 </div>
                                             </CommandItem>
@@ -385,62 +398,67 @@ export function CreateOrderDialog() {
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <div className="col-span-1 space-y-2">
-                        <Label className="text-xs font-semibold">Qty</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1 text-center block">Qty</Label>
                         <SmartNumberInput 
-                        className="h-9" 
+                        className="h-9 px-1 text-center text-xs" 
                         value={Number(item.quantity)} 
                         onChange={(val: number | undefined) => updateItem(index, { quantity: val || 0 })}
                         />
                     </div>
-                    <div className="col-span-1 space-y-2">
-                        <Label className="text-xs font-semibold">Purchase Price</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1">Buy Price</Label>
                         <SmartNumberInput 
-                        className="h-9" 
+                        className="h-9 px-1 text-xs" 
                         value={Number(item.price)} 
                         onChange={(val: number | undefined) => updateItem(index, { price: val || 0 })}
                         />
                     </div>
-                    <div className="col-span-1 space-y-2">
-                        <Label className="text-xs font-semibold">MRP</Label>
+                    <div className="space-y-1.5 overflow-hidden">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1">Total</Label>
+                        <div className="h-9 px-2 flex items-center bg-primary/5 rounded border border-primary/10 text-xs font-bold text-primary truncate">
+                            {formatCurrency(Number(item.quantity) * Number(item.price))}
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1 text-primary/80">MRP</Label>
                         <SmartNumberInput 
-                        className="h-9" 
+                        className="h-9 px-1 text-xs" 
                         value={Number(item.mrp)} 
                         onChange={(val: number | undefined) => updateItem(index, { mrp: val || 0 })}
                         />
                     </div>
-                    {/* Added Sale Price Field */}
-                    <div className="col-span-1 space-y-2">
-                        <Label className="text-xs font-semibold">Sale</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1 text-emerald-600/80">Sale</Label>
                         <SmartNumberInput 
-                        className="h-9" 
+                        className="h-9 px-1 text-xs font-medium text-emerald-600" 
                         value={Number(item.salePrice)} 
                         onChange={(val: number | undefined) => updateItem(index, { salePrice: val || 0 })}
                         />
                     </div>
-                    <div className="col-span-2 space-y-2">
-                        <Label className="text-xs font-semibold">Batch Number</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1">Batch *</Label>
                         <Input 
-                        className="h-9" 
-                        placeholder="Required" 
+                        className="h-9 px-2 text-xs" 
+                        placeholder="Lot #" 
                         value={item.batchNumber} 
                         onChange={(e) => updateItem(index, { batchNumber: e.target.value })}
                         />
                     </div>
-                    <div className="col-span-2 space-y-2">
-                        <Label className="text-xs font-semibold">Expiry Date</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] font-bold text-muted-foreground uppercase opacity-80 pl-1">Expiry *</Label>
                         <Input 
                         type="date"
-                        className="h-9" 
+                        className="h-9 px-1 text-[11px]" 
                         value={item.expiryDate} 
                         onChange={(e) => updateItem(index, { expiryDate: e.target.value })}
                         />
                     </div>
-                    <div className="col-span-1 pb-0.5">
+                    <div className="pb-0.5 flex justify-end">
                         <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors" 
                         onClick={() => removeItem(index)}
                         >
                         <Trash2 className="h-4 w-4" />
@@ -478,8 +496,9 @@ export function CreateOrderDialog() {
                 )}
             </div>
             </div>
+            </div>
 
-            <DialogFooter className="border-t pt-4">
+            <DialogFooter className="border-t p-6 mt-auto">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
                 Cancel
             </Button>

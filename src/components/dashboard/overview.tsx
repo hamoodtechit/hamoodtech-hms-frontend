@@ -282,7 +282,7 @@ export function Overview() {
         </Card>
         <Card className="col-span-1 md:col-span-2 lg:col-span-3">
           <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
+            <CardTitle>Recent Sales & Purchases</CardTitle>
             <CardDescription>Latest system events.</CardDescription>
           </CardHeader>
           <CardContent>
