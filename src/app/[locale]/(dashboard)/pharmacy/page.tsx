@@ -72,10 +72,31 @@ export default function PharmacyPage() {
       </div>
 
       <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-card to-secondary/10 border-l-4 border-l-emerald-500">
+        {/* Cash in Hand */}
+        <Card className="hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-card to-secondary/10 border-l-4 border-l-cyan-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cash in Hand</CardTitle>
+            <DollarSign className="h-4 w-4 text-cyan-500" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{formatCurrency(stats?.totalCashInHand || 0)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Current drawer balance
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Total Sales */}
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-emerald-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-500" />
+            <ShoppingCart className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -84,34 +105,14 @@ export default function PharmacyPage() {
               <>
                 <div className="text-2xl font-bold">{formatCurrency(stats?.totalSales || 0)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats?.salesCount || 0} transactions processed
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        
-
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.lowStockCount || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Items require reordering
+                  {stats?.salesCount || 0} transitions
                 </p>
               </>
             )}
           </CardContent>
         </Card>
 
+        {/* Total Purchases */}
         <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
@@ -131,25 +132,25 @@ export default function PharmacyPage() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-cyan-500">
+        {/* Expiring in 30 Days */}
+        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-red-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cash in Hand</CardTitle>
-            <DollarSign className="h-4 w-4 text-cyan-500" />
+            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.totalCashInHand || 0)}</div>
+                <div className="text-2xl font-bold">{stats?.expiringIn30Days || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  Current drawer balance
+                   Expiring within 30 days
                 </p>
               </>
             )}
           </CardContent>
         </Card>
-
       </div>
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
         <Card className="col-span-1 lg:col-span-5 h-full">

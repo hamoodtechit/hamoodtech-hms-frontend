@@ -372,7 +372,7 @@ export function TransactionHistory() {
           Register History
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-full sm:max-w-none sm:w-[50vw] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Transaction History</SheetTitle>
           <SheetDescription>
