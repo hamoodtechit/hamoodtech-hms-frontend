@@ -138,6 +138,7 @@ export interface Purchase {
   supplierId: string;
   poNumber?: string;
   totalPrice?: number | string;
+  netPrice?: number | string;
   status: PurchaseStatus;
   purchaseItems: PurchaseItem[];
   paymentMethod?: PaymentMethod;
@@ -374,6 +375,7 @@ export interface Sale {
   patientId: string;
   invoiceNumber: string;
   totalPrice: number | string;
+  netPrice?: number | string;
   status: 'pending' | 'completed' | 'rejected';
   paymentStatus?: 'paid' | 'due' | 'partial';
   paymentMethod?: PaymentMethod;
