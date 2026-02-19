@@ -344,6 +344,7 @@ export interface SaleItem {
   quantity: number;
   batchNumber: string;
   expiryDate: string;
+  dosageForm?: string;
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer';
@@ -413,6 +414,7 @@ export interface SaleItemDetails {
   itemName: string;
   itemDescription?: string | null;
   unit: string;
+  dosageForm?: string | null;
   price: number | string;
   mrp: number | string;
   quantity: number | string;
