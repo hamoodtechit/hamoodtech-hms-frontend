@@ -191,8 +191,10 @@ export function TransactionHistory() {
     const receiptWindow = window.open('', '_blank', 'width=450,height=600');
     if (receiptWindow) {
         receiptWindow.document.write(`
+            <!DOCTYPE html>
             <html>
                 <head>
+                    <meta charset="UTF-8">
                     <title>Receipt ${sale.invoiceNumber}</title>
                     <style>
                         @page { size: 80mm auto; margin: 0; }
@@ -251,7 +253,7 @@ export function TransactionHistory() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${sale.saleItems.map(item => {
+                            ${(sale.saleItems || []).map(item => {
                                 const itemTotal = Number(item.price) * Number(item.quantity)
                                 const itemDisc = Number(item.discountAmount) || (Number(item.discountPercentage) ? (itemTotal * Number(item.discountPercentage)) / 100 : 0)
                                 const netItemTotal = itemTotal - itemDisc
@@ -319,7 +321,7 @@ export function TransactionHistory() {
                     <div class="separator"></div>
 
                     <div class="footer">
-                        <p>Thank you for visiting MediCare Pharmacy!</p>
+                        <p>Thank you for visiting ${general?.hospitalName || "MediCare Pharmacy"}!</p>
                         <p style="font-style:italic">Note: Medicines once sold cannot be returned without receipt.</p>
                         <div style="margin-top:20px; border-top:1px solid #e5e7eb; width:50%; margin-left:25%; padding-top:4px">
                             Authorized Signatory
@@ -327,10 +329,12 @@ export function TransactionHistory() {
                     </div>
 
                     <script>
-                        window.onload = function() { 
-                            window.print(); 
-                            setTimeout(function() { window.close(); }, 500);
-                        }
+                        window.addEventListener('load', function() {
+                            setTimeout(function() {
+                                window.print();
+                                setTimeout(function() { window.close(); }, 500);
+                            }, 500);
+                        });
                     </script>
                 </body>
             </html>
