@@ -544,7 +544,7 @@ export default function POSPage() {
                                             <span className="font-mono">{formatCurrency(activeRegister.openingBalance)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-muted-foreground">Sales Total ({activeRegister.salesCount}):</span>
+                                            <span className="text-muted-foreground">Sales Total (Net) ({activeRegister.salesCount}):</span>
                                             <span className="font-mono text-emerald-600">{formatCurrency(activeRegister.salesAmount)}</span>
                                         </div>
                                         <div className="flex justify-between items-center font-bold">
@@ -562,7 +562,7 @@ export default function POSPage() {
                                                 {activeRegister.sales.slice(0, 5).map((sale) => (
                                                     <div key={sale.id} className="flex justify-between text-xs">
                                                         <span className="font-mono">{sale.invoiceNumber}</span>
-                                                        <span className="font-medium">{formatCurrency(sale.totalPrice)}</span>
+                                                        <span className="font-medium">{formatCurrency(sale.netPrice || sale.totalPrice)}</span>
                                                     </div>
                                                 ))}
                                                 {activeRegister.sales.length > 5 && (
@@ -579,7 +579,7 @@ export default function POSPage() {
                                                 {activeRegister.purchases.slice(0, 5).map((purchase) => (
                                                     <div key={purchase.id} className="flex justify-between text-xs">
                                                         <span className="font-mono">{purchase.poNumber || 'N/A'}</span>
-                                                        <span className="font-medium">{formatCurrency(purchase.totalPrice)}</span>
+                                                        <span className="font-medium">{formatCurrency(purchase.netPrice || purchase.totalPrice)}</span>
                                                     </div>
                                                 ))}
                                                 {activeRegister.purchases.length > 5 && (

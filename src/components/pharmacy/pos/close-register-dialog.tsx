@@ -104,7 +104,7 @@ export function CloseRegisterDialog({
                 <span className="font-medium">{formatCurrency(activeRegister?.openingBalance || 0)}</span>
             </div>
             <div className="flex justify-between">
-                <span className="text-muted-foreground">Sales ({activeRegister?.salesCount || 0}):</span>
+                <span className="text-muted-foreground">Sales (Net) ({activeRegister?.salesCount || 0}):</span>
                 <span className="font-medium text-emerald-600">+{formatCurrency(activeRegister?.salesAmount || 0)}</span>
             </div>
             <div className="flex justify-between">
