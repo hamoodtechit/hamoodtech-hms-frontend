@@ -533,6 +533,7 @@ export interface CashRegister {
     patientId: string;
     invoiceNumber: string;
     totalPrice: string | number;
+    netPrice?: string | number;
     status: string;
     createdAt: string;
     updatedAt: string;
@@ -544,6 +545,7 @@ export interface CashRegister {
     supplierId: string;
     poNumber?: string;
     totalPrice: string | number;
+    netPrice?: string | number;
     status: string;
     createdAt: string;
     updatedAt: string;

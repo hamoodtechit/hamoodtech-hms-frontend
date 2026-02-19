@@ -114,7 +114,7 @@ export function TransactionHistory() {
             type: 'sale',
             number: s.invoiceNumber,
             party: s.patient?.name || 'Walk-in',
-            total: Number(s.totalPrice || 0),
+            total: Number(s.netPrice || s.totalPrice || 0),
             status: s.status,
             date: s.createdAt,
             original: s
@@ -125,7 +125,7 @@ export function TransactionHistory() {
             type: 'purchase',
             number: p.poNumber || 'PO-N/A',
             party: p.supplier?.name || 'Unknown Supplier',
-            total: Number(p.totalPrice || 0),
+            total: Number(p.netPrice || p.totalPrice || 0),
             status: p.status,
             date: p.createdAt,
             original: p
@@ -136,7 +136,7 @@ export function TransactionHistory() {
             type: 'return',
             number: r.invoiceNumber,
             party: r.patient?.name || 'Walk-in',
-            total: Number(r.totalPrice || 0),
+            total: Number(r.netPrice || r.totalPrice || 0),
             status: r.status,
             date: r.createdAt,
             original: r
@@ -185,7 +185,7 @@ export function TransactionHistory() {
     const taxableAmount = subtotal - discount
     const vatPercentage = 5 // TODO: Get from settings
     const vat = (taxableAmount * vatPercentage) / 100
-    const total = Number(sale.totalPrice)
+    const total = Number(sale.netPrice || sale.totalPrice)
     
     // Format currency values before using in template
     const formattedItems = sale.saleItems.map(item => ({
