@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
     Table,
     TableBody,
@@ -34,7 +35,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { userService } from "@/services/user-service"
 import { User } from "@/types/user"
-import { Edit, Eye, Loader2, MoreHorizontal, Plus, Search, Trash2, User as UserIcon } from "lucide-react"
+import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, User as UserIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { UserDetailsDialog } from "./components/user-details-dialog"
@@ -143,92 +144,120 @@ export default function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                <p>Loading users...</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead>Joined Date</TableHead>
-                  <TableHead className="w-[100px] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {!users || users.length === 0 ? (
-                    <TableRow>
-                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                            No users found.
-                        </TableCell>
-                    </TableRow>
-                ) : (
-                    users.map((user) => (
-                    <TableRow key={user.id}>
-                        <TableCell>
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                                <UserIcon className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-medium">{user.fullName} {user.fullNameBangla && `(${user.fullNameBangla})`}</span>
-                                <span className="text-xs text-muted-foreground">{user.email || user.username}</span>
-                            </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead>Joined Date</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                        <div className="flex flex-col gap-1">
+                          <Skeleton className="h-4 w-[150px]" />
+                          <Skeleton className="h-3 w-[100px]" />
                         </div>
-                        </TableCell>
-                        <TableCell>
-                             <Badge variant="secondary">{user.role?.name || 'No Role'}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                            {user.isActive ? (
-                                <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
-                            ) : (
-                                <Badge variant="destructive">Inactive</Badge>
-                            )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-[160px]">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setViewUser(user)}>
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            {hasPermission('user:update') && (
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-[80px]" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <Skeleton className="h-5 w-[60px]" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-[100px]" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : !users || users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                          <UserIcon className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {user.fullName}{" "}
+                            {user.fullNameBangla && `(${user.fullNameBangla})`}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.email || user.username}
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{user.role?.name || "No Role"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {user.isActive ? (
+                        <Badge className="bg-emerald-500 hover:bg-emerald-600">
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">Inactive</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setViewUser(user)}>
+                            <Eye className="mr-2 h-4 w-4" /> View Details
+                          </DropdownMenuItem>
+                          {hasPermission("user:update") && (
                             <DropdownMenuItem onClick={() => handleEdit(user)}>
-                                <Edit className="mr-2 h-4 w-4" /> Edit User
+                              <Edit className="mr-2 h-4 w-4" /> Edit User
                             </DropdownMenuItem>
-                            )}
-                            {hasPermission('user:delete') && (
-                            <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => handleDeleteClick(user)}
+                          )}
+                          {hasPermission("user:delete") && (
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteClick(user)}
                             >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete User
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete User
                             </DropdownMenuItem>
-                            )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                    ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

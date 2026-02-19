@@ -44,6 +44,7 @@ interface PosState {
     addToCart: (product: Product) => void
     removeFromCart: (id: string, batchNumber?: string) => void
     updateQuantity: (id: string, delta: number, batchNumber?: string) => void
+    setQuantity: (id: string, quantity: number, batchNumber?: string) => void
     clearCart: () => void
     addTransaction: (transaction: Transaction) => void
     refundTransaction: (id: string) => void
@@ -86,6 +87,14 @@ export const usePosStore = create<PosState>()(
                     if (item.id === id && item.batchNumber === batchNumber) {
                         const newQuantity = Math.max(1, item.quantity + delta)
                         return { ...item, quantity: newQuantity }
+                    }
+                    return item
+                })
+            })),
+            setQuantity: (id: string, quantity: number, batchNumber?: string) => set((state) => ({
+                cart: state.cart.map((item) => {
+                    if (item.id === id && item.batchNumber === batchNumber) {
+                        return { ...item, quantity: Math.max(1, quantity) }
                     }
                     return item
                 })

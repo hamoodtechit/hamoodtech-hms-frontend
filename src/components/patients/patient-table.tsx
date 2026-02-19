@@ -20,17 +20,25 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { usePatients } from "@/hooks/pharmacy-queries"
+import { PHARMACY_KEYS, usePatients } from "@/hooks/pharmacy-queries"
 import { usePermissions } from "@/hooks/use-permissions"
+import { Patient } from "@/types/pharmacy"
+import { useQueryClient } from "@tanstack/react-query"
 import { Edit, Eye, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
+import { PatientDialog } from "./patient-dialog"
 
 export function PatientTable() {
     const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [debouncedSearch] = useDebounce(search, 500)
     const [page, setPage] = useState(1)
+    
+    // Modal State
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+    const queryClient = useQueryClient()
 
     const { data: response, isLoading, isFetching } = usePatients({
         page,
@@ -41,10 +49,24 @@ export function PatientTable() {
     const patients = response?.data || []
     const meta = response?.meta
 
+    const handleAdd = () => {
+        setSelectedPatient(null)
+        setDialogOpen(true)
+    }
+
+    const handleEdit = (patient: Patient) => {
+        setSelectedPatient(patient)
+        setDialogOpen(true)
+    }
+
+    const handleSuccess = () => {
+        queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.patients({ page, limit: 10, search: debouncedSearch }) })
+    }
+
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="relative flex-1 w-full sm:max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search patients by name or phone..."
@@ -64,7 +86,7 @@ export function PatientTable() {
                 </div>
 
                 {hasPermission('patient:create') && (
-                    <Button className="gap-2">
+                    <Button className="gap-2 w-full sm:w-auto" onClick={handleAdd}>
                         <UserPlus className="h-4 w-4" /> Add Patient
                     </Button>
                 )}
@@ -141,7 +163,7 @@ export function PatientTable() {
                                                     <Eye className="mr-2 h-4 w-4" /> View History
                                                 </DropdownMenuItem>
                                                 {hasPermission('patient:update') && (
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(patient)}>
                                                         <Edit className="mr-2 h-4 w-4" /> Edit Details
                                                     </DropdownMenuItem>
                                                 )}
@@ -189,6 +211,13 @@ export function PatientTable() {
                     </div>
                 </div>
             )}
+
+            <PatientDialog 
+                open={dialogOpen} 
+                onOpenChange={setDialogOpen} 
+                onSuccess={handleSuccess}
+                patient={selectedPatient}
+            />
         </div>
     )
 }

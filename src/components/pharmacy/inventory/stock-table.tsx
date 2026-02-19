@@ -181,10 +181,7 @@ export function StockTable() {
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold">{item.batchNumber}</span>
-                                    <span className="text-[10px] text-muted-foreground font-mono">{item.sku}</span>
-                                </div>
+                                <span className="text-sm font-semibold">{item.batchNumber}</span>
                             </TableCell>
                             <TableCell>
                                 <span className={`text-sm ${isExpired ? 'text-destructive font-bold' : ''}`}>

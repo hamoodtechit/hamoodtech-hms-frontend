@@ -124,7 +124,15 @@ export function CartContents({
                                             >
                                                 <Minus className="h-3 w-3" />
                                             </Button>
-                                            <span className="text-xs w-5 text-center font-medium">{item.quantity}</span>
+                                            <SmartNumberInput 
+                                                value={item.quantity}
+                                                onFocus={(e: any) => e.target.select()}
+                                                onChange={(val: number | undefined) => {
+                                                    const { setQuantity } = usePosStore.getState()
+                                                    setQuantity(item.id, val || 1, item.batchNumber)
+                                                }}
+                                                className="h-5 w-10 text-center text-[10px] p-0 font-bold bg-background border-none focus-visible:ring-1 focus-visible:ring-primary"
+                                            />
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
@@ -192,7 +200,7 @@ export function CartContents({
             </div>
 
             {/* Footer Section - Optimized for various screen sizes */}
-            <div className="p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[70%]">
+            <div className="p-2 sm:p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[60%] sm:max-h-[70%]">
                 <ScrollArea className="flex-1 min-h-0 pr-3">
                     <div className="space-y-3 pb-2">
                         {/* Customer Selection */}
@@ -212,36 +220,36 @@ export function CartContents({
                         </div>
 
                         {/* Inline Payment & Amount */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                            <div className="space-y-0.5 sm:space-y-1">
+                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
                                 <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                    <SelectTrigger className="h-9 text-sm">
+                                    <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
                                         <SelectValue placeholder="Method" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {paymentMethods.map(method => (
                                             <SelectItem key={method} value={method}>
-                                                <span className="capitalize">{method}</span>
+                                                <span className="capitalize text-xs sm:text-sm">{method}</span>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
+                            <div className="space-y-0.5 sm:space-y-1">
+                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
                                 <SmartNumberInput 
                                     value={paidAmount}
                                     onFocus={(e: any) => e.target.select()} 
                                     onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                    className="h-9 text-sm font-bold"
+                                    className="h-8 sm:h-9 text-xs sm:text-sm font-bold"
                                 />
                             </div>
-                            <div className="col-span-2 space-y-1">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</span>
-                                <div className="text-xs px-3 py-2 bg-muted rounded border font-medium truncate">
+                            <div className="col-span-2 space-y-0.5 sm:space-y-1">
+                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</span>
+                                <div className="text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 bg-muted rounded border font-medium truncate">
                                     {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                                        <span className="text-destructive text-[10px]">No account mapped</span>
+                                        <span className="text-destructive text-[9px] sm:text-[10px]">No account mapped</span>
                                     )}
                                 </div>
                             </div>
@@ -301,7 +309,7 @@ export function CartContents({
                                     <span>-{formatCurrency(discountAmount)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-lg pt-1 border-t mt-1">
+                            <div className="flex justify-between font-bold text-base sm:text-lg pt-1 border-t mt-1">
                                 <span>Total to Pay</span>
                                 <span className="text-primary">{formatCurrency(total)}</span>
                             </div>
@@ -326,16 +334,16 @@ export function CartContents({
                     </div>
                 </ScrollArea>
                 
-                <div className="pt-3 mt-auto shrink-0 border-t border-primary/10">
+                <div className="pt-2 sm:pt-3 mt-auto shrink-0 border-t border-primary/10">
                     <Button 
                         className={cn(
-                            "w-full h-12 text-lg font-bold shadow-xl transition-all active:scale-[0.98]",
+                            "w-full h-10 sm:h-12 text-base sm:text-lg font-bold shadow-xl transition-all active:scale-[0.98]",
                             paidAmount < (total - 0.01) && total > 0 ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
                         )}
                         disabled={cart.length === 0}
                         onClick={onCheckout}
                     >
-                        <CreditCard className="mr-3 h-5 w-5" />
+                        <CreditCard className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
                         Complete Payment
                     </Button>
                 </div>

@@ -1,5 +1,7 @@
 import { api } from '@/lib/api';
 import {
+    AddOpeningStockDto,
+    AdjustStockDto,
     Branch,
     BranchListResponse,
     BranchPayload,
@@ -28,7 +30,6 @@ import {
     SaleReturnListResponse,
     SaleReturnPayload,
     Stock,
-    StockAdjustmentPayload,
     StockTransferPayload,
     Supplier,
     SupplierListResponse,
@@ -146,12 +147,16 @@ export const pharmacyService = {
     return response.data;
   },
 
-  adjustStock: async (data: StockAdjustmentPayload): Promise<void> => {
+  adjustStock: async (data: AdjustStockDto): Promise<void> => {
     await api.post('/pharmacy/stocks/adjust', data);
   },
 
   transferStock: async (data: StockTransferPayload): Promise<void> => {
     await api.post('/pharmacy/stocks/transfer', data);
+  },
+
+  addOpeningStock: async (data: AddOpeningStockDto): Promise<void> => {
+    await api.post('/pharmacy/stocks/opening', data);
   },
 
   // Branch APIs
@@ -284,6 +289,11 @@ export const pharmacyService = {
     status?: string;
   }): Promise<SaleReturnListResponse> => {
     const response = await api.get<SaleReturnListResponse>('/pharmacy/sale-returns', { params });
+    return response.data;
+  },
+
+  updateSaleReturnStatus: async (id: string, status: 'pending' | 'completed' | 'rejected'): Promise<{ success: boolean, message: string, data: any }> => {
+    const response = await api.patch<{ success: boolean, message: string, data: any }>(`/pharmacy/sale-returns/${id}/status`, { status });
     return response.data;
   },
 

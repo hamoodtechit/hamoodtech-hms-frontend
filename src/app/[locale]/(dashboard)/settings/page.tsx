@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -89,7 +90,78 @@ export default function SettingsPage() {
     }
 
     if (!general && !pharmacy && !appointments) {
-        return <div className="flex h-96 items-center justify-center text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin mr-2" /> Loading settings...</div>
+        return (
+            <div className="space-y-6 p-6 pb-16">
+                <div className="space-y-0.5">
+                    <Skeleton className="h-8 w-[150px]" />
+                    <Skeleton className="h-4 w-[300px]" />
+                </div>
+                <Separator className="my-6" />
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+                    <div className="w-full lg:w-64 space-y-2 shrink-0">
+                        <Skeleton className="h-11 w-full rounded-lg" />
+                        <Skeleton className="h-11 w-full rounded-lg" />
+                        <Skeleton className="h-11 w-full rounded-lg" />
+                        <Skeleton className="h-11 w-full rounded-lg" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[200px]" />
+                                <Skeleton className="h-4 w-[300px] mt-2" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center gap-4">
+                                    <Skeleton className="h-10 w-[180px]" />
+                                    <Skeleton className="h-4 w-[250px]" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-[150px]" />
+                                <Skeleton className="h-4 w-[250px] mt-2" />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
