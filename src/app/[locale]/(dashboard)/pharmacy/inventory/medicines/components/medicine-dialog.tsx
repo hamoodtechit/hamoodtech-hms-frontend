@@ -202,11 +202,15 @@ export function MedicineDialog({
     try {
       setSaving(true)
       
+      const selectedGeneric = generics.find(g => g.id === formData.genericId);
+      const selectedUnit = units.find(u => u.id === formData.medicineUnitId);
+
       // Sanitize payload: convert empty strings to undefined for optional fields
       const payload: any = {
         name: formData.name,
         genericId: formData.genericId || undefined,
-        unit: formData.unit || 'Pcs',
+        genericName: selectedGeneric?.name || "",
+        unit: selectedUnit?.name || formData.unit || 'Pcs',
         categoryId: formData.categoryId || undefined,
         nameBangla: formData.nameBangla || undefined,
         genericNameBangla: formData.genericNameBangla || undefined,
@@ -214,7 +218,6 @@ export function MedicineDialog({
         groupId: formData.groupId || undefined,
         medicineUnitId: formData.medicineUnitId || undefined,
         medicineManufacturerId: formData.medicineManufacturerId || undefined,
-        unitPrice: Number(formData.purchasePrice || formData.unitPrice) || 0,
         purchasePrice: Number(formData.purchasePrice || formData.unitPrice) || 0,
         salePrice: Number(formData.salePrice) || 0,
         mrp: Number(formData.mrp) || 0,
