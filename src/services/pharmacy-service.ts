@@ -412,5 +412,15 @@ export const pharmacyService = {
     const response = await api.delete(`/patients/${id}`);
     return response.data;
   },
+
+  // Reports
+  getSalesReport: async (params: { 
+    branchId: string; 
+    startDate: string; 
+    endDate: string; 
+  }): Promise<any> => {
+    const response = await api.get('/reports/pharmacy/sales-report', { params });
+    return response.data;
+  },
 };
 

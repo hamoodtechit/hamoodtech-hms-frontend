@@ -66,7 +66,8 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
 
   // Calculate totals
   const totalStock = displayMedicine.stocks?.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0) || (Number(displayMedicine.stock) || 0)
-  const stockValue = totalStock * (Number(displayMedicine.unitPrice) || 0)
+  const buyPrice = Number(displayMedicine.purchasePrice || displayMedicine.unitPrice) || 0
+  const stockValue = totalStock * buyPrice
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -170,7 +171,7 @@ export function MedicineDetailsDialog({ open, onOpenChange, medicine }: Medicine
            <div className="grid grid-cols-3 gap-4 border rounded-lg p-4">
               <div>
                  <div className="text-xs text-muted-foreground mb-1">Unit Price (Buy)</div>
-                 <div className="font-semibold">{formatCurrency(Number(displayMedicine.unitPrice) || 0)}</div>
+                 <div className="font-semibold">{formatCurrency(buyPrice)}</div>
               </div>
               <div>
                  <div className="text-xs text-muted-foreground mb-1">MRP</div>

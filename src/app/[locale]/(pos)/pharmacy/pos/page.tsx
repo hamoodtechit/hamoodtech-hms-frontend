@@ -114,6 +114,9 @@ export default function POSPage() {
   })
 
   const medicines = productsRes?.pages.flatMap(page => page.data) || []
+  const uniqueMedicines = medicines.filter((medicine, index, self) =>
+    index === self.findIndex((m) => m.id === medicine.id)
+  )
   const createSaleMutation = useCreateSale()
 
   // Effects
@@ -178,13 +181,20 @@ export default function POSPage() {
         return
     }
 
+    const itemStock = activeBatch?.quantity || availableStock
+    const existingInCart = cart.find(item => item.id === medicine.id && item.batchNumber === activeBatch?.batchNumber)
+    
+    if (existingInCart && existingInCart.quantity >= itemStock) {
+        toast.error(`Only ${itemStock} items available in stock`)
+        return
+    }
+
     addToCart({
       id: medicine.id,
       name: medicine.name,
       price: Number(medicine.salePrice),
       quantity: 1,
-      
-      stock: activeBatch?.quantity || availableStock,
+      stock: itemStock,
       batchNumber: activeBatch?.batchNumber,
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
@@ -194,7 +204,7 @@ export default function POSPage() {
   }
 
   // Filtered products are now handled by the backend query
-  const filteredProducts = medicines
+  const filteredProducts = uniqueMedicines
 
   // Calculations: Discount Applied FIRST, then Tax on the discounted amount
   const { formatCurrency } = useCurrency()
@@ -409,7 +419,7 @@ export default function POSPage() {
 
             {/* Mobile Cart Sheet (Controlled) */}
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-                <SheetContent side="right" className="p-0 w-full sm:w-[400px]">
+                <SheetContent side="right" className="p-0 w-full sm:max-w-[580px]">
                     <SheetTitle className="sr-only">Cart</SheetTitle>
                     <CartContents 
                         onCheckout={handleCheckout}
@@ -796,7 +806,7 @@ export default function POSPage() {
       </div>
 
       {/* Desktop Cart Sidebar */}
-      <div className="hidden md:flex flex-col w-[350px] lg:w-[400px] border-l bg-card rounded-xl shadow-sm overflow-hidden h-full"> 
+      <div className="hidden md:flex flex-col md:w-[480px] lg:w-[580px] border-l bg-card rounded-xl shadow-sm overflow-hidden h-full"> 
 
          <CartContents 
             onCheckout={handleCheckout}
