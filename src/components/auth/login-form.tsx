@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { useRouter } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/use-auth-store"
-import { Loader2, Lock, Mail } from "lucide-react"
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -19,6 +19,7 @@ export function LoginForm() {
     usernameOrEmail: "",
     password: ""
   })
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -89,15 +90,31 @@ export function LoginForm() {
                 <Input 
                     id="password" 
                     name="password" 
-                    type="password" 
-                    className="pl-9"
+                    type={showPassword ? "text" : "password"} 
+                    className="pl-9 pr-10"
                     required 
                     value={formData.password}
                     onChange={handleChange}
                     autoComplete="current-password"
                     disabled={isLoading}
                 />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                >
+                    {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                </Button>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+                Password: 8+ chars, with upper, lower, and numbers.
+            </p>
           </div>
           <Button className="w-full mt-2" type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
