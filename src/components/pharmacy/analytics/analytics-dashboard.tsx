@@ -67,8 +67,8 @@ export function AnalyticsDashboard() {
         const loadingToast = toast.loading("Generating report...")
         const data = await pharmacyService.getSalesReport({
             branchId: activeStoreId || 'default-branch',
-            startDate: date.from.toISOString(),
-            endDate: date.to.toISOString()
+            startDate: format(date.from, 'yyyy-MM-dd'),
+            endDate: format(date.to, 'yyyy-MM-dd')
         })
         toast.dismiss(loadingToast)
 
