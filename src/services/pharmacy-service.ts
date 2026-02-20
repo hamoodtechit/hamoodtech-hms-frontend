@@ -1,40 +1,40 @@
 import { api } from '@/lib/api';
 import {
-    AddOpeningStockDto,
-    AdjustStockDto,
-    Branch,
-    BranchListResponse,
-    BranchPayload,
-    CashRegisterClosePayload,
-    CashRegisterListResponse,
-    CashRegisterOpenPayload,
-    CashRegisterResponse,
-    Manufacturer,
-    ManufacturerListResponse,
-    ManufacturerPayload,
-    Medicine,
-    MedicinePayload,
-    PharmacyEntity,
-    PharmacyEntityType,
-    PharmacyGraphResponse,
-    PharmacyPayload,
-    PharmacyResponse,
-    PharmacyStatsResponse,
-    Purchase,
-    PurchaseListResponse,
-    PurchasePayload,
-    PurchaseStatus,
-    Sale,
-    SaleListResponse,
-    SalePayload,
-    SaleReturnListResponse,
-    SaleReturnPayload,
-    Stock,
-    StockTransferPayload,
-    Supplier,
-    SupplierListResponse,
-    SupplierPayload,
-    UpdateSalePayload
+  AddOpeningStockDto,
+  AdjustStockDto,
+  Branch,
+  BranchListResponse,
+  BranchPayload,
+  CashRegisterClosePayload,
+  CashRegisterListResponse,
+  CashRegisterOpenPayload,
+  CashRegisterResponse,
+  Manufacturer,
+  ManufacturerListResponse,
+  ManufacturerPayload,
+  Medicine,
+  MedicinePayload,
+  PharmacyEntity,
+  PharmacyEntityType,
+  PharmacyGraphResponse,
+  PharmacyPayload,
+  PharmacyResponse,
+  PharmacyStatsResponse,
+  Purchase,
+  PurchaseListResponse,
+  PurchasePayload,
+  PurchaseStatus,
+  Sale,
+  SaleListResponse,
+  SalePayload,
+  SaleReturnListResponse,
+  SaleReturnPayload,
+  Stock,
+  StockTransferPayload,
+  Supplier,
+  SupplierListResponse,
+  SupplierPayload,
+  UpdateSalePayload
 } from '@/types/pharmacy';
 
 export const pharmacyService = {
@@ -287,6 +287,7 @@ export const pharmacyService = {
     branchId?: string;
     patientId?: string;
     status?: string;
+    search?: string;
   }): Promise<SaleReturnListResponse> => {
     const response = await api.get<SaleReturnListResponse>('/pharmacy/sale-returns', { params });
     return response.data;

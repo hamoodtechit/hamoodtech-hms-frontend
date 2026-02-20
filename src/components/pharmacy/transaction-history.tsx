@@ -77,7 +77,7 @@ export function TransactionHistory() {
                 branchId: activeStoreId,
                 limit: 10,
                 page,
-                search: debouncedSearch
+                search: debouncedSearch || undefined
             }).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
         } else {
             promises.push(Promise.resolve({ type: 'sale', data: [], meta: { totalPages: 0 } }))
@@ -88,18 +88,18 @@ export function TransactionHistory() {
                 branchId: activeStoreId,
                 limit: 10,
                 page,
-                search: debouncedSearch // Backend might not support search yet for POs same way, but let's pass it
+                search: debouncedSearch || undefined
             }).then(res => ({ type: 'purchase', data: res.data.purchases, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'purchase', data: [], meta: { totalPages: 0 } }))
         }
 
         if (activeTab === 'all' || activeTab === 'return') {
-            // Note: Search for returns might need specific implementation if not supported by getSaleReturns generic 'params'
             promises.push(pharmacyService.getSaleReturns({
                 branchId: activeStoreId,
                 limit: 10,
                 page,
+                search: debouncedSearch || undefined
             }).then(res => ({ type: 'return', data: res.data.saleReturns, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'return', data: [], meta: { totalPages: 0 } }))
