@@ -29,7 +29,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
       <div className="flex flex-col items-center mb-6">
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
         <div className="text-center">
-            <h1 className="text-2xl font-bold uppercase">{activeBranch?.name || "PATWARY GENERAL HOSPITAL"}</h1>
+            <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
             <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
             <p className="text-sm mt-2">
             From {format(dateRange.from, "EEE MMM dd HH:mm:ss 'BDT' yyyy")} to {format(dateRange.to, "EEE MMM dd HH:mm:ss 'BDT' yyyy")}
