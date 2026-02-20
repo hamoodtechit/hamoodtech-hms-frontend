@@ -12,6 +12,7 @@ import {
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -24,7 +25,7 @@ import { userService } from "@/services/user-service"
 import { Role } from "@/types/role"
 import { CreateUserPayload, User } from "@/types/user"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -35,7 +36,9 @@ const userSchema = z.object({
     email: z.string().email("Invalid email address"),
     fullName: z.string().min(1, "Full name is required"),
     roleId: z.string().min(1, "Role is required"),
-    password: z.string().optional(),
+    password: z.string().optional()
+        .refine(val => !val || val.length >= 8, 'Password must be at least 8 characters')
+        .refine(val => !val || /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val), 'Password must contain uppercase, lowercase, and number'),
 })
 
 interface UserDialogProps {
@@ -48,6 +51,7 @@ interface UserDialogProps {
 export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDialogProps) {
     const [loading, setLoading] = useState(false)
     const [roles, setRoles] = useState<Role[]>([])
+    const [showPassword, setShowPassword] = useState(false)
 
     const form = useForm<z.infer<typeof userSchema>>({
         resolver: zodResolver(userSchema),
@@ -201,8 +205,31 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                                     <FormItem>
                                         <FormLabel>Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="******" {...field} />
+                                            <div className="relative">
+                                                <Input 
+                                                    type={showPassword ? "text" : "password"} 
+                                                    placeholder="******" 
+                                                    {...field} 
+                                                    className="pr-10"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                                    )}
+                                                </Button>
+                                            </div>
                                         </FormControl>
+                                        <FormDescription className="text-[10px]">
+                                            Minimum 8 characters with uppercase, lowercase, and numbers.
+                                        </FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}
