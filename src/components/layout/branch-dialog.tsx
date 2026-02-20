@@ -52,6 +52,7 @@ export function BranchDialog({
           address: branchToEdit.address || "",
           phone: branchToEdit.phone || "",
           email: branchToEdit.email || "",
+          logoUrl: branchToEdit.logoUrl || "",
           licenseNumber: branchToEdit.licenseNumber || "",
           taxRegistration: branchToEdit.taxRegistration || "",
         })
@@ -62,6 +63,7 @@ export function BranchDialog({
           address: "",
           phone: "",
           email: "",
+          logoUrl: "",
           licenseNumber: "",
           taxRegistration: "",
         })

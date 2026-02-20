@@ -8,16 +8,16 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Filler,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip
 } from 'chart.js'
 
 import { endOfDay, formatDistanceToNow, startOfMonth } from "date-fns"
@@ -133,7 +133,6 @@ export function Overview() {
             <Button asChild>
                 <Link href="/pharmacy/pos">New Sale</Link>
             </Button>
-            <Button variant="outline">Download Report</Button>
         </div>
       </div>
 

@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
-import { CreditCard, Minus, Plus, ShoppingCart, Tag, Trash2 } from "lucide-react"
+import { CreditCard, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { PatientSearch } from "./patient-search"
 
 interface CartContentsProps {
@@ -96,74 +97,73 @@ export function CartContents({
                             
                             return (
                             <div key={`${item.id}-${item.batchNumber}`} className="bg-card border rounded-md shadow-sm hover:border-primary/20 transition-colors">
-                                <div className="flex gap-2 p-2">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-sm truncate">{item.name}</p>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
-                                            {(item.discountPercentage || item.discountAmount) && (
-                                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 text-emerald-600 border-emerald-200">
-                                                    -{item.discountPercentage ? `${item.discountPercentage}%` : formatCurrency(item.discountAmount || 0)}
-                                                </Badge>
+                                <div className="p-1.5 space-y-1">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-sm truncate leading-tight">{item.name}</p>
+                                            <p className="text-[11px] text-muted-foreground font-medium">{formatCurrency(item.price)}</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            {itemDiscountAmount > 0 && (
+                                                <span className="text-[10px] text-muted-foreground line-through block leading-none">{formatCurrency(itemSubtotal)}</span>
                                             )}
+                                            <span className="font-black text-sm text-primary leading-tight">{formatCurrency(itemTotal)}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <div className="text-right leading-tight">
-                                            {itemDiscountAmount > 0 && (
-                                                <span className="text-[10px] text-muted-foreground line-through block">{formatCurrency(itemSubtotal)}</span>
-                                            )}
-                                            <span className="font-bold text-sm">{formatCurrency(itemTotal)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-secondary rounded-md p-0.5">
+
+                                    <div className="flex items-center justify-between gap-2 border-t pt-1.5 mt-0.5">
+                                        <div className="flex items-center gap-1">
+                                             <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-0.5 border">
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 rounded-sm hover:bg-background"
+                                                    onClick={() => updateQuantity(item.id, -1, item.batchNumber)}
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </Button>
+                                                <SmartNumberInput 
+                                                    value={item.quantity}
+                                                    onFocus={(e: any) => e.target.select()}
+                                                    onChange={(val: number | undefined) => {
+                                                        const q = val || 1
+                                                        if (q > (item.stock || 0)) {
+                                                            toast.error(`Only ${item.stock} items available in stock`)
+                                                        }
+                                                        const { setQuantity } = usePosStore.getState()
+                                                        setQuantity(item.id, q, item.batchNumber)
+                                                    }}
+                                                    className="h-6 w-10 text-center text-[11px] p-0 font-black bg-background border-none focus-visible:ring-1 focus-visible:ring-primary"
+                                                />
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 rounded-sm hover:bg-background"
+                                                    onClick={() => {
+                                                        if (item.quantity >= (item.stock || 0)) {
+                                                            toast.error(`Only ${item.stock} items available in stock`)
+                                                            return
+                                                        }
+                                                        updateQuantity(item.id, 1, item.batchNumber)
+                                                    }}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
-                                                className="h-5 w-5 rounded-sm hover:bg-background"
-                                                onClick={() => updateQuantity(item.id, -1, item.batchNumber)}
-                                            >
-                                                <Minus className="h-3 w-3" />
-                                            </Button>
-                                            <SmartNumberInput 
-                                                value={item.quantity}
-                                                onFocus={(e: any) => e.target.select()}
-                                                onChange={(val: number | undefined) => {
-                                                    const { setQuantity } = usePosStore.getState()
-                                                    setQuantity(item.id, val || 1, item.batchNumber)
-                                                }}
-                                                className="h-5 w-10 text-center text-[10px] p-0 font-bold bg-background border-none focus-visible:ring-1 focus-visible:ring-primary"
-                                            />
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-5 w-5 rounded-sm hover:bg-background"
-                                                onClick={() => updateQuantity(item.id, 1, item.batchNumber)}
-                                            >
-                                                <Plus className="h-3 w-3" />
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-5 w-5 rounded-sm hover:bg-background text-destructive hover:text-destructive"
+                                                className="h-6 w-6 rounded-sm text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => removeFromCart(item.id, item.batchNumber)}
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </Button>
                                         </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Item Discount Input (Compact) */}
-                                <div className="px-2 pb-2 pt-0">
-                                    <details className="group">
-                                        <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-primary flex items-center gap-1 w-fit">
-                                            <Tag className="h-3 w-3" />
-                                            <span>Discount</span>
-                                        </summary>
-                                        <div className="mt-1 flex gap-2">
+
+                                        <div className="flex items-center gap-1 bg-secondary/20 rounded-md p-0.5 border">
                                             <SmartNumberInput 
                                                 placeholder="%"
-                                                className="h-6 text-xs w-16"
+                                                className="h-6 text-[10px] w-12 bg-background border-none px-1"
                                                 min={0}
                                                 max={100}
                                                 value={item.discountPercentage}
@@ -176,9 +176,10 @@ export function CartContents({
                                                     usePosStore.setState({ cart: updatedCart })
                                                 }}
                                             />
+                                            <Separator orientation="vertical" className="h-4" />
                                             <SmartNumberInput 
                                                 placeholder="Amt"
-                                                className="h-6 text-xs w-20"
+                                                className="h-6 text-[10px] w-16 bg-background border-none px-1"
                                                 min={0}
                                                 value={item.discountAmount}
                                                 onChange={(val: number | undefined) => {
@@ -191,7 +192,7 @@ export function CartContents({
                                                 }}
                                             />
                                         </div>
-                                    </details>
+                                    </div>
                                 </div>
                             </div>
                         )})}
@@ -200,7 +201,7 @@ export function CartContents({
             </div>
 
             {/* Footer Section - Optimized for various screen sizes */}
-            <div className="p-2 sm:p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[60%] sm:max-h-[70%]">
+            <div className="p-2 sm:p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[45%] sm:max-h-[50%]">
                 <ScrollArea className="flex-1 min-h-0 pr-3">
                     <div className="space-y-3 pb-2">
                         {/* Customer Selection */}

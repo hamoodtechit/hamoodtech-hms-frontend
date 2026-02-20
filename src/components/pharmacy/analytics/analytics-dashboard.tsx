@@ -1,6 +1,8 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { pharmacyService } from "@/services/pharmacy-service"
 import {
     ArcElement,
     BarElement,
@@ -13,8 +15,11 @@ import {
     Title,
     Tooltip,
 } from 'chart.js'
-import { DollarSign, Package, TrendingUp } from "lucide-react"
+import { DollarSign, FileDown, Package, Printer, TrendingUp } from "lucide-react"
 import { Doughnut, Line } from "react-chartjs-2"
+import { createRoot } from 'react-dom/client'
+import { toast } from "sonner"
+import { PharmacySalesReport } from "../reports/pharmacy-sales-report"
 
 // Register ChartJS components
 ChartJS.register(
@@ -29,18 +34,19 @@ ChartJS.register(
   ArcElement
 )
 
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePharmacyGraph, usePharmacyStats } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
-import { endOfDay, startOfMonth } from "date-fns"
+import { endOfDay, format, startOfMonth } from "date-fns"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 
 export function AnalyticsDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
 
@@ -50,6 +56,68 @@ export function AnalyticsDashboard() {
         to: endOfDay(new Date()),
     })
   }, [])
+
+  const handleDownloadReport = async (type: 'print' | 'excel') => {
+    if (!date?.from || !date?.to) {
+        toast.error("Please select a date range")
+        return
+    }
+
+    try {
+        const loadingToast = toast.loading("Generating report...")
+        const data = await pharmacyService.getSalesReport({
+            branchId: activeStoreId || 'default-branch',
+            startDate: date.from.toISOString(),
+            endDate: date.to.toISOString()
+        })
+        toast.dismiss(loadingToast)
+
+        if (type === 'print') {
+            const printWindow = window.open('', '_blank')
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Pharmacy Sales Statement</title>')
+                // Add tailwind for printing if needed, or just standard styles
+                printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
+                printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
+                printWindow.document.close()
+                
+                const container = printWindow.document.getElementById('report-root')
+                if (container) {
+                    const root = createRoot(container)
+                    const activeBranch = stores.find(s => s.id === activeStoreId)
+                    root.render(<PharmacySalesReport data={data.data} dateRange={{ from: date.from, to: date.to }} activeBranch={activeBranch} />)
+                    
+                    // Give it a moment to render then print
+                    setTimeout(() => {
+                        printWindow.print()
+                        // printWindow.close()
+                    }, 1000)
+                }
+            }
+        } else {
+            // Excel/CSV logic
+            const outdoorSales = data.data.outdoor.sales
+            const headers = ["SL No", "Patient ID", "Bill ID", "Actual Amount", "Less", "Paid", "Due", "Creator"]
+            const rows = outdoorSales.map((s: any) => [
+                s.slNo, s.patientNumber, s.invoiceNumber, s.totalPrice, s.discountAmount, s.paid, s.due, s.createdBy
+            ])
+            
+            let csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(",") + "\n"
+                + rows.map((r: any) => r.join(",")).join("\n")
+            
+            const encodedUri = encodeURI(csvContent)
+            const link = document.createElement("a")
+            link.setAttribute("href", encodedUri)
+            link.setAttribute("download", `pharmacy_sales_report_${format(date.from, 'yyyyMMdd')}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        }
+    } catch (error) {
+        toast.error("Failed to generate report")
+    }
+  }
 
   // Format dates for API
   const startDate = date?.from ? date.from.toISOString() : undefined
@@ -155,6 +223,28 @@ export function AnalyticsDashboard() {
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
             <div className="flex items-center space-x-2">
                 <DatePickerWithRange date={date} setDate={setDate} />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                            <FileDown className="h-4 w-4" />
+                            Download Report
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('print')}>
+                            <FileDown className="h-4 w-4" />
+                            Download PDF Statement
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('print')}>
+                            <Printer className="h-4 w-4" />
+                            Print Statement
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('excel')}>
+                            <FileDown className="h-4 w-4" />
+                            Export Excel (CSV)
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
         {/* KPI Cards */}

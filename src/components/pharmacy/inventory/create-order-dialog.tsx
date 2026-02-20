@@ -26,7 +26,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Select,
     SelectContent,
@@ -38,6 +37,7 @@ import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -49,8 +49,11 @@ import { toast } from "sonner"
 export function CreateOrderDialog() {
   const { activeStoreId } = useStoreContext()
   const [open, setOpen] = useState(false)
-  const { data: suppliersRes } = useSuppliers({ limit: 100 })
-  const { data: medicinesRes } = useMedicines({ limit: 100 })
+  const [medicineSearch, setMedicineSearch] = useState("")
+  const [debouncedMedicineSearch] = useDebounce(medicineSearch, 500)
+  
+  const { data: suppliersRes } = useSuppliers({ limit: 200 })
+  const { data: medicinesRes, isFetching: loadingMedicines } = useMedicines({ search: debouncedMedicineSearch, limit: 100 })
   const { finance, fetchSettings } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   
@@ -107,28 +110,17 @@ export function CreateOrderDialog() {
     setPurchaseItems(purchaseItems.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, updates: Partial<PurchaseItem>) => {
+    const updateItem = (index: number, updates: Partial<PurchaseItem>) => {
     const newItems = [...purchaseItems]
     newItems[index] = { ...newItems[index], ...updates }
-    
-    // Auto-fill item name and prices if medicineId changed
-    if (updates.medicineId) {
-      const med = medicines.find(m => m.id === updates.medicineId)
-      if (med) {
-        newItems[index].itemName = med.name
-        newItems[index].itemDescription = med.genericName || ""
-        newItems[index].price = med.unitPrice || 0
-        newItems[index].mrp = med.mrp || 0
-        newItems[index].salePrice = med.salePrice || 0 // Auto-fill salePrice
-        newItems[index].unit = med.unit || "Piece"
-      }
-    }
-    
     setPurchaseItems(newItems)
   }
 
   const toggleCombobox = (index: number, isOpen: boolean) => {
       setOpenComboboxes(prev => ({ ...prev, [index]: isOpen }))
+      if (isOpen) {
+          setMedicineSearch("") // Reset search term when opening a new line's selector
+      }
   }
 
   const handleCreate = async () => {
@@ -212,16 +204,16 @@ export function CreateOrderDialog() {
                 <Plus className="mr-2 h-4 w-4" /> Create Purchase
             </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[1200px] h-[95vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[1200px] w-[95vw] h-[95vh] sm:h-[90vh] flex flex-col p-0 overflow-hidden gap-0 border-none shadow-2xl">
             <DialogHeader className="p-6 pb-2">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Create Purchase</DialogTitle>
             <DialogDescription>
                 Add a new purchase record to the system with real-time stock updates.
             </DialogDescription>
             </DialogHeader>
-            
-            <div className="flex-1 overflow-y-auto px-6 py-2">
-                <div className="grid gap-6">
+            <div className="flex-1 overflow-y-auto p-0 [scrollbar-gutter:stable] focus:outline-none pointer-events-auto overscroll-contain">
+                <div className="p-6 pt-2">
+                    <div className="grid gap-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div className="lg:col-span-8 flex flex-col gap-2">
                     <Label className="font-semibold">Supplier</Label>
@@ -343,7 +335,7 @@ export function CreateOrderDialog() {
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1 max-h-[400px] border rounded-md p-4">
+            <div className="flex-1 border rounded-md p-4 bg-muted/5 min-h-[300px]">
                 <div className="space-y-4">
                 {purchaseItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-[3.2fr_0.7fr_1fr_1.2fr_1fr_1fr_1.3fr_1.6fr_0.5fr] gap-2 items-end border-b pb-4 last:border-0 last:pb-0">
@@ -358,25 +350,40 @@ export function CreateOrderDialog() {
                                 className="w-full justify-between h-9 px-2 font-normal text-xs"
                                 >
                                 <span className="truncate">
-                                    {item.medicineId
-                                        ? medicines.find((medicine) => medicine.id === item.medicineId)?.name
-                                        : "Select..."}
+                                    {item.itemName || "Select medicine..."}
                                 </span>
                                 <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-0" align="start">
-                                <Command>
-                                    <CommandInput placeholder="Search medicine..." />
-                                    <CommandList>
-                                        <CommandEmpty>No medicine found.</CommandEmpty>
+                                <Command shouldFilter={false}>
+                                    <CommandInput 
+                                        placeholder="Search medicine..." 
+                                        value={medicineSearch}
+                                        onValueChange={setMedicineSearch}
+                                    />
+                                    <CommandList className="relative min-h-[200px]">
+                                        {loadingMedicines && (
+                                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-50">
+                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                            </div>
+                                        )}
+                                        <CommandEmpty>{loadingMedicines ? "Searching..." : "No medicine found."}</CommandEmpty>
                                         <CommandGroup>
                                         {medicines.map((medicine) => (
                                             <CommandItem
                                                 key={medicine.id}
                                                 value={medicine.name}
                                                 onSelect={() => {
-                                                    updateItem(index, { medicineId: medicine.id })
+                                                    updateItem(index, { 
+                                                        medicineId: medicine.id,
+                                                        itemName: medicine.name,
+                                                        itemDescription: medicine.genericName || "",
+                                                        price: medicine.purchasePrice || medicine.unitPrice || 0,
+                                                        mrp: medicine.mrp || 0,
+                                                        salePrice: medicine.salePrice || 0,
+                                                        unit: medicine.unit || "Piece"
+                                                    })
                                                     toggleCombobox(index, false)
                                                 }}
                                             >
@@ -472,7 +479,7 @@ export function CreateOrderDialog() {
                     </div>
                 )}
                 </div>
-            </ScrollArea>
+            </div>
 
             {/* Totals Summary */}
             <div className="bg-muted/30 p-4 rounded-lg border space-y-2">
@@ -494,9 +501,10 @@ export function CreateOrderDialog() {
                         </span>
                     </div>
                 )}
+                </div>
             </div>
-            </div>
-            </div>
+        </div>
+    </div>
 
             <DialogFooter className="border-t p-6 mt-auto">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>

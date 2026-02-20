@@ -22,10 +22,15 @@ import { PurchaseDetailsDialog } from "./purchase-details-dialog"
 export function PurchaseOrderList() {
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
+    const [page, setPage] = useState(1)
     const { formatCurrency } = useCurrency()
 
-    const { data: purchasesRes, isLoading: loading } = usePurchases({ limit: 50 })
+    const { data: purchasesRes, isLoading: loading } = usePurchases({ 
+        page,
+        limit: 10 
+    })
     const purchases = purchasesRes?.data?.purchases || []
+    const pagination = purchasesRes?.data?.pagination
 
     const statusMutation = useUpdatePurchaseStatus()
 
@@ -45,7 +50,7 @@ export function PurchaseOrderList() {
 
     return (
         <div className="space-y-4">
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -127,6 +132,35 @@ export function PurchaseOrderList() {
                     </TableBody>
                 </Table>
             </div>
+
+            {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between py-2 px-1">
+                    <p className="text-xs text-muted-foreground">
+                        Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} orders
+                    </p>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={pagination.page <= 1}
+                        >
+                            Previous
+                        </Button>
+                        <div className="text-xs font-medium px-4">
+                            Page {pagination.page} of {pagination.totalPages}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                            disabled={pagination.page >= pagination.totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
             
             <PurchaseDetailsDialog 
                 open={detailsOpen} 

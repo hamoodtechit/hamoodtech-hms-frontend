@@ -29,12 +29,18 @@ import { SupplierDialog } from "./supplier-dialog"
 
 export function SupplierTable() {
     const [search, setSearch] = useState("")
+    const [page, setPage] = useState(1)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [supplierToEdit, setSupplierToEdit] = useState<Supplier | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
-    const { data: suppliersRes, isLoading: loading } = useSuppliers({ search, limit: 100 })
+    const { data: suppliersRes, isLoading: loading } = useSuppliers({ 
+        search, 
+        page,
+        limit: 10 
+    })
     const suppliers = suppliersRes?.data || []
+    const meta = suppliersRes?.meta
     
     const deleteMutation = useDeleteSupplier()
 
@@ -64,7 +70,10 @@ export function SupplierTable() {
                         placeholder="Search suppliers..."
                         className="pl-9"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => {
+                            setSearch(e.target.value)
+                            setPage(1)
+                        }}
                     />
                 </div>
                 <Button onClick={() => {
@@ -75,7 +84,7 @@ export function SupplierTable() {
                 </Button>
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -143,6 +152,35 @@ export function SupplierTable() {
                     </TableBody>
                 </Table>
             </div>
+
+            {meta && meta.totalPages > 1 && (
+                <div className="flex items-center justify-between py-2 px-1">
+                    <p className="text-xs text-muted-foreground">
+                        Showing {(meta.page - 1) * meta.pageSize + 1} to {Math.min(meta.page * meta.pageSize, meta.totalItems)} of {meta.totalItems} suppliers
+                    </p>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={!meta.hasPreviousPage}
+                        >
+                            Previous
+                        </Button>
+                        <div className="text-xs font-medium px-4">
+                            Page {meta.page} of {meta.totalPages}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                            disabled={!meta.hasNextPage}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <SupplierDialog
                 open={dialogOpen}

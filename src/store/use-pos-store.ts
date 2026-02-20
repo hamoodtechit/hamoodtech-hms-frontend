@@ -15,6 +15,7 @@ export interface Product {
     discountPercentage?: number
     discountAmount?: number
     dosageForm?: string
+    stock?: number
 }
 
 export interface Transaction {
@@ -69,6 +70,10 @@ export const usePosStore = create<PosState>()(
                 )
                 
                 if (existing) {
+                    // Check stock limit
+                    if (existing.quantity >= (product.stock || 0)) {
+                        return { cart: state.cart } // No change, caller should handle toast
+                    }
                     return {
                         cart: state.cart.map((item) =>
                             (item.id === product.id && item.batchNumber === product.batchNumber) 
@@ -85,7 +90,14 @@ export const usePosStore = create<PosState>()(
             updateQuantity: (id: string, delta: number, batchNumber?: string) => set((state) => ({
                 cart: state.cart.map((item) => {
                     if (item.id === id && item.batchNumber === batchNumber) {
+                        const availableStock = item.stock || 0
                         const newQuantity = Math.max(1, item.quantity + delta)
+                        
+                        // Limit to stock
+                        if (delta > 0 && newQuantity > availableStock) {
+                            return item
+                        }
+                        
                         return { ...item, quantity: newQuantity }
                     }
                     return item
@@ -94,7 +106,9 @@ export const usePosStore = create<PosState>()(
             setQuantity: (id: string, quantity: number, batchNumber?: string) => set((state) => ({
                 cart: state.cart.map((item) => {
                     if (item.id === id && item.batchNumber === batchNumber) {
-                        return { ...item, quantity: Math.max(1, quantity) }
+                        const availableStock = item.stock || 0
+                        const validatedQuantity = Math.min(Math.max(1, quantity), availableStock)
+                        return { ...item, quantity: validatedQuantity }
                     }
                     return item
                 })
