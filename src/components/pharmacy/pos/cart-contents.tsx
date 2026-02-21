@@ -123,8 +123,15 @@ export function CartContents({
                                                     <Minus className="h-3 w-3" />
                                                 </Button>
                                                 <SmartNumberInput 
+                                                    id={`qty-${item.id}-${item.batchNumber || 'N/A'}`}
                                                     value={item.quantity}
                                                     onFocus={(e: any) => e.target.select()}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            document.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+                                                        }
+                                                    }}
                                                     onChange={(val: number | undefined) => {
                                                         const q = val || 1
                                                         if (q > (item.stock || 0)) {
@@ -204,7 +211,7 @@ export function CartContents({
             <div className="p-2 sm:p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[45%] sm:max-h-[50%]">
                 <ScrollArea className="flex-1 min-h-0 pr-3">
                     <div className="space-y-3 pb-2">
-                        {/* Customer Selection */}
+                        {/* 1. Customer Selection */}
                         <div className="space-y-1">
                             <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
                                 <span>Customer</span>
@@ -220,43 +227,7 @@ export function CartContents({
                             )}
                         </div>
 
-                        {/* Inline Payment & Amount */}
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            <div className="space-y-0.5 sm:space-y-1">
-                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
-                                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                    <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
-                                        <SelectValue placeholder="Method" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {paymentMethods.map(method => (
-                                            <SelectItem key={method} value={method}>
-                                                <span className="capitalize text-xs sm:text-sm">{method}</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-0.5 sm:space-y-1">
-                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
-                                <SmartNumberInput 
-                                    value={paidAmount}
-                                    onFocus={(e: any) => e.target.select()} 
-                                    onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                    className="h-8 sm:h-9 text-xs sm:text-sm font-bold"
-                                />
-                            </div>
-                            <div className="col-span-2 space-y-0.5 sm:space-y-1">
-                                <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</span>
-                                <div className="text-[10px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-2 bg-muted rounded border font-medium truncate">
-                                    {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                                        <span className="text-destructive text-[9px] sm:text-[10px]">No account mapped</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Sale Discount */}
+                        {/* 2. Sale Discount */}
                         <div className="space-y-1">
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                 Discount
@@ -292,48 +263,81 @@ export function CartContents({
                             </div>
                         </div>
 
-                        <Separator className="my-1" />
-
-                        {/* Totals */}
-                        <div className="space-y-1 text-sm bg-background/50 p-2 rounded-md border border-primary/5">
-                            <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Subtotal</span>
-                                <span className="font-medium">{formatCurrency(subtotal)}</span>
+                        {/* 3. Payment Details - Inline row (Method, Amount, Account) */}
+                        <div className="grid grid-cols-3 gap-2 px-0.5">
+                            <div className="space-y-0.5">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
+                                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                    <SelectTrigger className="h-8 text-[11px] px-2">
+                                        <SelectValue placeholder="Method" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {paymentMethods.map(method => (
+                                            <SelectItem key={method} value={method}>
+                                                <span className="capitalize text-[11px]">{method}</span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Tax ({vatPercentage}%)</span>
-                                <span className="font-medium">{formatCurrency(tax)}</span>
+                            <div className="space-y-0.5">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
+                                <SmartNumberInput 
+                                    value={paidAmount}
+                                    onFocus={(e: any) => e.target.select()} 
+                                    onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                                    className="h-8 text-[11px] font-bold border-primary/20"
+                                />
                             </div>
-                            {(discount > 0 || discountFixedAmount > 0) && (
-                                <div className="flex justify-between text-xs text-emerald-600 font-medium">
-                                    <span>Discount</span>
-                                    <span>-{formatCurrency(discountAmount)}</span>
+                            <div className="space-y-0.5">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Account</span>
+                                <div className="text-[10px] h-8 flex items-center px-2 bg-muted/50 rounded border font-medium truncate">
+                                    {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
+                                        <span className="text-destructive text-[9px]">No account</span>
+                                    )}
                                 </div>
-                            )}
-                            <div className="flex justify-between font-bold text-base sm:text-lg pt-1 border-t mt-1">
-                                <span>Total to Pay</span>
-                                <span className="text-primary">{formatCurrency(total)}</span>
                             </div>
-                            
-                            {paidAmount > 0 && (
-                                <div className="flex justify-between items-center pt-1 border-t border-dashed mt-1">
-                                    <span className={cn(
-                                        "text-xs font-bold uppercase tracking-wider",
-                                        paidAmount >= (total - 0.01) ? "text-emerald-600" : "text-destructive"
-                                    )}>
-                                        {paidAmount >= (total - 0.01) ? "Return Change" : "Balance Due"}
-                                    </span>
-                                    <span className={cn(
-                                        "font-bold",
-                                        paidAmount >= (total - 0.01) ? "text-emerald-600" : "text-destructive font-black text-lg underline underline-offset-4 decoration-2"
-                                    )}>
-                                        {formatCurrency(Math.abs(paidAmount - total))}
-                                    </span>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </ScrollArea>
+
+                {/* Fixed Totals Section - Matches User Image Design (Fixed outside ScrollArea) */}
+                <div className="space-y-1 bg-zinc-950 text-white p-3 rounded-lg border border-zinc-800 shadow-xl mt-1">
+                    <div className="flex justify-between text-[11px] font-medium">
+                        <span className="text-zinc-400">Subtotal</span>
+                        <span className="font-bold">{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-medium">
+                        <span className="text-zinc-400">Tax ({vatPercentage}%)</span>
+                        <span className="font-bold">{formatCurrency(tax)}</span>
+                    </div>
+                    {(discount > 0 || discountFixedAmount > 0) && (
+                        <div className="flex justify-between text-[11px] font-medium text-emerald-400">
+                            <span>Discount</span>
+                            <span className="font-bold">-{formatCurrency(discountAmount)}</span>
+                        </div>
+                    )}
+                    
+                    <div className="flex justify-between items-baseline pt-2 border-t border-zinc-800/50 mt-1">
+                        <span className="text-sm font-black text-white uppercase tracking-tighter">Total to Pay</span>
+                        <span className="text-2xl font-black text-white">{formatCurrency(total)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-zinc-700/50 mt-1">
+                        <span className={cn(
+                            "text-[10px] font-black uppercase tracking-widest",
+                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-500"
+                        )}>
+                            {paidAmount >= (total - 0.01) ? "RETURN CHANGE" : "BALANCE DUE"}
+                        </span>
+                        <span className={cn(
+                            "text-xl font-black",
+                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-500"
+                        )}>
+                            {formatCurrency(Math.abs(paidAmount - total))}
+                        </span>
+                    </div>
+                </div>
                 
                 <div className="pt-2 sm:pt-3 mt-auto shrink-0 border-t border-primary/10">
                     <Button 
