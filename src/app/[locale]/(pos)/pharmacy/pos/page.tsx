@@ -8,6 +8,7 @@ import { TransactionHistory } from "@/components/pharmacy/transaction-history"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -20,7 +21,7 @@ import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, Info, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Info, Keyboard, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -58,7 +59,6 @@ const getGenericColor = (name: string) => {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     return colors[Math.abs(hash) % colors.length];
-    return colors[Math.abs(hash) % colors.length];
 }
 
 const getStock = (medicine: Medicine) => {
@@ -76,6 +76,9 @@ export default function POSPage() {
   const [isMounted, setIsMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch] = useDebounce(searchQuery, 500)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  
   const [activeCategory, setActiveCategory] = useState("All")
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [discount, setDiscount] = useState(5) // Default 5% discount
@@ -88,6 +91,54 @@ export default function POSPage() {
   const [closeRegisterOpen, setCloseRegisterOpen] = useState(false)
   const { fetchSettings, pharmacy, finance } = useSettingsStore()
   const pharmacyFinance = finance // Alias for clarity if needed, or just use finance directly
+
+  // Customer State
+  const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
+
+  // Calculations: Discount Applied FIRST, then Tax on the discounted amount
+  const { formatCurrency } = useCurrency()
+  const vatPercentage = pharmacy?.vatPercentage || 0
+  const subtotal = cart.reduce((sum, item) => {
+    const itemSubtotal = item.price * item.quantity
+    const itemDiscountAmount = item.discountAmount || 
+      (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
+    return sum + (itemSubtotal - itemDiscountAmount)
+  }, 0)
+  
+  const discountAmount = discountFixedAmount || (subtotal * discount) / 100
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount)
+  const tax = discountedSubtotal * (vatPercentage / 100)
+  const total = discountedSubtotal + tax
+  const itemCount = cart.reduce((count, item) => count + item.quantity, 0)
+
+  const { checkInteractions } = useDrugInteraction()
+  const [showInteractionAlert, setShowInteractionAlert] = useState(false)
+  const [currentInteractions, setCurrentInteractions] = useState<any[]>([])
+
+  // Payment State
+  const [paymentMethod, setPaymentMethod] = useState<any>('cash')
+  const [paidAmount, setPaidAmount] = useState(0)
+
+  // Sync paidAmount with total when total changes
+  useEffect(() => {
+    setPaidAmount(total)
+  }, [total])
+
+  const handleCheckout = () => {
+      if (cart.length === 0) return
+
+      const drugNames = cart.map(c => c.name.split(' ')[0])
+      const interactions = checkInteractions(drugNames)
+
+      if (interactions.length > 0) {
+          setCurrentInteractions(interactions)
+          setShowInteractionAlert(true)
+          return
+      }
+
+      processTransaction()
+  }
 
   // React Query Hooks
   const { data: categoriesRes } = usePharmacyEntities('categories', { limit: 100 })
@@ -123,7 +174,44 @@ export default function POSPage() {
   useEffect(() => {
     setIsMounted(true)
     fetchSettings()
-  }, [])
+
+    // Global shortcut listener
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+        // F1 or / to focus search (if not already focused and not in input/textarea)
+        if (e.key === 'F1' || (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA')) {
+            e.preventDefault()
+            searchInputRef.current?.focus()
+            searchInputRef.current?.select()
+        }
+
+        // F8 for checkout
+        if (e.key === 'F8') {
+            e.preventDefault()
+            handleCheckout()
+        }
+
+        // Esc to clear search or close dialogs
+        if (e.key === 'Escape') {
+            setSearchQuery("")
+            setSelectedIndex(0)
+            setShortcutDialogOpen(false)
+        }
+
+        // ? or Alt+/ for Help
+        if ((e.key === '?' || (e.key === '/' && e.altKey)) && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+            e.preventDefault()
+            setShortcutDialogOpen(true)
+        }
+    }
+
+    window.addEventListener('keydown', handleGlobalShortcuts)
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts)
+  }, [total, cart])
+
+  useEffect(() => {
+    // Reset selection when search query changes
+    setSelectedIndex(0)
+  }, [debouncedSearch])
 
   useEffect(() => {
     const loadDefaultPatient = async () => {
@@ -201,54 +289,39 @@ export default function POSPage() {
       category: medicine.category?.name || 'Uncategorized',
       dosageForm: medicine.dosageForm
     } as any)
+
+    // Focus special ID for newly added item quantity
+    setTimeout(() => {
+        const qtyInput = document.getElementById(`qty-${medicine.id}-${activeBatch?.batchNumber || 'N/A'}`)
+        if (qtyInput) {
+            (qtyInput as HTMLInputElement).focus();
+            (qtyInput as HTMLInputElement).select();
+        }
+    }, 100)
+  }
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (filteredProducts.length === 0) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev + 1) % filteredProducts.length)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev - 1 + filteredProducts.length) % filteredProducts.length)
+    } else if (e.key === 'Enter' && searchQuery.trim() !== "") {
+      e.preventDefault()
+      const selectedProduct = filteredProducts[selectedIndex]
+      if (selectedProduct) {
+        handleAddToCart(selectedProduct)
+        setSearchQuery("")
+        setSelectedIndex(0)
+      }
+    }
   }
 
   // Filtered products are now handled by the backend query
   const filteredProducts = uniqueMedicines
-
-  // Calculations: Discount Applied FIRST, then Tax on the discounted amount
-  const { formatCurrency } = useCurrency()
-  const vatPercentage = pharmacy?.vatPercentage || 0
-  const subtotal = cart.reduce((sum, item) => {
-    const itemSubtotal = item.price * item.quantity
-    const itemDiscountAmount = item.discountAmount || 
-      (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
-    return sum + (itemSubtotal - itemDiscountAmount)
-  }, 0)
-  
-  const discountAmount = discountFixedAmount || (subtotal * discount) / 100
-  const discountedSubtotal = Math.max(0, subtotal - discountAmount)
-  const tax = discountedSubtotal * (vatPercentage / 100)
-  const total = discountedSubtotal + tax
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0)
-
-  const { checkInteractions } = useDrugInteraction()
-  const [showInteractionAlert, setShowInteractionAlert] = useState(false)
-  const [currentInteractions, setCurrentInteractions] = useState<any[]>([])
-
-  // Payment State
-  const [paymentMethod, setPaymentMethod] = useState<any>('cash')
-  const [paidAmount, setPaidAmount] = useState(0)
-
-  // Sync paidAmount with total when total changes
-  useEffect(() => {
-    setPaidAmount(total)
-  }, [total])
-
-  const handleCheckout = () => {
-      if (cart.length === 0) return
-
-      const drugNames = cart.map(c => c.name.split(' ')[0])
-      const interactions = checkInteractions(drugNames)
-
-      if (interactions.length > 0) {
-          setCurrentInteractions(interactions)
-          setShowInteractionAlert(true)
-          return
-      }
-
-      processTransaction()
-  }
 
   const processTransaction = async () => {
       if (!activeStoreId) {
@@ -334,9 +407,7 @@ export default function POSPage() {
       }
   }
 
-  // Customer State
-  const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
-  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
+  // Interaction alert is handled above
 
   // Receipt State
   const [receiptOpen, setReceiptOpen] = useState(false)
@@ -344,6 +415,9 @@ export default function POSPage() {
 
   // Prescription Dialog State
   const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
+
+  // Shortcut Help Dialog
+  const [shortcutDialogOpen, setShortcutDialogOpen] = useState(false)
 
   // Cart Sheet State (Controlled)
   const [cartOpen, setCartOpen] = useState(false)
@@ -446,10 +520,12 @@ export default function POSPage() {
             <div className="relative flex-1 w-full sm:w-auto">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
+                ref={searchInputRef}
                 type="search"
-                placeholder="Search medicines..."
+                placeholder="Search medicines (F1)..."
                 className="pl-9 bg-background/50 border-secondary-foreground/20"
                 value={searchQuery}
+                onKeyDown={handleSearchKeyDown}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
@@ -532,6 +608,16 @@ export default function POSPage() {
                     
                     {activeRegister && (
                         <>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary"
+                            title="Keyboard Shortcuts"
+                            onClick={() => setShortcutDialogOpen(true)}
+                        >
+                            <Keyboard className="h-4 w-4" />
+                        </Button>
+
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant="outline" size="icon" title="Session Info">
@@ -688,59 +774,56 @@ export default function POSPage() {
             ) : (
                 <>
                 <div className={`pb-2 ${viewMode === 'grid' ? 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2' : 'flex flex-col space-y-1'}`}>
-                    {filteredProducts.map((product) => {
+                    {filteredProducts.map((product, index) => {
                         const cartItem = cart.find(item => item.id === product.id)
                         const quantity = cartItem ? cartItem.quantity : 0
                         const salePrice = Number(product.salePrice)
                         const colorClass = getGenericColor(product.genericName || '')
-                        const showHeader = product.category?.name || quantity > 0
-
                         return (
                         <Card 
                             key={product.id} 
-                            className={`cursor-pointer transition-all group overflow-hidden border shadow-sm ${
-                                quantity > 0 ? 'border-primary ring-1 ring-primary/20' : colorClass
+                            className={`cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col h-[110px] sm:h-[120px] relative ${
+                                quantity > 0 ? 'border-primary ring-1 ring-primary/20' : 
+                                index === selectedIndex && searchQuery.trim() !== "" ? 'border-primary ring-2 ring-primary/50' : colorClass
                             }`}
                             onClick={() => handleAddToCart(product)}
                         >
                             {viewMode === 'grid' ? (
                                 // GRID VIEW RENDER
                                 <>
-                                    {showHeader && (
-                                    <CardHeader className="p-1.5 bg-transparent relative border-b border-black/5 dark:border-white/5">
-                                        <div className="flex justify-between items-start h-4">
-                                            {product.category?.name && (
-                                                <Badge variant="secondary" className="text-[9px] items-center gap-1 font-medium bg-background/80 backdrop-blur-sm px-1 h-4">
-                                                    {product.category.name}
-                                                </Badge>
-                                            )}
-                                            {quantity > 0 && (
-                                                <Badge className="bg-primary text-primary-foreground text-[9px] shadow-sm animate-in zoom-in px-1 h-4 ml-auto">
-                                                    {quantity}
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                    )}
-                                    <CardContent className={`p-1.5 sm:p-2 ${!showHeader ? 'pt-1.5 sm:pt-2' : ''}`}>
-                                        <div className="space-y-0 mb-1">
-                                            <h3 className="font-bold text-[11px] sm:text-xs line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
+                                    {/* Absolute Badges - No height impact */}
+                                    <div className="absolute top-1.5 left-1.5 right-1.5 flex justify-between items-start pointer-events-none z-10">
+                                        {product.category?.name ? (
+                                            <Badge variant="secondary" className="text-[8px] sm:text-[9px] font-medium bg-background/80 backdrop-blur-sm px-1 h-3.5 border-none shadow-sm">
+                                                {product.category.name}
+                                            </Badge>
+                                        ) : <div />}
+                                        {quantity > 0 && (
+                                            <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[9px] shadow-sm animate-in zoom-in px-1 h-3.5 ml-auto">
+                                                {quantity}
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    <CardContent className="p-2 sm:p-2.5 pt-6 sm:pt-7 flex-1 flex flex-col justify-between overflow-hidden">
+                                        <div className="space-y-0.5">
+                                            <h3 className="font-bold text-[10px] sm:text-[11px] line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
                                                 {product.name}
                                             </h3>
-                                            <div className="flex items-center text-[9px] text-muted-foreground">
+                                            <div className="flex items-center text-[8px] sm:text-[9px] text-muted-foreground line-clamp-1">
                                                 <span className="truncate">{product.genericName}</span>
                                                 <span className="mx-0.5">•</span>
-                                                <span className="font-medium">{product.strength}</span>
+                                                <span className="font-medium shrink-0">{product.strength}</span>
                                             </div>
                                         </div>
                                         
-                                        <div className="flex items-end justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-xs sm:text-sm text-primary leading-none">{formatCurrency(salePrice)}</span>
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-[8px] sm:text-[9px] text-muted-foreground">{getStock(product)} left</span>
-                                            </div>
+                                        <div className="flex items-end justify-between mt-auto">
+                                            <span className="font-bold text-xs sm:text-sm text-primary leading-none">
+                                                {formatCurrency(salePrice)}
+                                            </span>
+                                            <span className="text-[8px] sm:text-[9px] text-muted-foreground shrink-0">
+                                                {getStock(product)} left
+                                            </span>
                                         </div>
                                     </CardContent>
                                 </>
@@ -842,6 +925,59 @@ export default function POSPage() {
               </span>
           </Button>
       </div>
+      {/* Keyboard Shortcuts Dialog */}
+      <Dialog open={shortcutDialogOpen} onOpenChange={setShortcutDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                      <Keyboard className="h-5 w-5 text-primary" />
+                      Keyboard Shortcuts
+                  </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 items-center gap-4 p-2 bg-secondary/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">F1</kbd>
+                          <span className="text-sm font-medium">Focus Search</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">/</kbd>
+                          <span className="text-sm font-medium">Focus Search</span>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-2 items-center gap-4 p-2 bg-secondary/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">↑ / ↓</kbd>
+                          <span className="text-sm font-medium">Navigate Results</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">Enter</kbd>
+                          <span className="text-sm font-medium">Add to Cart</span>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-2 items-center gap-4 p-2 bg-secondary/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">Enter (in Cart)</kbd>
+                          <span className="text-sm font-medium">Back to Search</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">F8</kbd>
+                          <span className="text-sm font-medium">Complete Sale</span>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-2 items-center gap-4 p-2 bg-secondary/20 rounded-lg">
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">Esc</kbd>
+                          <span className="text-sm font-medium">Clear / Close</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <kbd className="px-2 py-1 rounded border bg-background font-mono text-xs shadow-sm">?</kbd>
+                          <span className="text-sm font-medium">Show Help</span>
+                      </div>
+                  </div>
+              </div>
+          </DialogContent>
+      </Dialog>
     </div>
   )
 }
