@@ -114,10 +114,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <span className="text-black">Gross Total</span>
                     <span>{formatCurrency(grossTotal)}</span>
                 </div>
-                {(totalItemDiscount > 0 || transaction.discount > 0) && (
+                {(totalItemDiscount > 0 || (transaction.discountAmount || 0) > 0 || transaction.discount > 0) && (
                     <div className="flex justify-between text-black">
                          <span>Total Discount</span>
-                         <span>-{formatCurrency(totalItemDiscount + transaction.discount)}</span>
+                         <span>-{formatCurrency(totalItemDiscount + (transaction.discountAmount || transaction.discount))}</span>
                     </div>
                 )}
                 {transaction.tax > 0 && (

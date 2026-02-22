@@ -385,6 +385,7 @@ export default function POSPage() {
               tax,
               taxPercentage: pharmacy?.vatPercentage || 0,
               discount,
+              discountAmount,
               paidAmount,
               dueAmount,
               date: new Date().toLocaleString(),
