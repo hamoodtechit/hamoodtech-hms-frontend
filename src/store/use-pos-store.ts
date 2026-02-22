@@ -28,6 +28,7 @@ export interface Transaction {
     tax: number
     taxPercentage?: number
     discount: number
+    discountAmount?: number
     paidAmount?: number
     dueAmount?: number
     status: 'Completed' | 'Refunded'

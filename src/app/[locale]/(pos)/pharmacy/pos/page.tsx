@@ -1,5 +1,6 @@
 "use client"
 
+import { MedicineFilters, MedicineFilterValues } from "@/components/pharmacy/medicine-filters"
 import { CartContents } from "@/components/pharmacy/pos/cart-contents"
 import { InteractionAlert } from "@/components/pharmacy/pos/interaction-alert"
 import { PrescriptionLinkDialog } from "@/components/pharmacy/pos/prescription-link-dialog"
@@ -21,7 +22,7 @@ import { Link } from "@/i18n/navigation"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, Info, Keyboard, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Filter, Info, Keyboard, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -84,6 +85,10 @@ export default function POSPage() {
   const [discount, setDiscount] = useState(5) // Default 5% discount
   const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
   
+  // Advanced Filters State
+  const [filters, setFilters] = useState<MedicineFilterValues>({})
+  const activeFilterCount = Object.values(filters).filter(v => v !== undefined && v !== "" && v !== "all").length
+
   const tabsListRef = useRef<HTMLDivElement>(null)
 
   const { activeStoreId } = useStoreContext()
@@ -161,7 +166,11 @@ export default function POSPage() {
   } = useInfiniteMedicines({ 
     search: debouncedSearch, 
     limit: 48,
-    categoryId: activeCategoryId,
+    categoryId: filters.categoryId || activeCategoryId,
+    ...filters,
+    // Ensure name fields from filters don't override the global search unless provided
+    name: filters.name || undefined,
+    genericName: filters.genericName || undefined,
   })
 
   const medicines = productsRes?.pages.flatMap(page => page.data) || []
@@ -385,6 +394,7 @@ export default function POSPage() {
               tax,
               taxPercentage: pharmacy?.vatPercentage || 0,
               discount,
+              discountAmount,
               paidAmount,
               dueAmount,
               date: new Date().toLocaleString(),
@@ -530,6 +540,47 @@ export default function POSPage() {
                 onKeyDown={handleSearchKeyDown}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 />
+
+                <div className="absolute right-2 top-1.5 flex items-center gap-1">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button 
+                                variant={activeFilterCount > 0 ? "secondary" : "ghost"} 
+                                size="sm" 
+                                className="h-7 px-2 gap-1.5"
+                            >
+                                <Filter size={14} className={activeFilterCount > 0 ? "text-primary fill-primary/20" : "text-muted-foreground"} />
+                                <span className="text-xs font-medium">Filter</span>
+                                {activeFilterCount > 0 && (
+                                    <Badge variant="default" className="h-4 min-w-[16px] px-1 text-[10px] flex items-center justify-center rounded-full bg-primary text-primary-foreground border-none">
+                                        {activeFilterCount}
+                                    </Badge>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[80vw] sm:w-[500px] md:w-[700px] p-4 shadow-xl border-secondary-foreground/10" align="end">
+                            <MedicineFilters 
+                                values={filters} 
+                                onChange={(newFilters) => {
+                                    setFilters(newFilters)
+                                    // If category changed in filters, update the tab
+                                    if (newFilters.categoryId) {
+                                        const catName = categoriesRes?.data?.find(c => c.id === newFilters.categoryId)?.name
+                                        if (catName) setActiveCategory(catName)
+                                    } else if (activeCategory !== "All") {
+                                        // If category was cleared in filters, reset tab to All
+                                        setActiveCategory("All")
+                                    }
+                                }} 
+                                onReset={() => {
+                                    setFilters({})
+                                    setActiveCategory("All")
+                                }}
+                                showActiveStatus={false} // Only active medicines in POS
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </div>
             <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-end">
                  <div className="flex-1 w-auto min-w-0 md:hidden relative flex items-center group">
