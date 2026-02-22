@@ -37,9 +37,39 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         {/* Global style for printing to remove headers/footers */}
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            @page { margin: 0 !important; }
-            html, body { margin: 0 !important; padding: 0 !important; }
-            #receipt-content { padding: 0 !important; margin: 0 !important; }
+            @page { 
+              margin: 0 !important;
+              size: auto;
+            }
+            html, body { 
+              margin: 0 !important; 
+              padding: 0 !important; 
+              background: white !important;
+              height: auto !important;
+            }
+            /* Hide the main app and overlay */
+            body > *:not([role="region"]), 
+            .fixed.inset-0.z-50.bg-background\\/80 { 
+              display: none !important; 
+            }
+            /* Target the dialog container specifically */
+            div[role="dialog"] {
+              position: absolute !important;
+              top: 0 !important;
+              left: 50% !important;
+              transform: translateX(-50%) !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 72mm !important; /* Standard thermal width */
+              box-shadow: none !important;
+              border: none !important;
+              background: white !important;
+            }
+            #receipt-content {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+            }
           }
         `}} />
         <div className="p-2 space-y-3 max-h-[90vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
