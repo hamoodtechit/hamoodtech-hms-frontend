@@ -38,41 +38,27 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             @page { 
-              margin: 0 !important;
+              margin: 0mm !important;
               size: auto;
             }
             html, body { 
               margin: 0 !important; 
               padding: 0 !important; 
               background: white !important;
-              height: auto !important;
             }
-            /* Hide the main app and overlay */
-            body > *:not([role="region"]), 
-            .fixed.inset-0.z-50.bg-background\\/80 { 
+            .print\\:hidden, [data-radix-collection-item] { 
               display: none !important; 
             }
-            /* Target the dialog container specifically */
-            div[role="dialog"] {
-              position: absolute !important;
-              top: 0 !important;
-              left: 50% !important;
-              transform: translateX(-50%) !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 72mm !important; /* Standard thermal width */
-              box-shadow: none !important;
-              border: none !important;
-              background: white !important;
-            }
             #receipt-content {
-              padding: 0 !important;
+              padding: 0mm !important;
               margin: 0 !important;
               width: 100% !important;
+              max-height: none !important;
+              overflow: visible !important;
             }
           }
         `}} />
-        <div className="p-2 space-y-3 max-h-[90vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
+        <div className="p-2 space-y-3 max-h-[60vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
             <div className="text-center space-y-0.5">
                  {activeBranch?.logoUrl && (
                     <div className="flex justify-center mb-1">
@@ -81,8 +67,8 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     </div>
                 )}
                 <h2 className="text-sm font-bold uppercase tracking-tight leading-tight">{general?.hospitalName || "Hospital Name"}</h2>
-                {activeBranch?.name && <p className="text-[12px] font-black">{activeBranch.name}</p>}
-                <div className="text-[10px] leading-tight text-black space-y-0.5 font-bold">
+                {activeBranch?.name && <p className="text-[12px] font-bold">{activeBranch.name}</p>}
+                <div className="text-[10px] leading-tight text-black space-y-0.5 font-semibold">
                     <p>{general?.address || "Hospital Address"}</p>
                     <p>Ph: {general?.phone || "Phone"}</p>
                 </div>
@@ -90,16 +76,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
             <Separator className="border-black/20" />
 
-            {/* Invoice Info */}
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <div>
-                   <span className="text-black font-black block uppercase">Patient Details:</span>
-                   <span className="font-extrabold block uppercase truncate">{transaction.customerName}</span>
+            {/* Patient Details */}
+            <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-y border-black/20 py-1 leading-tight">
+                <div className="space-y-0.5">
+                    <p className="text-black uppercase text-[8px] font-semibold">Patient Details:</p>
+                    <p className="font-bold">{transaction.customerName}</p>
                 </div>
-                <div className="text-right">
-                    <span className="text-black font-black block">Invoice #: <span className="text-black font-black">{transaction.invoiceNumber || transaction.id}</span></span>
-                    <span className="text-black font-black block">Date: <span className="text-black font-black">{transaction.date}</span></span>
-                    <span className="text-black font-black block uppercase">Mode: <span className="text-black font-black">{transaction.paymentMethod}</span></span>
+                <div className="text-right space-y-0.5">
+                    <p className="font-bold">Invoice #: {transaction.invoiceNumber}</p>
+                    <p className="font-bold">Date: {new Date(transaction.date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
+                    <p className="font-bold uppercase">Mode: {transaction.paymentMethod}</p>
                 </div>
             </div>
 
@@ -107,9 +93,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
             {/* Items Table */}
             <div className="space-y-1">
-                <div className="grid grid-cols-12 text-[10px] font-black border-b border-black/30 pb-0.5 mb-1">
-                    <div className="col-span-5">ITEM</div>
-                    <div className="col-span-2 text-center">QTY</div>
+                <div className="grid grid-cols-12 text-[10px] font-bold border-b border-black/40 pb-0.5">
+                    <div className="col-span-6">ITEM</div>
+                    <div className="col-span-1 text-center">QTY</div>
                     <div className="col-span-2 text-right">RATE</div>
                     <div className="col-span-3 text-right">AMT</div>
                 </div>
@@ -118,17 +104,17 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                      const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0)
                      const netItemTotal = itemTotal - itemDisc
                      
-                     return (
-                        <div key={idx} className="grid grid-cols-12 text-[10px] items-start leading-tight py-0.5 font-bold">
+                      return (
+                        <div key={idx} className="grid grid-cols-12 text-[10px] items-start leading-tight py-0.5 font-semibold">
                             <div className="col-span-6 pr-1">
-                                <span className="block font-black">
+                                <span className="block font-bold">
                                     {item.name}
                                     {item.dosageForm && <span className="text-[8px] font-normal ml-1">({item.dosageForm})</span>}
                                 </span>
                             </div>
                             <div className="col-span-1 text-center">{item.quantity}</div>
                             <div className="col-span-2 text-right">{item.price.toFixed(2)}</div>
-                            <div className="col-span-3 text-right font-black">
+                            <div className="col-span-3 text-right font-bold">
                                 {netItemTotal.toFixed(2)}
                             </div>
                         </div>
@@ -139,7 +125,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <Separator className="border-dashed border-black/20" />
 
             {/* Totals */}
-            <div className="space-y-1 text-[11px] font-black">
+            <div className="space-y-1 text-[11px] font-bold">
                 <div className="flex justify-between">
                     <span className="text-black">Gross Total</span>
                     <span>{formatCurrency(grossTotal)}</span>
@@ -151,26 +137,26 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     </div>
                 )}
                 {transaction.tax > 0 && (
-                     <div className="flex justify-between text-black">
-                         <span>VAT ({transaction.taxPercentage}%)</span>
-                         <span>+{formatCurrency(transaction.tax)}</span>
-                     </div>
-                 )}
+                    <div className="flex justify-between text-black">
+                        <span>VAT ({transaction.taxPercentage}%)</span>
+                        <span>+{formatCurrency(transaction.tax)}</span>
+                    </div>
+                )}
                  
                  <Separator className="border-black/30 my-1" />
                  
-                 <div className="flex justify-between text-sm font-black border-y border-black/40 py-1">
+                 <div className="flex justify-between text-sm font-bold border-y border-black/40 py-1">
                      <span>Net Payable</span>
                      <span>{formatCurrency(transaction.total)}</span>
                  </div>
                  
-                 <div className="flex justify-between pt-1">
+                 <div className="flex justify-between pt-1 font-bold">
                      <span className="text-black">Paid Amount</span>
-                     <span className="font-black">{formatCurrency(transaction.paidAmount || 0)}</span>
+                     <span>{formatCurrency(transaction.paidAmount || 0)}</span>
                  </div>
                  
                  {(transaction.dueAmount || 0) > 0 ? (
-                      <div className="flex justify-between text-black font-black">
+                      <div className="flex justify-between text-black font-bold">
                          <span>Due Amount</span>
                          <span>{formatCurrency(transaction.dueAmount || 0)}</span>
                       </div>
@@ -185,10 +171,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <Separator className="border-black/20" />
             
             {/* Footer */}
-            <div className="text-center text-[10px] text-black space-y-1.5 pt-2 font-bold">
+            <div className="text-center text-[10px] text-black space-y-1.5 pt-2 font-semibold">
                 <p>Thank you for visiting {general?.hospitalName || "Hospital"}!</p>
-                <p className="italic font-black">Note: Medicines once sold cannot be returned without receipt.</p>
-                <div className="pt-6 mt-4 border-t border-black/30 w-44 mx-auto font-black uppercase tracking-wider text-[11px]">
+                <p className="italic font-bold">Note: Medicines once sold cannot be returned without receipt.</p>
+                <div className="pt-6 mt-4 border-t border-black/30 w-44 mx-auto font-bold uppercase tracking-wider text-[11px]">
                     Authorized Signatory
                 </div>
             </div>
