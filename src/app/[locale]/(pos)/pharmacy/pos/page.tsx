@@ -350,6 +350,8 @@ export default function POSPage() {
               dueAmount,
               discountPercentage: discount,
               discountAmount: discountAmount,
+              taxPercentage: vatPercentage,
+              taxAmount: tax,
               saleItems: cart.map(item => ({
                   medicineId: item.id,
                   itemName: item.name,

@@ -381,6 +381,8 @@ export interface SalePayload {
   dueAmount: number;
   discountPercentage: number;
   discountAmount: number;
+  taxPercentage: number;
+  taxAmount: number;
   payments: SalePayment[];
   saleItems: SaleItem[];
 }
