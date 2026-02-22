@@ -813,7 +813,10 @@ export default function POSPage() {
                                             <div className="flex items-center text-[8px] sm:text-[9px] text-muted-foreground line-clamp-1">
                                                 <span className="truncate">{product.genericName}</span>
                                                 <span className="mx-0.5">•</span>
-                                                <span className="font-medium shrink-0">{product.strength}</span>
+                                                <span className="font-medium shrink-0">
+                                                    {product.dosageForm && <span className="mr-1">{product.dosageForm}</span>}
+                                                    {product.strength}
+                                                </span>
                                             </div>
                                         </div>
                                         
@@ -835,9 +838,12 @@ export default function POSPage() {
                                     </div>
                                     
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 leading-none">
                                             <h3 className="font-bold text-xs truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
-                                            <span className="text-[10px] text-muted-foreground font-medium shrink-0">{product.strength}</span>
+                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium shrink-0">
+                                                {product.dosageForm && <span>{product.dosageForm}</span>}
+                                                <span>{product.strength}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center text-[9px] text-muted-foreground mt-0.5">
                                             <span className="truncate max-w-[150px]">{product.genericName}</span>

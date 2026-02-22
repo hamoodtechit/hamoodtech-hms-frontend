@@ -93,6 +93,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             <div className="col-span-6 pr-1">
                                 <span className="block font-black">
                                     {item.name}
+                                    {item.dosageForm && <span className="text-[8px] font-normal ml-1">({item.dosageForm})</span>}
                                 </span>
                             </div>
                             <div className="col-span-1 text-center">{item.quantity}</div>
