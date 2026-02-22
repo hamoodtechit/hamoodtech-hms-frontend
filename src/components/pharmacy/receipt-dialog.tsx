@@ -37,9 +37,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         {/* Global style for printing to remove headers/footers */}
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            @page { margin: 0; size: auto; }
-            body { margin: 0; padding: 0; }
-            #receipt-content { padding: 0mm 2mm 2mm 2mm !important; }
+            @page { margin: 0 !important; }
+            html, body { margin: 0 !important; padding: 0 !important; }
+            #receipt-content { padding: 0 !important; margin: 0 !important; }
           }
         `}} />
         <div className="p-2 space-y-3 max-h-[90vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
