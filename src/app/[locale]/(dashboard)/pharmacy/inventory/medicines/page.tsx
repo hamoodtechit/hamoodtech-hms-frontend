@@ -1,6 +1,7 @@
 "use client"
 
 import { BatchList } from "@/components/pharmacy/inventory/batch-list"
+import { MedicineFilters, MedicineFilterValues } from "@/components/pharmacy/medicine-filters"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -24,9 +25,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
     Table,
     TableBody,
@@ -35,7 +34,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { useDeleteMedicine, useManufacturers, useMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
+import { useDeleteMedicine, useMedicines } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
@@ -83,31 +82,14 @@ export default function MedicinesPage() {
   const { activeStoreId } = useStoreContext()
 
   // Filter State
-  const [filterName, setFilterName] = useState("")
-  const [filterGeneric, setFilterGeneric] = useState("")
-  const [filterBarcode, setFilterBarcode] = useState("")
-  const [filterCategoryId, setFilterCategoryId] = useState("all")
-  const [filterGenericId, setFilterGenericId] = useState("all")
-  const [filterGroupId, setFilterGroupId] = useState("all")
-  const [filterManufacturerId, setFilterManufacturerId] = useState("all")
-  const [filterDosageForm, setFilterDosageForm] = useState("")
-  const [filterStrength, setFilterStrength] = useState("")
-  const [filterActive, setFilterActive] = useState<boolean | undefined>(undefined)
+  const [filters, setFilters] = useState<MedicineFilterValues>({})
+  const activeFilterCount = Object.values(filters).filter(v => v !== undefined && v !== "" && v !== "all").length
 
   const queryParams = {
     page,
     limit: 10,
     search: debouncedSearch,
-    name: filterName || undefined,
-    genericName: filterGeneric || undefined,
-    barcode: filterBarcode || undefined,
-    categoryId: filterCategoryId === 'all' ? undefined : filterCategoryId,
-    genericId: filterGenericId === 'all' ? undefined : filterGenericId,
-    groupId: filterGroupId === 'all' ? undefined : filterGroupId,
-    medicineManufacturerId: filterManufacturerId === 'all' ? undefined : filterManufacturerId,
-    dosageForm: filterDosageForm || undefined,
-    strength: filterStrength || undefined,
-    isActive: filterActive
+    ...filters,
   }
 
   // Data Fetching Hooks
@@ -115,32 +97,11 @@ export default function MedicinesPage() {
   const medicines = medicinesRes?.data || []
   const meta = medicinesRes?.meta || null
 
-  const { data: categoriesRes } = usePharmacyEntities('categories')
-  const categories = categoriesRes?.data || []
-
-  const { data: genericsRes } = usePharmacyEntities('generics')
-  const generics = genericsRes?.data || []
-
-  const { data: groupsRes } = usePharmacyEntities('groups')
-  const groups = groupsRes?.data || []
-
-  const { data: manufacturersRes } = useManufacturers()
-  const manufacturers = manufacturersRes?.data || []
 
   const deleteMutation = useDeleteMedicine()
 
   const resetFilters = () => {
-    setFilterName("")
-    setFilterName("")
-    setFilterGeneric("") // Keep this for text search? Or remove?
-    setFilterBarcode("")
-    setFilterCategoryId("all")
-    setFilterGenericId("all")
-    setFilterGroupId("all")
-    setFilterManufacturerId("all")
-    setFilterDosageForm("")
-    setFilterStrength("")
-    setFilterActive(undefined)
+    setFilters({})
     setSearch("")
     setPage(1)
   }
@@ -241,87 +202,15 @@ export default function MedicinesPage() {
                         Filters
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[800px] p-4" align="end">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="font-medium leading-none">Filter Medicines</h4>
-                            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-auto p-0 text-muted-foreground hover:text-primary">
-                                Reset Filters
-                            </Button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="filName">Medicine Name</Label>
-                                <Input id="filName" value={filterName} onChange={e => setFilterName(e.target.value)} placeholder="Filter by name" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="filGeneric">Generic Name</Label>
-                                <Input id="filGeneric" value={filterGeneric} onChange={e => setFilterGeneric(e.target.value)} placeholder="Filter by generic" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="filBarcode">Barcode</Label>
-                                <Input id="filBarcode" value={filterBarcode} onChange={e => setFilterBarcode(e.target.value)} placeholder="Filter by barcode" />
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label>Category</Label>
-                                <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Categories" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Categories</SelectItem>
-                                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Generic</Label>
-                                <Select value={filterGenericId} onValueChange={setFilterGenericId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Generics" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Generics</SelectItem>
-                                        {generics.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Group</Label>
-                                <Select value={filterGroupId} onValueChange={setFilterGroupId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Groups" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Groups</SelectItem>
-                                        {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="filDosage">Dosage Form</Label>
-                                <Input id="filDosage" value={filterDosageForm} onChange={e => setFilterDosageForm(e.target.value)} placeholder="e.g. Tablet" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="filStrength">Strength</Label>
-                                <Input id="filStrength" value={filterStrength} onChange={e => setFilterStrength(e.target.value)} placeholder="e.g. 500mg" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label>Manufacturer</Label>
-                                <Select value={filterManufacturerId} onValueChange={setFilterManufacturerId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Manufacturers" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Manufacturers</SelectItem>
-                                        {manufacturers.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
+                <PopoverContent className="w-[80vw] sm:w-[500px] md:w-[700px] p-4 shadow-xl" align="end">
+                    <MedicineFilters 
+                        values={filters} 
+                        onChange={(newFilters) => {
+                            setFilters(newFilters)
+                            setPage(1)
+                        }} 
+                        onReset={resetFilters} 
+                    />
                 </PopoverContent>
               </Popover>
             </div>
