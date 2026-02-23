@@ -32,8 +32,8 @@ import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useAuthStore } from "@/store/use-auth-store"
-import { Patient, PaymentMethod, Sale } from "@/types/pharmacy"
-import { Edit, Save, X } from "lucide-react"
+import { Patient, PaymentMethod, Sale, SaleReturn } from "@/types/pharmacy"
+import { Edit, RotateCcw, Save, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PatientSearch } from "./pos/patient-search"
@@ -62,6 +62,8 @@ export function SaleDetailsDialog({
   const [discountPercentage, setDiscountPercentage] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [saleReturns, setSaleReturns] = useState<SaleReturn[]>([])
+  const [fetchingReturns, setFetchingReturns] = useState(false)
 
   const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
@@ -76,8 +78,24 @@ export function SaleDetailsDialog({
       setDiscountPercentage(Number(sale.discountPercentage) || 0)
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setIsEditMode(false)
+      fetchSaleReturns()
     }
   }, [sale])
+
+  const fetchSaleReturns = async () => {
+    if (!sale) return
+    try {
+      setFetchingReturns(true)
+      const res = await pharmacyService.getSaleReturns({ search: sale.invoiceNumber, limit: 100 })
+      // Filter returns that belong to this sale specifically if invoiceNumber is shared or search by saleId if supported
+      // Usually invoiceNumber search for sale-returns will return returns for that invoice.
+      setSaleReturns(res.data.data)
+    } catch (error) {
+      console.error("Failed to fetch sale returns", error)
+    } finally {
+      setFetchingReturns(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!sale) return
@@ -202,9 +220,14 @@ export function SaleDetailsDialog({
                   {sale.saleItems.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
-                        <div>
+                        <div className="flex items-center gap-2">
                             {item.itemName}
-                            {item.dosageForm && <span className="text-[10px] text-muted-foreground ml-1">({item.dosageForm})</span>}
+                            {item.dosageForm && <span className="text-[10px] text-muted-foreground">({item.dosageForm})</span>}
+                            {item.saleReturnId && (
+                                <Badge variant="outline" className="text-[10px] h-4 border-red-200 text-red-600 bg-red-50">
+                                    Returned
+                                </Badge>
+                            )}
                         </div>
                         {(Number(item.discountAmount) > 0 || Number(item.discountPercentage) > 0) && (
                           <div className="text-[10px] text-emerald-600">
@@ -286,6 +309,44 @@ export function SaleDetailsDialog({
               </>
             )}
           </div>
+
+          <Separator />
+
+          {/* Related Returns Section */}
+          {saleReturns.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="font-semibold flex items-center gap-2 text-red-600">
+                <RotateCcw className="h-4 w-4" />
+                Return History
+              </h3>
+              <div className="border rounded-lg bg-red-50/20">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Return ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {saleReturns.map((sr) => (
+                      <TableRow key={sr.id}>
+                        <TableCell className="font-medium text-xs">{sr.invoiceNumber}</TableCell>
+                        <TableCell className="text-xs">{new Date(sr.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right text-xs font-semibold">{formatCurrency(sr.totalPrice)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={sr.status === 'completed' ? 'default' : 'secondary'} className="text-[10px] h-4">
+                            {sr.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
 
           <Separator />
 

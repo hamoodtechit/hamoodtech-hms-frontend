@@ -499,7 +499,10 @@ export interface SaleReturn {
   id: string;
   branchId: string;
   patientId: string;
+  saleId?: string;
   invoiceNumber: string;
+  taxPercentage?: number | string;
+  taxAmount?: number | string;
   totalPrice: number | string;
   status: 'pending' | 'completed' | 'rejected';
   paymentMethod?: PaymentMethod;

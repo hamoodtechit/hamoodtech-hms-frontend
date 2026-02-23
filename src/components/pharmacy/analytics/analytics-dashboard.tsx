@@ -95,16 +95,39 @@ export function AnalyticsDashboard() {
                 }
             }
         } else {
-            // Excel/CSV logic
-            const outdoorSales = data.data.outdoor.sales
-            const headers = ["SL No", "Patient ID", "Bill ID", "Actual Amount", "Less", "Paid", "Due", "Creator"]
-            const rows = outdoorSales.map((s: any) => [
-                s.slNo, s.patientNumber, s.invoiceNumber, s.totalPrice, s.discountAmount, s.paid, s.due, s.createdBy
-            ])
-            
-            let csvContent = "data:text/csv;charset=utf-8," 
-                + headers.join(",") + "\n"
-                + rows.map((r: any) => r.join(",")).join("\n")
+            // Excel/CSV logic — Outdoor Sales
+            const outdoorSales = data.data.outdoor?.sales || []
+            const outdoorReturns = data.data.outdoor?.returns || []
+            const summary = data.data.summary || {}
+
+            let csvContent = "data:text/csv;charset=utf-8,"
+
+            // Sales header & rows
+            const salesHeaders = ["SL No", "Patient ID", "Bill ID", "Total Price", "Discount", "Tax", "Net Amount", "Paid", "Due", "Created By"]
+            csvContent += "OUTDOOR SALES\n"
+            csvContent += salesHeaders.join(",") + "\n"
+            csvContent += outdoorSales.map((s: any) =>
+                [s.slNo, s.patientNumber, s.invoiceNumber, s.totalPrice, s.discountAmount, s.taxAmount, s.netAmount, s.paid, s.due, s.createdBy].join(",")
+            ).join("\n")
+
+            // Returns
+            if (outdoorReturns.length > 0) {
+                const returnHeaders = ["SL No", "Patient ID", "Invoice", "Total Return", "Tax", "Date"]
+                csvContent += "\n\nOUTDOOR RETURNS\n"
+                csvContent += returnHeaders.join(",") + "\n"
+                csvContent += outdoorReturns.map((r: any) =>
+                    [r.slNo, r.patientNumber, r.invoiceNumber, r.totalReturn, r.taxAmount, r.createdAt ? format(new Date(r.createdAt), 'yyyy-MM-dd') : ''].join(",")
+                ).join("\n")
+            }
+
+            // Summary
+            csvContent += "\n\nSUMMARY\n"
+            csvContent += `Total Sale,${summary.totalSale || 0}\n`
+            csvContent += `Total Return,${summary.totalReturn || 0}\n`
+            csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
+            csvContent += `Net Sales,${summary.netSales || 0}\n`
+            csvContent += `Total Collection,${summary.totalCollection || 0}\n`
+            csvContent += `Net Collection,${summary.netCollection || 0}\n`
             
             const encodedUri = encodeURI(csvContent)
             const link = document.createElement("a")
