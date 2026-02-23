@@ -2,7 +2,21 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Sheet,
     SheetContent,
@@ -27,8 +41,9 @@ import { pharmacyService } from "@/services/pharmacy-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/pharmacy"
-import { ChevronLeft, ChevronRight, Eye, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
 import { useEffect, useState } from "react"
+import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 
 import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
@@ -61,6 +76,19 @@ export function TransactionHistory() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
+  const [filters, setFilters] = useState<{
+    dateRange: DateRange | undefined;
+    status: string;
+    paymentMethod: string;
+  }>({
+    dateRange: undefined,
+    status: "all",
+    paymentMethod: "all"
+  })
+
+  const activeFilterCount = (filters.status !== "all" ? 1 : 0) + 
+                            (filters.paymentMethod !== "all" ? 1 : 0) +
+                            (filters.dateRange ? 1 : 0)
 
   const fetchTransactions = async () => {
     if (!activeStoreId) return
@@ -68,44 +96,39 @@ export function TransactionHistory() {
     try {
         setLoading(true)
         
-        // Prepare promises based on active tab or fetch all
-        // Note: For "All" we fetch everything and merge. Ideally backend should support unified history.
         const promises = []
         
+        const baseParams: any = {
+            branchId: activeStoreId,
+            limit: 10,
+            page,
+            search: debouncedSearch || undefined,
+            status: filters.status !== "all" ? filters.status : undefined,
+            startDate: filters.dateRange?.from ? filters.dateRange.from.toISOString().split('T')[0] : undefined,
+            endDate: filters.dateRange?.to ? filters.dateRange.to.toISOString().split('T')[0] : undefined,
+            paymentMethod: filters.paymentMethod !== "all" ? filters.paymentMethod : undefined
+        }
+        
         if (activeTab === 'all' || activeTab === 'sale') {
-            promises.push(pharmacyService.getSales({
-                branchId: activeStoreId,
-                limit: 10,
-                page,
-                search: debouncedSearch || undefined
-            }).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
+            promises.push(pharmacyService.getSales(baseParams).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
         } else {
             promises.push(Promise.resolve({ type: 'sale', data: [], meta: { totalPages: 0 } }))
         }
 
         if (activeTab === 'all' || activeTab === 'purchase') {
-            promises.push(pharmacyService.getPurchases({
-                branchId: activeStoreId,
-                limit: 10,
-                page,
-                search: debouncedSearch || undefined
-            }).then(res => ({ type: 'purchase', data: res.data.purchases, meta: res.data.pagination })))
+            promises.push(pharmacyService.getPurchases(baseParams).then(res => ({ type: 'purchase', data: res.data.purchases, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'purchase', data: [], meta: { totalPages: 0 } }))
         }
 
         if (activeTab === 'all' || activeTab === 'return') {
-            promises.push(pharmacyService.getSaleReturns({
-                branchId: activeStoreId,
-                limit: 10,
-                page,
-                search: debouncedSearch || undefined
-            }).then(res => ({ type: 'return', data: res.data.saleReturns, meta: res.data.pagination })))
+            promises.push(pharmacyService.getSaleReturns(baseParams).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'return', data: [], meta: { totalPages: 0 } }))
         }
 
         const results = await Promise.all(promises)
+        // ... rest of fetchTransactions (mapping and state update)
         
         const salesData = results.find(r => r.type === 'sale')
         const purchasesData = results.find(r => r.type === 'purchase')
@@ -416,17 +439,108 @@ export function TransactionHistory() {
                 </Button>
             </div>
 
-            <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Search by Invoice/PO..." 
-                    className="pl-9" 
-                    value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value)
-                        setPage(1)
-                    }}
-                />
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by Invoice/PO..." 
+                        className="pl-9 pr-9" 
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value)
+                            setPage(1)
+                        }}
+                    />
+                    {search && (
+                        <button 
+                            className="absolute right-2.5 top-2.5"
+                            onClick={() => setSearch("")}
+                        >
+                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                        </button>
+                    )}
+                </div>
+                
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className={cn("h-10 px-3 gap-2", activeFilterCount > 0 && "bg-primary/5 border-primary text-primary")}
+                        >
+                            <Filter className="h-4 w-4" />
+                            <span className="hidden sm:inline">Filters</span>
+                            {activeFilterCount > 0 && (
+                                <Badge variant="default" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                                    {activeFilterCount}
+                                </Badge>
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="end">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-medium leading-none">Advanced Filters</h4>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => setFilters({ dateRange: undefined, status: "all", paymentMethod: "all" })}
+                                    className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
+                                >
+                                    <X className="h-3 w-3" />
+                                    Reset
+                                </Button>
+                            </div>
+                            
+                            <div className="grid gap-2">
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Date Range</Label>
+                                <DatePickerWithRange 
+                                    date={filters.dateRange} 
+                                    setDate={(range: DateRange | undefined) => setFilters(f => ({ ...f, dateRange: range }))}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Status</Label>
+                                <Select 
+                                    value={filters.status} 
+                                    onValueChange={(val) => setFilters(f => ({ ...f, status: val }))}
+                                >
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="All Statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Statuses</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="rejected">Rejected</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Method</Label>
+                                <Select 
+                                    value={filters.paymentMethod} 
+                                    onValueChange={(val) => setFilters(f => ({ ...f, paymentMethod: val }))}
+                                >
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="All Methods" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Methods</SelectItem>
+                                        <SelectItem value="Cash">Cash</SelectItem>
+                                        <SelectItem value="Card">Card</SelectItem>
+                                        <SelectItem value="bKash">bKash</SelectItem>
+                                        <SelectItem value="Nagad">Nagad</SelectItem>
+                                        <SelectItem value="Rocket">Rocket</SelectItem>
+                                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
             </div>
 
             <div className="border rounded-md h-[calc(100vh-240px)] overflow-y-auto">
