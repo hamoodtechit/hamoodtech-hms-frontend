@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils"
 import { pharmacyService } from "@/services/pharmacy-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { Sale } from "@/types/pharmacy"
+import { Sale, SaleReturn } from "@/types/pharmacy"
 import { ChevronLeft, ChevronRight, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
@@ -48,6 +48,7 @@ import { toast } from "sonner"
 
 import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
+import { SaleReturnDetailsDialog } from "@/components/pharmacy/sale-return-details-dialog"
 
 type UnifiedTransaction = {
     id: string;
@@ -75,6 +76,8 @@ export function TransactionHistory() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
+  const [returnDetailsDialogOpen, setReturnDetailsDialogOpen] = useState(false)
+  const [selectedReturnForDetails, setSelectedReturnForDetails] = useState<SaleReturn | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
   const [filters, setFilters] = useState<{
     dateRange: DateRange | undefined;
@@ -378,12 +381,18 @@ export function TransactionHistory() {
   }
 
   const handleViewDetails = (tx: UnifiedTransaction) => {
-    if (tx.type !== 'sale') {
-        toast.info("Detailed Purchase view coming to POS soon. Please use Inventory module.")
+    if (tx.type === 'sale') {
+        setSelectedSaleForDetails(tx.original)
+        setDetailsDialogOpen(true)
         return
     }
-    setSelectedSaleForDetails(tx.original)
-    setDetailsDialogOpen(true)
+    if (tx.type === 'return') {
+        setSelectedReturnForDetails(tx.original)
+        setReturnDetailsDialogOpen(true)
+        return
+    }
+    
+    toast.info("Detailed Purchase view coming to POS soon. Please use Inventory module.")
   }
 
   return (
@@ -622,7 +631,7 @@ export function TransactionHistory() {
                                                 className="h-8 w-8" 
                                                 title="View Details"
                                                 onClick={() => handleViewDetails(tx)}
-                                                disabled={tx.type !== 'sale'}
+                                                disabled={tx.type === 'purchase'}
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
@@ -632,7 +641,7 @@ export function TransactionHistory() {
                                                 className="h-8 w-8" 
                                                 title="Reprint Receipt"
                                                 onClick={() => handleReprint(tx)}
-                                                disabled={tx.type !== 'sale'}
+                                                disabled={tx.type === 'purchase'}
                                             >
                                                 <Printer className="h-4 w-4" />
                                             </Button>
@@ -705,6 +714,12 @@ export function TransactionHistory() {
             fetchTransactions()
             setDetailsDialogOpen(false)
         }}
+    />
+
+    <SaleReturnDetailsDialog
+        saleReturn={selectedReturnForDetails}
+        open={returnDetailsDialogOpen}
+        onOpenChange={setReturnDetailsDialogOpen}
     />
     </>
   )
