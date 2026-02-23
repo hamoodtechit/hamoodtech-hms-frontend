@@ -516,7 +516,7 @@ export interface SaleReturnListResponse {
   success: boolean;
   message: string;
   data: {
-    saleReturns: SaleReturn[];
+    data: SaleReturn[];
     pagination: {
       total: number;
       page: number;
