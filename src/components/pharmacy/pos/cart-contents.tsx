@@ -304,14 +304,14 @@ export function CartContents({
                     </div>
                 </ScrollArea>
 
-                {/* Fixed Totals Section - Matches User Image Design (Fixed outside ScrollArea) */}
-                <div className="space-y-1 bg-zinc-950 text-white p-3 rounded-lg border border-zinc-800 shadow-xl mt-1">
+                {/* Fixed Totals Section - Theme-aware */}
+                <div className="space-y-1 bg-foreground text-background p-3 rounded-lg border border-border/20 shadow-xl mt-1">
                     <div className="flex justify-between text-[11px] font-medium">
-                        <span className="text-zinc-400">Subtotal</span>
+                        <span className="text-background/60">Subtotal</span>
                         <span className="font-bold">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-[11px] font-medium">
-                        <span className="text-zinc-400">Tax ({vatPercentage}%)</span>
+                        <span className="text-background/60">Tax ({vatPercentage}%)</span>
                         <span className="font-bold">{formatCurrency(tax)}</span>
                     </div>
                     {(discount > 0 || discountFixedAmount > 0) && (
@@ -321,21 +321,21 @@ export function CartContents({
                         </div>
                     )}
                     
-                    <div className="flex justify-between items-baseline pt-2 border-t border-zinc-800/50 mt-1">
-                        <span className="text-sm font-black text-white uppercase tracking-tighter">Total to Pay</span>
-                        <span className="text-2xl font-black text-white">{formatCurrency(total)}</span>
+                    <div className="flex justify-between items-baseline pt-2 border-t border-background/10 mt-1">
+                        <span className="text-sm font-black uppercase tracking-tighter">Total to Pay</span>
+                        <span className="text-2xl font-black">{formatCurrency(total)}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-zinc-700/50 mt-1">
+                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-background/20 mt-1">
                         <span className={cn(
                             "text-[10px] font-black uppercase tracking-widest",
-                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-500"
+                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
                         )}>
                             {paidAmount >= (total - 0.01) ? "RETURN CHANGE" : "BALANCE DUE"}
                         </span>
                         <span className={cn(
                             "text-xl font-black",
-                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-500"
+                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
                         )}>
                             {formatCurrency(Math.abs(paidAmount - total))}
                         </span>
