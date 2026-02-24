@@ -2,27 +2,27 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
@@ -300,110 +300,100 @@ export function MedicineDialog({
           
           <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 min-h-0 custom-scrollbar">
             <TabsContent value="info" className="mt-0 space-y-6 pb-8">
-              {/* Medicine Name - full width */}
-              <div className="space-y-2">
-                <Label htmlFor="name">Medicine Name *</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name} 
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="e.g. Napa Extend"
-                />
-              </div>
-
-              {/* Generic Name - full width */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="genericId">Generic Name *</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-1 md:px-2 text-xs text-primary"
-                    onClick={() => openQuickAdd('generics', 'Generic')}
-                  >
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">Add New</span>
-                  </Button>
+              {/* Medicine Name | Generic Name | Barcode — 3 columns inline */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Medicine Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">Medicine Name *</Label>
+                  <Input 
+                    id="name" 
+                    value={formData.name} 
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="e.g. Napa Extend"
+                  />
                 </div>
-                <Popover open={genericSearchOpen} onOpenChange={setGenericSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={genericSearchOpen}
-                      className="w-full justify-between font-normal"
-                    >
-                      {formData.genericId
-                        ? generics.find((g) => g.id === formData.genericId)?.name
-                        : "Select Generic..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search generic..." />
-                      <CommandList>
-                        <CommandEmpty>
-                          <div className="py-2 px-3 text-sm text-muted-foreground">No generic found.</div>
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {generics.map((g) => (
-                            <CommandItem
-                              key={g.id}
-                              value={g.name}
-                              onSelect={() => {
-                                handleInputChange('genericId', g.id)
-                                setGenericSearchOpen(false)
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.genericId === g.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {g.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                      {/* + Add New Generic button inside dropdown */}
-                      <div className="border-t p-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-xs text-primary h-8"
-                          onClick={() => {
-                            setGenericSearchOpen(false)
-                            openQuickAdd('generics', 'Generic')
-                          }}
-                        >
-                          <Plus className="h-3 w-3 mr-2" />
-                          Add New Generic
-                        </Button>
-                      </div>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
 
-              {/* Barcode - full width */}
-              <div className="space-y-2">
-                <Label htmlFor="barcode">Barcode</Label>
-                <Input 
-                  id="barcode" 
-                  value={formData.barcode} 
-                  onChange={(e) => handleInputChange('barcode', e.target.value)}
-                  placeholder="Scan or enter barcode"
-                />
+                {/* Generic Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="genericId">Generic Name *</Label>
+                  <Popover open={genericSearchOpen} onOpenChange={setGenericSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={genericSearchOpen}
+                        className="w-full justify-between font-normal"
+                      >
+                        {formData.genericId
+                          ? generics.find((g) => g.id === formData.genericId)?.name
+                          : "Select Generic..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        {/* + Add New button at the TOP, above search */}
+                        <div className="border-b p-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs text-primary h-8"
+                            onClick={() => {
+                              setGenericSearchOpen(false)
+                              openQuickAdd('generics', 'Generic')
+                            }}
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Create New Generic
+                          </Button>
+                        </div>
+                        <CommandInput placeholder="Search generic..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            <div className="py-2 px-3 text-sm text-muted-foreground">No generic found.</div>
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {generics.map((g) => (
+                              <CommandItem
+                                key={g.id}
+                                value={g.name}
+                                onSelect={() => {
+                                  handleInputChange('genericId', g.id)
+                                  setGenericSearchOpen(false)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.genericId === g.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {g.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Barcode */}
+                <div className="space-y-2">
+                  <Label htmlFor="barcode">Barcode</Label>
+                  <Input 
+                    id="barcode" 
+                    value={formData.barcode} 
+                    onChange={(e) => handleInputChange('barcode', e.target.value)}
+                    placeholder="Scan or enter barcode"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Category */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Category</Label>
-                  </div>
+                  <Label>Category</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -419,6 +409,17 @@ export function MedicineDialog({
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
+                        <div className="border-b p-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs text-primary h-8"
+                            onClick={() => openQuickAdd('categories', 'Category')}
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Create New Category
+                          </Button>
+                        </div>
                         <CommandInput placeholder="Search category..." />
                         <CommandList>
                           <CommandEmpty>
@@ -437,17 +438,6 @@ export function MedicineDialog({
                             ))}
                           </CommandGroup>
                         </CommandList>
-                        <div className="border-t p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => openQuickAdd('categories', 'Category')}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add New Category
-                          </Button>
-                        </div>
                       </Command>
                     </PopoverContent>
                   </Popover>
@@ -455,9 +445,7 @@ export function MedicineDialog({
 
                 {/* Unit */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Unit</Label>
-                  </div>
+                  <Label>Unit</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -473,6 +461,17 @@ export function MedicineDialog({
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
+                        <div className="border-b p-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs text-primary h-8"
+                            onClick={() => openQuickAdd('units', 'Unit')}
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Create New Unit
+                          </Button>
+                        </div>
                         <CommandInput placeholder="Search unit..." />
                         <CommandList>
                           <CommandEmpty>
@@ -491,17 +490,6 @@ export function MedicineDialog({
                             ))}
                           </CommandGroup>
                         </CommandList>
-                        <div className="border-t p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => openQuickAdd('units', 'Unit')}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add New Unit
-                          </Button>
-                        </div>
                       </Command>
                     </PopoverContent>
                   </Popover>
@@ -528,9 +516,7 @@ export function MedicineDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Manufacturer</Label>
-                  </div>
+                  <Label>Manufacturer</Label>
                   <Popover open={manufacturerSearchOpen} onOpenChange={setManufacturerSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -547,6 +533,20 @@ export function MedicineDialog({
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
+                        <div className="border-b p-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-xs text-primary h-8"
+                            onClick={() => {
+                              setManufacturerSearchOpen(false)
+                              openQuickAdd('manufacturers', 'Manufacturer')
+                            }}
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Create New Manufacturer
+                          </Button>
+                        </div>
                         <CommandInput placeholder="Search manufacturer..." />
                         <CommandList>
                           <CommandEmpty>
@@ -573,21 +573,6 @@ export function MedicineDialog({
                             ))}
                           </CommandGroup>
                         </CommandList>
-                        {/* + Add New Manufacturer button inside dropdown */}
-                        <div className="border-t p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => {
-                              setManufacturerSearchOpen(false)
-                              openQuickAdd('manufacturers', 'Manufacturer')
-                            }}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add New Manufacturer
-                          </Button>
-                        </div>
                       </Command>
                     </PopoverContent>
                   </Popover>
