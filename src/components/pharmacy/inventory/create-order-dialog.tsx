@@ -176,7 +176,7 @@ export function CreateOrderDialog() {
         }))
       }
 
-      console.log("Creating Purchase with payload:", payload)
+     
 
       await createMutation.mutateAsync(payload)
       toast.success("Purchase Order created successfully")

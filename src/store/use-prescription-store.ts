@@ -63,7 +63,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
 
             linkToSale: (prescriptionId, saleId) => {
                 // In a real app, we'd store the saleId on the prescription or vice versa
-                console.log(`Linked prescription ${prescriptionId} to sale ${saleId}`)
+                
                 get().updatePrescriptionStatus(prescriptionId, 'Filled')
             },
 

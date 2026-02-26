@@ -267,7 +267,7 @@ export function MedicineDialog({
         }
       }
 
-      console.log("Submitting Optimized Medicine Payload:", payload);
+      
 
       if (medicineToEdit) {
         await updateMutation.mutateAsync({ id: medicineToEdit.id, data: payload as Partial<MedicinePayload> })
