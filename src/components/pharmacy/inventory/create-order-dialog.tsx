@@ -51,9 +51,11 @@ export function CreateOrderDialog() {
   const [open, setOpen] = useState(false)
   const [medicineSearch, setMedicineSearch] = useState("")
   const [debouncedMedicineSearch] = useDebounce(medicineSearch, 500)
+  const [supplierSearch, setSupplierSearch] = useState("")
+  const [debouncedSupplierSearch] = useDebounce(supplierSearch, 500)
   
-  const { data: suppliersRes } = useSuppliers({ limit: 200 })
-  const { data: medicinesRes, isFetching: loadingMedicines } = useMedicines({ search: debouncedMedicineSearch, limit: 100 })
+  const { data: suppliersRes, isLoading: loadingSuppliers } = useSuppliers({ search: debouncedSupplierSearch, limit: 20 })
+  const { data: medicinesRes, isFetching: loadingMedicines } = useMedicines({ search: debouncedMedicineSearch, limit: 50 })
   const { finance, fetchSettings } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   
@@ -233,30 +235,42 @@ export function CreateOrderDialog() {
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-0" align="start">
-                                <Command>
-                                    <CommandInput placeholder="Search supplier..." />
+                                <Command shouldFilter={false}>
+                                    <CommandInput 
+                                        placeholder="Search supplier..." 
+                                        value={supplierSearch}
+                                        onValueChange={setSupplierSearch}
+                                    />
                                     <CommandList>
-                                        <CommandEmpty>No supplier found.</CommandEmpty>
-                                        <CommandGroup>
-                                            {suppliers.map((supplier) => (
-                                                <CommandItem
-                                                    key={supplier.id}
-                                                    value={supplier.name}
-                                                    onSelect={() => {
-                                                        setSelectedSupplier(supplier.id)
-                                                        setOpenSupplierCombobox(false)
-                                                    }}
-                                                >
-                                                    <Check
-                                                        className={cn(
-                                                            "mr-2 h-4 w-4",
-                                                            selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
-                                                        )}
-                                                    />
-                                                    {supplier.name}
-                                                </CommandItem>
-                                            ))}
-                                        </CommandGroup>
+                                        {loadingSuppliers ? (
+                                            <div className="p-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                                <Loader2 className="h-3 w-3 animate-spin" /> Searching...
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <CommandEmpty className="p-2 text-xs text-muted-foreground">No supplier found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {suppliers.map((supplier) => (
+                                                        <CommandItem
+                                                            key={supplier.id}
+                                                            value={supplier.id}
+                                                            onSelect={() => {
+                                                                setSelectedSupplier(supplier.id)
+                                                                setOpenSupplierCombobox(false)
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {supplier.name}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </>
+                                        )}
                                     </CommandList>
                                 </Command>
                             </PopoverContent>
