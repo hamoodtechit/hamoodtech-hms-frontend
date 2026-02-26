@@ -2,22 +2,22 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -59,7 +59,7 @@ export function CustomerDialog({ open, onOpenChange, onCustomerAdded }: Customer
 
   function onSubmit(values: z.infer<typeof customerSchema>) {
     // In a real app, this would hit an API
-    console.log(values)
+    
     toast.success("Customer profile created successfully")
     if (onCustomerAdded) {
         onCustomerAdded({ ...values, id: Math.random(), points: 0 })

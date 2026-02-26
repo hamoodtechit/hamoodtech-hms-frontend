@@ -21,7 +21,7 @@ export function usePermissions() {
     // Check role-based permissions
     if (user.role && user.role.permissions) {
       const has = user.role.permissions.some(p => p.key === permission);
-      // console.log(`Checking permission: ${permission}, Access: ${has}`);
+      
       return has;
     }
 

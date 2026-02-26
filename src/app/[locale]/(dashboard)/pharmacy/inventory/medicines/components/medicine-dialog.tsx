@@ -28,6 +28,7 @@ import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCreateMedicine, useManufacturers, usePharmacyEntities, useUpdateMedicine } from "@/hooks/pharmacy-queries"
+import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Medicine, MedicinePayload, PharmacyEntityType } from "@/types/pharmacy"
@@ -78,19 +79,49 @@ export function MedicineDialog({
   })
 
   // Data Fetching Hooks
-  const { data: categoriesRes, isLoading: loadingCategories } = usePharmacyEntities('categories')
+  const [categorySearch, setCategorySearch] = useState("")
+  const [debouncedCategorySearch] = useDebounce(categorySearch, 500)
+
+  const { data: categoriesRes, isLoading: loadingCategories } = usePharmacyEntities('categories', {
+    search: debouncedCategorySearch,
+    limit: 50
+  })
   const categories = categoriesRes?.data || []
 
-  const { data: genericsRes, isLoading: loadingGenerics } = usePharmacyEntities('generics')
+  const [genericSearch, setGenericSearch] = useState("")
+  const [debouncedGenericSearch] = useDebounce(genericSearch, 500)
+
+  const { data: genericsRes, isLoading: loadingGenerics } = usePharmacyEntities('generics', { 
+    search: debouncedGenericSearch, 
+    limit: 50 
+  })
   const generics = genericsRes?.data || []
 
-  const { data: groupsRes, isLoading: loadingGroups } = usePharmacyEntities('groups')
+  const [groupSearch, setGroupSearch] = useState("")
+  const [debouncedGroupSearch] = useDebounce(groupSearch, 500)
+
+  const { data: groupsRes, isLoading: loadingGroups } = usePharmacyEntities('groups', {
+    search: debouncedGroupSearch,
+    limit: 50
+  })
   const groups = groupsRes?.data || []
 
-  const { data: unitsRes, isLoading: loadingUnits } = usePharmacyEntities('units')
+  const [unitSearch, setUnitSearch] = useState("")
+  const [debouncedUnitSearch] = useDebounce(unitSearch, 500)
+
+  const { data: unitsRes, isLoading: loadingUnits } = usePharmacyEntities('units', {
+    search: debouncedUnitSearch,
+    limit: 50
+  })
   const units = unitsRes?.data || []
 
-  const { data: manufacturersRes, isLoading: loadingManufacturers } = useManufacturers()
+  const [manufacturerSearch, setManufacturerSearch] = useState("")
+  const [debouncedManufacturerSearch] = useDebounce(manufacturerSearch, 500)
+
+  const { data: manufacturersRes, isLoading: loadingManufacturers } = useManufacturers({
+    search: debouncedManufacturerSearch,
+    limit: 50
+  })
   const manufacturers = manufacturersRes?.data || []
 
   const loading = loadingCategories || loadingGenerics || loadingGroups || loadingUnits || loadingManufacturers
@@ -236,7 +267,7 @@ export function MedicineDialog({
         }
       }
 
-      console.log("Submitting Optimized Medicine Payload:", payload);
+      
 
       if (medicineToEdit) {
         await updateMutation.mutateAsync({ id: medicineToEdit.id, data: payload as Partial<MedicinePayload> })
@@ -331,7 +362,7 @@ export function MedicineDialog({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Command>
+                      <Command shouldFilter={false}>
                         {/* + Add New button at the TOP, above search */}
                         <div className="border-b p-1">
                           <Button
@@ -347,31 +378,45 @@ export function MedicineDialog({
                             Create New Generic
                           </Button>
                         </div>
-                        <CommandInput placeholder="Search generic..." />
+                        <CommandInput 
+                          placeholder="Search generic..." 
+                          value={genericSearch}
+                          onValueChange={setGenericSearch}
+                        />
                         <CommandList>
-                          <CommandEmpty>
-                            <div className="py-2 px-3 text-sm text-muted-foreground">No generic found.</div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {generics.map((g) => (
-                              <CommandItem
-                                key={g.id}
-                                value={g.name}
-                                onSelect={() => {
-                                  handleInputChange('genericId', g.id)
-                                  setGenericSearchOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    formData.genericId === g.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {g.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          {loadingGenerics ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Searching...
+                            </div>
+                          ) : (
+                            <>
+                              <CommandEmpty>
+                                <div className="py-2 px-3 text-sm text-muted-foreground">No generic found.</div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {generics.map((g) => (
+                                  <CommandItem
+                                    key={g.id}
+                                    value={g.name}
+                                    onSelect={() => {
+                                      handleInputChange('genericId', g.id)
+                                      setGenericSearchOpen(false)
+                                      setGenericSearch("") // Reset search on select
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        formData.genericId === g.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {g.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </>
+                          )}
                         </CommandList>
                       </Command>
                     </PopoverContent>
@@ -408,7 +453,7 @@ export function MedicineDialog({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Command>
+                      <Command shouldFilter={false}>
                         <div className="border-b p-1">
                           <Button
                             variant="ghost"
@@ -420,23 +465,39 @@ export function MedicineDialog({
                             Create New Category
                           </Button>
                         </div>
-                        <CommandInput placeholder="Search category..." />
+                        <CommandInput 
+                          placeholder="Search category..." 
+                          value={categorySearch}
+                          onValueChange={setCategorySearch}
+                        />
                         <CommandList>
-                          <CommandEmpty>
-                            <div className="py-2 px-3 text-sm text-muted-foreground">No category found.</div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {categories.map((c) => (
-                              <CommandItem
-                                key={c.id}
-                                value={c.name}
-                                onSelect={() => handleInputChange('categoryId', c.id)}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", formData.categoryId === c.id ? "opacity-100" : "opacity-0")} />
-                                {c.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          {loadingCategories ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Searching...
+                            </div>
+                          ) : (
+                            <>
+                              <CommandEmpty>
+                                <div className="py-2 px-3 text-sm text-muted-foreground">No category found.</div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {categories.map((c) => (
+                                  <CommandItem
+                                    key={c.id}
+                                    value={c.name}
+                                    onSelect={() => {
+                                      handleInputChange('categoryId', c.id)
+                                      setCategorySearch("")
+                                    }}
+                                  >
+                                    <Check className={cn("mr-2 h-4 w-4", formData.categoryId === c.id ? "opacity-100" : "opacity-0")} />
+                                    {c.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </>
+                          )}
                         </CommandList>
                       </Command>
                     </PopoverContent>
@@ -460,7 +521,7 @@ export function MedicineDialog({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Command>
+                      <Command shouldFilter={false}>
                         <div className="border-b p-1">
                           <Button
                             variant="ghost"
@@ -472,23 +533,39 @@ export function MedicineDialog({
                             Create New Unit
                           </Button>
                         </div>
-                        <CommandInput placeholder="Search unit..." />
+                        <CommandInput 
+                          placeholder="Search unit..." 
+                          value={unitSearch}
+                          onValueChange={setUnitSearch}
+                        />
                         <CommandList>
-                          <CommandEmpty>
-                            <div className="py-2 px-3 text-sm text-muted-foreground">No unit found.</div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {units.map((u) => (
-                              <CommandItem
-                                key={u.id}
-                                value={u.name}
-                                onSelect={() => handleInputChange('medicineUnitId', u.id)}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", formData.medicineUnitId === u.id ? "opacity-100" : "opacity-0")} />
-                                {u.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          {loadingUnits ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Searching...
+                            </div>
+                          ) : (
+                            <>
+                              <CommandEmpty>
+                                <div className="py-2 px-3 text-sm text-muted-foreground">No unit found.</div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {units.map((u) => (
+                                  <CommandItem
+                                    key={u.id}
+                                    value={u.name}
+                                    onSelect={() => {
+                                      handleInputChange('medicineUnitId', u.id)
+                                      setUnitSearch("")
+                                    }}
+                                  >
+                                    <Check className={cn("mr-2 h-4 w-4", formData.medicineUnitId === u.id ? "opacity-100" : "opacity-0")} />
+                                    {u.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </>
+                          )}
                         </CommandList>
                       </Command>
                     </PopoverContent>
@@ -532,7 +609,7 @@ export function MedicineDialog({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Command>
+                      <Command shouldFilter={false}>
                         <div className="border-b p-1">
                           <Button
                             variant="ghost"
@@ -547,31 +624,45 @@ export function MedicineDialog({
                             Create New Manufacturer
                           </Button>
                         </div>
-                        <CommandInput placeholder="Search manufacturer..." />
+                        <CommandInput 
+                          placeholder="Search manufacturer..." 
+                          value={manufacturerSearch}
+                          onValueChange={setManufacturerSearch}
+                        />
                         <CommandList>
-                          <CommandEmpty>
-                            <div className="py-2 px-3 text-sm text-muted-foreground">No manufacturer found.</div>
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {manufacturers.map((m) => (
-                              <CommandItem
-                                key={m.id}
-                                value={m.name}
-                                onSelect={() => {
-                                  handleInputChange('medicineManufacturerId', m.id)
-                                  setManufacturerSearchOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    formData.medicineManufacturerId === m.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {m.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          {loadingManufacturers ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Searching...
+                            </div>
+                          ) : (
+                            <>
+                              <CommandEmpty>
+                                <div className="py-2 px-3 text-sm text-muted-foreground">No manufacturer found.</div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {manufacturers.map((m) => (
+                                  <CommandItem
+                                    key={m.id}
+                                    value={m.name}
+                                    onSelect={() => {
+                                      handleInputChange('medicineManufacturerId', m.id)
+                                      setManufacturerSearchOpen(false)
+                                      setManufacturerSearch("")
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        formData.medicineManufacturerId === m.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {m.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </>
+                          )}
                         </CommandList>
                       </Command>
                     </PopoverContent>

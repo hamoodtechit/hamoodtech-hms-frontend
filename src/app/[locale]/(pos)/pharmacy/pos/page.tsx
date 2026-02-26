@@ -124,6 +124,7 @@ export default function POSPage() {
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<any>('cash')
   const [paidAmount, setPaidAmount] = useState(0)
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
   // Sync paidAmount with total when total changes
   useEffect(() => {
@@ -142,7 +143,11 @@ export default function POSPage() {
           return
       }
 
-      processTransaction()
+      setIsCheckoutOpen(true)
+  }
+
+  const finalizeCheckout = () => {
+    processTransaction()
   }
 
   // React Query Hooks
@@ -446,7 +451,7 @@ export default function POSPage() {
   
   const handleLinkPrescription = (id: string) => {
       // In a real app, you'd fetch prescription details here
-      console.log("Linked prescription:", id)
+      
   }
 
   if (!isMounted) return null
@@ -521,6 +526,9 @@ export default function POSPage() {
                         setPaymentMethod={setPaymentMethod}
                         paidAmount={paidAmount}
                         setPaidAmount={setPaidAmount}
+                        onFinalizeCheckout={finalizeCheckout}
+                        isCheckoutOpen={isCheckoutOpen}
+                        setIsCheckoutOpen={setIsCheckoutOpen}
                     />
                 </SheetContent>
             </Sheet>
@@ -964,6 +972,9 @@ export default function POSPage() {
             setPaymentMethod={setPaymentMethod}
             paidAmount={paidAmount}
             setPaidAmount={setPaidAmount}
+            onFinalizeCheckout={finalizeCheckout}
+            isCheckoutOpen={isCheckoutOpen}
+            setIsCheckoutOpen={setIsCheckoutOpen}
          />
       </div>
 

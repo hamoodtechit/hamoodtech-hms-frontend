@@ -3,21 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { pharmacyService } from "@/services/pharmacy-service"
@@ -105,7 +105,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
         saleReturnItems
       }
 
-      console.log('🔍 Sale Return Payload:', JSON.stringify(payload, null, 2))
+      
 
       await pharmacyService.createSaleReturn(payload)
 

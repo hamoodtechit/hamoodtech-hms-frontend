@@ -9,13 +9,13 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  Pill,
-  Settings,
-  Users,
-  Wallet
+    ChevronLeft,
+    ChevronRight,
+    LayoutDashboard,
+    Pill,
+    Settings,
+    Users,
+    Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
@@ -52,9 +52,9 @@ export function Sidebar() {
   // DEBUG LOGGING
   useEffect(() => {
     if (user) {
-        console.log("Sidebar User Full:", JSON.stringify(user, null, 2));
+        
     } else {
-        console.log("Sidebar User is NULL");
+        
     }
   }, [user]);
 

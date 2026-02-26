@@ -21,6 +21,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useDeleteSupplier, useSuppliers } from "@/hooks/pharmacy-queries"
+import { useDebounce } from "@/hooks/use-debounce"
 import { Supplier } from "@/types/pharmacy"
 import { Edit, Plus, Search, Trash2 } from "lucide-react"
 import { useState } from "react"
@@ -29,13 +30,14 @@ import { SupplierDialog } from "./supplier-dialog"
 
 export function SupplierTable() {
     const [search, setSearch] = useState("")
+    const [debouncedSearch] = useDebounce(search, 500)
     const [page, setPage] = useState(1)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [supplierToEdit, setSupplierToEdit] = useState<Supplier | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const { data: suppliersRes, isLoading: loading } = useSuppliers({ 
-        search, 
+        search: debouncedSearch, 
         page,
         limit: 10 
     })

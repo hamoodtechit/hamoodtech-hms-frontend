@@ -2,21 +2,29 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
-import { CreditCard, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react"
+import { CreditCard, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { PatientSearch } from "./patient-search"
 
 interface CartContentsProps {
     onCheckout: () => void
+    onFinalizeCheckout: () => void
     customerDialogOpen: boolean
     setCustomerDialogOpen: (open: boolean) => void
     selectedCustomer: Patient | null
@@ -29,10 +37,13 @@ interface CartContentsProps {
     setPaymentMethod: (method: PaymentMethod) => void
     paidAmount: number
     setPaidAmount: (amount: number) => void
+    isCheckoutOpen: boolean
+    setIsCheckoutOpen: (open: boolean) => void
 }
 
 export function CartContents({
     onCheckout,
+    onFinalizeCheckout,
     customerDialogOpen,
     setCustomerDialogOpen,
     selectedCustomer,
@@ -44,7 +55,9 @@ export function CartContents({
     paymentMethod,
     setPaymentMethod,
     paidAmount,
-    setPaidAmount
+    setPaidAmount,
+    isCheckoutOpen,
+    setIsCheckoutOpen
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart } = usePosStore()
@@ -210,151 +223,185 @@ export function CartContents({
                 )}
             </div>
 
-            {/* Footer Section - Optimized for various screen sizes */}
-            <div className="p-2 sm:p-3 bg-secondary/5 border-t shrink-0 flex flex-col max-h-[45%] sm:max-h-[50%]">
-                <ScrollArea className="flex-1 min-h-0 pr-3">
-                    <div className="space-y-3 pb-2">
-                        {/* 1. Customer Selection */}
-                        <div className="space-y-1">
-                            <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-                                <span>Customer</span>
-                            </div>
-                            <PatientSearch 
-                                selectedPatient={selectedCustomer} 
-                                onSelect={setSelectedCustomer} 
-                            />
-                            {selectedCustomer?.bloodGroup && (
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-secondary/20 p-1 rounded px-2">
-                                    <span className="font-semibold">Blood Group:</span> {selectedCustomer.bloodGroup}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* 2. Sale Discount */}
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                Discount
-                            </span>
-                            <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <SmartNumberInput 
-                                        placeholder="%" 
-                                        className="h-8 text-xs pr-6" 
-                                        min={0}
-                                        max={100}
-                                        value={discount === 0 ? undefined : discount}
-                                        onChange={(val: number | undefined) => {
-                                            setDiscount(val || 0)
-                                            setDiscountFixedAmount(0)
-                                        }}
-                                    />
-                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">%</span>
-                                </div>
-                                <div className="relative flex-1">
-                                    <SmartNumberInput 
-                                        placeholder="Amount" 
-                                        className="h-8 text-xs pr-8" 
-                                        min={0}
-                                        value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
-                                        onChange={(val: number | undefined) => {
-                                            setDiscountFixedAmount(val || 0)
-                                            setDiscount(0)
-                                        }}
-                                    />
-                                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">Tk</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 3. Payment Details - Inline row (Method, Amount, Account) */}
-                        <div className="grid grid-cols-3 gap-2 px-0.5">
-                            <div className="space-y-0.5">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Method</span>
-                                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                    <SelectTrigger className="h-8 text-[11px] px-2">
-                                        <SelectValue placeholder="Method" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {paymentMethods.map(method => (
-                                            <SelectItem key={method} value={method}>
-                                                <span className="capitalize text-[11px]">{method}</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-0.5">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</span>
-                                <SmartNumberInput 
-                                    value={paidAmount}
-                                    onFocus={(e: any) => e.target.select()} 
-                                    onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                    className="h-8 text-[11px] font-bold border-primary/20"
-                                />
-                            </div>
-                            <div className="space-y-0.5">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Account</span>
-                                <div className="text-[10px] h-8 flex items-center px-2 bg-muted/50 rounded border font-medium truncate">
-                                    {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                                        <span className="text-destructive text-[9px]">No account</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </ScrollArea>
-
-                {/* Fixed Totals Section - Theme-aware */}
-                <div className="space-y-1 bg-foreground text-background p-3 rounded-lg border border-border/20 shadow-xl mt-1">
-                    <div className="flex justify-between text-[11px] font-medium">
-                        <span className="text-background/60">Subtotal</span>
-                        <span className="font-bold">{formatCurrency(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] font-medium">
-                        <span className="text-background/60">Tax ({vatPercentage}%)</span>
-                        <span className="font-bold">{formatCurrency(tax)}</span>
+            {/* Footer Section - Simplified Sticky Footer */}
+            <div className="p-3 bg-secondary/5 border-t shrink-0 flex flex-col gap-3">
+                {/* 1. Summary Totals */}
+                <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                        <span>Subtotal ({cart.length} items)</span>
+                        <span>{formatCurrency(subtotal)}</span>
                     </div>
                     {(discount > 0 || discountFixedAmount > 0) && (
-                        <div className="flex justify-between text-[11px] font-medium text-emerald-400">
+                        <div className="flex justify-between text-xs font-medium text-emerald-600">
                             <span>Discount</span>
-                            <span className="font-bold">-{formatCurrency(discountAmount)}</span>
+                            <span>-{formatCurrency(discountAmount)}</span>
                         </div>
                     )}
-                    
-                    <div className="flex justify-between items-baseline pt-2 border-t border-background/10 mt-1">
-                        <span className="text-sm font-black uppercase tracking-tighter">Total to Pay</span>
-                        <span className="text-2xl font-black">{formatCurrency(total)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-background/20 mt-1">
-                        <span className={cn(
-                            "text-[10px] font-black uppercase tracking-widest",
-                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
-                        )}>
-                            {paidAmount >= (total - 0.01) ? "RETURN CHANGE" : "BALANCE DUE"}
-                        </span>
-                        <span className={cn(
-                            "text-xl font-black",
-                            paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
-                        )}>
-                            {formatCurrency(Math.abs(paidAmount - total))}
-                        </span>
+                    <div className="flex justify-between items-baseline pt-1 border-t mt-1">
+                        <span className="text-sm font-bold uppercase">Total to Pay</span>
+                        <span className="text-2xl font-black text-primary">{formatCurrency(total)}</span>
                     </div>
                 </div>
-                
-                <div className="pt-2 sm:pt-3 mt-auto shrink-0 border-t border-primary/10">
-                    <Button 
-                        className={cn(
-                            "w-full h-10 sm:h-12 text-base sm:text-lg font-bold shadow-xl transition-all active:scale-[0.98]",
-                            paidAmount < (total - 0.01) && total > 0 ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
-                        )}
-                        disabled={cart.length === 0}
-                        onClick={onCheckout}
-                    >
-                        <CreditCard className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-                        Complete Payment
-                    </Button>
-                </div>
+
+                {/* 2. Main Checkout Trigger (Drawer) */}
+                <Sheet open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+                    <SheetTrigger asChild>
+                        <Button 
+                            className="w-full h-12 text-lg font-bold shadow-lg transition-all active:scale-[0.98] bg-primary hover:bg-primary/90"
+                            disabled={cart.length === 0}
+                        >
+                            <CreditCard className="mr-2 h-5 w-5" />
+                            Review & Pay
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 gap-0">
+                        <SheetHeader className="p-4 border-b bg-secondary/10">
+                            <SheetTitle className="flex items-center gap-2">
+                                <Receipt className="w-5 h-5 text-primary" />
+                                Checkout Details
+                            </SheetTitle>
+                        </SheetHeader>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                            {/* Drawer: Customer Selection */}
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    Customer Selection
+                                </Label>
+                                <PatientSearch 
+                                    selectedPatient={selectedCustomer} 
+                                    onSelect={setSelectedCustomer} 
+                                />
+                                {selectedCustomer && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 p-2 rounded border border-primary/10">
+                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                            {selectedCustomer.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-foreground">{selectedCustomer.name}</p>
+                                            <p className="text-[10px]">{selectedCustomer.phone}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Drawer: Sale Discount */}
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    Sale Discount
+                                </Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="relative">
+                                        <SmartNumberInput 
+                                            placeholder="Percentage (%)" 
+                                            className="h-10 text-sm pr-8" 
+                                            min={0}
+                                            max={100}
+                                            value={discount === 0 ? undefined : discount}
+                                            onChange={(val: number | undefined) => {
+                                                setDiscount(val || 0)
+                                                setDiscountFixedAmount(0)
+                                            }}
+                                        />
+                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">%</span>
+                                    </div>
+                                    <div className="relative">
+                                        <SmartNumberInput 
+                                            placeholder="Fixed (Tk)" 
+                                            className="h-10 text-sm pr-8" 
+                                            min={0}
+                                            value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
+                                            onChange={(val: number | undefined) => {
+                                                setDiscountFixedAmount(val || 0)
+                                                setDiscount(0)
+                                            }}
+                                        />
+                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">Tk</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Drawer: Payment Details */}
+                            <div className="space-y-4 pt-4 border-t">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Method</Label>
+                                        <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                            <SelectTrigger className="h-10 text-sm">
+                                                <SelectValue placeholder="Method" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {paymentMethods.map(method => (
+                                                    <SelectItem key={method} value={method}>
+                                                        <span className="capitalize">{method}</span>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</Label>
+                                        <SmartNumberInput 
+                                            value={paidAmount}
+                                            onFocus={(e: any) => e.target.select()} 
+                                            onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                                            className="h-10 text-base font-bold border-primary/20 text-primary"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</Label>
+                                    <div className="h-10 flex items-center px-3 bg-muted/30 rounded border text-sm font-medium">
+                                        {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
+                                            <span className="text-destructive font-bold italic">No account configured for {paymentMethod}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Drawer Footer: Totals and Completion */}
+                        <div className="p-4 border-t bg-foreground text-background">
+                            <div className="space-y-1 mb-4">
+                                <div className="flex justify-between text-xs opacity-70">
+                                    <span>Total Payable</span>
+                                    <span className="font-bold">{formatCurrency(total)}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className={cn(
+                                        "text-xs font-black uppercase tracking-widest",
+                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                    )}>
+                                        {paidAmount >= (total - 0.01) ? "Return Change" : "Balance Due"}
+                                    </span>
+                                    <span className={cn(
+                                        "text-2xl font-black",
+                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                    )}>
+                                        {formatCurrency(Math.abs(paidAmount - total))}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <Button 
+                                className={cn(
+                                    "w-full h-14 text-xl font-black shadow-xl transition-all active:scale-[0.98]",
+                                    paidAmount < (total - 0.01) && total > 0 
+                                        ? "bg-rose-500 hover:bg-rose-600 text-white" 
+                                        : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                )}
+                                onClick={() => {
+                                    onFinalizeCheckout()
+                                    setIsCheckoutOpen(false)
+                                }}
+                            >
+                                <CreditCard className="mr-3 h-6 w-6" />
+                                COMPLETE PAYMENT
+                            </Button>
+                        </div>
+                    </SheetContent>
+                </Sheet>
             </div>
         </div>
     )
