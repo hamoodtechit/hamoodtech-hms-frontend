@@ -296,6 +296,14 @@ export interface AddOpeningStockDto {
   note?: string;
 }
 
+export interface UpdateOpeningStockDto {
+  quantity?: number;
+  unitPrice?: number;
+  mrp?: number;
+  expiryDate?: string;
+  note?: string;
+}
+
 export type PharmacyEntityType = 'generics' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
 
 export interface Patient {

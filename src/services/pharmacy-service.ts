@@ -35,6 +35,7 @@ import {
     Supplier,
     SupplierListResponse,
     SupplierPayload,
+    UpdateOpeningStockDto,
     UpdateSalePayload
 } from '@/types/pharmacy';
 
@@ -158,6 +159,10 @@ export const pharmacyService = {
 
   addOpeningStock: async (data: AddOpeningStockDto): Promise<void> => {
     await api.post('/pharmacy/stocks/opening', data);
+  },
+
+  updateOpeningStock: async (id: string, data: UpdateOpeningStockDto): Promise<void> => {
+    await api.patch(`/pharmacy/stocks/opening/${id}`, data);
   },
 
   // Branch APIs

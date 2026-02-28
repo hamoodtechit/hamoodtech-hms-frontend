@@ -1,5 +1,6 @@
 "use client"
 
+import { EditOpeningStockDialog } from "@/app/[locale]/(dashboard)/pharmacy/inventory/medicines/components/edit-opening-stock-dialog"
 import { StockAdjustmentDialog } from "@/app/[locale]/(dashboard)/pharmacy/inventory/medicines/components/stock-adjustment-dialog"
 import { StockTransferDialog } from "@/app/[locale]/(dashboard)/pharmacy/inventory/medicines/components/stock-transfer-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,7 @@ import {
 import { pharmacyService } from "@/services/pharmacy-service"
 import { Stock } from "@/types/pharmacy"
 import { format } from "date-fns"
-import { ArrowRightLeft, Loader2, MoreHorizontal, Settings2 } from "lucide-react"
+import { ArrowRightLeft, Edit2, Loader2, MoreHorizontal, Settings2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -37,6 +38,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
     // Dialog States
     const [adjustmentOpen, setAdjustmentOpen] = useState(false)
     const [transferOpen, setTransferOpen] = useState(false)
+    const [editOpen, setEditOpen] = useState(false)
     const [selectedStock, setSelectedStock] = useState<Stock | null>(null)
 
     const loadBatches = async () => {
@@ -45,6 +47,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
             // We fetch the full medicine details to get the updated stocks
             // because the /pharmacy/stocks endpoint might be unreliable or require different params
             const response = await pharmacyService.getMedicine(itemId)
+            console.log("Batch List Data:", response.data.stocks)
             setStocks(response.data.stocks || [])
         } catch (error) {
             toast.error("Failed to load batch data")
@@ -55,6 +58,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
 
     useEffect(() => {
         if (initialStocks) {
+           
             setStocks(initialStocks)
             setLoading(false)
         } else {
@@ -71,7 +75,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
                             <TableHead>Batch #</TableHead>
                             <TableHead>Expiry Date</TableHead>
                             <TableHead>Quantity</TableHead>
-                            <TableHead>Branch</TableHead>
+                            
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -98,7 +102,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell className="font-bold">{batch.quantity} {batch.unit}</TableCell>
-                                    <TableCell>{batch.branch?.name || 'Local Store'}</TableCell>
+                                    
                                     <TableCell>
                                          {isExpired ? (
                                             <Badge variant="destructive">Expired</Badge>
@@ -124,13 +128,21 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
                                                 >
                                                     <Settings2 className="mr-2 h-4 w-4" /> Adjust Stock
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
+                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setSelectedStock(batch)
                                                         setTransferOpen(true)
                                                     }}
                                                 >
                                                     <ArrowRightLeft className="mr-2 h-4 w-4" /> Transfer Stock
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setSelectedStock(batch)
+                                                        setEditOpen(true)
+                                                    }}
+                                                >
+                                                    <Edit2 className="mr-2 h-4 w-4" /> Edit Record
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -164,6 +176,13 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
                onOpenChange={setTransferOpen}
                onSuccess={loadBatches}
                stock={selectedStock}
+            />
+
+            <EditOpeningStockDialog 
+               open={editOpen}
+               onOpenChange={setEditOpen}
+               stock={selectedStock}
+               onSuccess={loadBatches}
             />
         </div>
     )
