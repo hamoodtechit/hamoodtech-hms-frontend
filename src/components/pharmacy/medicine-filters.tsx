@@ -72,6 +72,14 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
     const [openGen, setOpenGen] = useState(false)
     const [openGrp, setOpenGrp] = useState(false)
     const [openMfg, setOpenMfg] = useState(false)
+    
+    // Track selected labels for searchable dropdowns to handle label disappearance on search-clear
+    const [selectedLabels, setSelectedLabels] = useState<Record<string, string>>({
+        category: "",
+        generic: "",
+        group: "",
+        manufacturer: ""
+    })
 
     const handleFieldChange = (field: keyof MedicineFilterValues, value: any) => {
         onChange({ ...values, [field]: value === 'all' ? undefined : value })
@@ -155,7 +163,7 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                 className="w-full h-9 justify-between text-xs font-normal"
                             >
                                 {values.categoryId 
-                                    ? categories.find(c => c.id === values.categoryId)?.name || "Category Selected" 
+                                    ? (categories.find(c => c.id === values.categoryId)?.name || selectedLabels.category || "Category Selected") 
                                     : "All Categories"}
                                 <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                             </Button>
@@ -192,7 +200,9 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                                         value={c.id}
                                                         onSelect={() => {
                                                             handleFieldChange('categoryId', c.id)
+                                                            setSelectedLabels(prev => ({ ...prev, category: c.name }))
                                                             setOpenCat(false)
+                                                            setCatSearch("")
                                                         }}
                                                     >
                                                         <Check className={cn("mr-2 h-3 w-3", values.categoryId === c.id ? "opacity-100" : "opacity-0")} />
@@ -218,7 +228,7 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                 className="w-full h-9 justify-between text-xs font-normal"
                             >
                                 {values.genericId 
-                                    ? generics.find(g => g.id === values.genericId)?.name || "Generic Selected" 
+                                    ? (generics.find(g => g.id === values.genericId)?.name || selectedLabels.generic || "Generic Selected") 
                                     : "All Generics"}
                                 <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                             </Button>
@@ -255,7 +265,9 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                                         value={g.id}
                                                         onSelect={() => {
                                                             handleFieldChange('genericId', g.id)
+                                                            setSelectedLabels(prev => ({ ...prev, generic: g.name }))
                                                             setOpenGen(false)
+                                                            setGenSearch("")
                                                         }}
                                                     >
                                                         <Check className={cn("mr-2 h-3 w-3", values.genericId === g.id ? "opacity-100" : "opacity-0")} />
@@ -281,7 +293,7 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                 className="w-full h-9 justify-between text-xs font-normal"
                             >
                                 {values.groupId 
-                                    ? groups.find(g => g.id === values.groupId)?.name || "Group Selected" 
+                                    ? (groups.find(g => g.id === values.groupId)?.name || selectedLabels.group || "Group Selected") 
                                     : "All Groups"}
                                 <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                             </Button>
@@ -318,7 +330,9 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                                         value={g.id}
                                                         onSelect={() => {
                                                             handleFieldChange('groupId', g.id)
+                                                            setSelectedLabels(prev => ({ ...prev, group: g.name }))
                                                             setOpenGrp(false)
+                                                            setGrpSearch("")
                                                         }}
                                                     >
                                                         <Check className={cn("mr-2 h-3 w-3", values.groupId === g.id ? "opacity-100" : "opacity-0")} />
@@ -344,7 +358,7 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                 className="w-full h-9 justify-between text-xs font-normal"
                             >
                                 {values.medicineManufacturerId 
-                                    ? manufacturers.find(m => m.id === values.medicineManufacturerId)?.name || "Manufacturer Selected" 
+                                    ? (manufacturers.find(m => m.id === values.medicineManufacturerId)?.name || selectedLabels.manufacturer || "Manufacturer Selected") 
                                     : "All Manufacturers"}
                                 <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                             </Button>
@@ -381,7 +395,9 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                                                         value={m.id}
                                                         onSelect={() => {
                                                             handleFieldChange('medicineManufacturerId', m.id)
+                                                            setSelectedLabels(prev => ({ ...prev, manufacturer: m.name }))
                                                             setOpenMfg(false)
+                                                            setMfgSearch("")
                                                         }}
                                                     >
                                                         <Check className={cn("mr-2 h-3 w-3", values.medicineManufacturerId === m.id ? "opacity-100" : "opacity-0")} />

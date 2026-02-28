@@ -77,6 +77,7 @@ export function CreateOrderDialog() {
   // Create Supplier Dialog State
   const [createSupplierOpen, setCreateSupplierOpen] = useState(false)
   const [status, setStatus] = useState<'pending' | 'completed'>('pending')
+  const [selectedSupplierName, setSelectedSupplierName] = useState("")
 
   useEffect(() => {
     fetchSettings()
@@ -229,7 +230,7 @@ export function CreateOrderDialog() {
                                     className="flex-1 justify-between h-10"
                                 >
                                     {selectedSupplier
-                                        ? suppliers.find((supplier) => supplier.id === selectedSupplier)?.name
+                                        ? (suppliers.find((supplier) => supplier.id === selectedSupplier)?.name || selectedSupplierName)
                                         : "Select supplier..."}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -256,7 +257,9 @@ export function CreateOrderDialog() {
                                                             value={supplier.id}
                                                             onSelect={() => {
                                                                 setSelectedSupplier(supplier.id)
+                                                                setSelectedSupplierName(supplier.name)
                                                                 setOpenSupplierCombobox(false)
+                                                                setSupplierSearch("")
                                                             }}
                                                         >
                                                             <Check

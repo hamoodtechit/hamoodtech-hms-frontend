@@ -294,7 +294,7 @@ export default function POSPage() {
     addToCart({
       id: medicine.id,
       name: medicine.name,
-      price: Number(medicine.salePrice),
+      price: activeBatch?.unitPrice ? Number(activeBatch.unitPrice) : Number(medicine.salePrice),
       quantity: 1,
       stock: itemStock,
       batchNumber: activeBatch?.batchNumber,
@@ -838,7 +838,8 @@ export default function POSPage() {
                     {filteredProducts.map((product, index) => {
                         const cartItem = cart.find(item => item.id === product.id)
                         const quantity = cartItem ? cartItem.quantity : 0
-                        const salePrice = Number(product.salePrice)
+                        const activeBatch = product.stocks?.find(s => s.quantity > 0)
+                        const salePrice = activeBatch?.unitPrice ? Number(activeBatch.unitPrice) : Number(product.salePrice)
                         const colorClass = getGenericColor(product.genericName || '')
                         return (
                         <Card 

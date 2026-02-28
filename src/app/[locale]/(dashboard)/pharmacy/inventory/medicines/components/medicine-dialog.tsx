@@ -2,27 +2,27 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
 } from "@/components/ui/command"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
@@ -156,6 +156,12 @@ export function MedicineDialog({
           batchNumber: undefined,
           expiryDate: undefined
         })
+        setSelectedLabels({
+          generic: medicineToEdit.generic?.name || "",
+          category: medicineToEdit.category?.name || "",
+          unit: medicineToEdit.medicineUnit?.name || "",
+          manufacturer: medicineToEdit.medicineManufacturer?.name || ""
+        })
       } else {
         setFormData({
           name: "",
@@ -181,6 +187,12 @@ export function MedicineDialog({
           batchNumber: "",
           expiryDate: ""
         })
+        setSelectedLabels({
+          generic: "",
+          category: "",
+          unit: "",
+          manufacturer: ""
+        })
       }
     }
   }, [open, medicineToEdit])
@@ -200,6 +212,16 @@ export function MedicineDialog({
   const [quickAddTitle, setQuickAddTitle] = useState("")
   const [manufacturerSearchOpen, setManufacturerSearchOpen] = useState(false)
   const [genericSearchOpen, setGenericSearchOpen] = useState(false)
+  const [categorySearchOpen, setCategorySearchOpen] = useState(false)
+  const [unitSearchOpen, setUnitSearchOpen] = useState(false)
+
+  // Track selected labels for searchable dropdowns to handle label disappearance on search-clear
+  const [selectedLabels, setSelectedLabels] = useState<Record<string, string>>({
+    generic: "",
+    category: "",
+    unit: "",
+    manufacturer: ""
+  })
 
   const openQuickAdd = (type: PharmacyEntityType, title: string) => {
     setQuickAddType(type)
@@ -356,7 +378,7 @@ export function MedicineDialog({
                         className="w-full justify-between font-normal"
                       >
                         {formData.genericId
-                          ? generics.find((g) => g.id === formData.genericId)?.name
+                          ? (generics.find((g) => g.id === formData.genericId)?.name || selectedLabels.generic)
                           : "Select Generic..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -401,6 +423,7 @@ export function MedicineDialog({
                                     value={g.name}
                                     onSelect={() => {
                                       handleInputChange('genericId', g.id)
+                                      setSelectedLabels(prev => ({ ...prev, generic: g.name }))
                                       setGenericSearchOpen(false)
                                       setGenericSearch("") // Reset search on select
                                     }}
@@ -439,7 +462,7 @@ export function MedicineDialog({
                 {/* Category */}
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <Popover>
+                  <Popover open={categorySearchOpen} onOpenChange={setCategorySearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -447,7 +470,7 @@ export function MedicineDialog({
                         className="w-full justify-between font-normal"
                       >
                         {formData.categoryId
-                          ? categories.find((c) => c.id === formData.categoryId)?.name
+                          ? (categories.find((c) => c.id === formData.categoryId)?.name || selectedLabels.category)
                           : "Select Category"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -488,6 +511,8 @@ export function MedicineDialog({
                                     value={c.name}
                                     onSelect={() => {
                                       handleInputChange('categoryId', c.id)
+                                      setSelectedLabels(prev => ({ ...prev, category: c.name }))
+                                      setCategorySearchOpen(false)
                                       setCategorySearch("")
                                     }}
                                   >
@@ -507,7 +532,7 @@ export function MedicineDialog({
                 {/* Unit */}
                 <div className="space-y-2">
                   <Label>Unit</Label>
-                  <Popover>
+                  <Popover open={unitSearchOpen} onOpenChange={setUnitSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -515,7 +540,7 @@ export function MedicineDialog({
                         className="w-full justify-between font-normal"
                       >
                         {formData.medicineUnitId
-                          ? units.find((u) => u.id === formData.medicineUnitId)?.name
+                          ? (units.find((u) => u.id === formData.medicineUnitId)?.name || selectedLabels.unit)
                           : "Select Unit Type"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -556,6 +581,8 @@ export function MedicineDialog({
                                     value={u.name}
                                     onSelect={() => {
                                       handleInputChange('medicineUnitId', u.id)
+                                      setSelectedLabels(prev => ({ ...prev, unit: u.name }))
+                                      setUnitSearchOpen(false)
                                       setUnitSearch("")
                                     }}
                                   >
@@ -603,7 +630,7 @@ export function MedicineDialog({
                         className="w-full justify-between font-normal"
                       >
                         {formData.medicineManufacturerId
-                          ? manufacturers.find((m) => m.id === formData.medicineManufacturerId)?.name
+                          ? (manufacturers.find((m) => m.id === formData.medicineManufacturerId)?.name || selectedLabels.manufacturer)
                           : "Select Manufacturer..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -647,6 +674,7 @@ export function MedicineDialog({
                                     value={m.name}
                                     onSelect={() => {
                                       handleInputChange('medicineManufacturerId', m.id)
+                                      setSelectedLabels(prev => ({ ...prev, manufacturer: m.name }))
                                       setManufacturerSearchOpen(false)
                                       setManufacturerSearch("")
                                     }}
