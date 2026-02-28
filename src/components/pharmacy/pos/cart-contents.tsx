@@ -3,6 +3,11 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -18,7 +23,7 @@ import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
-import { CreditCard, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
+import { CalendarDays, Check, ChevronDown, CreditCard, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { PatientSearch } from "./patient-search"
 
@@ -60,7 +65,7 @@ export function CartContents({
     setIsCheckoutOpen
 }: CartContentsProps) {
     
-    const { cart, updateQuantity, removeFromCart } = usePosStore()
+    const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()
     const { pharmacy, finance } = useSettingsStore()
     const { formatCurrency } = useCurrency()
     const vatPercentage = pharmacy?.vatPercentage || 0
@@ -118,6 +123,53 @@ export function CartContents({
                                                 {item.dosageForm && <span className="text-[10px] font-normal text-muted-foreground ml-1">({item.dosageForm})</span>}
                                             </p>
                                             <p className="text-[11px] text-muted-foreground font-medium">{formatCurrency(item.price)}</p>
+                                            
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <button className="text-[10px] text-muted-foreground flex items-center hover:text-primary transition-colors mt-0.5 group/batch">
+                                                        <span className="opacity-70">Batch:</span> 
+                                                        <span className="font-bold ml-1 text-foreground/80 group-hover/batch:text-primary">{item.batchNumber || 'N/A'}</span>
+                                                        <ChevronDown className="h-2.5 w-2.5 ml-0.5 opacity-50" />
+                                                    </button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[180px] p-0" align="start">
+                                                    <div className="p-2 border-b bg-muted/20">
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Select Batch</p>
+                                                    </div>
+                                                    <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+                                                        {item.stocks?.filter(s => Number(s.quantity) > 0).map((s) => (
+                                                            <button
+                                                                key={s.batchNumber}
+                                                                className={cn(
+                                                                    "w-full text-left p-2 text-xs flex flex-col gap-0.5 hover:bg-muted transition-colors border-b last:border-0 relative",
+                                                                    s.batchNumber === item.batchNumber && "bg-primary/5 border-l-2 border-l-primary"
+                                                                )}
+                                                                onClick={() => switchBatch(item.id, item.batchNumber || '', s)}
+                                                            >
+                                                                <div className="flex justify-between items-center pr-4">
+                                                                    <span className="font-bold">{s.batchNumber}</span>
+                                                                    {s.batchNumber === item.batchNumber && <Check className="h-3 w-3 text-primary absolute right-2 top-2" />}
+                                                                </div>
+                                                                <div className="flex justify-between text-[9px] text-muted-foreground">
+                                                                    <span className="flex items-center gap-0.5">
+                                                                        <CalendarDays className="h-2.5 w-2.5" />
+                                                                        {new Date(s.expiryDate).toLocaleDateString()}
+                                                                    </span>
+                                                                    <span className="font-bold text-foreground/70">{s.quantity} left</span>
+                                                                </div>
+                                                                <div className="text-[10px] font-black text-primary">
+                                                                    {formatCurrency(Number(s.unitPrice))}
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                        {(!item.stocks || item.stocks.filter(s => Number(s.quantity) > 0).length === 0) && (
+                                                            <div className="p-4 text-center text-[10px] text-muted-foreground italic">
+                                                                No other batches available
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
                                         </div>
                                         <div className="text-right shrink-0">
                                             {itemDiscountAmount > 0 && (

@@ -1,4 +1,4 @@
-import { Branch, CashRegister, PaymentMethod } from '@/types/pharmacy'
+import { Branch, CashRegister, PaymentMethod, Stock } from '@/types/pharmacy'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
@@ -16,6 +16,7 @@ export interface Product {
     discountAmount?: number
     dosageForm?: string
     stock?: number
+    stocks?: Stock[]
 }
 
 export interface Transaction {
@@ -47,6 +48,7 @@ interface PosState {
     removeFromCart: (id: string, batchNumber?: string) => void
     updateQuantity: (id: string, delta: number, batchNumber?: string) => void
     setQuantity: (id: string, quantity: number, batchNumber?: string) => void
+    switchBatch: (id: string, oldBatchNumber: string, newBatch: Stock) => void
     clearCart: () => void
     addTransaction: (transaction: Transaction) => void
     refundTransaction: (id: string) => void
@@ -114,6 +116,52 @@ export const usePosStore = create<PosState>()(
                     return item
                 })
             })),
+            switchBatch: (id, oldBatchNumber, newBatch) => set((state) => {
+                // Find the item to switch
+                const itemToSwitch = state.cart.find(item => item.id === id && item.batchNumber === oldBatchNumber)
+                if (!itemToSwitch) return state
+
+                // Check if an item with the NEW batch already exists in cart
+                const targetExisting = state.cart.find(item => item.id === id && item.batchNumber === newBatch.batchNumber)
+
+                if (targetExisting) {
+                    // Merge quantities if they are the same medicine but different entries
+                    // Ensure we don't exceed the new batch's stock
+                    const combinedQuantity = Math.min(itemToSwitch.quantity + targetExisting.quantity, (newBatch.quantity as number) || 0)
+                    
+                    return {
+                        cart: state.cart
+                            .filter(item => !(item.id === id && item.batchNumber === oldBatchNumber)) // Remove the old entry
+                            .map(item => 
+                                (item.id === id && item.batchNumber === newBatch.batchNumber)
+                                    ? { 
+                                        ...item, 
+                                        quantity: combinedQuantity,
+                                        price: Number(newBatch.unitPrice),
+                                        stock: Number(newBatch.quantity),
+                                        expiryDate: newBatch.expiryDate
+                                      }
+                                    : item
+                            )
+                    }
+                }
+
+                // Otherwise just update the specific item
+                return {
+                    cart: state.cart.map((item) => 
+                        (item.id === id && item.batchNumber === oldBatchNumber)
+                            ? { 
+                                ...item, 
+                                batchNumber: newBatch.batchNumber,
+                                expiryDate: newBatch.expiryDate,
+                                price: Number(newBatch.unitPrice),
+                                stock: Number(newBatch.quantity),
+                                quantity: Math.min(item.quantity, Number(newBatch.quantity))
+                              }
+                            : item
+                    )
+                }
+            }),
             clearCart: () => set({ cart: [] }),
             addTransaction: (transaction) => set((state) => ({
                 transactions: [transaction, ...state.transactions]
