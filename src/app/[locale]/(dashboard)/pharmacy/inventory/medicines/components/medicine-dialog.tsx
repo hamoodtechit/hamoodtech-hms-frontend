@@ -2,27 +2,27 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
@@ -235,13 +235,18 @@ export function MedicineDialog({
       return
     }
 
-    if (formData.openingStock && formData.openingStock > 0 && !formData.batchNumber) {
-      toast.error("Batch number is required for opening stock")
+    if (formData.openingStock && formData.openingStock > 0 && (!formData.batchNumber || !formData.expiryDate)) {
+      toast.error("Batch number and Expiry date are required for opening stock")
       return
     }
 
     if (formData.salePrice && formData.mrp && formData.salePrice > formData.mrp) {
       toast.error("Sale price cannot be greater than MRP")
+      return
+    }
+
+    if (formData.purchasePrice && formData.mrp && Number(formData.purchasePrice) > Number(formData.mrp)) {
+      toast.error("Purchase Price cannot be greater than MRP")
       return
     }
 

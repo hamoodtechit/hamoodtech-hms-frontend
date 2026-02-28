@@ -3,36 +3,36 @@
 import { BatchList } from "@/components/pharmacy/inventory/batch-list"
 import { MedicineFilters, MedicineFilterValues } from "@/components/pharmacy/medicine-filters"
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useDeleteMedicine, useMedicines } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -41,17 +41,17 @@ import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import { Medicine } from "@/types/pharmacy"
 import {
-    ArrowLeft,
-    Edit,
-    Eye,
-    Filter,
-    Loader2,
-    MoreHorizontal,
-    Plus,
-    RefreshCw,
-    Search,
-    Trash2,
-    Upload
+  ArrowLeft,
+  Edit,
+  Eye,
+  Filter,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Upload
 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -276,7 +276,7 @@ export default function MedicinesPage() {
                       <TableCell className="text-center">
                         <div className="flex flex-col">
                            <span className="font-bold text-emerald-600">
-                             {formatCurrency(medicine.stocks?.find(s => Number(s.quantity) > 0)?.unitPrice || medicine.salePrice)}
+                             {formatCurrency(medicine.salePrice)}
                            </span>
                            <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
                         </div>

@@ -67,9 +67,10 @@ export function OpeningStockDialog({ open, onOpenChange, medicine, branchId }: O
     const units = unitsRes?.data || []
 
     useEffect(() => {
-        if (medicine && open) {
+        if (open && medicine) {
+            console.log("Opening Stock Medicine Data:", medicine)
             setUnit(medicine.unit || "")
-            setUnitPrice(Number(medicine.purchasePrice) || 0)
+            setUnitPrice(Number(medicine.salePrice) || 0)
             setMrp(Number(medicine.mrp) || 0)
             setRackNumber(medicine.rackNumber || "")
         }
@@ -79,7 +80,12 @@ export function OpeningStockDialog({ open, onOpenChange, medicine, branchId }: O
         if (!medicine || !branchId) return
 
         if (!batchNumber || !expiryDate || quantity <= 0 || unitPrice <= 0 || mrp <= 0) {
-            toast.error("Please fill in all required fields: Batch, Expiry, Quantity, Buy Price, and MRP (must be > 0)")
+            toast.error("Please fill in all required fields: Batch, Expiry, Quantity, Unit Price, and MRP (must be > 0)")
+            return
+        }
+
+        if (unitPrice > mrp) {
+            toast.error("Unit Price cannot be greater than MRP (Unit)")
             return
         }
 
@@ -209,7 +215,7 @@ export function OpeningStockDialog({ open, onOpenChange, medicine, branchId }: O
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="unitPrice">Buy Price *</Label>
+                            <Label htmlFor="unitPrice">Unit Price *</Label>
                             <SmartNumberInput
                                 id="unitPrice"
                                 value={unitPrice}
