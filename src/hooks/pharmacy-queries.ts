@@ -1,5 +1,5 @@
 import { pharmacyService } from "@/services/pharmacy-service";
-import { Medicine, PharmacyEntityType, PharmacyResponse } from "@/types/pharmacy";
+import { Medicine, PharmacyEntityType, PharmacyResponse, UpdateOpeningStockDto } from "@/types/pharmacy";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const PHARMACY_KEYS = {
@@ -283,6 +283,16 @@ export function useAddOpeningStock() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => pharmacyService.addOpeningStock(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
+    },
+  });
+}
+
+export function useUpdateOpeningStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateOpeningStockDto }) => pharmacyService.updateOpeningStock(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
     },
