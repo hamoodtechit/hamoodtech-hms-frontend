@@ -275,7 +275,9 @@ export default function MedicinesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-col">
-                           <span className="font-bold text-emerald-600">{formatCurrency(medicine.salePrice)}</span>
+                           <span className="font-bold text-emerald-600">
+                             {formatCurrency(medicine.stocks?.find(s => Number(s.quantity) > 0)?.unitPrice || medicine.salePrice)}
+                           </span>
                            <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
                         </div>
                       </TableCell>
