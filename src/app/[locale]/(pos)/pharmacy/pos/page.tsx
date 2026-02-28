@@ -301,7 +301,8 @@ export default function POSPage() {
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
       category: medicine.category?.name || 'Uncategorized',
-      dosageForm: medicine.dosageForm
+      dosageForm: medicine.dosageForm,
+      stocks: medicine.stocks
     } as any)
 
     // Focus special ID for newly added item quantity
@@ -840,12 +841,14 @@ export default function POSPage() {
                         const quantity = cartItem ? cartItem.quantity : 0
                         const activeBatch = product.stocks?.find(s => s.quantity > 0)
                         const salePrice = activeBatch?.unitPrice ? Number(activeBatch.unitPrice) : Number(product.salePrice)
+                        const isOutOfStock = getStock(product) <= 0
                         const colorClass = getGenericColor(product.genericName || '')
                         return (
                         <Card 
                             key={product.id} 
                             className={`cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col h-[110px] sm:h-[120px] relative ${
-                                quantity > 0 ? 'border-primary ring-1 ring-primary/20' : 
+                                quantity > 0 ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.02]' : 
+                                isOutOfStock ? 'bg-muted/50 border-destructive/30 border-dashed opacity-80' :
                                 index === selectedIndex && searchQuery.trim() !== "" ? 'border-primary ring-2 ring-primary/50' : colorClass
                             }`}
                             onClick={() => handleAddToCart(product)}
@@ -856,9 +859,16 @@ export default function POSPage() {
                                     {/* Absolute Badges - No height impact */}
                                     <div className="absolute top-1.5 left-1.5 right-1.5 flex justify-between items-start pointer-events-none z-10">
                                         {product.category?.name ? (
-                                            <Badge variant="secondary" className="text-[8px] sm:text-[9px] font-medium bg-background/80 backdrop-blur-sm px-1 h-3.5 border-none shadow-sm">
-                                                {product.category.name}
-                                            </Badge>
+                                            <div className="flex flex-col gap-1 items-start">
+                                                <Badge variant="secondary" className="text-[8px] sm:text-[9px] font-medium bg-background/80 backdrop-blur-sm px-1 h-3.5 border-none shadow-sm">
+                                                    {product.category.name}
+                                                </Badge>
+                                                {product.stocks && product.stocks.filter(s => Number(s.quantity) > 0).length > 1 && (
+                                                    <Badge variant="outline" className="text-[7px] font-bold px-1 h-3 border-primary/30 bg-primary/10 text-primary uppercase tracking-tighter shadow-sm">
+                                                        Multi-Batch
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         ) : <div />}
                                         {quantity > 0 && (
                                             <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[9px] shadow-sm animate-in zoom-in px-1 h-3.5 ml-auto">
@@ -883,18 +893,21 @@ export default function POSPage() {
                                         </div>
                                         
                                         <div className="flex items-end justify-between mt-auto">
-                                            <span className="font-bold text-xs sm:text-sm text-primary leading-none">
+                                            <span className={`font-bold text-xs sm:text-sm leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>
                                                 {formatCurrency(salePrice)}
                                             </span>
-                                            <span className="text-[8px] sm:text-[9px] text-muted-foreground shrink-0">
-                                                {getStock(product)} left
+                                            <span className={`text-[8px] sm:text-[9px] shrink-0 ${isOutOfStock ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                                                {isOutOfStock ? 'OUT OF STOCK' : `${getStock(product)} left`}
                                             </span>
                                         </div>
                                     </CardContent>
                                 </>
                             ) : (
                                 // LIST VIEW RENDER
-                                <div className={`p-1 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${quantity > 0 ? 'bg-primary/5' : ''}`}>
+                                <div className={`p-1 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
+                                    quantity > 0 ? 'bg-primary/5' : 
+                                    isOutOfStock ? 'bg-destructive/[0.08] dark:bg-destructive/[0.12]' : ''
+                                }`}>
                                     <div className={`h-6 w-6 rounded flex items-center justify-center shrink-0 border shadow-xs ${colorClass}`}>
                                         <Pill className="h-3 w-3 text-muted-foreground/70" />
                                     </div>
@@ -909,15 +922,22 @@ export default function POSPage() {
                                         </div>
                                         <div className="flex items-center text-[9px] text-muted-foreground mt-0.5">
                                             <span className="truncate max-w-[150px]">{product.genericName}</span>
-                                            {getStock(product) <= 10 && (
+                                            {product.stocks && product.stocks.filter(s => Number(s.quantity) > 0).length > 1 && (
+                                                <Badge variant="outline" className="ml-1 text-[7px] px-0.5 h-3 border-primary/20 bg-primary/5 text-primary uppercase font-bold leading-none">MB</Badge>
+                                            )}
+                                            {isOutOfStock ? (
+                                                <span className="ml-1.5 text-destructive font-bold uppercase text-[8px]">Out of Stock</span>
+                                            ) : getStock(product) <= 10 && (
                                                 <span className="ml-1.5 text-amber-600 font-bold uppercase text-[8px]">{getStock(product)} left</span>
                                             )}
                                         </div>
                                     </div>
     
                                     <div className="text-right shrink-0 flex flex-col items-end">
-                                        <div className="font-bold text-primary text-xs leading-none">{formatCurrency(salePrice)}</div>
-                                        <div className="text-[8px] text-muted-foreground mt-0.5">{getStock(product)} in stock</div>
+                                        <div className={`font-bold text-xs leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{formatCurrency(salePrice)}</div>
+                                        <div className={`text-[8px] mt-0.5 ${isOutOfStock ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                                            {isOutOfStock ? '0 remaining' : `${getStock(product)} in stock`}
+                                        </div>
                                     </div>
 
                                     {quantity > 0 && (
