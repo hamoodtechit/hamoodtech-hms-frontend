@@ -9,6 +9,7 @@ export interface Appointment {
   serialNumber: string;
   date: string;
   timeSlot: string;
+  fees: string;
   status: AppointmentStatus;
   note?: string;
   createdAt: string;
@@ -70,5 +71,8 @@ export interface AppointmentPaginatedResponse {
 export interface AppointmentDetailsResponse {
   success: boolean;
   message: string;
-  data: Appointment;
+  data: {
+    appointment: Appointment;
+    sale?: any;
+  };
 }

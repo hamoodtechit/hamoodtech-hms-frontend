@@ -22,7 +22,8 @@ import {
     MapPin,
     Phone,
     Stethoscope,
-    User
+    User,
+    Wallet,
 } from "lucide-react"
 
 interface AppointmentDetailsDialogProps {
@@ -33,7 +34,7 @@ interface AppointmentDetailsDialogProps {
 
 export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: AppointmentDetailsDialogProps) {
     const { data: appointmentRes, isLoading } = useAppointment(appointmentId || "")
-    const appointment = appointmentRes?.data
+    const appointment = appointmentRes?.data?.appointment
 
     if (!appointmentId) return null
 
@@ -139,6 +140,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 <Field label="Treating Doctor" value={appointment?.doctor?.name} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
                                 <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
+                                <Field label="Appointment Fees" value={appointment?.fees ? `${appointment.fees} BDT` : "N/A"} icon={Wallet} />
                             </DetailSection>
 
                             {/* Additional Info */}
