@@ -208,10 +208,10 @@ export function TransactionHistory() {
     const sale = tx.original as Sale
     
     // Calculate totals matching ReceiptDialog logic
-    const grossTotal = sale.saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
-    const totalItemDiscount = sale.saleItems.reduce((sum, item) => {
-        const itemSubtotal = Number(item.price) * Number(item.quantity)
-        return sum + (Number(item.discountAmount) || (Number(item.discountPercentage) ? (itemSubtotal * Number(item.discountPercentage)) / 100 : 0))
+    const grossTotal = (sale.saleItems || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0)
+    const totalItemDiscount = (sale.saleItems || []).reduce((sum, item) => {
+        const itemSubtotal = Number(item.price || 0) * Number(item.quantity || 0)
+        return sum + (Number(item.discountAmount || 0) || (Number(item.discountPercentage || 0) ? (itemSubtotal * Number(item.discountPercentage)) / 100 : 0))
     }, 0)
     
     const receiptWindow = window.open('', '_blank', 'width=450,height=600');
@@ -280,18 +280,20 @@ export function TransactionHistory() {
                         </thead>
                         <tbody>
                             ${(sale.saleItems || []).map(item => {
-                                const itemTotal = Number(item.price) * Number(item.quantity)
-                                const itemDisc = Number(item.discountAmount) || (Number(item.discountPercentage) ? (itemTotal * Number(item.discountPercentage)) / 100 : 0)
+                                const price = Number(item.price || 0)
+                                const qty = Number(item.quantity || 0)
+                                const itemTotal = price * qty
+                                const itemDisc = Number(item.discountAmount || 0) || (Number(item.discountPercentage || 0) ? (itemTotal * Number(item.discountPercentage)) / 100 : 0)
                                 const netItemTotal = itemTotal - itemDisc
                                 return `
                                     <tr class="item-row">
                                         <td>
-                                            <span class="bold">${item.itemName}</span>
+                                            <span class="bold">${item.itemName || 'Item'}</span>
                                             ${item.dosageForm ? `<span style="font-size:8px; color:#6b7280"> (${item.dosageForm})</span>` : ''}
                                             ${item.batchNumber ? `<br/><span style="font-size:7px; color:#9ca3af">B: ${item.batchNumber}</span>` : ''}
                                         </td>
-                                        <td class="text-center">${item.quantity}</td>
-                                        <td class="text-right">${Number(item.price).toFixed(2)}</td>
+                                        <td class="text-center">${qty}</td>
+                                        <td class="text-right">${price.toFixed(2)}</td>
                                         <td class="text-right bold">${formatCurrency(netItemTotal)}</td>
                                     </tr>
                                 `
@@ -306,16 +308,16 @@ export function TransactionHistory() {
                             <span>Gross Total</span>
                             <span>${formatCurrency(grossTotal)}</span>
                         </div>
-                        ${(totalItemDiscount + (Number(sale.discountAmount) || 0)) > 0 ? `
+                        ${(totalItemDiscount + (Number(sale.discountAmount || 0))) > 0 ? `
                             <div class="totals-row" style="color:#4b5563">
                                 <span>Total Discount</span>
-                                <span>-${formatCurrency(totalItemDiscount + (Number(sale.discountAmount) || 0))}</span>
+                                <span>-${formatCurrency(totalItemDiscount + (Number(sale.discountAmount || 0)))}</span>
                             </div>
                         ` : ''}
-                        ${Number(sale.taxAmount) > 0 ? `
+                        ${Number(sale.taxAmount || 0) > 0 ? `
                             <div class="totals-row" style="color:#4b5563">
-                                <span>VAT (${sale.taxPercentage}%)</span>
-                                <span>+${formatCurrency(Number(sale.taxAmount))}</span>
+                                <span>VAT (${sale.taxPercentage || 0}%)</span>
+                                <span>+${formatCurrency(Number(sale.taxAmount || 0))}</span>
                             </div>
                         ` : ''}
                         
@@ -323,7 +325,7 @@ export function TransactionHistory() {
                         
                         <div class="totals-row bold" style="font-size:12px">
                             <span>Net Payable</span>
-                            <span>${formatCurrency(Number(sale.netPrice || sale.totalPrice))}</span>
+                            <span>${formatCurrency(Number(sale.netPrice || sale.totalPrice || 0))}</span>
                         </div>
                         
                         <div class="totals-row paid-row">
@@ -331,15 +333,15 @@ export function TransactionHistory() {
                             <span>${formatCurrency(Number(sale.paidAmount || 0))}</span>
                         </div>
 
-                        ${Number(sale.dueAmount) > 0 ? `
+                        ${Number(sale.dueAmount || 0) > 0 ? `
                             <div class="totals-row bold" style="color:#dc2626">
                                 <span>Due Amount</span>
-                                <span>${formatCurrency(Number(sale.dueAmount))}</span>
+                                <span>${formatCurrency(Number(sale.dueAmount || 0))}</span>
                             </div>
                         ` : `
                             <div class="totals-row" style="color:#4b5563">
                                 <span>Change Return</span>
-                                <span>${formatCurrency(Math.max(0, Number(sale.paidAmount || 0) - Number(sale.netPrice || sale.totalPrice)))}</span>
+                                <span>${formatCurrency(Math.max(0, Number(sale.paidAmount || 0) - Number(sale.netPrice || sale.totalPrice || 0)))}</span>
                             </div>
                         `}
                     </div>

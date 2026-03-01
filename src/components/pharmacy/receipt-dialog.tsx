@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -50,8 +50,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               margin: 0 !important; 
               padding: 0 !important; 
               background: white !important;
+              color: black !important;
             }
-            .print\\:hidden, [data-radix-collection-item], [data-slot="dialog-close"] { 
+            .print\\:hidden, [data-slot="dialog-close"] { 
               display: none !important; 
             }
             [data-slot="dialog-content"] {
@@ -64,6 +65,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               border: none !important;
               box-shadow: none !important;
               padding: 0 !important;
+              background: white !important;
             }
             #receipt-content {
               padding: 0mm !important;
@@ -71,6 +73,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               width: 100% !important;
               max-height: none !important;
               overflow: visible !important;
+              display: block !important;
+            }
+            * {
+              color: black !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
           }
         `}} />
@@ -96,12 +104,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-y border-black/20 py-1 leading-tight">
                 <div className="space-y-0.5">
                     <p className="text-black uppercase text-[8px] font-semibold">Patient Details:</p>
-                    <p className="font-bold">{transaction.customerName}</p>
+                    <p className="font-bold">{transaction.customerName || 'Walk-in'}</p>
                 </div>
                 <div className="text-right space-y-0.5">
-                    <p className="font-bold">Invoice #: {transaction.invoiceNumber}</p>
-                    <p className="font-bold">Date: {new Date(transaction.date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
-                    <p className="font-bold uppercase">Mode: {transaction.paymentMethod}</p>
+                    <p className="font-bold">Invoice #: {transaction.invoiceNumber || 'N/A'}</p>
+                    <p className="font-bold">Date: {new Date(transaction.date || new Date()).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
+                    <p className="font-bold uppercase">Mode: {transaction.paymentMethod || 'cash'}</p>
                 </div>
             </div>
 
@@ -116,8 +124,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <div className="col-span-3 text-right">AMT</div>
                 </div>
                 {transaction.items.map((item, idx) => {
-                     const itemTotal = item.price * item.quantity
-                     const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0)
+                     const price = Number(item.price || 0)
+                     const qty = Number(item.quantity || 0)
+                     const itemTotal = price * qty
+                     const itemDisc = Number(item.discountAmount || 0) || (Number(item.discountPercentage || 0) ? (itemTotal * Number(item.discountPercentage)) / 100 : 0)
                      const netItemTotal = itemTotal - itemDisc
                      
                       return (
@@ -128,8 +138,8 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                     {item.dosageForm && <span className="text-[8px] font-normal ml-1">({item.dosageForm})</span>}
                                 </span>
                             </div>
-                            <div className="col-span-1 text-center">{item.quantity}</div>
-                            <div className="col-span-2 text-right">{item.price.toFixed(2)}</div>
+                            <div className="col-span-1 text-center">{qty}</div>
+                            <div className="col-span-2 text-right">{price.toFixed(2)}</div>
                             <div className="col-span-3 text-right font-bold">
                                 {netItemTotal.toFixed(2)}
                             </div>
@@ -146,16 +156,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <span className="text-black">Gross Total</span>
                     <span>{formatCurrency(grossTotal)}</span>
                 </div>
-                {(totalItemDiscount > 0 || (transaction.discountAmount || 0) > 0 || transaction.discount > 0) && (
+                {(totalItemDiscount > 0 || (transaction.discountAmount || 0) > 0 || (transaction.discount || 0) > 0) && (
                     <div className="flex justify-between text-black">
                          <span>Total Discount</span>
-                         <span>-{formatCurrency(totalItemDiscount + (transaction.discountAmount || transaction.discount))}</span>
+                         <span>-{formatCurrency(totalItemDiscount + (transaction.discountAmount || transaction.discount || 0))}</span>
                     </div>
                 )}
-                {transaction.tax > 0 && (
+                {(transaction.tax || 0) > 0 && (
                     <div className="flex justify-between text-black">
-                        <span>VAT ({transaction.taxPercentage}%)</span>
-                        <span>+{formatCurrency(transaction.tax)}</span>
+                        <span>VAT ({transaction.taxPercentage || 0}%)</span>
+                        <span>+{formatCurrency(transaction.tax || 0)}</span>
                     </div>
                 )}
                  
@@ -163,7 +173,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  
                  <div className="flex justify-between text-sm font-bold border-y border-black/40 py-1">
                      <span>Net Payable</span>
-                     <span>{formatCurrency(transaction.total)}</span>
+                     <span>{formatCurrency(transaction.total || 0)}</span>
                  </div>
                  
                  <div className="flex justify-between pt-1 font-bold">
@@ -177,10 +187,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                          <span>{formatCurrency(transaction.dueAmount || 0)}</span>
                       </div>
                  ) : (
-                     <div className="flex justify-between text-black">
+                      <div className="flex justify-between text-black">
                          <span>Change Return</span>
-                         <span>{formatCurrency((transaction.paidAmount || 0) - transaction.total)}</span>
-                     </div>
+                         <span>{formatCurrency(Math.max(0, (transaction.paidAmount || 0) - (transaction.total || 0)))}</span>
+                      </div>
                  )}
             </div>
             
