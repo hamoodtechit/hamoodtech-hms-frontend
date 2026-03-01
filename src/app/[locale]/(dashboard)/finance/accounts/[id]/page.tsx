@@ -1,5 +1,6 @@
 "use client"
 
+import { AccountDialog } from "@/components/finance/account-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,16 +26,19 @@ import {
     History,
     Info,
     Loader2,
+    Settings2,
     Wallet
 } from "lucide-react"
 import { useParams } from "next/navigation"
+import { useState } from "react"
 
 export default function AccountDetailsPage() {
     const params = useParams()
     const id = params.id as string
+    const [editOpen, setEditOpen] = useState(false)
     const { formatCurrency } = useCurrency()
     
-    const { data: response, isLoading, error } = useFinanceAccount(id)
+    const { data: response, isLoading, error, refetch } = useFinanceAccount(id)
     const account = response?.data
 
     if (isLoading) {
@@ -76,11 +80,17 @@ export default function AccountDetailsPage() {
                         <p className="text-muted-foreground">Transaction history and details for {account.name}.</p>
                     </div>
                 </div>
-                {account.isActive ? (
-                    <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
-                ) : (
-                    <Badge variant="destructive">Inactive</Badge>
-                )}
+                <div className="flex items-center gap-2">
+                    {account.isActive ? (
+                        <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
+                    ) : (
+                        <Badge variant="destructive">Inactive</Badge>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                        <Settings2 className="mr-2 h-4 w-4" />
+                        Edit Account
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -207,9 +217,16 @@ export default function AccountDetailsPage() {
                                 ))
                             )}
                         </TableBody>
-                    </Table>
+                     </Table>
                 </CardContent>
             </Card>
+
+            <AccountDialog 
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                account={account}
+                onSuccess={refetch}
+            />
         </div>
     )
 }

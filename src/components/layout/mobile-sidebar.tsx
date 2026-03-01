@@ -9,10 +9,13 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import {
     Activity,
+    CalendarDays,
     LayoutDashboard,
     Menu,
+    Microscope,
     Pill,
     Settings,
+    ShoppingCart,
     Users,
     Wallet
 } from "lucide-react"
@@ -101,7 +104,42 @@ function SidebarBase() {
       color: "text-pink-400", 
       permission: "medicine:read" 
     },
-    // { label: "Appointments",icon: CalendarDays,    href: "/appointments",color: "text-orange-400" },
+    { 
+      label: "Appointments",
+      icon: CalendarDays,    
+      href: "/appointments",
+      color: "text-orange-400",
+      permission: "appointment:read"
+    },
+    { 
+      label: "Diagnostic",
+      icon: Microscope,    
+      href: "/diagnostic",
+      color: "text-blue-400",
+      permission: "diagnostic-test:read"
+    },
+    {
+      label: "Sales",
+      icon: ShoppingCart,
+      color: "text-emerald-500",
+      children: [
+          {
+              label: "POS System",
+              href: "/pharmacy/pos",
+              permission: "sale:create",
+          },
+          {
+              label: "Sale History",
+              href: "/sales",
+              permission: "sale:read",
+          },
+          {
+              label: "Returns",
+              href: "/sales/returns",
+              permission: "sale-return:read",
+          }
+      ]
+    },
     {
         label: "Finance",
         icon: Wallet,

@@ -2,37 +2,37 @@
 
 import { BatchList } from "@/components/pharmacy/inventory/batch-list"
 import { MedicineFilters, MedicineFilterValues } from "@/components/pharmacy/medicine-filters"
+import { FilterPopover } from "@/components/shared/filter-popover"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useDeleteMedicine, useMedicines } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -41,17 +41,16 @@ import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import { Medicine } from "@/types/pharmacy"
 import {
-  ArrowLeft,
-  Edit,
-  Eye,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  Upload
+    ArrowLeft,
+    Edit,
+    Eye,
+    Loader2,
+    MoreHorizontal,
+    Plus,
+    RefreshCw,
+    Search,
+    Trash2,
+    Upload
 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -89,6 +88,7 @@ export default function MedicinesPage() {
     page,
     limit: 10,
     search: debouncedSearch,
+    branchId: activeStoreId || undefined,
     ...filters,
   }
 
@@ -195,24 +195,19 @@ export default function MedicinesPage() {
                   }}
                 />
               </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                        <Filter className="h-4 w-4" />
-                        Filters
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[80vw] sm:w-[500px] md:w-[700px] p-4 shadow-xl" align="end">
-                    <MedicineFilters 
-                        values={filters} 
-                        onChange={(newFilters) => {
-                            setFilters(newFilters)
-                            setPage(1)
-                        }} 
-                        onReset={resetFilters} 
-                    />
-                </PopoverContent>
-              </Popover>
+              <FilterPopover 
+                activeFilterCount={activeFilterCount}
+                onReset={resetFilters}
+              >
+                <MedicineFilters 
+                    values={filters} 
+                    onChange={(newFilters) => {
+                        setFilters(newFilters)
+                        setPage(1)
+                    }} 
+                    onReset={resetFilters} 
+                />
+              </FilterPopover>
             </div>
           </div>
         </CardHeader>
@@ -235,7 +230,7 @@ export default function MedicinesPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <Loader2 className="h-8 w-8 animate-spin" />
                         <span>Fetching medicines...</span>
@@ -244,7 +239,7 @@ export default function MedicinesPage() {
                   </TableRow>
                 ) : medicines.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                       No medicines found matching filters.
                     </TableCell>
                   </TableRow>
@@ -274,17 +269,27 @@ export default function MedicinesPage() {
                         <span className="text-xs font-medium">{medicine.medicineManufacturer?.name || 'N/A'}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex flex-col">
-                           <span className="font-bold text-emerald-600">
-                             {formatCurrency(medicine.salePrice)}
+                        <div className="flex flex-col gap-0.5">
+                           <span className="font-bold text-emerald-600 text-xs" title="Sales Price">
+                             S: {formatCurrency(medicine.salePrice)}
+                           </span>
+                           <span className="text-[10px] text-orange-600 font-semibold" title="Purchase Price">
+                             P: {formatCurrency(medicine.purchasePrice || medicine.unitPrice)}
                            </span>
                            <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                       <TableCell className="text-center">
                         <div className="flex flex-col items-center">
-                           <span className={`text-sm font-bold ${(medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0) <= medicine.reorderLevel ? 'text-destructive' : 'text-primary'}`}>
-                             {medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0}
+                           <span className={`text-sm font-bold ${(() => {
+                              const currentStock = activeStoreId 
+                                ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
+                                : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0);
+                              return currentStock <= medicine.reorderLevel ? 'text-destructive' : 'text-primary';
+                           })()}`}>
+                             {activeStoreId 
+                                ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
+                                : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0)}
                            </span>
                            <span className="text-[10px] text-muted-foreground uppercase">{medicine.unit || 'Units'}</span>
                         </div>

@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { AccountDetailResponse, AccountListResponse, FinanceTransactionListResponse, TransactionQueryParams, WithdrawPayload } from "@/types/finance";
+import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransactionListResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
 
 export const financeService = {
     getAccounts: async (params?: { page?: number; limit?: number; type?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
@@ -9,6 +9,21 @@ export const financeService = {
 
     getAccount: async (id: string): Promise<AccountDetailResponse> => {
         const response = await api.get<AccountDetailResponse>(`/finance/accounts/${id}`);
+        return response.data;
+    },
+
+    createAccount: async (data: CreateAccountPayload): Promise<AccountDetailResponse> => {
+        const response = await api.post<AccountDetailResponse>("/finance/accounts", data);
+        return response.data;
+    },
+
+    updateAccount: async (id: string, data: UpdateAccountPayload): Promise<AccountDetailResponse> => {
+        const response = await api.patch<AccountDetailResponse>(`/finance/accounts/${id}`, data);
+        return response.data;
+    },
+
+    deleteAccount: async (id: string): Promise<{ success: boolean; message: string }> => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/finance/accounts/${id}`);
         return response.data;
     },
 

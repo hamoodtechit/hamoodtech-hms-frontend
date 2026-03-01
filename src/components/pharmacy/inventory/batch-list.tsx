@@ -29,11 +29,16 @@ import { toast } from "sonner"
 interface BatchListProps {
     itemId: string
     initialStocks?: Stock[]
+    branchId?: string
 }
 
-export function BatchList({ itemId, initialStocks }: BatchListProps) {
-    const [stocks, setStocks] = useState<Stock[]>(initialStocks || [])
+export function BatchList({ itemId, initialStocks, branchId }: BatchListProps) {
+    const [allStocks, setAllStocks] = useState<Stock[]>(initialStocks || [])
     const [loading, setLoading] = useState(!initialStocks)
+    
+    const stocks = branchId 
+        ? allStocks.filter(s => s.branchId === branchId) 
+        : allStocks
     
     // Dialog States
     const [adjustmentOpen, setAdjustmentOpen] = useState(false)
@@ -44,11 +49,9 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
     const loadBatches = async () => {
         try {
             setLoading(true)
-            // We fetch the full medicine details to get the updated stocks
-            // because the /pharmacy/stocks endpoint might be unreliable or require different params
             const response = await pharmacyService.getMedicine(itemId)
-            console.log("Batch List Data:", response.data.stocks)
-            setStocks(response.data.stocks || [])
+            console.log("Batch List Data fetched:", response.data.stocks)
+            setAllStocks(response.data.stocks || [])
         } catch (error) {
             toast.error("Failed to load batch data")
         } finally {
@@ -58,8 +61,7 @@ export function BatchList({ itemId, initialStocks }: BatchListProps) {
 
     useEffect(() => {
         if (initialStocks) {
-           
-            setStocks(initialStocks)
+            setAllStocks(initialStocks)
             setLoading(false)
         } else {
             loadBatches()

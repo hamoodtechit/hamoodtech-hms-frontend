@@ -9,11 +9,15 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
+    Briefcase,
+    CalendarDays,
     ChevronLeft,
     ChevronRight,
     LayoutDashboard,
+    Microscope,
     Pill,
     Settings,
+    ShoppingCart,
     Users,
     Wallet
 } from "lucide-react"
@@ -89,19 +93,72 @@ export function Sidebar() {
       color: "text-pink-400",
       module: "pharmacy",
     },
-    // {
-    //   label: t("appointments"),
-    //   icon: CalendarDays,
-    //   href: "/appointments",
-    //   color: "text-orange-400",
-    //   // permission: "appointment:read",
-    // },
+    {
+      label: "Appointments",
+      icon: CalendarDays,
+      href: "/appointments",
+      color: "text-orange-400",
+      module: "appointment",
+    },
+    {
+      label: "Diagnostic",
+      icon: Microscope,
+      href: "/diagnostic",
+      color: "text-blue-400",
+      module: "diagnostic",
+    },
+    {
+      label: "Sales",
+      icon: ShoppingCart,
+      color: "text-emerald-500",
+      module: "sales",
+      children: [
+          {
+              label: "POS System",
+              href: "/pharmacy/pos",
+              permission: "sale:create",
+          },
+          {
+              label: "Sale History",
+              href: "/sales",
+              permission: "sale:read",
+          },
+          {
+              label: "Returns",
+              href: "/sales/returns",
+              permission: "sale-return:read",
+          }
+      ]
+    },
     {
         label: "Finance",
         icon: Wallet,
         href: "/finance",
         color: "text-green-500",
         // permission: "finance:read",
+    },
+    {
+        label: "HR Management",
+        icon: Briefcase,
+        color: "text-orange-500",
+        module: "hr",
+        children: [
+            {
+                label: "Employees",
+                href: "/hr/employees",
+                permission: "employee:read",
+            },
+            {
+                label: "Departments",
+                href: "/hr/departments",
+                permission: "department:read",
+            },
+            {
+                label: "Designations",
+                href: "/hr/designations",
+                permission: "designation:read",
+            }
+        ]
     },
     {
       label: "User Management",

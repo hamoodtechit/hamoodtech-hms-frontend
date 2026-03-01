@@ -1,38 +1,25 @@
 "use client"
 
+import { SearchableSelect } from "@/components/shared/searchable-select"
 import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCreateMedicine, useManufacturers, usePharmacyEntities, useUpdateMedicine } from "@/hooks/pharmacy-queries"
 import { useDebounce } from "@/hooks/use-debounce"
-import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Medicine, MedicinePayload, PharmacyEntityType } from "@/types/pharmacy"
-import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { MasterDataDialog } from "../../../setup/components/master-data-dialog"
@@ -374,81 +361,17 @@ export function MedicineDialog({
                 {/* Generic Name */}
                 <div className="space-y-2">
                   <Label htmlFor="genericId">Generic Name *</Label>
-                  <Popover open={genericSearchOpen} onOpenChange={setGenericSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={genericSearchOpen}
-                        className="w-full justify-between font-normal"
-                      >
-                        {formData.genericId
-                          ? (generics.find((g) => g.id === formData.genericId)?.name || selectedLabels.generic)
-                          : "Select Generic..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command shouldFilter={false}>
-                        {/* + Add New button at the TOP, above search */}
-                        <div className="border-b p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => {
-                              setGenericSearchOpen(false)
-                              openQuickAdd('generics', 'Generic')
-                            }}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Create New Generic
-                          </Button>
-                        </div>
-                        <CommandInput 
-                          placeholder="Search generic..." 
-                          value={genericSearch}
-                          onValueChange={setGenericSearch}
-                        />
-                        <CommandList>
-                          {loadingGenerics ? (
-                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Searching...
-                            </div>
-                          ) : (
-                            <>
-                              <CommandEmpty>
-                                <div className="py-2 px-3 text-sm text-muted-foreground">No generic found.</div>
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {generics.map((g) => (
-                                  <CommandItem
-                                    key={g.id}
-                                    value={g.name}
-                                    onSelect={() => {
-                                      handleInputChange('genericId', g.id)
-                                      setSelectedLabels(prev => ({ ...prev, generic: g.name }))
-                                      setGenericSearchOpen(false)
-                                      setGenericSearch("") // Reset search on select
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        formData.genericId === g.id ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    {g.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SearchableSelect
+                    value={formData.genericId}
+                    onChange={(val) => handleInputChange('genericId', val)}
+                    options={generics.map(g => ({ id: g.id, name: g.name }))}
+                    placeholder="Select Generic..."
+                    loading={loadingGenerics}
+                    onSearchChange={setGenericSearch}
+                    onAddClick={() => openQuickAdd('generics', 'Generic')}
+                    addLabel="Create New Generic"
+                    showAll={false}
+                  />
                 </div>
 
                 {/* Barcode */}
@@ -467,141 +390,33 @@ export function MedicineDialog({
                 {/* Category */}
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <Popover open={categorySearchOpen} onOpenChange={setCategorySearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full justify-between font-normal"
-                      >
-                        {formData.categoryId
-                          ? (categories.find((c) => c.id === formData.categoryId)?.name || selectedLabels.category)
-                          : "Select Category"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command shouldFilter={false}>
-                        <div className="border-b p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => openQuickAdd('categories', 'Category')}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Create New Category
-                          </Button>
-                        </div>
-                        <CommandInput 
-                          placeholder="Search category..." 
-                          value={categorySearch}
-                          onValueChange={setCategorySearch}
-                        />
-                        <CommandList>
-                          {loadingCategories ? (
-                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Searching...
-                            </div>
-                          ) : (
-                            <>
-                              <CommandEmpty>
-                                <div className="py-2 px-3 text-sm text-muted-foreground">No category found.</div>
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {categories.map((c) => (
-                                  <CommandItem
-                                    key={c.id}
-                                    value={c.name}
-                                    onSelect={() => {
-                                      handleInputChange('categoryId', c.id)
-                                      setSelectedLabels(prev => ({ ...prev, category: c.name }))
-                                      setCategorySearchOpen(false)
-                                      setCategorySearch("")
-                                    }}
-                                  >
-                                    <Check className={cn("mr-2 h-4 w-4", formData.categoryId === c.id ? "opacity-100" : "opacity-0")} />
-                                    {c.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SearchableSelect
+                    value={formData.categoryId}
+                    onChange={(val) => handleInputChange('categoryId', val)}
+                    options={categories.map(c => ({ id: c.id, name: c.name }))}
+                    placeholder="Select Category"
+                    loading={loadingCategories}
+                    onSearchChange={setCategorySearch}
+                    onAddClick={() => openQuickAdd('categories', 'Category')}
+                    addLabel="Create New Category"
+                    showAll={false}
+                  />
                 </div>
 
                 {/* Unit */}
                 <div className="space-y-2">
                   <Label>Unit</Label>
-                  <Popover open={unitSearchOpen} onOpenChange={setUnitSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full justify-between font-normal"
-                      >
-                        {formData.medicineUnitId
-                          ? (units.find((u) => u.id === formData.medicineUnitId)?.name || selectedLabels.unit)
-                          : "Select Unit Type"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command shouldFilter={false}>
-                        <div className="border-b p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => openQuickAdd('units', 'Unit')}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Create New Unit
-                          </Button>
-                        </div>
-                        <CommandInput 
-                          placeholder="Search unit..." 
-                          value={unitSearch}
-                          onValueChange={setUnitSearch}
-                        />
-                        <CommandList>
-                          {loadingUnits ? (
-                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Searching...
-                            </div>
-                          ) : (
-                            <>
-                              <CommandEmpty>
-                                <div className="py-2 px-3 text-sm text-muted-foreground">No unit found.</div>
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {units.map((u) => (
-                                  <CommandItem
-                                    key={u.id}
-                                    value={u.name}
-                                    onSelect={() => {
-                                      handleInputChange('medicineUnitId', u.id)
-                                      setSelectedLabels(prev => ({ ...prev, unit: u.name }))
-                                      setUnitSearchOpen(false)
-                                      setUnitSearch("")
-                                    }}
-                                  >
-                                    <Check className={cn("mr-2 h-4 w-4", formData.medicineUnitId === u.id ? "opacity-100" : "opacity-0")} />
-                                    {u.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SearchableSelect
+                    value={formData.medicineUnitId}
+                    onChange={(val) => handleInputChange('medicineUnitId', val)}
+                    options={units.map(u => ({ id: u.id, name: u.name }))}
+                    placeholder="Select Unit Type"
+                    loading={loadingUnits}
+                    onSearchChange={setUnitSearch}
+                    onAddClick={() => openQuickAdd('units', 'Unit')}
+                    addLabel="Create New Unit"
+                    showAll={false}
+                  />
                 </div>
               </div>
 
@@ -626,80 +441,17 @@ export function MedicineDialog({
                 </div>
                 <div className="space-y-2">
                   <Label>Manufacturer</Label>
-                  <Popover open={manufacturerSearchOpen} onOpenChange={setManufacturerSearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={manufacturerSearchOpen}
-                        className="w-full justify-between font-normal"
-                      >
-                        {formData.medicineManufacturerId
-                          ? (manufacturers.find((m) => m.id === formData.medicineManufacturerId)?.name || selectedLabels.manufacturer)
-                          : "Select Manufacturer..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command shouldFilter={false}>
-                        <div className="border-b p-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-primary h-8"
-                            onClick={() => {
-                              setManufacturerSearchOpen(false)
-                              openQuickAdd('manufacturers', 'Manufacturer')
-                            }}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Create New Manufacturer
-                          </Button>
-                        </div>
-                        <CommandInput 
-                          placeholder="Search manufacturer..." 
-                          value={manufacturerSearch}
-                          onValueChange={setManufacturerSearch}
-                        />
-                        <CommandList>
-                          {loadingManufacturers ? (
-                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Searching...
-                            </div>
-                          ) : (
-                            <>
-                              <CommandEmpty>
-                                <div className="py-2 px-3 text-sm text-muted-foreground">No manufacturer found.</div>
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {manufacturers.map((m) => (
-                                  <CommandItem
-                                    key={m.id}
-                                    value={m.name}
-                                    onSelect={() => {
-                                      handleInputChange('medicineManufacturerId', m.id)
-                                      setSelectedLabels(prev => ({ ...prev, manufacturer: m.name }))
-                                      setManufacturerSearchOpen(false)
-                                      setManufacturerSearch("")
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        formData.medicineManufacturerId === m.id ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    {m.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SearchableSelect
+                    value={formData.medicineManufacturerId}
+                    onChange={(val) => handleInputChange('medicineManufacturerId', val)}
+                    options={manufacturers.map(m => ({ id: m.id, name: m.name }))}
+                    placeholder="Select Manufacturer..."
+                    loading={loadingManufacturers}
+                    onSearchChange={setManufacturerSearch}
+                    onAddClick={() => openQuickAdd('manufacturers', 'Manufacturer')}
+                    addLabel="Create New Manufacturer"
+                    showAll={false}
+                  />
                 </div>
               </div>
 

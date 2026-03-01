@@ -399,3 +399,24 @@ export function useSaleReturns(params: any = {}) {
     placeholderData: keepPreviousData,
   });
 }
+
+export function useBranches(params: any = {}) {
+  return useQuery({
+    queryKey: ['pharmacy', 'branches', params],
+    queryFn: async () => {
+      const res = await pharmacyService.getBranches(params);
+      return {
+        data: res.data.branches,
+        meta: {
+            page: res.data.pagination.page,
+            pageSize: res.data.pagination.limit,
+            totalPages: res.data.pagination.totalPages,
+            totalItems: res.data.pagination.total,
+            hasNextPage: res.data.pagination.page < res.data.pagination.totalPages,
+            hasPreviousPage: res.data.pagination.page > 1,
+        }
+      };
+    },
+    placeholderData: keepPreviousData,
+  });
+}

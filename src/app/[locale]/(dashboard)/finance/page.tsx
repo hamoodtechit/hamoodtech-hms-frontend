@@ -1,5 +1,6 @@
 "use client"
 
+import { AccountDialog } from "@/components/finance/account-dialog"
 import { WithdrawDialog } from "@/components/finance/withdraw-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,22 +13,22 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useDeleteFinanceAccount, useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
-import { financeService } from "@/services/finance-service"
 import { FinanceAccount } from "@/types/finance"
-import { useQuery } from "@tanstack/react-query"
-import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Eye, Loader2, Wallet } from "lucide-react"
+import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export default function FinancePage() {
     const { formatCurrency } = useCurrency()
     const [withdrawAccount, setWithdrawAccount] = useState<FinanceAccount | null>(null)
+    const [accountDialogOpen, setAccountDialogOpen] = useState(false)
+    const [selectedAccount, setSelectedAccount] = useState<FinanceAccount | null>(null)
 
-    const { data, isLoading, refetch } = useQuery({
-        queryKey: ['finance-accounts'],
-        queryFn: () => financeService.getAccounts({ limit: 100 })
-    })
+    const { data, isLoading, refetch } = useFinanceAccounts({ limit: 100 })
+    const deleteAccountMutation = useDeleteFinanceAccount()
 
     const accounts = data?.data || []
 
@@ -38,6 +39,13 @@ export default function FinancePage() {
                     <h1 className="text-3xl font-bold tracking-tight">Finance Management</h1>
                     <p className="text-muted-foreground">Manage accounts, balances, and transactions.</p>
                 </div>
+                <Button onClick={() => {
+                    setSelectedAccount(null)
+                    setAccountDialogOpen(true)
+                }}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Account
+                </Button>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -129,13 +137,40 @@ export default function FinancePage() {
                                                         View
                                                     </Button>
                                                 </Link>
-                                                <Button 
+                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
                                                     onClick={() => setWithdrawAccount(account)}
                                                 >
                                                     <ArrowUpRight className="mr-2 h-4 w-4" />
                                                     Withdraw
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setSelectedAccount(account)
+                                                        setAccountDialogOpen(true)
+                                                    }}
+                                                >
+                                                    <Edit className="h-4 w-4 text-primary" />
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    disabled={deleteAccountMutation.isPending}
+                                                    onClick={async () => {
+                                                        if (confirm("Are you sure you want to delete this account?")) {
+                                                            try {
+                                                                await deleteAccountMutation.mutateAsync(account.id)
+                                                                toast.success("Account deleted successfully")
+                                                            } catch (error) {
+                                                                toast.error("Failed to delete account")
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -147,13 +182,23 @@ export default function FinancePage() {
                 </CardContent>
             </Card>
 
-            <WithdrawDialog 
+             <WithdrawDialog 
                 open={!!withdrawAccount} 
                 onOpenChange={(open) => !open && setWithdrawAccount(null)}
                 account={withdrawAccount}
                 onSuccess={() => {
                     refetch()
                     setWithdrawAccount(null)
+                }}
+            />
+
+            <AccountDialog 
+                open={accountDialogOpen}
+                onOpenChange={setAccountDialogOpen}
+                account={selectedAccount}
+                onSuccess={() => {
+                    refetch()
+                    setSelectedAccount(null)
                 }}
             />
         </div>

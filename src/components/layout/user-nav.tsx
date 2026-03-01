@@ -18,15 +18,31 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "@/i18n/navigation"
 import { useAuthStore } from "@/store/use-auth-store"
+import * as React from "react"
 
 export function UserNav() {
   const router = useRouter()
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = () => {
     logout()
     router.push("/auth/login")
+  }
+
+  if (!mounted) {
+    return (
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+        </Button>
+    )
   }
 
   return (
@@ -39,7 +55,7 @@ export function UserNav() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user?.fullName || "User"}</p>

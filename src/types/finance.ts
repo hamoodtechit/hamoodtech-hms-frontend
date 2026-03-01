@@ -63,6 +63,21 @@ export interface WithdrawPayload {
     note?: string;
 }
 
+export interface CreateAccountPayload {
+    name: string;
+    type: 'cash' | 'bank' | 'mobile_banking' | 'other';
+    description?: string;
+    openingBalance: number;
+    isActive: boolean;
+}
+
+export interface UpdateAccountPayload {
+    name?: string;
+    type?: string;
+    description?: string;
+    isActive?: boolean;
+}
+
 export interface TransactionQueryParams {
     page?: number;
     limit?: number;
