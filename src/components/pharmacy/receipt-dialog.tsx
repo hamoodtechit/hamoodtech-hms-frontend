@@ -205,13 +205,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  
                  {dueAmount > 0 ? (
                       <div className="flex justify-between text-black font-bold">
-                         <span>Due Amount</span>
-                         <span>{formatCurrency(dueAmount)}</span>
+                          <span>Due Amount</span>
+                          <span>{formatCurrency(dueAmount)}</span>
                       </div>
                  ) : (
                       <div className="flex justify-between text-black">
-                         <span>Change Return</span>
-                         <span>{formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
+                          <span>Change Return</span>
+                          <span>{formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
                       </div>
                  )}
             </div>
