@@ -185,6 +185,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
         <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
           <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+              const logoHtml = activeBranch?.logoUrl 
+                  ? `<div class="text-center" style="margin-bottom: 5px;">
+                         <img src="${activeBranch.logoUrl}" alt="Logo" style="max-height: 40px; width: auto; object-fit: contain; margin: 0 auto;" />
+                     </div>`
+                  : '';
+                  
               const printContent = `
                   <!DOCTYPE html>
                   <html>
@@ -192,11 +198,18 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                           <meta charset="UTF-8">
                           <title>Receipt ${invoiceNumber}</title>
                           <style>
-                              @page { size: 80mm auto; margin: 0; }
+                              @page { margin: 0; }
                               body { 
                                   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
-                                  width: 80mm; margin: 0; padding: 10px; color: black; background: white;
-                                  font-size: 10px; line-height: 1.2;
+                                  width: 100%; 
+                                  max-width: 100%;
+                                  margin: 0; 
+                                  padding: 5mm; 
+                                  color: black; 
+                                  background: white;
+                                  font-size: 11px; 
+                                  line-height: 1.3;
+                                  box-sizing: border-box;
                               }
                               .text-center { text-align: center; }
                               .text-right { text-align: right; }
@@ -205,18 +218,19 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                               .separator { border-top: 1px solid #e5e7eb; margin: 8px 0; }
                               .separator-dashed { border-top: 1px dashed #e5e7eb; margin: 8px 0; }
                               .header h2 { font-size: 16px; margin: 0; }
-                              .header p { font-size: 9px; margin: 2px 0; color: #4b5563; }
-                              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 9px; }
+                              .header p { font-size: 10px; margin: 2px 0; color: #4b5563; }
+                              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px; }
                               .items-table { width: 100%; border-collapse: collapse; }
-                              .items-header { border-bottom: 1px solid #e5e7eb; font-weight: bold; font-size: 8px; }
+                              .items-header { border-bottom: 1px solid #e5e7eb; font-weight: bold; font-size: 9px; }
                               .items-header td { padding-bottom: 4px; }
                               .item-row td { padding: 4px 0; vertical-align: top; }
                               .totals-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
                               .paid-row { font-weight: bold; margin-top: 4px; }
-                              .footer { margin-top: 15px; text-align: center; font-size: 8px; color: #6b7280; }
+                              .footer { margin-top: 15px; text-align: center; font-size: 9px; color: #6b7280; }
                           </style>
                       </head>
                       <body>
+                          ${logoHtml}
                           <div class="header text-center">
                               <h2 class="bold uppercase">${general?.hospitalName || "Hospital"}</h2>
                               <p class="bold">${activeBranch?.name || 'Main Branch'}</p>
@@ -241,10 +255,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                           <table class="items-table">
                               <thead>
                                   <tr class="items-header uppercase">
-                                      <td style="width:45%">Item</td>
+                                      <td style="width:50%">Item</td>
                                       <td class="text-center" style="width:15%">Qty</td>
                                       <td class="text-right" style="width:15%">Rate</td>
-                                      <td class="text-right" style="width:25%">Amt</td>
+                                      <td class="text-right" style="width:20%">Amt</td>
                                   </tr>
                               </thead>
                               <tbody>
@@ -336,12 +350,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               `;
 
               const iframe = document.createElement('iframe');
-              iframe.style.position = 'fixed';
-              iframe.style.right = '0';
-              iframe.style.bottom = '0';
-              iframe.style.width = '0';
-              iframe.style.height = '0';
-              iframe.style.border = '0';
+              iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
               document.body.appendChild(iframe);
 
               const iframeDoc = iframe.contentWindow?.document;
@@ -356,7 +365,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       setTimeout(() => {
                           document.body.removeChild(iframe);
                       }, 1000);
-                  }, 500);
+                  }, 800); // Wait 800ms for images to load
               } else {
                   // Fallback for strict browsers
                   const win = window.open('', '_blank', 'width=450,height=600');
@@ -366,7 +375,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       setTimeout(() => {
                           win.print();
                           win.close();
-                      }, 500);
+                      }, 800);
                   }
               }
           }}>
