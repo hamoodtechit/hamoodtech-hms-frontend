@@ -126,18 +126,18 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
                             {/* Patient Info */}
                             <DetailSection icon={User} title="Patient Information">
-                                <Field label="Full Name" value={appointment?.patient.name} icon={User} />
+                                <Field label="Full Name" value={appointment?.patient?.name} icon={User} />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field label="Phone" value={appointment?.patient.phone} icon={Phone} />
-                                    <Field label="Patient ID" value={appointment?.patient.patientNumber} />
+                                    <Field label="Phone" value={appointment?.patient?.phone} icon={Phone} />
+                                    <Field label="Patient ID" value={appointment?.patient?.patientNumber} />
                                 </div>
-                                <Field label="Address" value={appointment?.patient.address} icon={MapPin} />
+                                <Field label="Address" value={appointment?.patient?.address} icon={MapPin} />
                             </DetailSection>
 
                             {/* Medical Professional Info */}
                             <DetailSection icon={Stethoscope} title="Medical Context">
-                                <Field label="Treating Doctor" value={appointment?.doctor.name} icon={User} />
-                                <Field label="Department" value={appointment?.department.name} icon={Building2} />
+                                <Field label="Treating Doctor" value={appointment?.doctor?.name} icon={User} />
+                                <Field label="Department" value={appointment?.department?.name} icon={Building2} />
                                 <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
                             </DetailSection>
 
