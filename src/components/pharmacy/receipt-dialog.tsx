@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -26,12 +26,32 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   
   if (!transaction) return null
 
-  // Calculate totals for verification
-  const grossTotal = transaction.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const totalItemDiscount = transaction.items.reduce((sum, item) => {
+  // Normalize data between POS Transaction and API Sale
+  const items = (transaction as any).saleItems || transaction.items || []
+  const normalizedItems = items.map((item: any) => ({
+    name: item.itemName || item.name || "Unknown Item",
+    quantity: Number(item.quantity || 0),
+    price: Number(item.price || 0),
+    dosageForm: item.dosageForm,
+    batchNumber: item.batchNumber,
+    discountAmount: Number(item.discountAmount || 0),
+    discountPercentage: Number(item.discountPercentage || 0)
+  }))
+
+  const grossTotal = normalizedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+  const totalItemDiscount = normalizedItems.reduce((sum: number, item: any) => {
       const itemSubtotal = item.price * item.quantity
       return sum + (item.discountAmount || (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0))
   }, 0)
+
+  const netTotal = Number((transaction as any).netPrice || transaction.total || 0)
+  const paidAmount = Number(transaction.paidAmount || 0)
+  const dueAmount = Number(transaction.dueAmount || 0)
+  const taxAmount = Number((transaction as any).taxAmount || transaction.tax || 0)
+  const discountAmount = Number((transaction as any).discountAmount || transaction.discount || 0)
+  const taxPercentage = Number(transaction.taxPercentage || 0)
+  const invoiceNumber = transaction.invoiceNumber || (transaction as any).number || "N/A"
+  const date = transaction.date || (transaction as any).createdAt || new Date().toISOString()
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,7 +63,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             @page { 
-              margin: 0mm !important;
+              margin: 0 !important;
               size: auto;
             }
             html, body { 
@@ -51,11 +71,18 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               padding: 0 !important; 
               background: white !important;
             }
-            .print\\:hidden, [data-radix-collection-item], [data-slot="dialog-close"] { 
+            /* Hide absolute everything except the receipt */
+            body > *:not([data-slot="dialog-portal"]),
+            [data-slot="dialog-overlay"],
+            [data-slot="dialog-close"],
+            .print\\:hidden { 
               display: none !important; 
             }
-            [data-slot="dialog-content"] {
+            [data-slot="dialog-portal"] {
               position: static !important;
+            }
+            [data-slot="dialog-content"] {
+              position: absolute !important;
               top: 0 !important;
               left: 0 !important;
               transform: none !important;
@@ -64,13 +91,17 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               border: none !important;
               box-shadow: none !important;
               padding: 0 !important;
+              display: block !important;
+              visibility: visible !important;
             }
             #receipt-content {
-              padding: 0mm !important;
+              padding: 0 !important;
               margin: 0 !important;
               width: 100% !important;
               max-height: none !important;
               overflow: visible !important;
+              display: block !important;
+              visibility: visible !important;
             }
           }
         `}} />
@@ -96,11 +127,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-y border-black/20 py-1 leading-tight">
                 <div className="space-y-0.5">
                     <p className="text-black uppercase text-[8px] font-semibold">Patient Details:</p>
-                    <p className="font-bold">{transaction.customerName}</p>
+                    <p className="font-bold">{transaction.customerName || (transaction as any).patient?.name || "Walk-in"}</p>
                 </div>
                 <div className="text-right space-y-0.5">
-                    <p className="font-bold">Invoice #: {transaction.invoiceNumber}</p>
-                    <p className="font-bold">Date: {new Date(transaction.date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
+                    <p className="font-bold">Invoice #: {invoiceNumber}</p>
+                    <p className="font-bold">Date: {new Date(date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
                     <p className="font-bold uppercase">Mode: {transaction.paymentMethod}</p>
                 </div>
             </div>
@@ -115,7 +146,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <div className="col-span-2 text-right">RATE</div>
                     <div className="col-span-3 text-right">AMT</div>
                 </div>
-                {transaction.items.map((item, idx) => {
+                {normalizedItems.map((item: any, idx: number) => {
                      const itemTotal = item.price * item.quantity
                      const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0)
                      const netItemTotal = itemTotal - itemDisc
@@ -126,6 +157,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <span className="block font-bold">
                                     {item.name}
                                     {item.dosageForm && <span className="text-[8px] font-normal ml-1">({item.dosageForm})</span>}
+                                    {item.batchNumber && <span className="block text-[8px] font-normal text-muted-foreground italic">B: {item.batchNumber}</span>}
                                 </span>
                             </div>
                             <div className="col-span-1 text-center">{item.quantity}</div>
@@ -146,16 +178,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <span className="text-black">Gross Total</span>
                     <span>{formatCurrency(grossTotal)}</span>
                 </div>
-                {(totalItemDiscount > 0 || (transaction.discountAmount || 0) > 0 || transaction.discount > 0) && (
+                {(totalItemDiscount > 0 || discountAmount > 0) && (
                     <div className="flex justify-between text-black">
                          <span>Total Discount</span>
-                         <span>-{formatCurrency(totalItemDiscount + (transaction.discountAmount || transaction.discount))}</span>
+                         <span>-{formatCurrency(totalItemDiscount + discountAmount)}</span>
                     </div>
                 )}
-                {transaction.tax > 0 && (
+                {taxAmount > 0 && (
                     <div className="flex justify-between text-black">
-                        <span>VAT ({transaction.taxPercentage}%)</span>
-                        <span>+{formatCurrency(transaction.tax)}</span>
+                        <span>VAT ({taxPercentage}%)</span>
+                        <span>+{formatCurrency(taxAmount)}</span>
                     </div>
                 )}
                  
@@ -163,24 +195,24 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  
                  <div className="flex justify-between text-sm font-bold border-y border-black/40 py-1">
                      <span>Net Payable</span>
-                     <span>{formatCurrency(transaction.total)}</span>
+                     <span>{formatCurrency(netTotal)}</span>
                  </div>
                  
                  <div className="flex justify-between pt-1 font-bold">
                      <span className="text-black">Paid Amount</span>
-                     <span>{formatCurrency(transaction.paidAmount || 0)}</span>
+                     <span>{formatCurrency(paidAmount)}</span>
                  </div>
                  
-                 {(transaction.dueAmount || 0) > 0 ? (
+                 {dueAmount > 0 ? (
                       <div className="flex justify-between text-black font-bold">
                          <span>Due Amount</span>
-                         <span>{formatCurrency(transaction.dueAmount || 0)}</span>
+                         <span>{formatCurrency(dueAmount)}</span>
                       </div>
                  ) : (
-                     <div className="flex justify-between text-black">
+                      <div className="flex justify-between text-black">
                          <span>Change Return</span>
-                         <span>{formatCurrency((transaction.paidAmount || 0) - transaction.total)}</span>
-                     </div>
+                         <span>{formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
+                      </div>
                  )}
             </div>
             
