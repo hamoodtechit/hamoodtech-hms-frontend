@@ -72,25 +72,45 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               background: white !important;
               visibility: hidden !important;
             }
-            #receipt-content, #receipt-content * {
+            /* Target the portal directly - standard Shadcn/Radix portal structure */
+            [data-slot="dialog-portal"],
+            [data-slot="dialog-portal"] [data-slot="dialog-content"],
+            [data-slot="dialog-portal"] #receipt-content,
+            [data-slot="dialog-portal"] #receipt-content * {
               visibility: visible !important;
             }
-            #receipt-content {
+            [data-slot="dialog-portal"] {
               position: absolute !important;
               left: 0 !important;
               top: 0 !important;
               width: 100% !important;
-              max-height: none !important;
-              overflow: visible !important;
-              display: block !important;
-              background: white !important;
-              color: black !important;
+            }
+            [data-slot="dialog-content"] {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              transform: none !important; /* CRITICAL: Remove centering transforms */
+              width: 100% !important;
+              max-width: none !important;
+              border: none !important;
+              box-shadow: none !important;
               padding: 0 !important;
               margin: 0 !important;
+              background-color: white !important;
+              display: block !important;
             }
-            /* Hide UI elements that shouldn't leak through despite visibility hidden */
-            [data-slot="dialog-overlay"], [data-slot="dialog-close"], .print\\:hidden {
+            /* Hide absolute UI noise */
+            [data-slot="dialog-overlay"], 
+            [data-slot="dialog-close"], 
+            .print\\:hidden,
+            button.print\\:hidden {
               display: none !important;
+              visibility: hidden !important;
+            }
+            #receipt-content {
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
             * {
               color: black !important;
