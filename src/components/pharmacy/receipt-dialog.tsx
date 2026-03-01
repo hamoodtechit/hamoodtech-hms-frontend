@@ -59,66 +59,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <DialogHeader className="sr-only">
           <DialogTitle>Receipt</DialogTitle>
         </DialogHeader>
-        {/* Global style for printing to remove headers/footers */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @media print {
-            @page { 
-              margin: 0 !important;
-              size: auto;
-            }
-            html, body { 
-              margin: 0 !important; 
-              padding: 0 !important; 
-              background: white !important;
-              visibility: hidden !important;
-            }
-            /* Target the portal directly - standard Shadcn/Radix portal structure */
-            [data-slot="dialog-portal"],
-            [data-slot="dialog-portal"] [data-slot="dialog-content"],
-            [data-slot="dialog-portal"] #receipt-content,
-            [data-slot="dialog-portal"] #receipt-content * {
-              visibility: visible !important;
-            }
-            [data-slot="dialog-portal"] {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
-              width: 100% !important;
-            }
-            [data-slot="dialog-content"] {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
-              transform: none !important; /* CRITICAL: Remove centering transforms */
-              width: 100% !important;
-              max-width: none !important;
-              border: none !important;
-              box-shadow: none !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              background-color: white !important;
-              display: block !important;
-            }
-            /* Hide absolute UI noise */
-            [data-slot="dialog-overlay"], 
-            [data-slot="dialog-close"], 
-            .print\\:hidden,
-            button.print\\:hidden {
-              display: none !important;
-              visibility: hidden !important;
-            }
-            #receipt-content {
-              width: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            * {
-              color: black !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-          }
-        `}} />
+        {/* No global print styles needed as we use an isolated iframe */}
         <div className="p-2 space-y-3 max-h-[60vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
             <div className="text-center space-y-0.5">
                  {activeBranch?.logoUrl && (
@@ -242,13 +183,199 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             </div>
         </div>
 
-        <div className="p-4 bg-zinc-50 print:hidden flex flex-col gap-2 border-t">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => window.print()}>
+        <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+              const printContent = `
+                  <!DOCTYPE html>
+                  <html>
+                      <head>
+                          <meta charset="UTF-8">
+                          <title>Receipt ${invoiceNumber}</title>
+                          <style>
+                              @page { size: 80mm auto; margin: 0; }
+                              body { 
+                                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+                                  width: 80mm; margin: 0; padding: 10px; color: black; background: white;
+                                  font-size: 10px; line-height: 1.2;
+                              }
+                              .text-center { text-align: center; }
+                              .text-right { text-align: right; }
+                              .bold { font-weight: bold; }
+                              .uppercase { text-transform: uppercase; }
+                              .separator { border-top: 1px solid #e5e7eb; margin: 8px 0; }
+                              .separator-dashed { border-top: 1px dashed #e5e7eb; margin: 8px 0; }
+                              .header h2 { font-size: 16px; margin: 0; }
+                              .header p { font-size: 9px; margin: 2px 0; color: #4b5563; }
+                              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 9px; }
+                              .items-table { width: 100%; border-collapse: collapse; }
+                              .items-header { border-bottom: 1px solid #e5e7eb; font-weight: bold; font-size: 8px; }
+                              .items-header td { padding-bottom: 4px; }
+                              .item-row td { padding: 4px 0; vertical-align: top; }
+                              .totals-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                              .paid-row { font-weight: bold; margin-top: 4px; }
+                              .footer { margin-top: 15px; text-align: center; font-size: 8px; color: #6b7280; }
+                          </style>
+                      </head>
+                      <body>
+                          <div class="header text-center">
+                              <h2 class="bold uppercase">${general?.hospitalName || "Hospital"}</h2>
+                              <p class="bold">${activeBranch?.name || 'Main Branch'}</p>
+                              <p>${general?.address || "Hospital Address"}</p>
+                          </div>
+
+                          <div class="separator"></div>
+
+                          <div class="info-grid">
+                              <div>
+                                  <span style="color:#6b7280">Patient:</span><br/>
+                                  <span class="bold uppercase">${transaction.customerName || (transaction as any).patient?.name || 'Walk-in'}</span>
+                              </div>
+                              <div class="text-right">
+                                  <span style="color:#6b7280">Invoice #:</span> <span class="bold">${invoiceNumber}</span><br/>
+                                  <span style="color:#6b7280">Date:</span> <span class="bold">${new Date(date).toLocaleDateString()}</span>
+                              </div>
+                          </div>
+
+                          <div class="separator-dashed"></div>
+
+                          <table class="items-table">
+                              <thead>
+                                  <tr class="items-header uppercase">
+                                      <td style="width:45%">Item</td>
+                                      <td class="text-center" style="width:15%">Qty</td>
+                                      <td class="text-right" style="width:15%">Rate</td>
+                                      <td class="text-right" style="width:25%">Amt</td>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  ${normalizedItems.map((item: any) => {
+                                      const itemTotal = item.price * item.quantity;
+                                      const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0);
+                                      const netItemTotal = itemTotal - itemDisc;
+                                      
+                                      let dosageHtml = '';
+                                      if (item.dosageForm) {
+                                          dosageHtml = `<span style="font-size:8px; color:#6b7280"> (${item.dosageForm})</span>`;
+                                      }
+                                      
+                                      let batchHtml = '';
+                                      if (item.batchNumber) {
+                                          batchHtml = `<br/><span style="font-size:7px; color:#9ca3af">B: ${item.batchNumber}</span>`;
+                                      }
+                                      
+                                      return `
+                                          <tr class="item-row">
+                                              <td>
+                                                  <span class="bold">${item.name}</span>
+                                                  ${dosageHtml}
+                                                  ${batchHtml}
+                                              </td>
+                                              <td class="text-center">${item.quantity}</td>
+                                              <td class="text-right">${Number(item.price).toFixed(2)}</td>
+                                              <td class="text-right bold">${formatCurrency(netItemTotal)}</td>
+                                          </tr>
+                                      `;
+                                  }).join('')}
+                              </tbody>
+                          </table>
+
+                          <div class="separator"></div>
+
+                          <div class="totals-section">
+                              <div class="totals-row">
+                                  <span>Gross Total</span>
+                                  <span>${formatCurrency(grossTotal)}</span>
+                              </div>
+                              ${(totalItemDiscount > 0 || discountAmount > 0) ? `
+                                  <div class="totals-row" style="color:#4b5563">
+                                      <span>Total Discount</span>
+                                      <span>-${formatCurrency(totalItemDiscount + discountAmount)}</span>
+                                  </div>
+                              ` : ''}
+                              ${taxAmount > 0 ? `
+                                  <div class="totals-row" style="color:#4b5563">
+                                      <span>VAT (${taxPercentage}%)</span>
+                                      <span>+${formatCurrency(taxAmount)}</span>
+                                  </div>
+                              ` : ''}
+                              
+                              <div class="separator" style="margin:4px 0"></div>
+                              
+                              <div class="totals-row bold" style="font-size:12px">
+                                  <span>Net Payable</span>
+                                  <span>${formatCurrency(netTotal)}</span>
+                              </div>
+                              
+                              <div class="totals-row paid-row">
+                                  <span>Paid Amount</span>
+                                  <span>${formatCurrency(paidAmount)}</span>
+                              </div>
+
+                              ${dueAmount > 0 ? `
+                                  <div class="totals-row bold" style="color:#dc2626">
+                                      <span>Due Amount</span>
+                                      <span>${formatCurrency(dueAmount)}</span>
+                                  </div>
+                              ` : `
+                                  <div class="totals-row" style="color:#4b5563">
+                                      <span>Change Return</span>
+                                      <span>${formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
+                                  </div>
+                              `}
+                          </div>
+
+                          <div class="footer">
+                              <p>Thank you for visiting ${general?.hospitalName || "Hospital"}!</p>
+                              <p>Note: Medicines once sold cannot be returned without receipt.</p>
+                              <div style="margin-top:20px; border-top:1px solid #e5e7eb; padding-top:5px; width:100px; margin-left:auto; margin-right:auto;">
+                                  Authorized Signatory
+                              </div>
+                          </div>
+                      </body>
+                  </html>
+              `;
+
+              const iframe = document.createElement('iframe');
+              iframe.style.position = 'fixed';
+              iframe.style.right = '0';
+              iframe.style.bottom = '0';
+              iframe.style.width = '0';
+              iframe.style.height = '0';
+              iframe.style.border = '0';
+              document.body.appendChild(iframe);
+
+              const iframeDoc = iframe.contentWindow?.document;
+              if (iframeDoc) {
+                  iframeDoc.open();
+                  iframeDoc.write(printContent);
+                  iframeDoc.close();
+                  
+                  setTimeout(() => {
+                      iframe.contentWindow?.focus();
+                      iframe.contentWindow?.print();
+                      setTimeout(() => {
+                          document.body.removeChild(iframe);
+                      }, 1000);
+                  }, 500);
+              } else {
+                  // Fallback for strict browsers
+                  const win = window.open('', '_blank', 'width=450,height=600');
+                  if (win) {
+                      win.document.write(printContent);
+                      win.document.close();
+                      setTimeout(() => {
+                          win.print();
+                          win.close();
+                      }, 500);
+                  }
+              }
+          }}>
             <Printer className="mr-2 h-4 w-4" /> Print Receipt
           </Button>
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
              Close
           </Button>
+
         </div>
       </DialogContent>
     </Dialog>
