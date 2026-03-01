@@ -47,6 +47,7 @@ import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 
 import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
+import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 import { SaleReturnDetailsDialog } from "@/components/pharmacy/sale-return-details-dialog"
 
@@ -78,6 +79,8 @@ export function TransactionHistory() {
   const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
   const [returnDetailsDialogOpen, setReturnDetailsDialogOpen] = useState(false)
   const [selectedReturnForDetails, setSelectedReturnForDetails] = useState<SaleReturn | null>(null)
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
+  const [selectedTransactionForReceipt, setSelectedTransactionForReceipt] = useState<any | null>(null)
   const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
   const [filters, setFilters] = useState<{
     dateRange: DateRange | undefined;
@@ -205,172 +208,9 @@ export function TransactionHistory() {
         toast.info("Purchase order printing integration coming soon")
         return
     }
-    const sale = tx.original as Sale
     
-    // Calculate totals matching ReceiptDialog logic
-    const grossTotal = (sale.saleItems || []).reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0)
-    const totalItemDiscount = (sale.saleItems || []).reduce((sum, item) => {
-        const itemSubtotal = Number(item.price || 0) * Number(item.quantity || 0)
-        return sum + (Number(item.discountAmount || 0) || (Number(item.discountPercentage || 0) ? (itemSubtotal * Number(item.discountPercentage)) / 100 : 0))
-    }, 0)
-    
-    const receiptWindow = window.open('', '_blank', 'width=450,height=600');
-    if (receiptWindow) {
-        receiptWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Receipt ${sale.invoiceNumber}</title>
-                    <style>
-                        @page { size: 80mm auto; margin: 0; }
-                        body { 
-                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
-                            width: 80mm; margin: 0; padding: 10px; color: black; background: white;
-                            font-size: 10px; line-height: 1.2;
-                        }
-                        .text-center { text-align: center; }
-                        .text-right { text-align: right; }
-                        .bold { font-weight: bold; }
-                        .uppercase { text-transform: uppercase; }
-                        .separator { border-top: 1px solid #e5e7eb; margin: 8px 0; }
-                        .separator-dashed { border-top: 1px dashed #e5e7eb; margin: 8px 0; }
-                        .header h2 { font-size: 16px; margin: 0; }
-                        .header p { font-size: 9px; margin: 2px 0; color: #4b5563; }
-                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 9px; }
-                        .items-table { width: 100%; border-collapse: collapse; }
-                        .items-header { border-bottom: 1px solid #e5e7eb; font-weight: bold; font-size: 8px; }
-                        .items-header td { padding-bottom: 4px; }
-                        .item-row td { padding: 4px 0; vertical-align: top; }
-                        .totals-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-                        .paid-row { font-weight: bold; margin-top: 4px; }
-                        .footer { margin-top: 15px; text-align: center; font-size: 8px; color: #6b7280; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header text-center">
-                        <h2 class="bold uppercase">${general?.hospitalName || "MediCare Pharmacy"}</h2>
-                        <p class="bold">${sale.branch?.name || 'Main Branch'}</p>
-                        <p>${general?.address || "Hospital Road, Dhaka"}</p>
-                    </div>
-
-                    <div class="separator"></div>
-
-                    <div class="info-grid">
-                        <div>
-                            <span style="color:#6b7280">Patient:</span><br/>
-                            <span class="bold uppercase">${sale.patient?.name || 'Walk-in'}</span>
-                        </div>
-                        <div class="text-right">
-                            <span style="color:#6b7280">Invoice #:</span> <span class="bold">${sale.invoiceNumber}</span><br/>
-                            <span style="color:#6b7280">Date:</span> <span class="bold">${new Date(sale.createdAt).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-
-                    <div class="separator-dashed"></div>
-
-                    <table class="items-table">
-                        <thead>
-                            <tr class="items-header uppercase">
-                                <td style="width:45%">Item</td>
-                                <td class="text-center" style="width:15%">Qty</td>
-                                <td class="text-right" style="width:15%">Rate</td>
-                                <td class="text-right" style="width:25%">Amt</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${(sale.saleItems || []).map(item => {
-                                const price = Number(item.price || 0)
-                                const qty = Number(item.quantity || 0)
-                                const itemTotal = price * qty
-                                const itemDisc = Number(item.discountAmount || 0) || (Number(item.discountPercentage || 0) ? (itemTotal * Number(item.discountPercentage)) / 100 : 0)
-                                const netItemTotal = itemTotal - itemDisc
-                                return `
-                                    <tr class="item-row">
-                                        <td>
-                                            <span class="bold">${item.itemName || 'Item'}</span>
-                                            ${item.dosageForm ? `<span style="font-size:8px; color:#6b7280"> (${item.dosageForm})</span>` : ''}
-                                            ${item.batchNumber ? `<br/><span style="font-size:7px; color:#9ca3af">B: ${item.batchNumber}</span>` : ''}
-                                        </td>
-                                        <td class="text-center">${qty}</td>
-                                        <td class="text-right">${price.toFixed(2)}</td>
-                                        <td class="text-right bold">${formatCurrency(netItemTotal)}</td>
-                                    </tr>
-                                `
-                            }).join('')}
-                        </tbody>
-                    </table>
-
-                    <div class="separator-dashed"></div>
-
-                    <div class="totals-section">
-                        <div class="totals-row">
-                            <span>Gross Total</span>
-                            <span>${formatCurrency(grossTotal)}</span>
-                        </div>
-                        ${(totalItemDiscount + (Number(sale.discountAmount || 0))) > 0 ? `
-                            <div class="totals-row" style="color:#4b5563">
-                                <span>Total Discount</span>
-                                <span>-${formatCurrency(totalItemDiscount + (Number(sale.discountAmount || 0)))}</span>
-                            </div>
-                        ` : ''}
-                        ${Number(sale.taxAmount || 0) > 0 ? `
-                            <div class="totals-row" style="color:#4b5563">
-                                <span>VAT (${sale.taxPercentage || 0}%)</span>
-                                <span>+${formatCurrency(Number(sale.taxAmount || 0))}</span>
-                            </div>
-                        ` : ''}
-                        
-                        <div class="separator" style="margin:4px 0"></div>
-                        
-                        <div class="totals-row bold" style="font-size:12px">
-                            <span>Net Payable</span>
-                            <span>${formatCurrency(Number(sale.netPrice || sale.totalPrice || 0))}</span>
-                        </div>
-                        
-                        <div class="totals-row paid-row">
-                            <span>Paid Amount</span>
-                            <span>${formatCurrency(Number(sale.paidAmount || 0))}</span>
-                        </div>
-
-                        ${Number(sale.dueAmount || 0) > 0 ? `
-                            <div class="totals-row bold" style="color:#dc2626">
-                                <span>Due Amount</span>
-                                <span>${formatCurrency(Number(sale.dueAmount || 0))}</span>
-                            </div>
-                        ` : `
-                            <div class="totals-row" style="color:#4b5563">
-                                <span>Change Return</span>
-                                <span>${formatCurrency(Math.max(0, Number(sale.paidAmount || 0) - Number(sale.netPrice || sale.totalPrice || 0)))}</span>
-                            </div>
-                        `}
-                    </div>
-
-                    <div class="separator"></div>
-
-                    <div class="footer">
-                        <p>Thank you for visiting ${general?.hospitalName || "MediCare Pharmacy"}!</p>
-                        <p style="font-style:italic">Note: Medicines once sold cannot be returned without receipt.</p>
-                        <div style="margin-top:20px; border-top:1px solid #e5e7eb; width:50%; margin-left:25%; padding-top:4px">
-                            Authorized Signatory
-                        </div>
-                    </div>
-
-                    <script>
-                        window.addEventListener('load', function() {
-                            setTimeout(function() {
-                                window.print();
-                                setTimeout(function() { window.close(); }, 500);
-                            }, 500);
-                        });
-                    </script>
-                </body>
-            </html>
-        `);
-        receiptWindow.document.close();
-    } else {
-        toast.error("Popup blocked. Please allow popups to print receipts.");
-    }
+    setSelectedTransactionForReceipt(tx.original)
+    setReceiptDialogOpen(true)
   }
 
   const handleRefund = (tx: UnifiedTransaction) => {
@@ -722,6 +562,12 @@ export function TransactionHistory() {
         saleReturn={selectedReturnForDetails}
         open={returnDetailsDialogOpen}
         onOpenChange={setReturnDetailsDialogOpen}
+    />
+
+    <ReceiptDialog 
+        open={receiptDialogOpen}
+        onOpenChange={setReceiptDialogOpen}
+        transaction={selectedTransactionForReceipt}
     />
     </>
   )
