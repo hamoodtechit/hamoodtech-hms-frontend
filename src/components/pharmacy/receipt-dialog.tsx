@@ -3,7 +3,9 @@
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
-    DialogContent
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -34,6 +36,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Receipt</DialogTitle>
+        </DialogHeader>
         {/* Global style for printing to remove headers/footers */}
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
@@ -46,8 +51,19 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               padding: 0 !important; 
               background: white !important;
             }
-            .print\\:hidden, [data-radix-collection-item] { 
+            .print\\:hidden, [data-radix-collection-item], [data-slot="dialog-close"] { 
               display: none !important; 
+            }
+            [data-slot="dialog-content"] {
+              position: static !important;
+              top: 0 !important;
+              left: 0 !important;
+              transform: none !important;
+              width: 100% !important;
+              max-width: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
             }
             #receipt-content {
               padding: 0mm !important;
