@@ -70,38 +70,32 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               margin: 0 !important; 
               padding: 0 !important; 
               background: white !important;
+              visibility: hidden !important;
             }
-            /* Hide absolute everything except the receipt */
-            body > *:not([data-slot="dialog-portal"]),
-            [data-slot="dialog-overlay"],
-            [data-slot="dialog-close"],
-            .print\\:hidden { 
-              display: none !important; 
-            }
-            [data-slot="dialog-portal"] {
-              position: static !important;
-            }
-            [data-slot="dialog-content"] {
-              position: absolute !important;
-              top: 0 !important;
-              left: 0 !important;
-              transform: none !important;
-              width: 100% !important;
-              max-width: none !important;
-              border: none !important;
-              box-shadow: none !important;
-              padding: 0 !important;
-              display: block !important;
+            #receipt-content, #receipt-content * {
               visibility: visible !important;
             }
             #receipt-content {
-              padding: 0 !important;
-              margin: 0 !important;
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
               width: 100% !important;
               max-height: none !important;
               overflow: visible !important;
               display: block !important;
-              visibility: visible !important;
+              background: white !important;
+              color: black !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+            /* Hide UI elements that shouldn't leak through despite visibility hidden */
+            [data-slot="dialog-overlay"], [data-slot="dialog-close"], .print\\:hidden {
+              display: none !important;
+            }
+            * {
+              color: black !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
           }
         `}} />
