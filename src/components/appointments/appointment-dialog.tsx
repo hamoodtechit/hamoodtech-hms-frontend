@@ -220,19 +220,13 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label>Appointment Date *</Label>
-                                        <Input 
-                                            type="date"
-                                            value={formData.date}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Active Branch</Label>
-                                        <Input value={activeBranchName} disabled className="bg-muted" />
-                                    </div>
+                                <div className="grid gap-2">
+                                    <Label>Appointment Date *</Label>
+                                    <Input 
+                                        type="date"
+                                        value={formData.date}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                                    />
                                 </div>
 
                                 <div className="space-y-4">

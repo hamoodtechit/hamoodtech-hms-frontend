@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCreatePurchase, useMedicines, useSuppliers } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -68,6 +69,7 @@ export function CreateOrderDialog() {
   const [selectedSupplier, setSelectedSupplier] = useState("")
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [selectedAccountId, setSelectedAccountId] = useState("")
   const [paidAmount, setPaidAmount] = useState(0)
   
   // Combobox states
@@ -79,9 +81,19 @@ export function CreateOrderDialog() {
   const [status, setStatus] = useState<'pending' | 'completed'>('pending')
   const [selectedSupplierName, setSelectedSupplierName] = useState("")
 
+  // Fetch accounts for manual selection
+  const { data: accountsRes } = useFinanceAccounts({ isActive: true, limit: 100 })
+  const accounts = accountsRes?.data || []
+
   useEffect(() => {
     fetchSettings()
   }, [])
+
+  // Sync selected account with default from settings
+  useEffect(() => {
+    const defaultAccountId = finance?.paymentMethodAccounts?.[paymentMethod]?.id || ""
+    setSelectedAccountId(defaultAccountId)
+  }, [paymentMethod, finance])
 
   // Calculations
   const subtotal = purchaseItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
@@ -162,7 +174,7 @@ export function CreateOrderDialog() {
         paidAmount,
         dueAmount,
         payments: [{
-            accountId: finance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
+            accountId: selectedAccountId || finance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
             amount: paidAmount,
             paymentMethod,
             note: "Initial payment for purchase"
@@ -329,14 +341,23 @@ export function CreateOrderDialog() {
 
                 <div className="lg:col-span-5 flex flex-col gap-2">
                     <Label className="font-semibold flex items-center gap-2">
-                        Target Account
+                        Target Account *
                     </Label>
-                    <div className="text-sm px-3 h-10 bg-muted/50 rounded-md border font-medium truncate flex items-center text-primary">
-                        <Check className="mr-2 h-4 w-4 opacity-70" />
-                        {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                            <span className="text-destructive text-xs italic">No account mapped (Check Settings)</span>
-                        )}
-                    </div>
+                    <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                        <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select target account" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {accounts.map(acc => (
+                                <SelectItem key={acc.id} value={acc.id}>
+                                    {acc.name} ({acc.type})
+                                </SelectItem>
+                            ))}
+                            {accounts.length === 0 && (
+                                <SelectItem value="none" disabled>No accounts found</SelectItem>
+                            )}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
