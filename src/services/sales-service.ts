@@ -2,19 +2,33 @@ import { api } from '@/lib/api';
 import {
     Sale,
     SalePayload,
+    SalePaymentPayload,
     SaleReturn,
     SaleReturnPayload,
-    SalesPaginatedResponse
+    SalesPaginatedResponse,
+    UpdateSalePayload
 } from '@/types/sales';
 
 export const salesService = {
   getSales: async (params?: {
     page?: number;
     limit?: number;
+    id?: string;
     branchId?: string;
     patientId?: string;
-    status?: string;
+    status?: 'pending' | 'completed' | 'rejected' | 'returned';
     search?: string;
+    invoiceNumber?: string;
+    paymentMethod?: string;
+    paymentStatus?: 'paid' | 'due' | 'partial';
+    createdBy?: string;
+    updatedBy?: string;
+    cashRegisterSessionId?: string;
+    isIndoorSale?: boolean;
+    startDate?: string;
+    endDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
   }): Promise<SalesPaginatedResponse<Sale>> => {
     const response = await api.get<SalesPaginatedResponse<Sale>>('/sales', { params });
     return response.data;
@@ -30,18 +44,35 @@ export const salesService = {
     return response.data;
   },
 
-  updateSale: async (id: string, data: Partial<SalePayload>): Promise<{ success: boolean; message: string; data: Sale }> => {
-    const response = await api.patch<{ success: boolean; message: string; data: Sale }>(`/sales/${id}`, data);
+  updateSale: async (id: string, data: UpdateSalePayload): Promise<{ success: boolean, message: string, data: Sale }> => {
+    const response = await api.patch<{ success: boolean, message: string, data: Sale }>(`/sales/${id}`, data);
     return response.data;
   },
 
-  getSaleReturns: async (params?: {
+  addSalePayment: async (id: string, data: SalePaymentPayload): Promise<{ success: boolean, message: string, data: Sale }> => {
+    const response = await api.post<{ success: boolean, message: string, data: Sale }>(`/sales/${id}/payments`, data);
+    return response.data;
+  },
+
+  getSaleReturns: async (params: {
     page?: number;
     limit?: number;
+    id?: string;
     branchId?: string;
     patientId?: string;
-    status?: string;
+    status?: 'pending' | 'completed' | 'rejected' | 'returned';
     search?: string;
+    invoiceNumber?: string;
+    paymentMethod?: string;
+    paymentStatus?: 'paid' | 'due' | 'partial';
+    createdBy?: string;
+    updatedBy?: string;
+    cashRegisterSessionId?: string;
+    isIndoorSale?: boolean;
+    startDate?: string;
+    endDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
   }): Promise<SalesPaginatedResponse<SaleReturn>> => {
     const response = await api.get<SalesPaginatedResponse<SaleReturn>>('/sales/returns', { params });
     return response.data;

@@ -38,10 +38,11 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { pharmacyService } from "@/services/pharmacy-service"
+import { salesService } from "@/services/sales-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { Sale, SaleReturn } from "@/types/pharmacy"
-import { ChevronLeft, ChevronRight, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
+import { Sale, SaleReturn } from "@/types/sales"
+import { ChevronLeft, ChevronRight, DollarSign, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
@@ -81,6 +82,7 @@ export function TransactionHistory() {
   const [selectedReturnForDetails, setSelectedReturnForDetails] = useState<SaleReturn | null>(null)
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
   const [selectedTransactionForReceipt, setSelectedTransactionForReceipt] = useState<any | null>(null)
+  const [initialAddPayment, setInitialAddPayment] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
   const [filters, setFilters] = useState<{
     dateRange: DateRange | undefined;
@@ -116,7 +118,7 @@ export function TransactionHistory() {
         }
         
         if (activeTab === 'all' || activeTab === 'sale') {
-            promises.push(pharmacyService.getSales(baseParams).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
+            promises.push(salesService.getSales(baseParams).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
         } else {
             promises.push(Promise.resolve({ type: 'sale', data: [], meta: { totalPages: 0 } }))
         }
@@ -128,7 +130,7 @@ export function TransactionHistory() {
         }
 
         if (activeTab === 'all' || activeTab === 'return') {
-            promises.push(pharmacyService.getSaleReturns(baseParams).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
+            promises.push(salesService.getSaleReturns(baseParams).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'return', data: [], meta: { totalPages: 0 } }))
         }
@@ -184,7 +186,6 @@ export function TransactionHistory() {
             returnsData?.meta?.totalPages || 1
         )
         setTotalPages(maxPages)
-
     } catch (error) {
         console.error("Failed to fetch transactions", error)
         toast.error("Failed to load transaction history")
@@ -477,6 +478,21 @@ export function TransactionHistory() {
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
+                                            {tx.type === 'sale' && Number(tx.original?.dueAmount) > 0 && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100" 
+                                                    title="Collect Payment"
+                                                    onClick={() => {
+                                                        setSelectedSaleForDetails(tx.original)
+                                                        setInitialAddPayment(true)
+                                                        setDetailsDialogOpen(true)
+                                                    }}
+                                                >
+                                                    <DollarSign className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                             <Button 
                                                 variant="ghost" 
                                                 size="icon" 
@@ -556,6 +572,7 @@ export function TransactionHistory() {
             fetchTransactions()
             setDetailsDialogOpen(false)
         }}
+        initialAddPayment={initialAddPayment}
     />
 
     <SaleReturnDetailsDialog

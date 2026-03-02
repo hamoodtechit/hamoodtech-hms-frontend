@@ -23,17 +23,18 @@ export interface FinanceTransaction {
     saleId: string | null;
     purchaseId: string | null;
     expenseId: string | null;
+    saleReturnId: string | null;
     flowType: 'in' | 'out';
-    txnType: 'sale' | 'purchase' | 'expense' | 'income' | 'withdraw' | 'deposit';
+    txnType: 'opening' | 'sale' | 'purchase' | 'expense' | 'income' | 'withdraw' | 'deposit' | 'transfer' | 'adjustment' | 'sale-return';
     paymentMethod: string;
     amount: string;
     note?: string;
     createdAt: string;
     updatedAt: string;
-    account?: {
-        name: string;
-        type: string;
-    };
+    account?: FinanceAccount;
+    sale?: any;
+    purchase?: any;
+    expense?: any;
 }
 
 export interface AccountListResponse {
@@ -65,7 +66,7 @@ export interface WithdrawPayload {
 
 export interface CreateAccountPayload {
     name: string;
-    type: 'cash' | 'bank' | 'mobile_banking' | 'other';
+    type: 'cash' | 'bank' | 'mfs' | 'asset' | 'liability' | 'equity' | 'income' | 'expense';
     description?: string;
     openingBalance: number;
     isActive: boolean;
@@ -83,8 +84,10 @@ export interface TransactionQueryParams {
     limit?: number;
     search?: string;
     accountId?: string;
+    branchId?: string;
     flowType?: 'in' | 'out';
-    txnType?: 'opening' | 'sale' | 'purchase' | 'expense' | 'income' | 'transfer' | 'adjustment' | 'withdraw';
+    lowType?: 'in' | 'out'; // Alias for compatibility
+    txnType?: 'opening' | 'sale' | 'purchase' | 'expense' | 'income' | 'transfer' | 'adjustment' | 'withdraw' | 'deposit' | 'sale-return';
     startDate?: string;
     endDate?: string;
 }

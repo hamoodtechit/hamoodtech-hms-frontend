@@ -7,6 +7,7 @@ export const FINANCE_KEYS = {
     accounts: (params?: any) => [...FINANCE_KEYS.all, "accounts", params] as const,
     account: (id: string) => [...FINANCE_KEYS.all, "account", id] as const,
     transactions: (params?: any) => [...FINANCE_KEYS.all, "transactions", params] as const,
+    transaction: (id: string) => [...FINANCE_KEYS.all, "transaction", id] as const,
 };
 
 export function useFinanceAccounts(params?: any) {
@@ -28,6 +29,14 @@ export function useFinanceTransactions(params?: any) {
     return useQuery({
         queryKey: FINANCE_KEYS.transactions(params),
         queryFn: () => financeService.getTransactions(params),
+    });
+}
+
+export function useFinanceTransaction(id: string) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.transaction(id),
+        queryFn: () => financeService.getTransaction(id),
+        enabled: !!id,
     });
 }
 
@@ -57,6 +66,18 @@ export function useDeleteFinanceAccount() {
         mutationFn: (id: string) => financeService.deleteAccount(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.all });
+        },
+    });
+}
+
+export function useUpdateFinanceTransaction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: { note?: string; paymentMethod?: string } }) => 
+            financeService.updateTransaction(id, data),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.transaction(id) });
+            queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.transactions() });
         },
     });
 }

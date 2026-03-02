@@ -3,6 +3,7 @@
 import { AccountDialog } from "@/components/finance/account-dialog"
 import { ExpenseCategoryList } from "@/components/finance/expense-category-list"
 import { ExpenseList } from "@/components/finance/expense-list"
+import { TransactionList } from "@/components/finance/transaction-list"
 import { WithdrawDialog } from "@/components/finance/withdraw-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,11 +27,12 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { FinanceAccount } from "@/types/finance"
 import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export default function FinancePage() {
     const { formatCurrency } = useCurrency()
+    const [mounted, setMounted] = useState(false)
     const [withdrawAccount, setWithdrawAccount] = useState<FinanceAccount | null>(null)
     const [accountDialogOpen, setAccountDialogOpen] = useState(false)
     const [selectedAccount, setSelectedAccount] = useState<FinanceAccount | null>(null)
@@ -38,7 +40,19 @@ export default function FinancePage() {
     const { data, isLoading, refetch } = useFinanceAccounts({ limit: 100 })
     const deleteAccountMutation = useDeleteFinanceAccount()
 
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
     const accounts = data?.data || []
+
+    if (!mounted) {
+        return (
+            <div className="flex h-[450px] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/40" />
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-6">
@@ -50,6 +64,7 @@ export default function FinancePage() {
             <Tabs defaultValue="accounts" className="space-y-4">
                 <TabsList className="bg-background border">
                     <TabsTrigger value="accounts" className="data-[state=active]:bg-primary/10">Accounts</TabsTrigger>
+                    <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
                     <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
                     <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
                 </TabsList>
@@ -196,6 +211,10 @@ export default function FinancePage() {
                             </Table>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                <TabsContent value="transactions">
+                    <TransactionList />
                 </TabsContent>
 
                 <TabsContent value="expenses">

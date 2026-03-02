@@ -1,6 +1,7 @@
 import { pharmacyService } from "@/services/pharmacy-service";
-import { Medicine, PharmacyEntityType, PharmacyResponse, UpdateOpeningStockDto } from "@/types/pharmacy";
+import { Medicine, PharmacyEntityType, PharmacyResponse, PurchaseStatus, UpdateOpeningStockDto } from "@/types/pharmacy";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const PHARMACY_KEYS = {
   all: ["pharmacy"] as const,
@@ -16,10 +17,8 @@ export const PHARMACY_KEYS = {
   suppliers: (params: any) => [...PHARMACY_KEYS.all, "suppliers", params] as const,
   purchases: (params: any) => [...PHARMACY_KEYS.all, "purchases", params] as const,
   purchase: (id: string) => [...PHARMACY_KEYS.all, "purchase", id] as const,
-  sales: (params: any) => [...PHARMACY_KEYS.all, "sales", params] as const,
-  sale: (id: string) => [...PHARMACY_KEYS.all, "sale", id] as const,
-  saleReturns: (params: any) => [...PHARMACY_KEYS.all, "saleReturns", params] as const,
   cashRegisters: (params: any) => [...PHARMACY_KEYS.all, "cash-registers", params] as const,
+  branches: (params: any) => [...PHARMACY_KEYS.all, "branches", params] as const,
 };
 
 export function useCashRegisters(params: any = {}) {
@@ -339,7 +338,14 @@ export function useDeleteSupplier() {
 }
 
 // Purchase Hooks
-export function usePurchases(params: any = {}) {
+export function usePurchases(params: { 
+  page?: number; 
+  limit?: number; 
+  search?: string;
+  branchId?: string;
+  supplierId?: string;
+  status?: PurchaseStatus;
+} = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.purchases(params),
     queryFn: () => pharmacyService.getPurchases(params),
@@ -375,34 +381,10 @@ export function usePurchase(id: string) {
   });
 }
 
-// Sales Hooks (for History/Dashboard)
-export function useSales(params: any = {}) {
-  return useQuery({
-    queryKey: PHARMACY_KEYS.sales(params),
-    queryFn: () => pharmacyService.getSales(params),
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useSale(id: string) {
-  return useQuery({
-    queryKey: PHARMACY_KEYS.sale(id),
-    queryFn: () => pharmacyService.getSale(id),
-    enabled: !!id,
-  });
-}
-
-export function useSaleReturns(params: any = {}) {
-  return useQuery({
-    queryKey: PHARMACY_KEYS.saleReturns(params),
-    queryFn: () => pharmacyService.getSaleReturns(params),
-    placeholderData: keepPreviousData,
-  });
-}
 
 export function useBranches(params: any = {}) {
   return useQuery({
-    queryKey: ['pharmacy', 'branches', params],
+    queryKey: PHARMACY_KEYS.branches(params),
     queryFn: async () => {
       const res = await pharmacyService.getBranches(params);
       return {
@@ -419,4 +401,19 @@ export function useBranches(params: any = {}) {
     },
     placeholderData: keepPreviousData,
   });
+}
+
+export function useDeleteBranch() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => pharmacyService.deleteBranch(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.branches({}) });
+            queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
+            toast.success("Branch deleted successfully");
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to delete branch");
+        }
+    });
 }

@@ -36,16 +36,16 @@ export default function InventoryPage() {
 
         <Tabs defaultValue="stock" className="space-y-4">
             <TabsList>
-                <TabsTrigger value="stock">Current Stock</TabsTrigger>
-                <TabsTrigger value="po">Purchase</TabsTrigger>
-                <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
+                {hasPermission('stock:read') && <TabsTrigger value="stock">Current Stock</TabsTrigger>}
+                {hasPermission('purchase:read') && <TabsTrigger value="po">Purchase</TabsTrigger>}
+                {hasPermission('supplier:read') && <TabsTrigger value="suppliers">Suppliers</TabsTrigger>}
             </TabsList>
             <TabsContent value="stock" className="space-y-4">
                 <StockTable />
             </TabsContent>
             <TabsContent value="po" className="space-y-4">
                 <div className="flex justify-end">
-                    {hasPermission('medicine:purchase') && <CreateOrderDialog />}
+                    {hasPermission('purchase:create') && <CreateOrderDialog />}
                 </div>
                 <PurchaseOrderList />
             </TabsContent>

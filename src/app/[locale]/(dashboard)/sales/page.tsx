@@ -1,9 +1,25 @@
 "use client"
 
+import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
+import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Table,
     TableBody,
@@ -14,27 +30,70 @@ import {
 } from "@/components/ui/table"
 import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
+import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import {
+    DollarSign,
     Eye,
     FileText,
+    Filter,
     Loader2,
     Search,
-    ShoppingCart
+    ShoppingCart,
+    X
 } from "lucide-react"
 import { useState } from "react"
+import { DateRange } from "react-day-picker"
 
 export default function SalesHistoryPage() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 500)
   const [page, setPage] = useState(1)
+  const [status, setStatus] = useState<string>("all")
+  const [paymentStatus, setPaymentStatus] = useState<string>("all")
+  const [paymentMethod, setPaymentMethod] = useState<string>("all")
+  const [invoiceNumber, setInvoiceNumber] = useState("")
+  const [createdBy, setCreatedBy] = useState("")
+  const [isIndoorSale, setIsIndoorSale] = useState<string>("all")
+  const [minAmount, setMinAmount] = useState("")
+  const [maxAmount, setMaxAmount] = useState("")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const limit = 10
 
-  const { data: salesRes, isLoading } = useSales({
+  const activeFilterCount = (status !== "all" ? 1 : 0) + 
+                            (paymentStatus !== "all" ? 1 : 0) + 
+                            (paymentMethod !== "all" ? 1 : 0) +
+                            (invoiceNumber ? 1 : 0) +
+                            (createdBy ? 1 : 0) +
+                            (isIndoorSale !== "all" ? 1 : 0) +
+                            (minAmount ? 1 : 0) +
+                            (maxAmount ? 1 : 0) +
+                            (dateRange ? 1 : 0)
+
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [initialAddPayment, setInitialAddPayment] = useState(false)
+
+  const { data: salesRes, isLoading, refetch } = useSales({
     page,
-    limit: 10,
-    search,
+    limit,
+    status: status !== "all" ? (status as any) : undefined,
+    paymentStatus: paymentStatus !== "all" ? (paymentStatus as any) : undefined,
+    paymentMethod: paymentMethod !== "all" ? paymentMethod : undefined,
+    invoiceNumber: invoiceNumber || undefined,
+    createdBy: createdBy || undefined,
+    isIndoorSale: isIndoorSale === "yes" ? true : isIndoorSale === "no" ? false : undefined,
+    minAmount: minAmount ? Number(minAmount) : undefined,
+    maxAmount: maxAmount ? Number(maxAmount) : undefined,
+    startDate: dateRange?.from?.toISOString().split('T')[0],
+    endDate: dateRange?.to?.toISOString().split('T')[0],
+    search: debouncedSearch || undefined,
     branchId: activeStoreId || undefined
   })
 
@@ -61,14 +120,196 @@ export default function SalesHistoryPage() {
               <ShoppingCart className="h-5 w-5 text-primary" />
               Transactions
             </CardTitle>
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search invoice or patient..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-background/50 border-primary/20 focus:border-primary transition-all rounded-xl"
-              />
+            <div className="flex flex-col md:flex-row items-center gap-3">
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search invoice or patient..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 bg-background/50 border-primary/20 focus:border-primary transition-all rounded-xl"
+                />
+              </div>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className={cn(
+                      "rounded-xl gap-2",
+                      activeFilterCount > 0 && "bg-primary/5 border-primary text-primary"
+                    )}
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <Badge variant="default" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium leading-none">Advanced Filters</h4>
+                      {activeFilterCount > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setStatus("all")
+                            setPaymentStatus("all")
+                            setPaymentMethod("all")
+                            setInvoiceNumber("")
+                            setCreatedBy("")
+                            setIsIndoorSale("all")
+                            setMinAmount("")
+                            setMaxAmount("")
+                            setDateRange(undefined)
+                          }}
+                          className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2 col-span-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Date Range</Label>
+                        <DatePickerWithRange 
+                          date={dateRange} 
+                          setDate={setDateRange}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Invoice Number</Label>
+                        <Input 
+                          placeholder="SALE-..."
+                          value={invoiceNumber}
+                          onChange={(e) => setInvoiceNumber(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Created By</Label>
+                        <Input 
+                          placeholder="User name"
+                          value={createdBy}
+                          onChange={(e) => setCreatedBy(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Sale Status</Label>
+                        <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="returned">Returned</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Indoor Sale</Label>
+                        <Select value={isIndoorSale} onValueChange={(v) => { setIsIndoorSale(v); setPage(1); }}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="yes">Indoor Only</SelectItem>
+                            <SelectItem value="no">Outdoor Only</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Status</Label>
+                        <Select value={paymentStatus} onValueChange={(v) => { setPaymentStatus(v); setPage(1); }}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Payment Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="due">Due</SelectItem>
+                            <SelectItem value="partial">Partial</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Method</Label>
+                        <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="All Methods" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Methods</SelectItem>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="card">Card</SelectItem>
+                            <SelectItem value="online">Online</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                            <SelectItem value="bKash">bKash</SelectItem>
+                            <SelectItem value="Nagad">Nagad</SelectItem>
+                            <SelectItem value="Rocket">Rocket</SelectItem>
+                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Min Amount</Label>
+                        <Input 
+                          type="number"
+                          placeholder="0.00"
+                          value={minAmount}
+                          onChange={(e) => setMinAmount(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Max Amount</Label>
+                        <Input 
+                          type="number"
+                          placeholder="999..."
+                          value={maxAmount}
+                          onChange={(e) => setMaxAmount(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {search && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setSearch("")
+                    setPage(1)
+                  }}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -81,6 +322,8 @@ export default function SalesHistoryPage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Patient</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>Paid</TableHead>
+                  <TableHead>Due</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Payment</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -110,6 +353,15 @@ export default function SalesHistoryPage() {
                       <TableCell className="font-bold text-primary">
                         {formatCurrency(Number(sale.netPrice || sale.totalPrice))}
                       </TableCell>
+                      <TableCell className="text-emerald-600 font-medium">
+                        {formatCurrency(Number(sale.paidAmount || 0))}
+                      </TableCell>
+                      <TableCell className={cn(
+                        "font-bold",
+                        Number(sale.dueAmount) > 0 ? "text-red-600" : "text-muted-foreground"
+                      )}>
+                        {formatCurrency(Number(sale.dueAmount || 0))}
+                      </TableCell>
                       <TableCell>
                         <Badge 
                           variant={sale.status === 'completed' ? 'success' : sale.status === 'pending' ? 'warning' : 'destructive'}
@@ -122,8 +374,12 @@ export default function SalesHistoryPage() {
                         <Badge 
                           variant="outline"
                           className={cn(
-                            "capitalize border-none bg-muted px-2 py-0.5",
-                            sale.paymentStatus === 'paid' ? "text-emerald-500 bg-emerald-500/10" : "text-amber-500 bg-amber-500/10"
+                            "capitalize border-none px-2 py-0.5",
+                            sale.paymentStatus === 'paid' 
+                              ? "text-emerald-500 bg-emerald-500/10" 
+                              : sale.paymentStatus === 'partial'
+                              ? "text-amber-500 bg-amber-500/10"
+                              : "text-red-500 bg-red-500/10"
                           )}
                         >
                           {sale.paymentStatus}
@@ -131,10 +387,42 @@ export default function SalesHistoryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all">
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all"
+                             onClick={() => {
+                                setSelectedSale(sale)
+                                setInitialAddPayment(false)
+                                setDetailsOpen(true)
+                             }}
+                           >
                               <Eye className="h-4 w-4" />
                            </Button>
-                           <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-500/20 hover:text-blue-500 transition-all">
+                           {Number(sale.dueAmount) > 0 && (
+                             <Button 
+                               variant="ghost" 
+                               size="icon" 
+                               className="h-8 w-8 bg-red-50 text-red-600 hover:bg-red-100 transition-all border border-red-100"
+                               title="Collect Payment"
+                               onClick={() => {
+                                  setSelectedSale(sale)
+                                  setInitialAddPayment(true)
+                                  setDetailsOpen(true)
+                               }}
+                             >
+                                <DollarSign className="h-4 w-4" />
+                             </Button>
+                           )}
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="h-8 w-8 hover:bg-blue-500/20 hover:text-blue-500 transition-all"
+                             onClick={() => {
+                                setSelectedSale(sale)
+                                setReceiptOpen(true)
+                             }}
+                           >
                               <FileText className="h-4 w-4" />
                            </Button>
                         </div>
@@ -173,10 +461,46 @@ export default function SalesHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <SaleDetailsDialog 
+        sale={selectedSale}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        onSuccess={() => refetch()}
+        initialAddPayment={initialAddPayment}
+      />
+
+      <ReceiptDialog 
+        open={receiptOpen}
+        onOpenChange={setReceiptOpen}
+        transaction={selectedSale ? {
+            id: selectedSale.id,
+            customerName: selectedSale.patient?.name || 'Walk-in',
+            items: (selectedSale.saleItems || []).map(item => ({
+                id: item.medicineId || '',
+                name: item.itemName || 'Unknown Item',
+                price: Number(item.price),
+                quantity: Number(item.quantity),
+                batchNumber: item.batchNumber,
+                discountPercentage: Number(item.discountPercentage || 0),
+                discountAmount: Number(item.discountAmount || 0),
+                dosageForm: item.unit // mapping unit to dosageForm as fallback
+            })),
+            total: Number(selectedSale.totalPrice),
+            subtotal: Number(selectedSale.netPrice || selectedSale.totalPrice),
+            tax: Number(selectedSale.taxAmount || 0),
+            taxPercentage: Number(selectedSale.taxPercentage || 0),
+            discount: Number(selectedSale.discountPercentage || 0),
+            discountAmount: Number(selectedSale.discountAmount || 0),
+            paidAmount: Number(selectedSale.paidAmount || 0),
+            dueAmount: Number(selectedSale.dueAmount || 0),
+            date: selectedSale.createdAt,
+            status: selectedSale.status === 'completed' ? 'Completed' : 'Refunded', // match type
+            paymentMethod: (selectedSale.paymentMethod as any) || 'cash',
+            invoiceNumber: selectedSale.invoiceNumber
+        } as any : null}
+      />
     </div>
   )
 }
 
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(" ");
-}

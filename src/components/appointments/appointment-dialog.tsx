@@ -21,15 +21,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
 import { usePatients } from "@/hooks/patient-queries"
+import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { TimeSlotPicker } from "./time-slot-picker"
 
 interface AppointmentDialogProps {
     open: boolean
@@ -47,6 +50,13 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
 
     const createMutation = useCreateAppointment()
     const updateMutation = useUpdateAppointment()
+    const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
+
+    useEffect(() => {
+        if (open && !appointmentConfig) {
+            fetchSettings()
+        }
+    }, [open, appointmentConfig, fetchSettings])
 
     const isEdit = !!appointment
 
@@ -59,6 +69,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         date: new Date().toISOString().split('T')[0],
         timeSlot: "",
         note: "",
+        fees: "0",
         status: "pending" as AppointmentStatus
     })
 
@@ -78,6 +89,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     date: appointment.date.split('T')[0],
                     timeSlot: appointment.timeSlot,
                     note: appointment.note || "",
+                    fees: appointment.fees || "0",
                     status: appointment.status
                 })
             } else {
@@ -89,6 +101,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     date: new Date().toISOString().split('T')[0],
                     timeSlot: "",
                     note: "",
+                    fees: "0",
                     status: "pending"
                 })
             }
@@ -217,11 +230,29 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label>Time Slot *</Label>
-                                        <Input 
-                                            placeholder="e.g. 10:00 AM"
-                                            value={formData.timeSlot}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, timeSlot: e.target.value }))}
+                                        <Label>Active Branch</Label>
+                                        <Input value={activeBranchName} disabled className="bg-muted" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <TimeSlotPicker 
+                                        value={formData.timeSlot}
+                                        onChange={(time) => setFormData(prev => ({ ...prev, timeSlot: time }))}
+                                        startTime={appointmentConfig?.startTime}
+                                        endTime={appointmentConfig?.endTime}
+                                        duration={appointmentConfig?.slotDuration}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>Consultation Fees (Tk)</Label>
+                                        <SmartNumberInput 
+                                            placeholder="600"
+                                            value={formData.fees ? Number(formData.fees) : undefined}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, fees: val?.toString() || "" }))}
+                                            className="rounded-xl border-primary/10"
                                         />
                                     </div>
                                 </div>

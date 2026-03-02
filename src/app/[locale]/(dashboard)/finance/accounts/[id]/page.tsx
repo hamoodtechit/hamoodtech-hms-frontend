@@ -1,26 +1,16 @@
 "use client"
 
 import { AccountDialog } from "@/components/finance/account-dialog"
+import { TransactionDetailsDialog } from "@/components/finance/transaction-details-dialog"
+import { TransactionTable } from "@/components/finance/transaction-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
 import { useFinanceAccount } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
-import { cn } from "@/lib/utils"
 import {
-    ArrowDownLeft,
     ArrowLeft,
-    ArrowUpRight,
-    Calendar,
     CreditCard,
     DollarSign,
     History,
@@ -38,6 +28,10 @@ export default function AccountDetailsPage() {
     const [editOpen, setEditOpen] = useState(false)
     const { formatCurrency } = useCurrency()
     
+    // Details Dialog State
+    const [selectedTxnId, setSelectedTxnId] = useState<string | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState(false)
+
     const { data: response, isLoading, error, refetch } = useFinanceAccount(id)
     const account = response?.data
 
@@ -65,6 +59,11 @@ export default function AccountDetailsPage() {
     }
 
     const transactions = account.transactions || []
+
+    const handleViewDetails = (id: string) => {
+        setSelectedTxnId(id)
+        setDetailsOpen(true)
+    }
 
     return (
         <div className="space-y-6">
@@ -147,77 +146,12 @@ export default function AccountDetailsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Date & ID</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Flow</TableHead>
-                                <TableHead className="text-right">Previous</TableHead>
-                                <TableHead className="text-right">Current</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                                <TableHead>Method & Note</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {transactions.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground font-medium italic">
-                                        No transactions recorded yet.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                transactions.map((txn) => (
-                                    <TableRow key={txn.id}>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-xs">{txn.txnId}</span>
-                                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
-                                                    <Calendar className="h-3 w-3" />
-                                                    {new Date(txn.createdAt).toLocaleDateString()} {new Date(txn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="capitalize text-[10px] h-5">
-                                                {txn.txnType}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className={cn(
-                                                "flex items-center gap-1 font-semibold text-xs",
-                                                txn.flowType === 'in' ? "text-emerald-600" : "text-destructive"
-                                            )}>
-                                                {txn.flowType === 'in' ? (
-                                                    <><ArrowDownLeft className="h-3 w-3" /> IN</>
-                                                ) : (
-                                                    <><ArrowUpRight className="h-3 w-3" /> OUT</>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right text-muted-foreground text-xs whitespace-nowrap">
-                                            {formatCurrency(Number(txn.accountBalanceBefore))}
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium text-xs whitespace-nowrap">
-                                            {formatCurrency(Number(txn.accountBalanceNow))}
-                                        </TableCell>
-                                        <TableCell className={cn(
-                                            "text-right font-bold whitespace-nowrap",
-                                            txn.flowType === 'in' ? "text-emerald-600" : "text-destructive"
-                                        )}>
-                                            {txn.flowType === 'in' ? '+' : '-'}{formatCurrency(Number(txn.amount))}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col max-w-[200px]">
-                                                <span className="text-[10px] font-medium uppercase text-muted-foreground">{txn.paymentMethod}</span>
-                                                <span className="text-xs truncate" title={txn.note}>{txn.note || "-"}</span>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                     </Table>
+                    <TransactionTable 
+                        transactions={transactions}
+                        showAccount={false}
+                        showBalances={true}
+                        onViewDetails={handleViewDetails}
+                    />
                 </CardContent>
             </Card>
 
@@ -226,6 +160,12 @@ export default function AccountDetailsPage() {
                 onOpenChange={setEditOpen}
                 account={account}
                 onSuccess={refetch}
+            />
+
+            <TransactionDetailsDialog 
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                transactionId={selectedTxnId}
             />
         </div>
     )

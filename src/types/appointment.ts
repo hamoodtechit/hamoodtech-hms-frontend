@@ -10,6 +10,8 @@ export interface Appointment {
   date: string;
   timeSlot: string;
   status: AppointmentStatus;
+  fees: string;
+  saleId?: string;
   note?: string;
   createdAt: string;
   updatedAt: string;
@@ -49,6 +51,7 @@ export interface AppointmentPayload {
   departmentId: string;
   date: string;
   timeSlot: string;
+  fees: string;
   note?: string;
   status?: AppointmentStatus;
 }
@@ -67,8 +70,13 @@ export interface AppointmentPaginatedResponse {
   };
 }
 
+import { Sale } from "./sales";
+
 export interface AppointmentDetailsResponse {
   success: boolean;
   message: string;
-  data: Appointment;
+  data: {
+    appointment: Appointment;
+    sale: Sale;
+  };
 }

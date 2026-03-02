@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransactionListResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
+import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
 
 export const financeService = {
     getAccounts: async (params?: { page?: number; limit?: number; type?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
@@ -34,6 +34,16 @@ export const financeService = {
 
     getTransactions: async (params?: TransactionQueryParams): Promise<FinanceTransactionListResponse> => {
         const response = await api.get<FinanceTransactionListResponse>("/finance/transactions", { params });
+        return response.data;
+    },
+    
+    getTransaction: async (id: string): Promise<FinanceTransaction> => {
+        const response = await api.get<FinanceTransaction>(`/finance/transactions/${id}`);
+        return response.data;
+    },
+
+    updateTransaction: async (id: string, data: { note?: string; paymentMethod?: string }): Promise<FinanceTransaction> => {
+        const response = await api.patch<FinanceTransaction>(`/finance/transactions/${id}`, data);
         return response.data;
     }
 };

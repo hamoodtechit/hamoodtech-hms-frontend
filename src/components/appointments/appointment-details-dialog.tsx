@@ -1,5 +1,7 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,22 +10,42 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useAppointment } from "@/hooks/appointment-queries"
-import { AppointmentStatus } from "@/types/appointment"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
+import { useUpdateSale } from "@/hooks/sales-queries"
+import { useCurrency } from "@/hooks/use-currency"
+import { Appointment, AppointmentStatus } from "@/types/appointment"
+import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import {
     Building2,
     Calendar,
     Clock,
+    CreditCard,
+    DollarSign,
     FileText,
     Loader2,
     MapPin,
     Phone,
+    Receipt,
     Stethoscope,
-    User
+    User,
+    Wallet
 } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
 interface AppointmentDetailsDialogProps {
     open: boolean
@@ -32,8 +54,14 @@ interface AppointmentDetailsDialogProps {
 }
 
 export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: AppointmentDetailsDialogProps) {
-    const { data: appointmentRes, isLoading } = useAppointment(appointmentId || "")
-    const appointment = appointmentRes?.data
+    const { data: response, isLoading } = useAppointment(appointmentId || "")
+    const { formatCurrency } = useCurrency()
+    
+    // Response now contains { appointment, sale }
+    const appointment = response?.data?.appointment
+    const sale = response?.data?.sale
+
+    const [isPaying, setIsPaying] = useState(false)
 
     if (!appointmentId) return null
 
@@ -56,8 +84,8 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         }
     }
 
-    const DetailSection = ({ icon: Icon, title, children }: { icon: any, title: string, children: React.ReactNode }) => (
-        <section className="space-y-3">
+    const DetailSection = ({ icon: Icon, title, children, className }: { icon: any, title: string, children: React.ReactNode, className?: string }) => (
+        <section className={cn("space-y-3", className)}>
             <div className="flex items-center gap-2 text-primary font-bold text-[11px] uppercase tracking-[0.2em]">
                 <Icon className="h-3.5 w-3.5" />
                 <h3>{title}</h3>
@@ -80,7 +108,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] bg-background/95 backdrop-blur-xl">
+            <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] bg-background/95 backdrop-blur-xl">
                 <div className="absolute top-0 left-0 w-full h-[150px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent -z-10" />
                 
                 <DialogHeader className="p-8 pb-4">
@@ -141,8 +169,71 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
                             </DetailSection>
 
+                            {/* Billing & Payment Info - Only show if fee is present */}
+                            {(appointment?.fees || sale) && (
+                                <DetailSection icon={Receipt} title="Billing & Payment" className="md:col-span-2">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="space-y-4">
+                                            <Field label="Invoice Number" value={sale?.invoiceNumber} icon={FileText} />
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Status</span>
+                                                <Badge variant={sale?.paymentStatus === 'paid' ? 'default' : 'destructive'} className="capitalize h-5 py-0">
+                                                    {sale?.paymentStatus || 'pending'}
+                                                </Badge>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 col-span-2 bg-background/50 p-4 rounded-xl border border-primary/5">
+                                            <div className="flex justify-between items-center text-sm font-medium">
+                                                <span className="text-muted-foreground">Consultation Fee</span>
+                                                <span>{formatCurrency(Number(appointment?.fees || sale?.totalPrice || 0))}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm font-medium text-emerald-600">
+                                                <span>Paid Amount</span>
+                                                <span>{formatCurrency(Number(sale?.paidAmount || 0))}</span>
+                                            </div>
+                                            
+                                            {/* Show due if balance exists (either via sale or appointment fees) */}
+                                            {(() => {
+                                                const totalDue = sale ? Number(sale.dueAmount || 0) : Number(appointment?.fees || 0);
+                                                if (totalDue <= 0) return null;
+                                                
+                                                return (
+                                                    <>
+                                                        <Separator className="my-2" />
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Due</span>
+                                                            <span className="text-lg font-black text-destructive">{formatCurrency(totalDue)}</span>
+                                                        </div>
+
+                                                        {!isPaying && (
+                                                            <Button 
+                                                                className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-xl"
+                                                                onClick={() => setIsPaying(true)}
+                                                            >
+                                                                <DollarSign className="h-4 w-4 mr-2" />
+                                                                Process Payment
+                                                            </Button>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {isPaying && sale && (
+                                        <PaymentForm 
+                                            sale={sale} 
+                                            appointment={appointment}
+                                            onCancel={() => setIsPaying(false)} 
+                                            onSuccess={() => setIsPaying(false)}
+                                        />
+                                    )}
+                                </DetailSection>
+                            )}
+
                             {/* Additional Info */}
-                            <div className="md:col-span-2 space-y-3">
+                            <div className="md:col-span-2 space-y-3 pt-4">
                                 <div className="flex items-center gap-2 text-primary font-bold text-[11px] uppercase tracking-[0.2em]">
                                     <FileText className="h-3.5 w-3.5" />
                                     <h3>Clinical Notes / Instructions</h3>
@@ -169,5 +260,114 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                 </div>
             </DialogContent>
         </Dialog>
+    )
+}
+
+function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, appointment?: Appointment, onCancel: () => void, onSuccess: () => void }) {
+    const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
+    const accounts = accountsRes?.data || []
+    const updateSaleMutation = useUpdateSale()
+    
+    const [accountId, setAccountId] = useState("")
+    const [paymentAmount, setPaymentAmount] = useState<number | undefined>(Number(sale.dueAmount))
+    const [paymentNote, setPaymentNote] = useState("")
+
+    const handleProcessPayment = async () => {
+        if (!accountId) return toast.error("Please select a payment account")
+        if (!paymentAmount || paymentAmount <= 0) return toast.error("Amount must be greater than 0")
+
+        try {
+            const currentPaid = Number(sale.paidAmount || 0)
+            const currentDue = Number(sale.dueAmount || 0)
+            
+            await updateSaleMutation.mutateAsync({
+                id: sale.id,
+                data: {
+                    paidAmount: currentPaid + paymentAmount,
+                    dueAmount: Math.max(0, currentDue - paymentAmount),
+                    payments: [
+                        {
+                            accountId,
+                            amount: paymentAmount,
+                            paymentMethod: (accounts.find(a => a.id === accountId)?.type as any) || 'cash',
+                            note: paymentNote || `Appointment Payment - ${appointment?.serialNumber || ''}`
+                        }
+                    ]
+                }
+            })
+            toast.success("Payment recorded successfully")
+            onSuccess()
+        } catch (error) {
+            toast.error("Failed to process payment")
+        }
+    }
+
+    return (
+        <div className="mt-4 p-6 rounded-2xl bg-primary/5 border border-primary/20 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex justify-between items-center">
+                <h4 className="text-sm font-bold flex items-center gap-2 text-primary">
+                    <Wallet className="h-4 w-4" />
+                    Record Payment
+                </h4>
+                <Button variant="ghost" size="sm" onClick={onCancel} className="h-8 w-8 p-0 rounded-full">
+                    ×
+                </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="account">Select Account</Label>
+                    <Select value={accountId} onValueChange={setAccountId}>
+                        <SelectTrigger id="account" className="rounded-xl border-primary/10">
+                            <SelectValue placeholder="Select payment account" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {accounts.map(acc => (
+                                <SelectItem key={acc.id} value={acc.id}>
+                                    <div className="flex items-center gap-2">
+                                        {acc.type === 'cash' ? <Wallet className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                                        <span>{acc.name}</span>
+                                        <span className="text-[10px] text-muted-foreground ml-2 capitalize">({acc.type})</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="amount">Payment Amount</Label>
+                    <SmartNumberInput 
+                        id="amount"
+                        prefix="Tk"
+                        value={paymentAmount} 
+                        onChange={setPaymentAmount}
+                        className="rounded-xl border-primary/10"
+                    />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                    <Label htmlFor="note">Payment Note (Optional)</Label>
+                    <Input 
+                        id="note"
+                        value={paymentNote} 
+                        onChange={(e) => setPaymentNote(e.target.value)}
+                        placeholder="e.g. Received via bKash"
+                        className="rounded-xl border-primary/10"
+                    />
+                </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" size="sm" onClick={onCancel} className="rounded-lg">Cancel</Button>
+                <Button 
+                    size="sm" 
+                    onClick={handleProcessPayment} 
+                    disabled={updateSaleMutation.isPending}
+                    className="rounded-lg"
+                >
+                    {updateSaleMutation.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                    Confirm Payment
+                </Button>
+            </div>
+        </div>
     )
 }

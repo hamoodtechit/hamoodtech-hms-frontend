@@ -43,7 +43,7 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
 
     // Form State
     const [name, setName] = useState("")
-    const [type, setType] = useState<'cash' | 'bank' | 'mobile_banking' | 'other'>('cash')
+    const [type, setType] = useState<'cash' | 'bank' | 'mfs' | 'asset' | 'liability' | 'equity' | 'income' | 'expense'>('cash')
     const [description, setDescription] = useState("")
     const [openingBalance, setOpeningBalance] = useState(0)
     const [isActive, setIsActive] = useState(true)
@@ -132,8 +132,12 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
                             <SelectContent>
                                 <SelectItem value="cash">Cash</SelectItem>
                                 <SelectItem value="bank">Bank</SelectItem>
-                                <SelectItem value="mobile_banking">Mobile Banking</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
+                                <SelectItem value="mfs">MFS (Mobile Financial Services)</SelectItem>
+                                <SelectItem value="asset">Asset</SelectItem>
+                                <SelectItem value="liability">Liability</SelectItem>
+                                <SelectItem value="equity">Equity</SelectItem>
+                                <SelectItem value="income">Income</SelectItem>
+                                <SelectItem value="expense">Expense</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

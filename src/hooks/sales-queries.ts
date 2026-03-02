@@ -1,5 +1,7 @@
 import { salesService } from "@/services/sales-service";
+import { SalePaymentPayload, UpdateSalePayload } from "@/types/sales";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const SALES_KEYS = {
   all: ["sales"] as const,
@@ -65,3 +67,32 @@ export function useUpdateSaleReturnStatus() {
     },
   });
 }
+export const useUpdateSale = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSalePayload }) =>
+      salesService.updateSale(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+      toast.success("Sale updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update sale");
+    },
+  });
+};
+
+export const useAddSalePayment = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: ({ id, data }: { id: string; data: SalePaymentPayload }) =>
+        salesService.addSalePayment(id, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+        toast.success("Payment added successfully");
+      },
+      onError: (error: any) => {
+        toast.error(error.response?.data?.message || "Failed to add payment");
+      },
+    });
+};

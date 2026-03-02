@@ -3,11 +3,14 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { ArrowLeft, Database, Layers, Pill, Tag } from "lucide-react"
 import { MasterDataTable } from "./components/master-data-table"
 
 export default function PharmacySetupPage() {
+  const { hasPermission } = usePermissions()
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -33,22 +36,32 @@ export default function PharmacySetupPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="generics" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 h-auto p-1 bg-muted/50">
-              <TabsTrigger value="generics" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Tag className="mr-2 h-4 w-4" /> Generics
-              </TabsTrigger>
-              <TabsTrigger value="categories" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Layers className="mr-2 h-4 w-4" /> Categories
-              </TabsTrigger>
-              <TabsTrigger value="groups" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Database className="mr-2 h-4 w-4" /> Groups
-              </TabsTrigger>
-              <TabsTrigger value="units" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Pill className="mr-2 h-4 w-4" /> Units
-              </TabsTrigger>
-              <TabsTrigger value="manufacturers" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-                <Database className="mr-2 h-4 w-4" /> Manufacturers
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8 h-auto p-1 bg-muted/50">
+              {hasPermission('medicine-generic:read') && (
+                <TabsTrigger value="generics" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                    <Tag className="mr-2 h-4 w-4" /> Generics
+                </TabsTrigger>
+              )}
+              {hasPermission('medicine-category:read') && (
+                <TabsTrigger value="categories" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                    <Layers className="mr-2 h-4 w-4" /> Categories
+                </TabsTrigger>
+              )}
+              {hasPermission('medicine-group:read') && (
+                <TabsTrigger value="groups" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                    <Database className="mr-2 h-4 w-4" /> Groups
+                </TabsTrigger>
+              )}
+              {hasPermission('medicine-unit:read') && (
+                <TabsTrigger value="units" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                    <Pill className="mr-2 h-4 w-4" /> Units
+                </TabsTrigger>
+              )}
+              {hasPermission('medicine-manufacturer:read') && (
+                <TabsTrigger value="manufacturers" className="py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
+                    <Database className="mr-2 h-4 w-4" /> Manufacturers
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="generics" className="mt-0 animate-in fade-in-50">

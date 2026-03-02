@@ -3,37 +3,40 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
+import { useAddSalePayment, useUpdateSale } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
-import { pharmacyService } from "@/services/pharmacy-service"
+import { salesService } from "@/services/sales-service"
 import { useAuthStore } from "@/store/use-auth-store"
-import { Patient, PaymentMethod, Sale, SaleReturn } from "@/types/pharmacy"
-import { Edit, RotateCcw, Save, X } from "lucide-react"
+import { Patient, PaymentMethod } from "@/types/pharmacy"
+import { Sale, SaleReturn } from "@/types/sales"
+import { CreditCard, Edit, Loader2, RotateCcw, Save, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PatientSearch } from "./pos/patient-search"
@@ -43,6 +46,7 @@ interface SaleDetailsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  initialAddPayment?: boolean
 }
 
 export function SaleDetailsDialog({
@@ -50,6 +54,7 @@ export function SaleDetailsDialog({
   open,
   onOpenChange,
   onSuccess,
+  initialAddPayment = false,
 }: SaleDetailsDialogProps) {
   const { formatCurrency } = useCurrency()
   const { user } = useAuthStore()
@@ -65,6 +70,19 @@ export function SaleDetailsDialog({
   const [saleReturns, setSaleReturns] = useState<SaleReturn[]>([])
   const [fetchingReturns, setFetchingReturns] = useState(false)
 
+  // Payment UI state
+  const [isAddingPayment, setIsAddingPayment] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState<number>(0)
+  const [paymentAccountId, setPaymentAccountId] = useState<string>('')
+  const [paymentNote, setPaymentNote] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'due' | 'partial'>('due')
+
+  const { data: accountsRes } = useFinanceAccounts()
+  const accounts = accountsRes?.data || []
+
+  const { mutate: addPayment, isPending: submitttingPayment } = useAddSalePayment()
+  const { mutate: updateSale, isPending: updatingSale } = useUpdateSale()
+
   const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
   const { hasPermission } = usePermissions()
@@ -79,22 +97,52 @@ export function SaleDetailsDialog({
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setIsEditMode(false)
       fetchSaleReturns()
+      
+      if (initialAddPayment && Number(sale.dueAmount) > 0) {
+        setIsAddingPayment(true)
+        setPaymentAmount(Number(sale.dueAmount))
+      } else {
+        setIsAddingPayment(false)
+      }
     }
-  }, [sale])
+  }, [sale, initialAddPayment])
 
   const fetchSaleReturns = async () => {
     if (!sale) return
     try {
       setFetchingReturns(true)
-      const res = await pharmacyService.getSaleReturns({ search: sale.invoiceNumber, limit: 100 })
+      const res = await salesService.getSaleReturns({ search: sale.invoiceNumber, limit: 100 })
       // Filter returns that belong to this sale specifically if invoiceNumber is shared or search by saleId if supported
       // Usually invoiceNumber search for sale-returns will return returns for that invoice.
-      setSaleReturns(res.data.data)
+      setSaleReturns(res.data.data || [])
     } catch (error) {
       console.error("Failed to fetch sale returns", error)
     } finally {
       setFetchingReturns(false)
     }
+  }
+  const handlePaymentSubmit = () => {
+    if (!sale || !paymentAccountId || paymentAmount <= 0) {
+        toast.error("Please select an account and enter a valid amount")
+        return
+    }
+
+    addPayment({
+        id: sale.id,
+        data: {
+            accountId: paymentAccountId,
+            amount: paymentAmount,
+            paymentMethod: paymentMethod,
+            note: paymentNote || undefined
+        }
+    }, {
+        onSuccess: () => {
+            setIsAddingPayment(false)
+            setPaymentAmount(0)
+            setPaymentNote('')
+            onSuccess?.()
+        }
+    })
   }
 
   const handleSave = async () => {
@@ -102,17 +150,22 @@ export function SaleDetailsDialog({
 
     setLoading(true)
     try {
-      await pharmacyService.updateSale(sale.id, {
-        status,
-        paymentMethod,
-        discountPercentage: discountPercentage || undefined,
-        discountAmount: discountAmount || undefined,
-        patientId: selectedPatient?.id,
+      updateSale({
+        id: sale.id,
+        data: {
+            status,
+            paymentMethod,
+            discountPercentage: discountPercentage || undefined,
+            discountAmount: discountAmount || undefined,
+            paymentStatus: paymentStatus,
+            patientId: selectedPatient?.id,
+        }
+      }, {
+        onSuccess: () => {
+            setIsEditMode(false)
+            onSuccess?.()
+        }
       })
-
-      toast.success('Sale updated successfully')
-      setIsEditMode(false)
-      onSuccess?.()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update sale')
     } finally {
@@ -127,13 +180,19 @@ export function SaleDetailsDialog({
       setPaymentMethod(sale.paymentMethod || 'cash')
       setDiscountPercentage(Number(sale.discountPercentage) || 0)
       setDiscountAmount(Number(sale.discountAmount) || 0)
+      setPaymentStatus(sale.paymentStatus || 'due')
     }
     setIsEditMode(false)
   }
 
   if (!sale) return null
-
-  const subtotal = sale.saleItems.reduce((sum, item) => sum + Number(item.totalPrice), 0)
+  
+  // Use existing netPrice/totalPrice if available, or calculate from items if they exist
+  const items = sale?.saleItems || []
+  const subtotal = items.length > 0 
+    ? items.reduce((sum, item) => sum + Number(item.totalPrice), 0)
+    : Number(sale.totalPrice || 0)
+    
   const discount = discountAmount || (subtotal * discountPercentage) / 100
   const total = subtotal - discount
 
@@ -142,7 +201,14 @@ export function SaleDetailsDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Sale Details - {sale.invoiceNumber}</span>
+            <div className="flex items-center gap-2">
+              <span>Sale Details - {sale.invoiceNumber}</span>
+              {Number(sale.dueAmount) > 0 && (
+                <Badge variant="destructive" className="animate-pulse bg-red-600">
+                  Unpaid Balance
+                </Badge>
+              )}
+            </div>
             {!isEditMode && canEditSales && (
               <Button
                 variant="outline"
@@ -217,7 +283,7 @@ export function SaleDetailsDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sale.saleItems.map((item) => (
+                  {(sale.saleItems || []).map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -378,12 +444,117 @@ export function SaleDetailsDialog({
                     <span className="text-muted-foreground">Paid Amount</span>
                     <span className="font-semibold text-emerald-600">{formatCurrency(sale.paidAmount || 0)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Due Amount</span>
-                    <span className="font-semibold text-destructive">{formatCurrency(sale.dueAmount || 0)}</span>
+                <div className="flex justify-between text-sm p-2 bg-red-50 rounded-lg border border-red-100">
+                    <span className="text-red-600 font-bold uppercase tracking-wider text-xs">Total Due</span>
+                    <span className="font-black text-red-600 text-lg">{formatCurrency(sale.dueAmount || 0)}</span>
                 </div>
             </div>
           </div>
+
+          {/* Add Payment UI */}
+          {Number(sale.dueAmount) > 0 && !isEditMode && (
+            <div className="mt-4 p-4 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-primary flex items-center gap-2">
+                   <CreditCard className="h-4 w-4" />
+                   Add Payment
+                </h3>
+                {!isAddingPayment ? (
+                  <Button size="sm" onClick={() => {
+                    setIsAddingPayment(true)
+                    setPaymentAmount(Number(sale.dueAmount))
+                  }}>
+                    Settlement
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="ghost" onClick={() => setIsAddingPayment(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              {isAddingPayment && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2">
+                    <Label>Amount to Pay</Label>
+                    <Input 
+                      type="number" 
+                      value={paymentAmount} 
+                      onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                      max={Number(sale.dueAmount)}
+                      min={0.01}
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Account</Label>
+                    <Select value={paymentAccountId} onValueChange={setPaymentAccountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Account" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map(acc => (
+                          <SelectItem key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.currentBalance)})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Method</Label>
+                    <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentMethods.map((method) => (
+                          <SelectItem key={method} value={method}>
+                            <span className="capitalize">{method}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Note (Optional)</Label>
+                    <Input 
+                      placeholder="Payment note..." 
+                      value={paymentNote} 
+                      onChange={(e) => setPaymentNote(e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2 pt-2">
+                    <Button 
+                      className="w-full" 
+                      onClick={handlePaymentSubmit}
+                      disabled={submitttingPayment || paymentAmount <= 0 || !paymentAccountId}
+                    >
+                      {submitttingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Confirm Payment
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Edit Mode Actions */}
+          {isEditMode && (
+             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+               <div className="space-y-2">
+                  <Label>Payment Status</Label>
+                  <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="due">Due</SelectItem>
+                      <SelectItem value="partial">Partial</SelectItem>
+                    </SelectContent>
+                  </Select>
+               </div>
+             </div>
+          )}
         </div>
 
         {isEditMode && (

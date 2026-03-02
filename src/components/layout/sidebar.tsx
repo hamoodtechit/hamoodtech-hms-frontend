@@ -9,15 +9,20 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
+    BarChart3,
     Briefcase,
+    Building2,
     CalendarDays,
     ChevronLeft,
     ChevronRight,
+    Image as ImageIcon,
     LayoutDashboard,
     Microscope,
     Pill,
     Settings,
+    ShoppingBag,
     ShoppingCart,
+    Truck,
     Users,
     Wallet
 } from "lucide-react"
@@ -80,34 +85,6 @@ export function Sidebar() {
       permission: "dashboard:read",
     },
     {
-      label: t("patients"),
-      icon: Users,
-      href: "/patients",
-      color: "text-violet-400",
-      module: "patients",
-    },
-    {
-      label: "Pharmacy",
-      icon: Pill,
-      href: "/pharmacy",
-      color: "text-pink-400",
-      module: "pharmacy",
-    },
-    {
-      label: "Appointments",
-      icon: CalendarDays,
-      href: "/appointments",
-      color: "text-orange-400",
-      module: "appointment",
-    },
-    {
-      label: "Diagnostic",
-      icon: Microscope,
-      href: "/diagnostic",
-      color: "text-blue-400",
-      module: "diagnostic",
-    },
-    {
       label: "Sales",
       icon: ShoppingCart,
       color: "text-emerald-500",
@@ -131,11 +108,91 @@ export function Sidebar() {
       ]
     },
     {
+      label: "Pharmacy",
+      icon: Pill,
+      color: "text-pink-400",
+      module: "pharmacy",
+      children: [
+          {
+              label: "Medicines",
+              href: "/pharmacy/inventory/medicines",
+              permission: "medicine:read",
+          },
+          {
+              label: "Stock Adjustment",
+              href: "/pharmacy/inventory",
+              permission: "stock:read",
+          },
+          {
+            label: "Pharmacy Setup",
+            href: "/pharmacy/setup",
+            permission: "medicine-category:read",
+          }
+      ]
+    },
+    {
+      label: "Appointments",
+      icon: CalendarDays,
+      href: "/appointments",
+      color: "text-orange-400",
+      module: "appointment",
+      permission: "appointment:read",
+    },
+    {
+      label: t("patients"),
+      icon: Users,
+      href: "/patients",
+      color: "text-violet-400",
+      module: "patients",
+      permission: "patient:read",
+    },
+    {
+        label: "Reports",
+        icon: BarChart3,
+        href: "/reports",
+        color: "text-indigo-500",
+        module: "reports",
+        permission: "report:read",
+    },
+    {
+        label: "Branches",
+        icon: Building2,
+        href: "/branches",
+        color: "text-cyan-500",
+        module: "branches",
+        permission: "branch:read",
+    },
+    {
+        label: "Diagnostic",
+        icon: Microscope,
+        href: "/diagnostic",
+        color: "text-blue-400",
+        module: "diagnostic",
+        permission: "diagnostic-test:read",
+    },
+    {
         label: "Finance",
         icon: Wallet,
         href: "/finance",
         color: "text-green-500",
-        // permission: "finance:read",
+        module: "finance",
+        permission: "account:read",
+    },
+    {
+      label: "Purchases",
+      icon: ShoppingBag,
+      href: "/purchases",
+      color: "text-amber-500",
+      module: "purchases",
+      permission: "purchase:read",
+    },
+    {
+      label: "Suppliers",
+      icon: Truck,
+      href: "/suppliers",
+      color: "text-blue-500",
+      module: "suppliers",
+      permission: "supplier:read",
     },
     {
         label: "HR Management",
@@ -146,7 +203,7 @@ export function Sidebar() {
             {
                 label: "Employees",
                 href: "/hr/employees",
-                permission: "employee:read",
+                permission: "user:read",
             },
             {
                 label: "Departments",
@@ -161,10 +218,18 @@ export function Sidebar() {
         ]
     },
     {
+        label: "Media Library",
+        icon: ImageIcon,
+        href: "/media",
+        color: "text-purple-400",
+        module: "media",
+        permission: "media:read",
+    },
+    {
       label: "User Management",
       icon: Users,
       color: "text-indigo-400",
-      permission: "user:read", 
+      module: "users",
       children: [
           {
               label: "Users",
@@ -175,7 +240,7 @@ export function Sidebar() {
               label: "Roles & Permissions",
               href: "/settings/roles",
               permission: "role:read",
-          }
+          },
       ]
     },
     {
@@ -183,6 +248,7 @@ export function Sidebar() {
       icon: Settings,
       href: "/settings",
       color: "text-emerald-400",
+      module: "settings",
       permission: "settings:read",
     },
   ]
@@ -244,7 +310,7 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-        "hidden md:flex relative flex-col h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-white/10 transition-all duration-300 w-full"
+        "hidden md:flex relative flex-col h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-white/10 transition-all duration-300 w-full overflow-hidden"
     )}>
       {/* Brand Header */}
       <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900">
@@ -273,7 +339,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 py-6 px-3">
+      <ScrollArea className="flex-1 py-6 px-3 min-h-0">
         <div className="space-y-2">
           {visibleRoutes.map((route) => {
              // Check if children exist

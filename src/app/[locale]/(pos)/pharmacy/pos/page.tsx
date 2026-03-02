@@ -124,6 +124,7 @@ export default function POSPage() {
 
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<any>('cash')
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("")
   const [paidAmount, setPaidAmount] = useState(0)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
@@ -131,6 +132,13 @@ export default function POSPage() {
   useEffect(() => {
     setPaidAmount(total)
   }, [total])
+
+  useEffect(() => {
+    if (pharmacyFinance?.paymentMethodAccounts) {
+        const defaultAccountId = pharmacyFinance.paymentMethodAccounts[paymentMethod]?.id || ""
+        setSelectedAccountId(defaultAccountId)
+    }
+  }, [paymentMethod, pharmacyFinance])
 
   const handleCheckout = () => {
       if (cart.length === 0) return
@@ -368,6 +376,7 @@ export default function POSPage() {
               discountAmount: discountAmount,
               taxPercentage: vatPercentage,
               taxAmount: tax,
+              type: "pos", // Identifying this as a POS sale
               saleItems: cart.map(item => ({
                   medicineId: item.id,
                   itemName: item.name,
@@ -382,7 +391,7 @@ export default function POSPage() {
                   dosageForm: item.dosageForm
               })),
               payments: [{
-                  accountId: pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
+                  accountId: selectedAccountId || pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
                   amount: actuallyPaid,
                   paymentMethod: paymentMethod,
                   note: ""
@@ -526,6 +535,8 @@ export default function POSPage() {
                         setDiscountFixedAmount={setDiscountFixedAmount}
                         paymentMethod={paymentMethod}
                         setPaymentMethod={setPaymentMethod}
+                        selectedAccountId={selectedAccountId}
+                        setSelectedAccountId={setSelectedAccountId}
                         paidAmount={paidAmount}
                         setPaidAmount={setPaidAmount}
                         onFinalizeCheckout={finalizeCheckout}
@@ -992,6 +1003,8 @@ export default function POSPage() {
             setDiscountFixedAmount={setDiscountFixedAmount}
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
+            selectedAccountId={selectedAccountId}
+            setSelectedAccountId={setSelectedAccountId}
             paidAmount={paidAmount}
             setPaidAmount={setPaidAmount}
             onFinalizeCheckout={finalizeCheckout}

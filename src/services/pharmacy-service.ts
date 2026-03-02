@@ -24,19 +24,13 @@ import {
     PurchaseListResponse,
     PurchasePayload,
     PurchaseStatus,
-    Sale,
-    SaleListResponse,
     SalePayload,
-    SaleReturn,
-    SaleReturnListResponse,
-    SaleReturnPayload,
     Stock,
     StockTransferPayload,
     Supplier,
     SupplierListResponse,
     SupplierPayload,
-    UpdateOpeningStockDto,
-    UpdateSalePayload
+    UpdateOpeningStockDto
 } from '@/types/pharmacy';
 
 export const pharmacyService = {
@@ -259,55 +253,6 @@ export const pharmacyService = {
     return response.data;
   },
 
-  getSales: async (params?: {
-    page?: number;
-    limit?: number;
-    branchId?: string;
-    patientId?: string;
-    status?: string;
-    search?: string;
-  }): Promise<SaleListResponse> => {
-    const response = await api.get<SaleListResponse>('/pharmacy/sales', { params });
-    return response.data;
-  },
-
-  getSale: async (id: string): Promise<{ success: boolean, message: string, data: Sale }> => {
-    const response = await api.get<{ success: boolean, message: string, data: Sale }>(`/pharmacy/sales/${id}`);
-    return response.data;
-  },
-
-  updateSale: async (id: string, data: UpdateSalePayload): Promise<{ success: boolean, message: string, data: Sale }> => {
-    const response = await api.patch<{ success: boolean, message: string, data: Sale }>(`/pharmacy/sales/${id}`, data);
-    return response.data;
-  },
-
-  // Sale Returns APIs
-  createSaleReturn: async (data: SaleReturnPayload): Promise<{ success: boolean, message: string, data: any }> => {
-    const response = await api.post<{ success: boolean, message: string, data: any }>('/pharmacy/sale-returns', data);
-    return response.data;
-  },
-
-  getSaleReturns: async (params?: {
-    page?: number;
-    limit?: number;
-    branchId?: string;
-    patientId?: string;
-    status?: string;
-    search?: string;
-  }): Promise<SaleReturnListResponse> => {
-    const response = await api.get<SaleReturnListResponse>('/pharmacy/sale-returns', { params });
-    return response.data;
-  },
-
-  getSaleReturn: async (id: string): Promise<{ success: boolean, message: string, data: SaleReturn }> => {
-    const response = await api.get<{ success: boolean, message: string, data: SaleReturn }>(`/pharmacy/sale-returns/${id}`);
-    return response.data;
-  },
-
-  updateSaleReturnStatus: async (id: string, status: 'pending' | 'completed' | 'rejected'): Promise<{ success: boolean, message: string, data: any }> => {
-    const response = await api.patch<{ success: boolean, message: string, data: any }>(`/pharmacy/sale-returns/${id}/status`, { status });
-    return response.data;
-  },
 
   // --- Cash Register ---
   openCashRegister: async (data: CashRegisterOpenPayload): Promise<CashRegisterResponse> => {

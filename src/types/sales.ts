@@ -55,19 +55,40 @@ export interface SaleItemDetails extends SaleItem {
   saleReturnId?: string | null;
 }
 
+export interface SalePaymentPayload {
+  accountId: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  note?: string;
+}
+
 export interface SalePayload {
-  branchId: string;
+  branchId?: string;
   patientId?: string;
   status: 'pending' | 'completed' | 'rejected';
   paymentMethod: PaymentMethod;
+  paymentStatus?: 'paid' | 'due' | 'partial';
   paidAmount: number | string;
   dueAmount: number | string;
   discountPercentage: number | string;
   discountAmount: number | string;
   taxPercentage: number | string;
   taxAmount: number | string;
-  payments: SalePayment[];
+  payments?: SalePayment[];
   saleItems: SaleItem[];
+}
+
+export interface UpdateSalePayload extends Partial<SalePayload> {
+  // Matches the user provided schema
+  patientId?: string;
+  status?: 'pending' | 'completed' | 'rejected';
+  paymentMethod?: PaymentMethod;
+  discountPercentage?: number | string;
+  discountAmount?: number | string;
+  paymentStatus?: 'paid' | 'due' | 'partial';
+  paidAmount?: number | string;
+  dueAmount?: number | string;
+  saleItems?: SaleItem[];
 }
 
 export interface SaleReturnItem {

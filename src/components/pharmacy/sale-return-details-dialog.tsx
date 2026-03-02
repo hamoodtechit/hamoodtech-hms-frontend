@@ -3,27 +3,27 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
-import { SaleReturn } from "@/types/pharmacy"
+import { SaleReturn } from "@/types/sales"
 import { X } from "lucide-react"
 
-import { pharmacyService } from "@/services/pharmacy-service"
+import { salesService } from "@/services/sales-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -52,9 +52,9 @@ export function SaleReturnDetailsDialog({ saleReturn: initialSaleReturn, open, o
   const fetchReturnDetails = async (id: string) => {
     try {
         setLoading(true)
-        const res = await pharmacyService.getSaleReturn(id)
+        const res = await salesService.getSaleReturn(id)
         if (res.success) {
-            setSaleReturn(res.data)
+            setSaleReturn(res.data as any)
         }
     } catch (error) {
         console.error("Failed to fetch sale return details", error)

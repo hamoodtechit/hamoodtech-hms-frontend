@@ -18,10 +18,12 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
+import { FinanceAccount } from "@/types/finance"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
 import { CalendarDays, Check, ChevronDown, CreditCard, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
@@ -40,6 +42,8 @@ interface CartContentsProps {
     setDiscountFixedAmount: (amount: number) => void
     paymentMethod: PaymentMethod
     setPaymentMethod: (method: PaymentMethod) => void
+    selectedAccountId: string
+    setSelectedAccountId: (id: string) => void
     paidAmount: number
     setPaidAmount: (amount: number) => void
     isCheckoutOpen: boolean
@@ -59,6 +63,8 @@ export function CartContents({
     setDiscountFixedAmount,
     paymentMethod,
     setPaymentMethod,
+    selectedAccountId,
+    setSelectedAccountId,
     paidAmount,
     setPaidAmount,
     isCheckoutOpen,
@@ -68,6 +74,22 @@ export function CartContents({
     const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()
     const { pharmacy, finance } = useSettingsStore()
     const { formatCurrency } = useCurrency()
+    const { data: accountsRes } = useFinanceAccounts({ limit: 100, isActive: true })
+    const accounts = accountsRes?.data || []
+
+    const paymentMethodToAccountType: Record<string, string> = {
+        'cash': 'cash',
+        'card': 'bank',
+        'online': 'bank',
+        'Bank Transfer': 'bank',
+        'cheque': 'bank',
+        'bKash': 'mfs',
+        'Nagad': 'mfs',
+        'Rocket': 'mfs'
+    }
+
+    // Relaxed filtering to allow switching accounts regardless of payment method
+    const availableAccounts = accounts
     const vatPercentage = pharmacy?.vatPercentage || 0
 
     // Calculations: Discount Applied FIRST, then Tax on the discounted amount
@@ -289,6 +311,12 @@ export function CartContents({
                             <span>-{formatCurrency(discountAmount)}</span>
                         </div>
                     )}
+                    {tax > 0 && (
+                        <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                            <span>Tax (VAT {vatPercentage}%)</span>
+                            <span>{formatCurrency(tax)}</span>
+                        </div>
+                    )}
                     <div className="flex justify-between items-baseline pt-1 border-t mt-1">
                         <span className="text-sm font-bold uppercase">Total to Pay</span>
                         <span className="text-2xl font-black text-primary">{formatCurrency(total)}</span>
@@ -404,11 +432,26 @@ export function CartContents({
 
                                 <div className="space-y-1.5">
                                     <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</Label>
-                                    <div className="h-10 flex items-center px-3 bg-muted/30 rounded border text-sm font-medium">
-                                        {finance?.paymentMethodAccounts?.[paymentMethod]?.name || (
-                                            <span className="text-destructive font-bold italic">No account configured for {paymentMethod}</span>
-                                        )}
-                                    </div>
+                                    <Select 
+                                        value={selectedAccountId} 
+                                        onValueChange={setSelectedAccountId}
+                                    >
+                                        <SelectTrigger className="h-10 text-sm">
+                                            <SelectValue placeholder="Select Account" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableAccounts.map((account: FinanceAccount) => (
+                                                <SelectItem key={account.id} value={account.id}>
+                                                    {account.name} ({account.type})
+                                                </SelectItem>
+                                            ))}
+                                            {availableAccounts.length === 0 && (
+                                                <div className="p-2 text-xs text-muted-foreground text-center italic">
+                                                    No {paymentMethodToAccountType[paymentMethod]} accounts found
+                                                </div>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                         </div>
@@ -417,8 +460,24 @@ export function CartContents({
                         <div className="p-4 border-t bg-foreground text-background">
                             <div className="space-y-1 mb-4">
                                 <div className="flex justify-between text-xs opacity-70">
+                                    <span>Subtotal</span>
+                                    <span>{formatCurrency(subtotal)}</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-xs text-emerald-400">
+                                        <span>Discount</span>
+                                        <span>-{formatCurrency(discountAmount)}</span>
+                                    </div>
+                                )}
+                                {tax > 0 && (
+                                    <div className="flex justify-between text-xs opacity-70">
+                                        <span>Tax (VAT {vatPercentage}%)</span>
+                                        <span>{formatCurrency(tax)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm font-bold border-t pt-1 mt-1">
                                     <span>Total Payable</span>
-                                    <span className="font-bold">{formatCurrency(total)}</span>
+                                    <span>{formatCurrency(total)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className={cn(

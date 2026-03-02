@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { usePharmacyStats, usePurchases, useSales } from "@/hooks/pharmacy-queries"
+import { usePharmacyStats, usePurchases } from "@/hooks/pharmacy-queries"
+import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
@@ -180,7 +181,7 @@ export default function PharmacyPage() {
                         </div>
                     </Button>
                 </Link>
-                <Link href="/pharmacy/reports" className="flex w-full">
+                <Link href="/reports" className="flex w-full">
                     <Button variant="outline" className="w-full justify-start h-auto py-3 transition-all hover:bg-primary/5 hover:border-primary/30 group">
                         <Activity className="mr-3 h-5 w-5 text-purple-500 group-hover:scale-110 transition-transform" />
                         <div className="flex flex-col items-start truncate overflow-hidden">

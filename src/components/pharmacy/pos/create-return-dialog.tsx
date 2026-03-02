@@ -3,25 +3,25 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
-import { pharmacyService } from "@/services/pharmacy-service"
-import { Sale, SaleReturnPayload } from "@/types/pharmacy"
+import { salesService } from "@/services/sales-service"
+import { Sale, SaleReturnPayload } from "@/types/sales"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -107,7 +107,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
 
       
 
-      await pharmacyService.createSaleReturn(payload)
+      await salesService.createSaleReturn(payload)
 
       toast.success("Return created successfully")
       onSuccess()

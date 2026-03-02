@@ -19,13 +19,20 @@ import { Eye, Loader2, Plus, Search } from "lucide-react"
 import { useState } from "react"
 import { ExpenseDialog } from "./expense-dialog"
 
+import { useStoreContext } from "@/store/use-store-context"
+
 export function ExpenseList() {
     const { formatCurrency } = useCurrency()
+    const { activeStoreId } = useStoreContext()
     const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
     const [search, setSearch] = useState("")
 
-    const { data: response, isLoading, refetch } = useExpenses({ search, limit: 100 })
+    const { data: response, isLoading, refetch } = useExpenses({ 
+        search, 
+        branchId: activeStoreId || undefined,
+        limit: 100 
+    })
     const expenses = response?.expenses || []
 
     return (
