@@ -10,7 +10,7 @@ export interface Appointment {
   date: string;
   timeSlot: string;
   status: AppointmentStatus;
-  fees: string;
+  fees: number;
   saleId?: string;
   note?: string;
   createdAt: string;
@@ -51,9 +51,18 @@ export interface AppointmentPayload {
   departmentId: string;
   date: string;
   timeSlot: string;
-  fees: string;
+  fees: number;
   note?: string;
   status?: AppointmentStatus;
+  paymentMethod?: PaymentMethod;
+  paidAmount?: number;
+  dueAmount?: number;
+  payments?: {
+    accountId: string;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    note?: string;
+  }[];
 }
 
 export interface AppointmentPaginatedResponse {
@@ -70,7 +79,7 @@ export interface AppointmentPaginatedResponse {
   };
 }
 
-import { Sale } from "./sales";
+import { PaymentMethod, Sale } from "./pharmacy";
 
 export interface AppointmentDetailsResponse {
   success: boolean;

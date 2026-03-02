@@ -24,12 +24,14 @@ import {
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
-import { Loader2, Plus } from "lucide-react"
+import { PaymentMethod } from "@/types/pharmacy"
+import { Banknote, Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { TimeSlotPicker } from "./time-slot-picker"
@@ -50,15 +52,29 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
 
     const createMutation = useCreateAppointment()
     const updateMutation = useUpdateAppointment()
-    const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
+    const { appointments: appointmentConfig, finance, fetchSettings } = useSettingsStore()
 
-    useEffect(() => {
-        if (open && !appointmentConfig) {
-            fetchSettings()
-        }
-    }, [open, appointmentConfig, fetchSettings])
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
+    const [selectedAccountId, setSelectedAccountId] = useState("")
+    const [paidAmount, setPaidAmount] = useState(0)
 
     const isEdit = !!appointment
+
+    const { data: accountsRes } = useFinanceAccounts({ isActive: true, limit: 100 })
+    const accounts = accountsRes?.data || []
+
+    useEffect(() => {
+        if (open) {
+            fetchSettings()
+        }
+    }, [open, fetchSettings])
+
+    useEffect(() => {
+        if (!isEdit) {
+            const defaultAccountId = finance?.paymentMethodAccounts?.[paymentMethod]?.id || ""
+            setSelectedAccountId(defaultAccountId)
+        }
+    }, [paymentMethod, finance, isEdit])
 
     // Form State
     const [formData, setFormData] = useState({
@@ -69,7 +85,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         date: new Date().toISOString().split('T')[0],
         timeSlot: "",
         note: "",
-        fees: "0",
+        fees: 0,
         status: "pending" as AppointmentStatus
     })
 
@@ -89,7 +105,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     date: appointment.date.split('T')[0],
                     timeSlot: appointment.timeSlot,
                     note: appointment.note || "",
-                    fees: appointment.fees || "0",
+                    fees: Number(appointment.fees) || 0,
                     status: appointment.status
                 })
             } else {
@@ -101,7 +117,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     date: new Date().toISOString().split('T')[0],
                     timeSlot: "",
                     note: "",
-                    fees: "0",
+                    fees: 0,
                     status: "pending"
                 })
             }
@@ -123,10 +139,21 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                 })
                 toast.success("Appointment updated successfully")
             } else {
-                await createMutation.mutateAsync({
+                const dueAmount = Math.max(0, formData.fees - paidAmount)
+                const payload = {
                     ...formData,
-                    branchId: activeStoreId || formData.branchId
-                })
+                    branchId: activeStoreId || formData.branchId,
+                    paymentMethod,
+                    paidAmount,
+                    dueAmount,
+                    payments: paidAmount > 0 ? [{
+                        accountId: selectedAccountId || finance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
+                        amount: paidAmount,
+                        paymentMethod,
+                        note: "Appointment fee payment"
+                    }] : []
+                }
+                await createMutation.mutateAsync(payload)
                 toast.success("Appointment scheduled successfully")
             }
             onSuccess?.()
@@ -239,17 +266,71 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
                                         <Label>Consultation Fees (Tk)</Label>
                                         <SmartNumberInput 
                                             placeholder="600"
-                                            value={formData.fees ? Number(formData.fees) : undefined}
-                                            onChange={(val) => setFormData(prev => ({ ...prev, fees: val?.toString() || "" }))}
-                                            className="rounded-xl border-primary/10"
+                                            value={formData.fees}
+                                            onChange={(val) => {
+                                                const newFees = val || 0
+                                                setFormData(prev => ({ ...prev, fees: newFees }))
+                                                if (!isEdit) setPaidAmount(newFees)
+                                            }}
+                                            className="rounded-xl border-primary/10 h-10"
                                         />
                                     </div>
+                                    <div className="grid gap-2">
+                                        <Label>Amount Paid (Tk)</Label>
+                                        <div className="relative">
+                                            <SmartNumberInput 
+                                                value={paidAmount}
+                                                onChange={(val) => setPaidAmount(val || 0)}
+                                                className="h-10 pl-8 font-bold border-primary/10"
+                                                disabled={isEdit}
+                                            />
+                                            <Banknote className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {!isEdit && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label>Payment Method</Label>
+                                            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                                <SelectTrigger className="h-10">
+                                                    <SelectValue placeholder="Select method" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                                        <SelectItem key={method} value={method}>
+                                                            <span className="capitalize">{method}</span>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Target Account</Label>
+                                            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                                <SelectTrigger className="h-10">
+                                                    <SelectValue placeholder="Select account" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {accounts.map(acc => (
+                                                        <SelectItem key={acc.id} value={acc.id}>
+                                                            {acc.name} ({acc.type})
+                                                        </SelectItem>
+                                                    ))}
+                                                    {accounts.length === 0 && (
+                                                        <SelectItem value="none" disabled>No accounts found</SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid gap-2">
                                     <Label>Notes</Label>
