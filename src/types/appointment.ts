@@ -54,15 +54,6 @@ export interface AppointmentPayload {
   fees: number;
   note?: string;
   status?: AppointmentStatus;
-  paymentMethod?: PaymentMethod;
-  paidAmount?: number;
-  dueAmount?: number;
-  payments?: {
-    accountId: string;
-    amount: number;
-    paymentMethod: PaymentMethod;
-    note?: string;
-  }[];
 }
 
 export interface AppointmentPaginatedResponse {
@@ -79,7 +70,7 @@ export interface AppointmentPaginatedResponse {
   };
 }
 
-import { PaymentMethod, Sale } from "./pharmacy";
+import { Sale } from "./sales";
 
 export interface AppointmentDetailsResponse {
   success: boolean;

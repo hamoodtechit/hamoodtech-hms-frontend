@@ -22,12 +22,13 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
-import { useAppointment } from "@/hooks/appointment-queries"
+import { APPOINTMENT_KEYS, useAppointment } from "@/hooks/appointment-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useUpdateSale } from "@/hooks/sales-queries"
+import { useAddSalePayment } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { Sale } from "@/types/sales"
+import { useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import {
     Building2,
@@ -44,7 +45,7 @@ import {
     User,
     Wallet
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 interface AppointmentDetailsDialogProps {
@@ -60,6 +61,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
     // Response now contains { appointment, sale }
     const appointment = response?.data?.appointment
     const sale = response?.data?.sale
+    const queryClient = useQueryClient()
 
     const [isPaying, setIsPaying] = useState(false)
 
@@ -226,7 +228,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                             sale={sale} 
                                             appointment={appointment}
                                             onCancel={() => setIsPaying(false)} 
-                                            onSuccess={() => setIsPaying(false)}
+                                            onSuccess={() => {
+                                                setIsPaying(false)
+                                                queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.details(appointmentId) })
+                                            }}
                                         />
                                     )}
                                 </DetailSection>
@@ -266,39 +271,36 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
 function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, appointment?: Appointment, onCancel: () => void, onSuccess: () => void }) {
     const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
     const accounts = accountsRes?.data || []
-    const updateSaleMutation = useUpdateSale()
+    const addPaymentMutation = useAddSalePayment()
     
     const [accountId, setAccountId] = useState("")
+    const [paymentMethod, setPaymentMethod] = useState<string>("cash")
     const [paymentAmount, setPaymentAmount] = useState<number | undefined>(Number(sale.dueAmount))
     const [paymentNote, setPaymentNote] = useState("")
+
+    useEffect(() => {
+        // Update default account when method changes
+        const matchingAccount = accounts.find(a => a.type === paymentMethod)
+        if (matchingAccount) setAccountId(matchingAccount.id)
+    }, [paymentMethod, accounts])
 
     const handleProcessPayment = async () => {
         if (!accountId) return toast.error("Please select a payment account")
         if (!paymentAmount || paymentAmount <= 0) return toast.error("Amount must be greater than 0")
 
         try {
-            const currentPaid = Number(sale.paidAmount || 0)
-            const currentDue = Number(sale.dueAmount || 0)
-            
-            await updateSaleMutation.mutateAsync({
+            await addPaymentMutation.mutateAsync({
                 id: sale.id,
                 data: {
-                    paidAmount: currentPaid + paymentAmount,
-                    dueAmount: Math.max(0, currentDue - paymentAmount),
-                    payments: [
-                        {
-                            accountId,
-                            amount: paymentAmount,
-                            paymentMethod: (accounts.find(a => a.id === accountId)?.type as any) || 'cash',
-                            note: paymentNote || `Appointment Payment - ${appointment?.serialNumber || ''}`
-                        }
-                    ]
+                    accountId,
+                    amount: paymentAmount,
+                    paymentMethod: paymentMethod as any,
+                    note: paymentNote || `Appointment Payment - ${appointment?.serialNumber || ''}`
                 }
             })
-            toast.success("Payment recorded successfully")
             onSuccess()
         } catch (error) {
-            toast.error("Failed to process payment")
+            // Error toast handled in mutation hook
         }
     }
 
@@ -316,7 +318,23 @@ function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, a
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="account">Select Account</Label>
+                    <Label>Payment Method</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <SelectTrigger className="rounded-xl border-primary/10">
+                            <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                <SelectItem key={method} value={method}>
+                                    <span className="capitalize">{method}</span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="account">Target Account</Label>
                     <Select value={accountId} onValueChange={setAccountId}>
                         <SelectTrigger id="account" className="rounded-xl border-primary/10">
                             <SelectValue placeholder="Select payment account" />
@@ -334,6 +352,7 @@ function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, a
                         </SelectContent>
                     </Select>
                 </div>
+
                 <div className="space-y-2">
                     <Label htmlFor="amount">Payment Amount</Label>
                     <SmartNumberInput 
@@ -344,7 +363,7 @@ function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, a
                         className="rounded-xl border-primary/10"
                     />
                 </div>
-                <div className="md:col-span-2 space-y-2">
+                <div className="space-y-2">
                     <Label htmlFor="note">Payment Note (Optional)</Label>
                     <Input 
                         id="note"
@@ -361,10 +380,10 @@ function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, a
                 <Button 
                     size="sm" 
                     onClick={handleProcessPayment} 
-                    disabled={updateSaleMutation.isPending}
-                    className="rounded-lg"
+                    disabled={addPaymentMutation.isPending}
+                    className="rounded-lg h-9 px-6 bg-primary hover:bg-primary/90 font-bold"
                 >
-                    {updateSaleMutation.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                    {addPaymentMutation.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
                     Confirm Payment
                 </Button>
             </div>
