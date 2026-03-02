@@ -1,14 +1,14 @@
 import {
-    PermissionsResponse,
-    Role,
-    RoleDetailResponse,
-    RolePayload,
-    RolesResponse
+  PermissionsResponse,
+  Role,
+  RoleDetailResponse,
+  RolePayload,
+  RolesResponse
 } from '@/types/role';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv.hamoodtech.com/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv-dev.genify.live/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
