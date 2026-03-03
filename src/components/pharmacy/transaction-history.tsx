@@ -42,6 +42,7 @@ import { salesService } from "@/services/sales-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale, SaleReturn } from "@/types/sales"
+import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, DollarSign, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
@@ -112,8 +113,8 @@ export function TransactionHistory() {
             page,
             search: debouncedSearch || undefined,
             status: filters.status !== "all" ? filters.status : undefined,
-            startDate: filters.dateRange?.from ? filters.dateRange.from.toISOString().split('T')[0] : undefined,
-            endDate: filters.dateRange?.to ? filters.dateRange.to.toISOString().split('T')[0] : undefined,
+            startDate: filters.dateRange?.from ? format(filters.dateRange.from, 'yyyy-MM-dd') : undefined,
+            endDate: filters.dateRange?.to ? format(filters.dateRange.to, 'yyyy-MM-dd') : undefined,
             paymentMethod: filters.paymentMethod !== "all" ? filters.paymentMethod : undefined
         }
         

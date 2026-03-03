@@ -16,6 +16,7 @@ import {
 import { useFinanceAccounts, useFinanceTransactions } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import {
     ChevronLeft,
     ChevronRight,
@@ -56,8 +57,8 @@ export function TransactionList({ title = "Recent Transactions", variant = "defa
         branchId: activeStoreId || undefined,
         flowType: flowType === "all" ? undefined : flowType,
         txnType: txnType === "all" ? undefined : txnType,
-        startDate: dateRange?.from?.toISOString(),
-        endDate: dateRange?.to?.toISOString(),
+        startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+        endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     }
 
     const { data: accountsRes } = useFinanceAccounts({ limit: 100 })

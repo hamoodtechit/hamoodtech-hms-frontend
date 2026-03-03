@@ -21,7 +21,7 @@ import {
     Tooltip
 } from 'chart.js'
 
-import { endOfDay, formatDistanceToNow, startOfMonth } from "date-fns"
+import { endOfDay, format, formatDistanceToNow, startOfMonth } from "date-fns"
 import { AlertTriangle, CreditCard, DollarSign, Users } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Line } from "react-chartjs-2"
@@ -67,8 +67,8 @@ export function Overview() {
     })
   }, [])
 
-  const startDate = date?.from ? date.from.toISOString() : undefined
-  const endDate = date?.to ? date.to.toISOString() : undefined
+  const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined
+  const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined
 
   const { data: statsRes, isLoading: loadingStats } = usePharmacyStats({ 
     branchId: activeStoreId || undefined, 

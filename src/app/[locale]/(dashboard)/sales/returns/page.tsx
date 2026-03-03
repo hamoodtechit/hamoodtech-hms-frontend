@@ -82,8 +82,8 @@ export default function SalesReturnsPage() {
     isIndoorSale: isIndoorSale === "yes" ? true : isIndoorSale === "no" ? false : undefined,
     minAmount: minAmount ? Number(minAmount) : undefined,
     maxAmount: maxAmount ? Number(maxAmount) : undefined,
-    startDate: dateRange?.from?.toISOString().split('T')[0],
-    endDate: dateRange?.to?.toISOString().split('T')[0],
+    startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+    endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     search: debouncedSearch || undefined,
     branchId: activeStoreId || undefined
   })
