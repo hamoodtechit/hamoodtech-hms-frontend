@@ -143,8 +143,8 @@ export function AnalyticsDashboard() {
   }
 
   // Format dates for API
-  const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined
-  const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined
+  const startDate = date?.from ? date.from.toISOString() : undefined
+  const endDate = date?.to ? date.to.toISOString() : undefined
   
   const { data: stats, isLoading: statsLoading } = usePharmacyStats({ 
     branchId: activeStoreId || undefined,
