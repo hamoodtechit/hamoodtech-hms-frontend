@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table"
 import { PHARMACY_KEYS, usePatients } from "@/hooks/pharmacy-queries"
 import { usePermissions } from "@/hooks/use-permissions"
+import { Link } from "@/i18n/navigation"
 import { Patient } from "@/types/pharmacy"
 import { useQueryClient } from "@tanstack/react-query"
 import { Edit, Eye, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
@@ -159,8 +160,10 @@ export function PatientTable() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>
-                                                    <Eye className="mr-2 h-4 w-4" /> View History
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/sales?patientId=${patient.id}`}>
+                                                        <Eye className="mr-2 h-4 w-4" /> View Details
+                                                    </Link>
                                                 </DropdownMenuItem>
                                                 {hasPermission('patient:update') && (
                                                     <DropdownMenuItem onClick={() => handleEdit(patient)}>

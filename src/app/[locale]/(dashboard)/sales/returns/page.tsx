@@ -1,5 +1,6 @@
 "use client"
 
+import { SaleReturnDetailsDialog } from "@/components/pharmacy/sale-return-details-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,6 +26,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
+import { SaleReturn } from "@/types/sales"
 import { format } from "date-fns"
 import {
     CheckCircle2,
@@ -55,6 +57,8 @@ export default function SalesReturnsPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [selectedReturn, setSelectedReturn] = useState<SaleReturn | null>(null)
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
   const limit = 10
 
   const activeFilterCount = (status !== "all" ? 1 : 0) + 
@@ -357,7 +361,15 @@ export default function SalesReturnsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all">
+                           <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all"
+                              onClick={() => {
+                                  setSelectedReturn(item)
+                                  setDetailsDialogOpen(true)
+                              }}
+                           >
                               <Eye className="h-4 w-4" />
                            </Button>
                            {item.status === 'pending' && (
@@ -416,6 +428,12 @@ export default function SalesReturnsPage() {
           )}
         </CardContent>
       </Card>
+
+      <SaleReturnDetailsDialog 
+        saleReturn={selectedReturn}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+      />
     </div>
   )
 }

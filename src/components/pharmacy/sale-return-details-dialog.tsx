@@ -3,21 +3,21 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { SaleReturn } from "@/types/sales"
@@ -138,8 +138,11 @@ export function SaleReturnDetailsDialog({ saleReturn: initialSaleReturn, open, o
                         <div>
                             {item.itemName}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">
-                            Batch: {item.batchNumber}
+                        <div className="text-[10px] text-muted-foreground flex gap-2 uppercase font-mono">
+                            <span>Batch: {item.batchNumber}</span>
+                            {item.expiryDate && (
+                                <span>Exp: {new Date(item.expiryDate).toLocaleDateString()}</span>
+                            )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>

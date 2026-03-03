@@ -42,6 +42,7 @@ export interface Sale {
   taxAmount: number | string;
   cashRegisterSessionId?: string;
   saleItems: SaleItemDetails[];
+  type: 'general-sale' | 'pos';
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +77,7 @@ export interface SalePayload {
   taxAmount: number | string;
   payments?: SalePayment[];
   saleItems: SaleItem[];
+  type?: 'general-sale' | 'pos';
 }
 
 export interface UpdateSalePayload extends Partial<SalePayload> {
@@ -89,6 +91,7 @@ export interface UpdateSalePayload extends Partial<SalePayload> {
   paidAmount?: number | string;
   dueAmount?: number | string;
   saleItems?: SaleItem[];
+  type?: 'general-sale' | 'pos';
 }
 
 export interface SaleReturnItem {

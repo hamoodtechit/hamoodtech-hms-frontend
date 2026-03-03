@@ -35,20 +35,15 @@ import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
-import {
-    DollarSign,
-    Eye,
-    FileText,
-    Filter,
-    Loader2,
-    Search,
-    ShoppingCart,
-    X
-} from "lucide-react"
+import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { DateRange } from "react-day-picker"
 
 export default function SalesHistoryPage() {
+  const searchParams = useSearchParams()
+  const urlPatientId = searchParams.get('patientId')
+  
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [search, setSearch] = useState("")
@@ -63,6 +58,7 @@ export default function SalesHistoryPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [patientIdFilter, setPatientIdFilter] = useState<string | null>(urlPatientId)
   const limit = 10
 
   const activeFilterCount = (status !== "all" ? 1 : 0) + 
@@ -73,7 +69,8 @@ export default function SalesHistoryPage() {
                             (isIndoorSale !== "all" ? 1 : 0) +
                             (minAmount ? 1 : 0) +
                             (maxAmount ? 1 : 0) +
-                            (dateRange ? 1 : 0)
+                            (dateRange ? 1 : 0) +
+                            (patientIdFilter ? 1 : 0)
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -94,7 +91,8 @@ export default function SalesHistoryPage() {
     startDate: dateRange?.from?.toISOString().split('T')[0],
     endDate: dateRange?.to?.toISOString().split('T')[0],
     search: debouncedSearch || undefined,
-    branchId: activeStoreId || undefined
+    branchId: activeStoreId || undefined,
+    patientId: patientIdFilter || undefined
   })
 
   const sales = salesRes?.data?.sales || []
@@ -167,6 +165,7 @@ export default function SalesHistoryPage() {
                             setMinAmount("")
                             setMaxAmount("")
                             setDateRange(undefined)
+                            setPatientIdFilter(null)
                           }}
                           className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
                         >
