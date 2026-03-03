@@ -19,7 +19,7 @@ import { useEffect, useState } from "react"
 
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { cn } from "@/lib/utils"
-import { endOfDay, startOfMonth } from "date-fns"
+import { endOfDay, format, startOfMonth } from "date-fns"
 import { DateRange } from "react-day-picker"
 
 export default function PharmacyPage() {
@@ -35,8 +35,8 @@ export default function PharmacyPage() {
   }, [])
 
   // Format dates for API
-  const startDate = date?.from ? date.from.toISOString() : undefined
-  const endDate = date?.to ? date.to.toISOString() : undefined
+  const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined
+  const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined
 
   const { data: statsResponse, isLoading: loading } = usePharmacyStats({ 
     branchId: activeStoreId || undefined,

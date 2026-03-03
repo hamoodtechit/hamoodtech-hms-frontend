@@ -1,5 +1,7 @@
 "use client"
 
+import { format } from "date-fns"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
@@ -110,8 +112,8 @@ export function TransactionHistory() {
             page,
             search: debouncedSearch || undefined,
             status: filters.status !== "all" ? filters.status : undefined,
-            startDate: filters.dateRange?.from ? filters.dateRange.from.toISOString().split('T')[0] : undefined,
-            endDate: filters.dateRange?.to ? filters.dateRange.to.toISOString().split('T')[0] : undefined,
+            startDate: filters.dateRange?.from ? format(filters.dateRange.from, 'yyyy-MM-dd') : undefined,
+            endDate: filters.dateRange?.to ? format(filters.dateRange.to, 'yyyy-MM-dd') : undefined,
             paymentMethod: filters.paymentMethod !== "all" ? filters.paymentMethod : undefined
         }
         

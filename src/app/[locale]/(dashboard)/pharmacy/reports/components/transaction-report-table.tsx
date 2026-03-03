@@ -57,8 +57,8 @@ export function TransactionReportTable() {
         accountId: accountId !== "all" ? accountId : undefined,
         txnType: txnType !== "all" ? txnType : undefined,
         flowType: flowType !== "all" ? flowType : undefined,
-        startDate: date?.from?.toISOString(),
-        endDate: date?.to?.toISOString(),
+        startDate: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
+        endDate: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
     }
 
     const { data: transactionsRes, isLoading } = useFinanceTransactions(params)
