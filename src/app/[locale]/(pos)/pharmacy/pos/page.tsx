@@ -128,6 +128,11 @@ export default function POSPage() {
   const [selectedAccountId, setSelectedAccountId] = useState<string>("")
   const [paidAmount, setPaidAmount] = useState(0)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [lastTransaction, setLastTransaction] = useState<any>(null)
+  const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
+  const [shortcutDialogOpen, setShortcutDialogOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
 
   // Sync paidAmount with total when total changes
   useEffect(() => {
@@ -402,8 +407,9 @@ export default function POSPage() {
 
           const response = await createSaleMutation.mutateAsync(salePayload)
           
+          const fallbackId = `TRX-${Date.now()}`
           const transaction = {
-              id: response.data?.id || `TRX-${Date.now()}`,
+              id: response.data?.id || fallbackId,
               customerName: selectedCustomer ? selectedCustomer.name : "Walk-in Customer",
               items: [...cart],
               total,
@@ -438,18 +444,6 @@ export default function POSPage() {
 
   // Interaction alert is handled above
 
-  // Receipt State
-  const [receiptOpen, setReceiptOpen] = useState(false)
-  const [lastTransaction, setLastTransaction] = useState<any>(null)
-
-  // Prescription Dialog State
-  const [linkPrescriptionOpen, setLinkPrescriptionOpen] = useState(false)
-
-  // Shortcut Help Dialog
-  const [shortcutDialogOpen, setShortcutDialogOpen] = useState(false)
-
-  // Cart Sheet State (Controlled)
-  const [cartOpen, setCartOpen] = useState(false)
 
   const scrollTabs = (direction: 'left' | 'right') => {
     if (tabsListRef.current) {

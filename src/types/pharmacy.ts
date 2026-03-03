@@ -391,7 +391,7 @@ export interface SalePayload {
   discountAmount: number;
   taxPercentage: number;
   taxAmount: number;
-  type: string; // 'pos' or 'general-sale'
+  type: 'general-sale' | 'pos'; // 'pos' or 'general-sale'
   payments: SalePayment[];
   saleItems: SaleItem[];
 }
