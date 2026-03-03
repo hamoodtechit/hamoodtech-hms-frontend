@@ -34,6 +34,7 @@ import { useActiveCashRegister, useInfiniteMedicines, usePharmacyEntities } from
 import { useCreateSale } from "@/hooks/sales-queries"
 import { patientService } from "@/services/patient-service"
 import { Medicine, Patient } from "@/types/pharmacy"
+import { SalePayload } from "@/types/sales"
 
 const getGenericColor = (name: string) => {
     const colors = [
@@ -364,7 +365,7 @@ export default function POSPage() {
               paymentStatus = 'partial'
           }
 
-          const salePayload = {
+          const salePayload: SalePayload = {
               branchId: activeStoreId,
               patientId: selectedCustomer?.id,
               status: "completed" as const,
@@ -376,7 +377,7 @@ export default function POSPage() {
               discountAmount: discountAmount,
               taxPercentage: vatPercentage,
               taxAmount: tax,
-              type: "pos", // Identifying this as a POS sale
+              type: "pos" as const, // Identifying this as a POS sale
               saleItems: cart.map(item => ({
                   medicineId: item.id,
                   itemName: item.name,
