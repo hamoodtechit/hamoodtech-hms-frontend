@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useAppointments, useDeleteAppointment } from "@/hooks/appointment-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
@@ -22,7 +22,7 @@ import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { format } from "date-fns"
-import { Calendar, Clock, Edit, Eye, Loader2, Plus, Search, Stethoscope, Trash2 } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, Stethoscope, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -75,6 +75,7 @@ export default function AppointmentsPage() {
     }
 
     const appointments = data?.data || []
+    const totalPages = data?.meta?.totalPages || 1
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -224,6 +225,34 @@ export default function AppointmentsPage() {
                             )}
                         </TableBody>
                     </Table>
+                    
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between p-4 border-t bg-muted/20">
+                            <span className="text-sm text-muted-foreground font-medium">
+                                Page <span className="text-foreground font-bold">{page}</span> of <span className="text-foreground font-bold">{totalPages}</span>
+                            </span>
+                            <div className="flex gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1 || isLoading}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages || isLoading}
+                                >
+                                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

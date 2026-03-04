@@ -37,7 +37,6 @@ import {
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
-import { pharmacyService } from "@/services/pharmacy-service"
 import { salesService } from "@/services/sales-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -84,7 +83,7 @@ export function TransactionHistory() {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
   const [selectedTransactionForReceipt, setSelectedTransactionForReceipt] = useState<any | null>(null)
   const [initialAddPayment, setInitialAddPayment] = useState(false)
-  const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'purchase' | 'return'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'sale' | 'return'>('all')
   const [filters, setFilters] = useState<{
     dateRange: DateRange | undefined;
     status: string;
@@ -119,16 +118,11 @@ export function TransactionHistory() {
         }
         
         if (activeTab === 'all' || activeTab === 'sale') {
-            promises.push(salesService.getSales(baseParams).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
+            promises.push(salesService.getSales({ ...baseParams, type: 'pos' }).then(res => ({ type: 'sale', data: res.data.sales, meta: res.data.pagination })))
         } else {
             promises.push(Promise.resolve({ type: 'sale', data: [], meta: { totalPages: 0 } }))
         }
 
-        if (activeTab === 'all' || activeTab === 'purchase') {
-            promises.push(pharmacyService.getPurchases(baseParams).then(res => ({ type: 'purchase', data: res.data.purchases, meta: res.data.pagination })))
-        } else {
-             promises.push(Promise.resolve({ type: 'purchase', data: [], meta: { totalPages: 0 } }))
-        }
 
         if (activeTab === 'all' || activeTab === 'return') {
             promises.push(salesService.getSaleReturns(baseParams).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
@@ -140,10 +134,11 @@ export function TransactionHistory() {
         // ... rest of fetchTransactions (mapping and state update)
         
         const salesData = results.find(r => r.type === 'sale')
-        const purchasesData = results.find(r => r.type === 'purchase')
         const returnsData = results.find(r => r.type === 'return')
 
-        const formattedSales: UnifiedTransaction[] = (salesData?.data || []).map((s: any) => ({
+        const formattedSales: UnifiedTransaction[] = (salesData?.data || [])
+            .filter((s: any) => s.type === 'pos')
+            .map((s: any) => ({
             id: s.id,
             type: 'sale',
             number: s.invoiceNumber,
@@ -154,16 +149,6 @@ export function TransactionHistory() {
             original: s
         }))
 
-        const formattedPurchases: UnifiedTransaction[] = (purchasesData?.data || []).map((p: any) => ({
-            id: p.id,
-            type: 'purchase',
-            number: p.poNumber || 'PO-N/A',
-            party: p.supplier?.name || 'Unknown Supplier',
-            total: Number(p.netPrice || p.totalPrice || 0),
-            status: p.status,
-            date: p.createdAt,
-            original: p
-        }))
 
         const formattedReturns: UnifiedTransaction[] = (returnsData?.data || []).map((r: any) => ({
             id: r.id,
@@ -176,14 +161,13 @@ export function TransactionHistory() {
             original: r
         }))
 
-        const combined = [...formattedSales, ...formattedPurchases, ...formattedReturns]
+        const combined = [...formattedSales, ...formattedReturns]
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         
         setTransactions(combined)
         
         const maxPages = Math.max(
             salesData?.meta?.totalPages || 1,
-            purchasesData?.meta?.totalPages || 1,
             returnsData?.meta?.totalPages || 1
         )
         setTotalPages(maxPages)
@@ -281,14 +265,6 @@ export function TransactionHistory() {
                     className="h-7 text-xs"
                 >
                     Returns
-                </Button>
-                <Button 
-                    variant={activeTab === 'purchase' ? "default" : "outline"} 
-                    size="sm" 
-                    onClick={() => { setActiveTab('purchase'); setPage(1); }}
-                    className="h-7 text-xs"
-                >
-                    Purchases
                 </Button>
             </div>
 

@@ -470,7 +470,7 @@ export default function POSPage() {
             <p className="text-muted-foreground">Please select a branch to access the POS system.</p>
             <div className="flex gap-4">
                 <StoreSwitcher />
-                <Link href="/pharmacy">
+                <Link href="/dashboard">
                     <Button variant="outline">Exit POS</Button>
                 </Link>
             </div>
@@ -667,7 +667,7 @@ export default function POSPage() {
                         <FileText className="h-4 w-4" />
                     </Button>
                     */}
-                    <Link href="/pharmacy">
+                    <Link href="/dashboard">
                         <Button variant="ghost" size="icon" className="text-muted-foreground mr-2" title="Exit POS">
                             <ChevronLeft className="h-5 w-5" />
                         </Button>

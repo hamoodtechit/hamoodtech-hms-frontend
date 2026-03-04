@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import {
-    Sale,
-    SalePayload,
-    SalePaymentPayload,
-    SaleReturn,
-    SaleReturnPayload,
-    SalesPaginatedResponse,
-    UpdateSalePayload
+  Sale,
+  SalePayload,
+  SalePaymentPayload,
+  SaleReturn,
+  SaleReturnPayload,
+  SalesPaginatedResponse,
+  UpdateSalePayload
 } from '@/types/sales';
 
 export const salesService = {
@@ -29,6 +29,7 @@ export const salesService = {
     endDate?: string;
     minAmount?: number;
     maxAmount?: number;
+    type?: string;
   }): Promise<SalesPaginatedResponse<Sale>> => {
     const response = await api.get<SalesPaginatedResponse<Sale>>('/sales', { params });
     return response.data;
@@ -73,6 +74,7 @@ export const salesService = {
     endDate?: string;
     minAmount?: number;
     maxAmount?: number;
+    type?: string;
   }): Promise<SalesPaginatedResponse<SaleReturn>> => {
     const response = await api.get<SalesPaginatedResponse<SaleReturn>>('/sales/returns', { params });
     return response.data;
