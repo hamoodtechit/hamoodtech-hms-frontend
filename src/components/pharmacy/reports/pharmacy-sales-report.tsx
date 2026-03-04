@@ -219,25 +219,25 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>Total Sale (Gross)</span>
               <span className="font-bold">{Number(summary.totalSale || 0).toFixed(2)}</span>
             </div>
+            <div className="flex justify-between">
+              <span>Total Tax</span>
+              <span className="font-bold">{Number(summary.totalTax || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-red-600">
+              <span>Total Discount</span>
+              <span className="font-bold">- {Number(summary.totalDiscount || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between border-t border-black pt-1">
+              <span>Net Sales</span>
+              <span className="font-bold">{Number(summary.totalNetSale || 0).toFixed(2)}</span>
+            </div>
             <div className="flex justify-between text-red-600">
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-emerald-600">
-              <span>Total Discount</span>
-              <span className="font-bold">- {Number(summary.totalDiscount || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Net Sales</span>
-              <span className="font-bold">{Number(summary.netSales || 0).toFixed(2)}</span>
-            </div>
-            <div className="border-t border-black pt-1 flex justify-between">
-              <span>Total Collection</span>
-              <span className="font-bold">{Number(summary.totalCollection || 0).toFixed(2)}</span>
-            </div>
             <div className="flex justify-between font-bold border-t border-black pt-1">
-              <span>Net Collection</span>
-              <span>{Number(summary.netCollection || 0).toFixed(2)}</span>
+              <span>Total Collection</span>
+              <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
