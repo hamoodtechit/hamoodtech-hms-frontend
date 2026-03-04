@@ -9,24 +9,24 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -116,7 +116,7 @@ export default function SalesHistoryPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <CardTitle className="text-xl font-semibold flex items-center gap-2">
               <ShoppingCart className="h-5 w-5 text-primary" />
-              Transactions
+              All Sales Records
             </CardTitle>
             <div className="flex flex-col md:flex-row items-center gap-3">
               <div className="relative w-full md:w-72">
