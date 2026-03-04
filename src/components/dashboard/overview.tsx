@@ -3,22 +3,22 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePharmacyGraph, usePharmacyStats, usePurchases } from "@/hooks/pharmacy-queries"
+import { usePharmacyGraph, usePharmacyStats, usePharmacySummary, usePurchases } from "@/hooks/pharmacy-queries"
 import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-    BarElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Filler,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip
 } from 'chart.js'
 
 import { endOfDay, format, formatDistanceToNow, startOfMonth } from "date-fns"
@@ -76,17 +76,22 @@ export function Overview() {
     endDate 
   })
 
+  const { data: summaryRes, isLoading: loadingSummary } = usePharmacySummary({
+    branchId: activeStoreId || undefined, 
+    startDate, 
+    endDate 
+  })
+
   // Memoize all-time params to prevent infinite loop
   // using branchId: undefined to get GLOBAL medicine count
   const allTimeParams = useMemo(() => ({
     branchId: undefined,
     startDate: '2000-01-01',
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: format(new Date(), 'yyyy-MM-dd')
   }), [])
 
   // Fetch all-time stats for inventory counts
   const { data: allTimeStatsRes } = usePharmacyStats(allTimeParams)
-  
   const { data: graphRes, isLoading: loadingGraph } = usePharmacyGraph({ 
     branchId: activeStoreId || undefined, 
     startDate, 
@@ -99,9 +104,10 @@ export function Overview() {
   const { data: purchasesRes, isLoading: loadingPurchases } = usePurchases({ limit: 5, branchId: activeStoreId || undefined })
 
   const stats = statsRes?.data
+  const summary = summaryRes?.data
   const allTimeStats = allTimeStatsRes?.data
   const graphData = graphRes?.data || []
-  const loading = loadingStats || loadingGraph
+  const loading = loadingStats || loadingGraph || loadingSummary
 
   const chartData = {
     labels: graphData.map(d => new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
@@ -140,7 +146,7 @@ export function Overview() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Sales Revenue (Gross)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -151,9 +157,10 @@ export function Overview() {
                 </div>
             ) : (
               <>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.totalSales || 0)}</div>
-                <p className="text-xs text-muted-foreground flex items-center mt-1">
-                  {stats?.salesCount || 0} sales processed
+                <div className="text-2xl font-bold">{formatCurrency(summary?.sales?.totalAmount || 0)}</div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                   Net: {formatCurrency(summary?.sales?.netSales || 0)} 
+                   <span className="text-emerald-500 ml-1">({summary?.sales?.count || 0} Tx)</span>
                 </p>
               </>
             )}
@@ -161,8 +168,8 @@ export function Overview() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Stock</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -172,9 +179,9 @@ export function Overview() {
                 </div>
             ) : (
               <>
-                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
+                <div className="text-2xl font-bold text-rose-600">{formatCurrency(summary?.returns?.saleReturnAmount || 0)}</div>
                 <p className="text-xs text-muted-foreground flex items-center mt-1">
-                  Across all categories
+                  {summary?.returns?.saleReturnCount || 0} items returned
                 </p>
               </>
             )}
@@ -193,18 +200,20 @@ export function Overview() {
                 </div>
             ) : (
               <>
-                <div className="text-2xl font-bold">{formatCurrency(stats?.totalPurchases || 0)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(summary?.purchases?.totalAmount || 0)}</div>
                 <p className="text-xs text-muted-foreground flex items-center mt-1">
-                  {stats?.purchasesCount || 0} purchase orders
+                  {summary?.purchases?.count || 0} purchase orders
                 </p>
               </>
             )}
           </CardContent>
         </Card>
+
+        {/* Operational Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Critical Stock</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <CardTitle className="text-sm font-medium">Active Stock</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -213,12 +222,22 @@ export function Overview() {
                     <Skeleton className="h-3 w-[120px]" />
                 </div>
             ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.lowStockCount || 0} Items</div>
-                <p className="text-xs text-muted-foreground text-orange-600 flex items-center mt-1">
-                  Requires immediate attention
-                </p>
-              </>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                    <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
+                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Total Medicines</p>
+                </div>
+                <div className="flex gap-4">
+                    <div className="text-right border-l pl-4">
+                        <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low Stock</p>
+                    </div>
+                    <div className="text-right border-l pl-4">
+                        <div className="text-lg font-semibold text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
+                        <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
+                    </div>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>

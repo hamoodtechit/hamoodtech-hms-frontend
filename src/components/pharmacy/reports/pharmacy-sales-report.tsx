@@ -34,7 +34,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
             <h1 className="text-2xl font-bold uppercase">{activeBranch?.name || 'PATWARY GENERAL HOSPITAL'}</h1>
             <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
             <p className="text-sm mt-2">
-            From {format(dateRange.from, "EEE MMM dd HH:mm:ss 'BDT' yyyy")} to {format(dateRange.to, "EEE MMM dd HH:mm:ss 'BDT' yyyy")}
+            From {format(dateRange.from, "dd MMM yyyy")} to {format(dateRange.to, "dd MMM yyyy")}
             </p>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
           <div className="bg-gray-200 text-center font-bold border-b border-black py-1 uppercase text-xs">Summary</div>
           <div className="p-2 space-y-1 text-xs">
             <div className="flex justify-between">
-              <span>Total Sale (Net)</span>
+              <span>Total Sale (Gross)</span>
               <span className="font-bold">{Number(summary.totalSale || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600">

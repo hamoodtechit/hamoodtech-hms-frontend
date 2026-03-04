@@ -623,6 +623,42 @@ export interface PharmacyGraphResponse {
   data: PharmacyGraphDataItem[];
 }
 
+export interface PharmacySummary {
+  sales: {
+    totalAmount: number;
+    taxAmount: number;
+    netSales: number;
+    paidAmount: number;
+    dueAmount: number;
+    count: number;
+  };
+  purchases: {
+    totalAmount: number;
+    paidAmount: number;
+    dueAmount: number;
+    count: number;
+  };
+  expenses: {
+    totalAmount: number;
+    count: number;
+  };
+  returns: {
+    saleReturnAmount: number;
+    saleReturnCount: number;
+    purchaseReturnAmount: number;
+    purchaseReturnCount: number;
+  };
+  cogs: number;
+  grossProfit: number;
+  netProfit: number;
+}
+
+export interface PharmacySummaryResponse {
+  success: boolean;
+  message: string;
+  data: PharmacySummary;
+}
+
 export interface CashRegisterOpenPayload {
   branchId: string;
   openingBalance: number;

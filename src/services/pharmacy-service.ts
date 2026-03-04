@@ -1,36 +1,37 @@
 import { api } from '@/lib/api';
 import {
-    AddOpeningStockDto,
-    AdjustStockDto,
-    Branch,
-    BranchListResponse,
-    BranchPayload,
-    CashRegisterClosePayload,
-    CashRegisterListResponse,
-    CashRegisterOpenPayload,
-    CashRegisterResponse,
-    Manufacturer,
-    ManufacturerListResponse,
-    ManufacturerPayload,
-    Medicine,
-    MedicinePayload,
-    PharmacyEntity,
-    PharmacyEntityType,
-    PharmacyGraphResponse,
-    PharmacyPayload,
-    PharmacyResponse,
-    PharmacyStatsResponse,
-    Purchase,
-    PurchaseListResponse,
-    PurchasePayload,
-    PurchaseStatus,
-    SalePayload,
-    Stock,
-    StockTransferPayload,
-    Supplier,
-    SupplierListResponse,
-    SupplierPayload,
-    UpdateOpeningStockDto
+  AddOpeningStockDto,
+  AdjustStockDto,
+  Branch,
+  BranchListResponse,
+  BranchPayload,
+  CashRegisterClosePayload,
+  CashRegisterListResponse,
+  CashRegisterOpenPayload,
+  CashRegisterResponse,
+  Manufacturer,
+  ManufacturerListResponse,
+  ManufacturerPayload,
+  Medicine,
+  MedicinePayload,
+  PharmacyEntity,
+  PharmacyEntityType,
+  PharmacyGraphResponse,
+  PharmacyPayload,
+  PharmacyResponse,
+  PharmacyStatsResponse,
+  PharmacySummaryResponse,
+  Purchase,
+  PurchaseListResponse,
+  PurchasePayload,
+  PurchaseStatus,
+  SalePayload,
+  Stock,
+  StockTransferPayload,
+  Supplier,
+  SupplierListResponse,
+  SupplierPayload,
+  UpdateOpeningStockDto
 } from '@/types/pharmacy';
 
 export const pharmacyService = {
@@ -370,13 +371,21 @@ export const pharmacyService = {
     return response.data;
   },
 
-  // Reports
   getSalesReport: async (params: { 
     branchId: string; 
     startDate: string; 
     endDate: string; 
   }): Promise<any> => {
     const response = await api.get('/reports/pharmacy/sales-report', { params });
+    return response.data;
+  },
+
+  getPharmacySummary: async (params: { 
+    branchId?: string; 
+    startDate?: string; 
+    endDate?: string; 
+  }): Promise<PharmacySummaryResponse> => {
+    const response = await api.get<PharmacySummaryResponse>('/reports/pharmacy/summary', { params });
     return response.data;
   },
 };

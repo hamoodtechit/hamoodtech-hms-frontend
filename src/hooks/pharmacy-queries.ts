@@ -7,7 +7,8 @@ export const PHARMACY_KEYS = {
   all: ["pharmacy"] as const,
   stats: (params: any) => [...PHARMACY_KEYS.all, "stats", params] as const,
   graph: (params: any) => [...PHARMACY_KEYS.all, "graph", params] as const,
-  topSelling: (branchId?: string, days?: number) => [...PHARMACY_KEYS.all, "topSelling", branchId, days] as const,
+  summary: (params: any) => [...PHARMACY_KEYS.all, "summary", params] as const,
+  topSelling: (branchId?: string, days?: number, startDate?: string, endDate?: string) => [...PHARMACY_KEYS.all, "topSelling", branchId, days, startDate, endDate] as const,
   patients: (params: any) => [...PHARMACY_KEYS.all, "patients", params] as const,
   activeSession: (branchId?: string) => [...PHARMACY_KEYS.all, "session", "active", branchId] as const,
   medicines: (params: any) => [...PHARMACY_KEYS.all, "medicines", params] as const,
@@ -46,9 +47,17 @@ export function usePharmacyGraph(params: { branchId?: string; startDate?: string
   });
 }
 
+export function usePharmacySummary(params: { branchId?: string; startDate?: string; endDate?: string }) {
+  return useQuery({
+    queryKey: PHARMACY_KEYS.summary(params),
+    queryFn: () => pharmacyService.getPharmacySummary(params),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useTopSellingProducts(params: { branchId?: string; days?: number; startDate?: string; endDate?: string }) {
   return useQuery({
-    queryKey: PHARMACY_KEYS.topSelling(params.branchId, params.days),
+    queryKey: PHARMACY_KEYS.topSelling(params.branchId, params.days, params.startDate, params.endDate),
     queryFn: () => pharmacyService.getTopSellingProducts(params),
     staleTime: 30 * 60 * 1000,
     placeholderData: keepPreviousData,

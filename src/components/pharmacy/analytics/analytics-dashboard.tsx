@@ -15,7 +15,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js'
-import { DollarSign, FileDown, Package, Printer, TrendingUp } from "lucide-react"
+import { AlertTriangle, DollarSign, FileDown, Package, Printer } from "lucide-react"
 import { Doughnut, Line } from "react-chartjs-2"
 import { createRoot } from 'react-dom/client'
 import { toast } from "sonner"
@@ -36,7 +36,7 @@ ChartJS.register(
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePharmacyGraph, usePharmacyStats } from "@/hooks/pharmacy-queries"
+import { usePharmacyGraph, usePharmacyStats, usePharmacySummary } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 
@@ -122,7 +122,7 @@ export function AnalyticsDashboard() {
 
             // Summary
             csvContent += "\n\nSUMMARY\n"
-            csvContent += `Total Sale,${summary.totalSale || 0}\n`
+            csvContent += `Gross Sale,${summary.totalSale || 0}\n`
             csvContent += `Total Return,${summary.totalReturn || 0}\n`
             csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
             csvContent += `Net Sales,${summary.netSales || 0}\n`
@@ -151,6 +151,12 @@ export function AnalyticsDashboard() {
     startDate,
     endDate
   })
+
+  const { data: summaryRes, isLoading: summaryLoading } = usePharmacySummary({
+    branchId: activeStoreId || undefined,
+    startDate,
+    endDate
+  })
   
   const { data: graphResponse, isLoading: graphLoading } = usePharmacyGraph({ 
     branchId: activeStoreId || undefined,
@@ -160,7 +166,7 @@ export function AnalyticsDashboard() {
     days: !startDate ? 7 : undefined 
   })
 
-  if (statsLoading || graphLoading) {
+  if (statsLoading || graphLoading || summaryLoading) {
     return (
       <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -194,10 +200,8 @@ export function AnalyticsDashboard() {
   }
 
   const pStats = stats?.data
+  const summary = summaryRes?.data
   const graphDataItems = graphResponse?.data || []
-
-  // Average Order Value
-  const avgOrderValue = pStats?.salesCount ? (pStats.totalSales / pStats.salesCount) : 0
 
   const salesData = {
     labels: graphDataItems.map(d => new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })),
@@ -270,53 +274,54 @@ export function AnalyticsDashboard() {
                 </DropdownMenu>
             </div>
         </div>
-        {/* KPI Cards */}
+        {/* Financial KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <CardTitle className="text-sm font-medium">Sales Revenue (Gross)</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(pStats?.totalSales || 0)}</div>
-                    <p className="text-xs text-muted-foreground flex items-center">
-                         Cumulative sales performance
+                    <div className="text-2xl font-bold">{formatCurrency(summary?.sales?.totalAmount || 0)}</div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                         Net: {formatCurrency(summary?.sales?.netSales || 0)} 
+                         <span className="text-emerald-500 ml-1">({summary?.sales?.count || 0} Tx)</span>
                     </p>
                 </CardContent>
             </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(avgOrderValue)}</div>
-                    <p className="text-xs text-muted-foreground flex items-center">
-                         Revenue per transaction
-                    </p>
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{pStats?.salesCount || 0}</div>
-                     <p className="text-xs text-muted-foreground flex items-center">
-                        Total POS sales processed
-                    </p>
-                </CardContent>
-            </Card>
-             <Card>
+            <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <Package className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{pStats?.lowStockCount || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                        Requires attention
+                        Medicines requiring attention
+                    </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Medicine Inventory</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pStats?.totalMedicines || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                         Total distinct medicines
+                    </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-red-600">{pStats?.expiringIn30Days || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                         Expiring within 30 days
                     </p>
                 </CardContent>
             </Card>
