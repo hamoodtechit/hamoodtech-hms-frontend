@@ -44,37 +44,40 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   if (!transaction) return null
   console.log("RECEIPT_TRANSACTION_DATA:", transaction)
 
-  const items = transaction.saleItems || []
+  // The API might return the sale nested under a 'sale' property or directly
+  const data = transaction.sale || transaction
+  const items = data.saleItems || []
   
-  const netTotal = Number(transaction.netPrice || transaction.totalPrice || 0)
+  const netTotal = Number(data.netPrice || data.totalPrice || 0)
   const grossTotal = items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0)
-  const paidAmount = Number(transaction.paidAmount || 0)
-  const dueAmount = Number(transaction.dueAmount || 0)
-  const taxAmount = Number(transaction.taxAmount || 0)
+  const paidAmount = Number(data.paidAmount || 0)
+  const dueAmount = Number(data.dueAmount || 0)
+  const taxAmount = Number(data.taxAmount || 0)
   
-  const patientName = transaction.patient?.name || transaction.customerName || "Walk-in Patient"
-  const patientAge = transaction.patient?.age ? `${transaction.patient.age}Y` : "N/A"
-  const patientSex = transaction.patient?.gender ? transaction.patient.gender.charAt(0).toUpperCase() + transaction.patient.gender.slice(1) : "N/A"
-  const patientPhone = transaction.patient?.phone || "N/A"
-  const patientId = transaction.patient?.id ? transaction.patient.id.slice(0,8).toUpperCase() : "N/A"
+  const patient = data.patient || {}
+  const patientName = patient.name || data.customerName || "Walk-in Patient"
+  const patientAge = patient.age ? `${patient.age}Y` : "N/A"
+  const patientSex = patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : "N/A"
+  const patientPhone = patient.phone || "N/A"
+  const patientId = patient.patientNumber || patient.id?.slice(0,8).toUpperCase() || "N/A"
   
-  const invoiceNumber = transaction.invoiceNumber || "N/A"
-  const labNumber = transaction.id ? transaction.id.slice(-8).toUpperCase() : "N/A" // Pseudo lab number
-  const date = transaction.createdAt || new Date().toISOString()
+  const invoiceNumber = data.invoiceNumber || "N/A"
+  const labNumber = data.id ? data.id.slice(-8).toUpperCase() : "N/A" // Pseudo lab number
+  const date = data.createdAt || new Date().toISOString()
   
   // Find consultant
   let consultantName = "N/A"
-  if (transaction.doctorId) {
-      const doc = doctors.find(d => d.id === transaction.doctorId)
+  if (data.doctorId) {
+      const doc = doctors.find(d => d.id === data.doctorId)
       if (doc) consultantName = doc.name
-  } else if (transaction.doctor?.name) {
-      consultantName = transaction.doctor.name
+  } else if (data.doctor?.name) {
+      consultantName = data.doctor.name
   }
 
   // Find assigned staff
-  let assignedStaffName = transaction.staffId || "User/Cashier"
-  if (transaction.staffId && staffs.length > 0) {
-      const staff = staffs.find(s => s.id === transaction.staffId)
+  let assignedStaffName = data.staffId || "User/Cashier"
+  if (data.staffId && staffs.length > 0) {
+      const staff = staffs.find(s => s.id === data.staffId)
       if (staff) assignedStaffName = staff.name
   }
 
@@ -95,14 +98,23 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
         </DialogHeader>
         
         <div className="p-8 max-h-[75vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
-            <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans">
+            <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans min-h-[500px]">
                 {/* Side Watermark / Vertical Text */}
-                <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-500 tracking-wider whitespace-nowrap hidden print:block">
+                <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-400 tracking-wider whitespace-nowrap hidden print:block">
                     Powered by Hamood Tech
                 </div>
 
+                {/* PAID Hologram */}
+                {isFullPaid && (
+                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.08]">
+                       <div className="text-[150px] font-black uppercase text-red-600 -rotate-[35deg] border-[12px] border-red-600 px-12 py-6 rounded-[40px] tracking-[15px]">
+                           PAID
+                       </div>
+                   </div>
+                )}
+
                 {/* Header */}
-                <div className="text-center mb-4">
+                <div className="text-center mb-4 relative z-10">
                     <h1 className="text-2xl font-bold uppercase tracking-wider">{general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
                     <p className="text-[13px] mt-1">{general?.address || "Bonpara Bazar, Boraigram, Natore-6430"}</p>
                     <p className="text-[13px]">{general?.phone || "01711862547"}</p>
@@ -113,46 +125,44 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
 
                 {/* Info Table Box */}
-                <div className="border border-black border-dashed mb-4">
+                <div className="border border-black border-dashed mb-4 relative z-10">
                     {/* Row 1 */}
                     <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-1 px-2 border-r border-black border-dashed font-bold">
+                        <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[40px] flex items-center">
                             UHID : {patientId}
                         </div>
-                        <div className="p-1 px-2 flex justify-between">
-                            <div className="font-bold">
-                                <div>Bill No. : {invoiceNumber}</div>
-                                <div>Lab. No. {labNumber}</div>
-                            </div>
+                        <div className="p-2 px-3 flex flex-col justify-center min-h-[40px]">
+                            <div className="font-bold">Bill No. : {invoiceNumber}</div>
+                            <div className="font-bold">Lab. No. : {labNumber}</div>
                         </div>
                     </div>
                     {/* Row 2 */}
                     <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-1 px-2 border-r border-black border-dashed font-bold">
+                        <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
                             Name <span className="mx-2">:</span> {patientName}
                         </div>
-                        <div className="p-1 px-2 font-bold flex">
+                        <div className="p-2 px-3 font-bold flex items-center min-h-[30px]">
                             <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                         </div>
                     </div>
                     {/* Row 3 */}
                     <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-1 px-2 border-r border-black border-dashed font-bold flex gap-4">
+                        <div className="p-2 px-3 border-r border-black border-dashed font-bold flex gap-6 items-center min-h-[30px]">
                             <span>Age <span className="mx-1">:</span> {patientAge}</span>
                             <span>Sex : {patientSex}</span>
                         </div>
-                        <div className="p-1 px-2 font-bold">
+                        <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
                             Contact No. : {patientPhone}
                         </div>
                     </div>
                     {/* Row 4 */}
-                    <div className="p-1 px-2 font-bold">
+                    <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
                         Consultant : {consultantName}
                     </div>
                 </div>
 
                 {/* Items Table */}
-                <table className="w-full text-left border-collapse mb-2 max-w-full">
+                <table className="w-full text-left border-collapse mb-2 max-w-full relative z-10">
                     <thead>
                         <tr className="border-y border-black border-dashed font-bold">
                             <th className="py-1 px-1 w-12">SL No</th>
@@ -184,13 +194,9 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </table>
 
                 {/* Totals Section */}
-                <div className="flex justify-between items-start mt-4 mb-6">
+                <div className="flex justify-between items-start mt-4 mb-6 relative z-10">
                     <div className="pt-2 pl-4">
-                        {isFullPaid && (
-                            <div className="border-2 border-black rounded-[30px] px-8 py-2 text-2xl font-bold inline-block opacity-80 uppercase tracking-widest mt-4">
-                                Full Paid
-                            </div>
-                        )}
+                        {/* Status Hologram used in background */}
                     </div>
                     <div className="w-[250px]">
                         <div className="flex justify-between py-0.5 font-bold">
@@ -217,26 +223,26 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
 
                 {/* Footer Info */}
-                <div className="flex gap-6 mt-4 font-bold text-[11px]">
+                <div className="flex gap-6 mt-4 font-bold text-[11px] relative z-10">
                     <div>
                         In Word : {amountInWords}
                     </div>
                     <div>
-                        TYPE : {transaction.paymentMethod?.toUpperCase() || "CASH"}
+                        TYPE : {data.paymentMethod?.toUpperCase() || "CASH"}
                     </div>
                 </div>
                 
-                <div className="font-bold text-[11px] mt-1">
+                <div className="font-bold text-[11px] mt-1 relative z-10">
                     Delivery Date : {formattedDeliveryDate} {formattedDeliveryTime}
                 </div>
 
-                <div className="flex justify-between items-end mt-16 pt-4 font-bold text-sm">
+                <div className="flex justify-between items-end mt-16 pt-4 font-bold text-sm relative z-10">
                     <div>
                         যে সকল রুমে যাবেনঃ
                     </div>
                     <div className="text-center">
-                        <div className="border-t border-black border-dotted w-48 mb-1"></div>
-                        Assigned By: {assignedStaffName}
+                        <div className="border-t border-black border-dashed w-48 mb-1"></div>
+                        Authorized Signature
                     </div>
                 </div>
             </div>
@@ -266,79 +272,95 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                       font-family: Arial, sans-serif; 
                                       -webkit-print-color-adjust: exact; 
                                       print-color-adjust: exact;
+                                      margin: 0;
+                                      padding: 0;
                                   }
                                   /* Reset/normalize some Tailwind styles */
                                   .border { border-width: 1px; border-style: solid; border-color: black; }
-                                  .border-dashed { border-style: dashed; }
+                                  .border-dashed { border-style: dashed !important; }
+                                  .border-dotted { border-style: dotted !important; }
                                   .border-black { border-color: black !important; }
-                                  .border-b { border-bottom-width: 1px; border-style: solid; border-color: black; }
-                                  .border-r { border-right-width: 1px; border-style: solid; border-color: black; }
-                                  .border-t { border-top-width: 1px; border-style: solid; border-color: black; }
-                                  .border-gray-300\\/50 { border-color: rgba(209, 213, 219, 0.5); }
-                                  .border-y { border-top-width: 1px; border-bottom-width: 1px; border-style: solid; border-color: black; }
-                                  .grid { display: grid; }
-                                  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-                                  .flex { display: flex; }
-                                  .justify-between { justify-content: space-between; }
-                                  .items-start { align-items: flex-start; }
-                                  .items-end { align-items: flex-end; }
-                                  .gap-4 { gap: 1rem; }
-                                  .gap-6 { gap: 1.5rem; }
-                                  .p-1 { padding: 0.25rem; }
-                                  .p-4 { padding: 1rem; }
-                                  .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
-                                  .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-                                  .px-8 { padding-left: 2rem; padding-right: 2rem; }
-                                  .py-0\\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
-                                  .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-                                  .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-                                  .pt-2 { padding-top: 0.5rem; }
-                                  .pt-4 { padding-top: 1rem; }
-                                  .mb-1 { margin-bottom: 0.25rem; }
-                                  .mb-2 { margin-bottom: 0.5rem; }
-                                  .mb-4 { margin-bottom: 1rem; }
-                                  .mb-6 { margin-bottom: 1.5rem; }
-                                  .mt-1 { margin-top: 0.25rem; }
-                                  .mt-3 { margin-top: 0.75rem; }
-                                  .mt-4 { margin-top: 1rem; }
-                                  .mt-16 { margin-top: 4rem; }
-                                  .mx-1 { margin-left: 0.25rem; margin-right: 0.25rem; }
-                                  .mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
-                                  .w-12 { width: 3rem; }
-                                  .w-24 { width: 6rem; }
-                                  .w-48 { width: 12rem; }
-                                  .w-\\[250px\\] { width: 250px; }
-                                  .w-full { width: 100%; }
-                                  .text-center { text-align: center; }
-                                  .text-right { text-align: right; }
-                                  .text-gray-500 { color: #6b7280; }
-                                  .text-\\[10px\\] { font-size: 10px; }
-                                  .text-\\[11px\\] { font-size: 11px; }
-                                  .text-\\[12px\\] { font-size: 12px; }
-                                  .text-\\[13px\\] { font-size: 13px; }
-                                  .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-                                  .text-2xl { font-size: 1.5rem; line-height: 2rem; }
-                                  .font-bold { font-weight: 700; }
-                                  .font-medium { font-weight: 500; }
-                                  .uppercase { text-transform: uppercase; }
-                                  .tracking-wider { letter-spacing: 0.05em; }
-                                  .tracking-widest { letter-spacing: 0.1em; }
-                                  .border-collapse { border-collapse: collapse; }
-                                  .rounded-full { border-radius: 9999px; }
-                                  .rounded-\\[30px\\] { border-radius: 30px; }
-                                  .border-2 { border-width: 2px; }
-                                  .border-dotted { border-style: dotted; }
-                                  .inline-block { display: inline-block; }
-                                  .opacity-80 { opacity: 0.8; }
-                                  
-                                  /* Fix specifically for watermark layout in print */
-                                  .relative { position: relative; }
-                                  .absolute { position: absolute; }
-                                  .-left-6 { left: -1.5rem; }
-                                  .top-1\\/2 { top: 50%; }
-                                  .-translate-y-1\\/2 { transform: translateY(-50%) rotate(-90deg); } /* merged rotate */
-                                  .whitespace-nowrap { white-space: nowrap; }
-                                  .print\\:block { display: block; }
+                                  .border-b { border-bottom-width: 1px; }
+                                  .border-r { border-right-width: 1px; }
+                                  .border-t { border-top-width: 1px; }
+                                  .border-y { border-top-width: 1px; border-bottom-width: 1px; }
+                                  .grid { display: grid !important; }
+                                  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+                                  .flex { display: flex !important; }
+                                  .flex-col { flex-direction: column !important; }
+                                  .justify-center { justify-content: center !important; }
+                                  .justify-between { justify-content: space-between !important; }
+                                  .items-center { align-items: center !important; }
+                                  .items-start { align-items: flex-start !important; }
+                                  .items-end { align-items: flex-end !important; }
+                                  .gap-4 { gap: 1rem !important; }
+                                  .gap-6 { gap: 1.5rem !important; }
+                                  .p-2 { padding: 0.5rem !important; }
+                                  .p-4 { padding: 1rem !important; }
+                                  .p-8 { padding: 2rem !important; }
+                                  .px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+                                  .px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+                                  .px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
+                                  .py-0\\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
+                                  .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+                                  .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+                                  .pt-2 { padding-top: 0.5rem !important; }
+                                  .mb-1 { margin-bottom: 0.25rem !important; }
+                                  .mb-2 { margin-bottom: 0.5rem !important; }
+                                  .mb-4 { margin-bottom: 1rem !important; }
+                                  .mb-6 { margin-bottom: 1.5rem !important; }
+                                  .mt-1 { margin-top: 0.25rem !important; }
+                                  .mt-3 { margin-top: 0.75rem !important; }
+                                  .mt-4 { margin-top: 1rem !important; }
+                                  .mt-16 { margin-top: 4rem !important; }
+                                  .mx-2 { margin-left: 0.5rem !important; margin-right: 0.5rem !important; }
+                                  .w-12 { width: 3rem !important; }
+                                  .w-24 { width: 6rem !important; }
+                                  .w-48 { width: 12rem !important; }
+                                  .w-\\[250px\\] { width: 250px !important; }
+                                  .w-full { width: 100% !important; }
+                                  .min-h-\\[30px\\] { min-height: 30px !important; }
+                                  .min-h-\\[40px\\] { min-height: 40px !important; }
+                                  .min-h-\\[500px\\] { min-height: 500px !important; }
+                                  .text-center { text-align: center !important; }
+                                  .text-right { text-align: right !important; }
+                                  .text-gray-400 { color: #9ca3af !important; }
+                                  .text-gray-500 { color: #6b7280 !important; }
+                                  .text-red-600 { color: #dc2626 !important; }
+                                  .text-\\[10px\\] { font-size: 10px !important; }
+                                  .text-\\[11px\\] { font-size: 11px !important; }
+                                  .text-\\[12px\\] { font-size: 12px !important; }
+                                  .text-\\[13px\\] { font-size: 13px !important; }
+                                  .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+                                  .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                                  .text-\\[150px\\] { font-size: 150px !important; }
+                                  .font-bold { font-weight: 700 !important; }
+                                  .font-black { font-weight: 900 !important; }
+                                  .font-medium { font-weight: 500 !important; }
+                                  .uppercase { text-transform: uppercase !important; }
+                                  .tracking-wider { letter-spacing: 0.05em !important; }
+                                  .tracking-widest { letter-spacing: 0.1em !important; }
+                                  .tracking-\\[15px\\] { letter-spacing: 15px !important; }
+                                  .border-collapse { border-collapse: collapse !important; }
+                                  .rounded-full { border-radius: 9999px !important; }
+                                  .rounded-\\[30px\\] { border-radius: 30px !important; }
+                                  .rounded-\\[40px\\] { border-radius: 40px !important; }
+                                  .border-2 { border-width: 2px !important; }
+                                  .border-\\[12px\\] { border-width: 12px !important; }
+                                  .inline-block { display: inline-block !important; }
+                                  .opacity-\\[0\\.08\\] { opacity: 0.08 !important; }
+                                  .z-0 { z-index: 0 !important; }
+                                  .z-10 { z-index: 10 !important; }
+                                  .inset-0 { top: 0; right: 0; bottom: 0; left: 0 !important; }
+                                  .relative { position: relative !important; }
+                                  .absolute { position: absolute !important; }
+                                  .pointer-events-none { pointer-events: none !important; }
+                                  .overflow-hidden { overflow: hidden !important; }
+                                  .-left-6 { left: -1.5rem !important; }
+                                  .top-1\\/2 { top: 50% !important; }
+                                  .-translate-y-1\\/2 { transform: translateY(-50%) rotate(-90deg) !important; }
+                                  .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
+                                  .whitespace-nowrap { white-space: nowrap !important; }
                               </style>
                           </head>
                           <body>
@@ -364,7 +386,6 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
              Close
           </Button>
-
         </div>
       </DialogContent>
     </Dialog>

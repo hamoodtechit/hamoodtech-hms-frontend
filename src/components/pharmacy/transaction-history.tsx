@@ -47,6 +47,7 @@ import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 
+import { DiagnosticReceiptDialog } from "@/components/billing/diagnostic-receipt-dialog"
 import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
@@ -558,11 +559,19 @@ export function TransactionHistory() {
         onOpenChange={setReturnDetailsDialogOpen}
     />
 
-    <ReceiptDialog 
-        open={receiptDialogOpen}
-        onOpenChange={setReceiptDialogOpen}
-        transaction={selectedTransactionForReceipt}
-    />
+    {selectedTransactionForReceipt?.type === 'pos' ? (
+      <ReceiptDialog 
+          open={receiptDialogOpen}
+          onOpenChange={setReceiptDialogOpen}
+          transaction={selectedTransactionForReceipt}
+      />
+    ) : (
+      <DiagnosticReceiptDialog
+          open={receiptDialogOpen}
+          onOpenChange={setReceiptDialogOpen}
+          transaction={selectedTransactionForReceipt ? { sale: selectedTransactionForReceipt } : null}
+      />
+    )}
     </>
   )
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { DiagnosticReceiptDialog } from "@/components/billing/diagnostic-receipt-dialog"
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -9,24 +10,24 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -506,36 +507,44 @@ export default function SalesHistoryPage() {
         initialAddPayment={initialAddPayment}
       />
 
-      <ReceiptDialog 
-        open={receiptOpen}
-        onOpenChange={setReceiptOpen}
-        transaction={selectedSale ? {
-            id: selectedSale.id,
-            customerName: selectedSale.patient?.name || 'Walk-in',
-            items: (selectedSale.saleItems || []).map(item => ({
-                id: item.medicineId || '',
-                name: item.itemName || 'Unknown Item',
-                price: Number(item.price),
-                quantity: Number(item.quantity),
-                batchNumber: item.batchNumber,
-                discountPercentage: Number(item.discountPercentage || 0),
-                discountAmount: Number(item.discountAmount || 0),
-                dosageForm: item.unit // mapping unit to dosageForm as fallback
-            })),
-            total: Number(selectedSale.totalPrice),
-            subtotal: Number(selectedSale.netPrice || selectedSale.totalPrice),
-            tax: Number(selectedSale.taxAmount || 0),
-            taxPercentage: Number(selectedSale.taxPercentage || 0),
-            discount: Number(selectedSale.discountPercentage || 0),
-            discountAmount: Number(selectedSale.discountAmount || 0),
-            paidAmount: Number(selectedSale.paidAmount || 0),
-            dueAmount: Number(selectedSale.dueAmount || 0),
-            date: selectedSale.createdAt,
-            status: selectedSale.status === 'completed' ? 'Completed' : 'Refunded', // match type
-            paymentMethod: (selectedSale.paymentMethod as any) || 'cash',
-            invoiceNumber: selectedSale.invoiceNumber
-        } as any : null}
-      />
+      {selectedSale?.type === 'pos' ? (
+        <ReceiptDialog 
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            transaction={selectedSale ? {
+                id: selectedSale.id,
+                customerName: selectedSale.patient?.name || 'Walk-in',
+                items: (selectedSale.saleItems || []).map(item => ({
+                    id: item.medicineId || '',
+                    name: item.itemName || 'Unknown Item',
+                    price: Number(item.price),
+                    quantity: Number(item.quantity),
+                    batchNumber: item.batchNumber,
+                    discountPercentage: Number(item.discountPercentage || 0),
+                    discountAmount: Number(item.discountAmount || 0),
+                    dosageForm: item.unit // mapping unit to dosageForm as fallback
+                })),
+                total: Number(selectedSale.totalPrice),
+                subtotal: Number(selectedSale.netPrice || selectedSale.totalPrice),
+                tax: Number(selectedSale.taxAmount || 0),
+                taxPercentage: Number(selectedSale.taxPercentage || 0),
+                discount: Number(selectedSale.discountPercentage || 0),
+                discountAmount: Number(selectedSale.discountAmount || 0),
+                paidAmount: Number(selectedSale.paidAmount || 0),
+                dueAmount: Number(selectedSale.dueAmount || 0),
+                date: selectedSale.createdAt,
+                status: selectedSale.status === 'completed' ? 'Completed' : 'Refunded', // match type
+                paymentMethod: (selectedSale.paymentMethod as any) || 'cash',
+                invoiceNumber: selectedSale.invoiceNumber
+            } as any : null}
+        />
+      ) : (
+        <DiagnosticReceiptDialog
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            transaction={selectedSale ? { sale: selectedSale } : null}
+        />
+      )}
     </div>
   )
 }

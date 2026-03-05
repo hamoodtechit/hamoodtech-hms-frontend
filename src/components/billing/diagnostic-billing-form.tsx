@@ -46,6 +46,7 @@ interface CartItem {
     reportDays: number
     deliveryDate: string
     staffId: string
+    staffName: string
     discountAmount: number
     discountPercentage: number
 }
@@ -59,7 +60,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     // Data Fetching
     const { data: testsRes } = useDiagnosticTests({ branchId: activeStoreId, limit: 500 })
     const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
-    const { data: staffRes } = useEmployees({ branchId: activeStoreId, limit: 500 })
+    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId, employeeType: "staff", limit: 500 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, limit: 100, isActive: true })
 
     const allStaff = staffRes?.data || []
@@ -83,6 +84,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
     const [selectedTestId, setSelectedTestId] = useState<string>("")
+    const [selectedStaffId, setSelectedStaffId] = useState<string>("")
     const [cart, setCart] = useState<CartItem[]>([])
     
     // Payment State
@@ -112,6 +114,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         delivery.setDate(delivery.getDate() + (test.reportDays || 0))
         const deliveryStr = delivery.toISOString().split('T')[0]
 
+        const staff = allStaff.find(s => s.id === (selectedStaffId || test.staffId))
         const newItem: CartItem = {
             id: Math.random().toString(36).substring(7),
             testId: test.id,
@@ -119,13 +122,15 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             price: Number(test.price),
             reportDays: test.reportDays || 0,
             deliveryDate: deliveryStr,
-            staffId: test.staffId || "",
+            staffId: staff?.id || "",
+            staffName: staff?.name || "",
             discountAmount: 0,
             discountPercentage: 0
         }
 
         setCart([...cart, newItem])
         setSelectedTestId("")
+        setSelectedStaffId("")
     }
 
     const handleRemoveItem = (id: string) => {
@@ -202,7 +207,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 discountPercentage: item.discountPercentage,
                 discountAmount: item.discountAmount,
                 deliveryDate: item.deliveryDate,
-                testBy: allStaff.find(s => s.id === item.staffId)?.name || "",
+                testBy: item.staffName || "",
                 medicineId: "",
                 batchNumber: "",
                 expiryDate: ""
@@ -281,12 +286,22 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                                     Add Tests
                                 </Label>
                                 <div className="flex gap-2">
-                                    <div className="flex-1">
+                                    <div className="flex-[2]">
                                         <SearchableSelect 
                                             value={selectedTestId}
                                             onChange={setSelectedTestId}
                                             options={availableTests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(Number(t.price))}` }))}
                                             placeholder="Search Diagnostic Test..."
+                                            showAll={false}
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <SearchableSelect 
+                                            value={selectedStaffId}
+                                            onChange={setSelectedStaffId}
+                                            options={staffRes?.data?.map(s => ({ id: s.id, name: s.name })) || []}
+                                            placeholder="Assigned To"
+                                            loading={loadingStaff}
                                             showAll={false}
                                         />
                                     </div>
