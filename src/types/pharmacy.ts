@@ -391,7 +391,8 @@ export interface SalePayload {
   discountAmount: number;
   taxPercentage: number;
   taxAmount: number;
-  type: 'general-sale' | 'pos'; // 'pos' or 'general-sale'
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology'; // 'pos', 'general-sale', 'appointment', 'pathology', 'radiology'
+  doctorId?: string;
   payments: SalePayment[];
   saleItems: SaleItem[];
 }
@@ -414,6 +415,11 @@ export interface Sale {
   taxAmount?: number | string;
   cashRegisterSessionId?: string;
   type?: string;
+  doctorId?: string;
+  doctor?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
   branch?: { name: string };
@@ -431,6 +437,7 @@ export interface UpdateSalePayload {
   discountPercentage?: number;
   discountAmount?: number;
   type?: string;
+  doctorId?: string;
   payments?: {
     accountId: string;
     amount: number;

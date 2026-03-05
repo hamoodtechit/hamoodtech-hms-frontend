@@ -1,7 +1,7 @@
 import { Branch, Patient, PaymentMethod } from "./pharmacy";
 
 export interface SaleItem {
-  medicineId: string;
+  medicineId?: string;
   itemName: string;
   itemDescription?: string;
   unit: string;
@@ -10,9 +10,10 @@ export interface SaleItem {
   discountPercentage?: number | string;
   discountAmount?: number | string;
   quantity: number | string;
-  batchNumber: string;
-  expiryDate: string;
+  batchNumber?: string;
+  expiryDate?: string;
   dosageForm?: string;
+  deliveryDate?: string;
 }
 
 export interface SalePayment {
@@ -42,7 +43,9 @@ export interface Sale {
   taxAmount: number | string;
   cashRegisterSessionId?: string;
   saleItems: SaleItemDetails[];
-  type: 'general-sale' | 'pos';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
+  doctorId?: string;
+  staffId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,7 +80,9 @@ export interface SalePayload {
   taxAmount: number | string;
   payments?: SalePayment[];
   saleItems: SaleItem[];
-  type?: 'general-sale' | 'pos';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
+  doctorId?: string;
+  staffId?: string;
 }
 
 export interface UpdateSalePayload extends Partial<SalePayload> {
@@ -90,12 +95,18 @@ export interface UpdateSalePayload extends Partial<SalePayload> {
   paymentStatus?: 'paid' | 'due' | 'partial';
   paidAmount?: number | string;
   dueAmount?: number | string;
+  doctorId?: string;
+  staffId?: string;
+  doctor?: {
+    id: string;
+    name: string;
+  };
   saleItems?: SaleItem[];
-  type?: 'general-sale' | 'pos';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
 }
 
 export interface SaleReturnItem {
-  medicineId: string;
+  medicineId?: string;
   itemName: string;
   itemDescription?: string;
   unit: string;
@@ -103,8 +114,8 @@ export interface SaleReturnItem {
   mrp?: number | string;
   quantity: number | string;
   totalPrice?: number | string;
-  batchNumber: string;
-  expiryDate: string;
+  batchNumber?: string;
+  expiryDate?: string;
 }
 
 export interface SaleReturn {

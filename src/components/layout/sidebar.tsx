@@ -19,6 +19,7 @@ import {
     LayoutDashboard,
     Microscope,
     Pill,
+    Receipt,
     Settings,
     ShoppingBag,
     ShoppingCart,
@@ -104,6 +105,28 @@ export function Sidebar() {
               label: "Returns",
               href: "/sales/returns",
               permission: "sale-return:read",
+          }
+      ]
+    },
+    {
+      label: "Billing",
+      icon: Receipt,
+      color: "text-indigo-600",
+      children: [
+          {
+              label: "Appointment Billing",
+              href: "/billing/appointment",
+              module: "appointment",
+          },
+          {
+              label: "Pathology Billing",
+              href: "/billing/pathology",
+              module: "diagnostic",
+          },
+          {
+              label: "Radiology Billing",
+              href: "/billing/radiology",
+              module: "diagnostic",
           }
       ]
     },

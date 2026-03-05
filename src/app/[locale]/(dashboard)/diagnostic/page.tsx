@@ -91,6 +91,7 @@ export default function DiagnosticTestsPage() {
                                 <TableHead className="pl-6">Test Info</TableHead>
                                 <TableHead>Department</TableHead>
                                 <TableHead>Price</TableHead>
+                                <TableHead>Report Days</TableHead>
                                 <TableHead className="text-right pr-6">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -136,6 +137,11 @@ export default function DiagnosticTestsPage() {
                                         <TableCell>
                                             <span className="font-black text-primary tracking-tight text-sm">
                                                 {formatCurrency(test.price)}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-sm font-medium">
+                                                {test.reportDays || 0} Days
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-right pr-6">

@@ -58,6 +58,7 @@ export default function SalesHistoryPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [saleType, setSaleType] = useState<string>("all")
   const [patientIdFilter, setPatientIdFilter] = useState<string | null>(urlPatientId)
   const limit = 10
 
@@ -70,6 +71,7 @@ export default function SalesHistoryPage() {
                             (minAmount ? 1 : 0) +
                             (maxAmount ? 1 : 0) +
                             (dateRange ? 1 : 0) +
+                            (saleType !== "all" ? 1 : 0) +
                             (patientIdFilter ? 1 : 0)
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
@@ -92,7 +94,8 @@ export default function SalesHistoryPage() {
     endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     search: debouncedSearch || undefined,
     branchId: activeStoreId || undefined,
-    patientId: patientIdFilter || undefined
+    patientId: patientIdFilter || undefined,
+    type: saleType !== "all" ? saleType : undefined
   })
 
   const sales = salesRes?.data?.sales || []
@@ -165,6 +168,7 @@ export default function SalesHistoryPage() {
                             setMinAmount("")
                             setMaxAmount("")
                             setDateRange(undefined)
+                            setSaleType("all")
                             setPatientIdFilter(null)
                           }}
                           className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
@@ -250,6 +254,23 @@ export default function SalesHistoryPage() {
                       </div>
 
                       <div className="grid gap-2">
+                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Sale Type</Label>
+                        <Select value={saleType} onValueChange={(v) => { setSaleType(v); setPage(1); }}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="All Types" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="pos">POS</SelectItem>
+                            <SelectItem value="appointment">Appointment</SelectItem>
+                            <SelectItem value="pathology">Pathology</SelectItem>
+                            <SelectItem value="radiology">Radiology</SelectItem>
+                            <SelectItem value="general-sale">General Sale</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
                         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Method</Label>
                         <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
                           <SelectTrigger className="h-9">
@@ -319,6 +340,7 @@ export default function SalesHistoryPage() {
                 <TableRow>
                   <TableHead>Invoice</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Patient</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Paid</TableHead>
@@ -347,6 +369,21 @@ export default function SalesHistoryPage() {
                       <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                       <TableCell>
                         {format(new Date(sale.createdAt), "MMM dd, yyyy HH:mm")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "capitalize text-[10px] font-bold",
+                            sale.type === 'pos' ? "bg-blue-50 text-blue-600 border-blue-200" :
+                            sale.type === 'appointment' ? "bg-orange-50 text-orange-600 border-orange-200" :
+                            sale.type === 'pathology' ? "bg-purple-50 text-purple-600 border-purple-200" :
+                            sale.type === 'radiology' ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
+                            "bg-gray-50 text-gray-600 border-gray-200"
+                          )}
+                        >
+                          {sale.type || 'General'}
+                        </Badge>
                       </TableCell>
                       <TableCell>{sale.patient?.name || "Walk-in"}</TableCell>
                       <TableCell className="font-bold text-primary">

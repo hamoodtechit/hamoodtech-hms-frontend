@@ -86,7 +86,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
         const price = Number(item.price)
         
         return {
-          medicineId: item.medicineId,
+          medicineId: item.medicineId || "", // fallback to empty string if undefined for non-pharmacy items
           itemName: item.itemName,
           itemDescription: item.itemDescription || undefined,
           unit: item.unit,
@@ -164,9 +164,11 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
                     </TableCell>
                     <TableCell>
                         <div className="font-medium truncate max-w-[200px]" title={item.itemName}>{item.itemName}</div>
-                        <div className="text-xs text-muted-foreground truncate w-32" title={item.medicineId}>
-                            ID: ...{item.medicineId.slice(-6)}
-                        </div>
+                        {item.medicineId && (
+                            <div className="text-xs text-muted-foreground truncate w-32" title={item.medicineId}>
+                                ID: ...{item.medicineId.slice(-6)}
+                            </div>
+                        )}
                     </TableCell>
                     <TableCell>{item.batchNumber}</TableCell>
                     <TableCell>{Number(item.quantity)} {item.unit}</TableCell>

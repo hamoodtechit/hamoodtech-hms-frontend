@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateDiagnosticTest, useUpdateDiagnosticTest } from "@/hooks/diagnostic-queries"
-import { useDepartments } from "@/hooks/hr-queries"
+import { useDepartments, useEmployees } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest, DiagnosticTestPayload } from "@/types/diagnostic"
 import { Loader2 } from "lucide-react"
@@ -31,6 +33,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     const { activeStoreId } = useStoreContext()
 
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
+    const { data: staffRes } = useEmployees({ branchId: activeStoreId, employeeType: "staff", limit: 100 })
 
     const createMutation = useCreateDiagnosticTest()
     const updateMutation = useUpdateDiagnosticTest()
@@ -44,6 +47,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         description: "",
         departmentId: "",
         price: 0,
+        reportDays: 0,
+        staffId: "",
     })
 
     useEffect(() => {
@@ -56,6 +61,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     description: test.description || "",
                     departmentId: test.departmentId,
                     price: test.price,
+                    reportDays: test.reportDays || 0,
+                    staffId: test.staffId || "",
                 })
             } else {
                 setFormData({
@@ -65,14 +72,16 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     description: "",
                     departmentId: "",
                     price: 0,
+                    reportDays: 0,
+                    staffId: "",
                 })
             }
         }
     }, [open, test, activeStoreId])
 
     const handleSave = async () => {
-        if (!formData.name || !formData.departmentId || formData.price === undefined) {
-            toast.error("Please fill in required fields (Name, Department, Price)")
+        if (!formData.name || !formData.departmentId || formData.price === undefined || !formData.staffId) {
+            toast.error("Please fill in required fields (Name, Department, Price, Staff)")
             return
         }
 
@@ -90,7 +99,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
             }
             onSuccess?.()
             onOpenChange(false)
-        } catch (error) {
+        } catch {
             toast.error(isEdit ? "Failed to update test" : "Failed to create test")
         } finally {
             setLoading(false)
@@ -99,15 +108,16 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[500px] p-0">
+                <DialogHeader className="p-6 pb-0">
                     <DialogTitle>{isEdit ? "Update Diagnostic Test" : "Create New Diagnostic Test"}</DialogTitle>
                     <DialogDescription>
                         Define the details for a diagnostic test or procedure.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-4 py-4">
+                <ScrollArea className="max-h-[80vh] px-6">
+                    <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Test Name *</Label>
                         <Input 
@@ -139,12 +149,31 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     </div>
 
                     <div className="grid gap-2">
+                        <Label>Assigned Staff *</Label>
+                        <SearchableSelect 
+                            value={formData.staffId}
+                            onChange={(val) => setFormData(prev => ({ ...prev, staffId: val }))}
+                            options={staffRes?.data?.map(s => ({ id: s.id, name: s.name })) || []}
+                            placeholder="Select Staff"
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="price">Standard Price *</Label>
-                        <Input 
-                            id="price" 
-                            type="number"
-                            value={formData.price} 
-                            onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                        <SmartNumberInput 
+                            value={Number(formData.price) || undefined} 
+                            onChange={(val) => setFormData(prev => ({ ...prev, price: val || 0 }))}
+                            min={0}
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="reportDays">Report Delivery Days</Label>
+                        <SmartNumberInput 
+                            value={formData.reportDays} 
+                            onChange={(val) => setFormData(prev => ({ ...prev, reportDays: val || 0 }))}
+                            min={0}
+                            placeholder="e.g. 1"
                         />
                     </div>
 
@@ -159,8 +188,9 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                         />
                     </div>
                 </div>
+                </ScrollArea>
 
-                <DialogFooter>
+                <DialogFooter className="p-6 pt-0">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         Cancel
                     </Button>

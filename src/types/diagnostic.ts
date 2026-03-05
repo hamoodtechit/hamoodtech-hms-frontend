@@ -13,6 +13,8 @@ export interface DiagnosticTest {
     name: string;
     nameBangla?: string;
   };
+  reportDays?: number;
+  staffId?: string;
 }
 
 export interface DiagnosticTestPayload {
@@ -22,6 +24,8 @@ export interface DiagnosticTestPayload {
   description?: string;
   departmentId: string;
   price: number | string;
+  reportDays?: number;
+  staffId: string;
 }
 
 export interface DiagnosticPaginatedResponse<T> {
