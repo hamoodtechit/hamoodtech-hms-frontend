@@ -34,13 +34,15 @@ interface DiagnosticReceiptDialogProps {
   onOpenChange: (open: boolean) => void
   transaction: any | null // Generic sale object
   doctors?: any[] // To lookup doctor name if not populated
+  staffs?: any[] // To lookup staff name
 }
 
-export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, doctors = [] }: DiagnosticReceiptDialogProps) {
+export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, doctors = [], staffs = [] }: DiagnosticReceiptDialogProps) {
   const { general } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   
   if (!transaction) return null
+  console.log("RECEIPT_TRANSACTION_DATA:", transaction)
 
   const items = transaction.saleItems || []
   
@@ -69,6 +71,13 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
       consultantName = transaction.doctor.name
   }
 
+  // Find assigned staff
+  let assignedStaffName = transaction.staffId || "User/Cashier"
+  if (transaction.staffId && staffs.length > 0) {
+      const staff = staffs.find(s => s.id === transaction.staffId)
+      if (staff) assignedStaffName = staff.name
+  }
+
   const deliveryDateRaw = items[0]?.deliveryDate || date;
   // Format as DD/MM/YYYY
   const formattedDeliveryDate = new Date(deliveryDateRaw).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -86,10 +95,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
         </DialogHeader>
         
         <div className="p-8 max-h-[75vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
-            <div className="relative border border-black p-4 text-[12px] font-medium font-sans">
+            <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans">
                 {/* Side Watermark / Vertical Text */}
                 <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-500 tracking-wider whitespace-nowrap hidden print:block">
-                    Powered By: Hospital Management System
+                    Powered by Hamood Tech
                 </div>
 
                 {/* Header */}
@@ -104,10 +113,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
 
                 {/* Info Table Box */}
-                <div className="border border-black mb-4">
+                <div className="border border-black border-dashed mb-4">
                     {/* Row 1 */}
-                    <div className="grid grid-cols-2 border-b border-black">
-                        <div className="p-1 px-2 border-r border-black font-bold">
+                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                        <div className="p-1 px-2 border-r border-black border-dashed font-bold">
                             UHID : {patientId}
                         </div>
                         <div className="p-1 px-2 flex justify-between">
@@ -118,8 +127,8 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                         </div>
                     </div>
                     {/* Row 2 */}
-                    <div className="grid grid-cols-2 border-b border-black">
-                        <div className="p-1 px-2 border-r border-black font-bold">
+                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                        <div className="p-1 px-2 border-r border-black border-dashed font-bold">
                             Name <span className="mx-2">:</span> {patientName}
                         </div>
                         <div className="p-1 px-2 font-bold flex">
@@ -127,8 +136,8 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                         </div>
                     </div>
                     {/* Row 3 */}
-                    <div className="grid grid-cols-2 border-b border-black">
-                        <div className="p-1 px-2 border-r border-black font-bold flex gap-4">
+                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                        <div className="p-1 px-2 border-r border-black border-dashed font-bold flex gap-4">
                             <span>Age <span className="mx-1">:</span> {patientAge}</span>
                             <span>Sex : {patientSex}</span>
                         </div>
@@ -145,7 +154,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 {/* Items Table */}
                 <table className="w-full text-left border-collapse mb-2 max-w-full">
                     <thead>
-                        <tr className="border-y border-black font-bold">
+                        <tr className="border-y border-black border-dashed font-bold">
                             <th className="py-1 px-1 w-12">SL No</th>
                             <th className="py-1 px-1">Test Name</th>
                             <th className="py-1 px-1 text-right w-24">Unit Price</th>
@@ -158,11 +167,16 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                              const itemTotal = Number(item.price) * Number(item.quantity)
                              return (
                                 <tr key={index} className="border-b border-gray-300/50">
-                                    <td className="py-1 px-1">{index + 1}</td>
-                                    <td className="py-1 px-1">{item.itemName}</td>
-                                    <td className="py-1 px-1 text-right">{Number(item.price).toFixed(2)}</td>
-                                    <td className="py-1 px-1 text-center">{item.quantity}</td>
-                                    <td className="py-1 px-1 text-right">{itemTotal.toFixed(2)}</td>
+                                    <td className="py-1 px-1 align-top">{index + 1}</td>
+                                    <td className="py-1 px-1">
+                                        <div>{item.itemName}</div>
+                                        {item.testBy && (
+                                            <div className="text-[10px] text-gray-500 mt-0.5">Test By: {item.testBy}</div>
+                                        )}
+                                    </td>
+                                    <td className="py-1 px-1 text-right align-top">{Number(item.price).toFixed(2)}</td>
+                                    <td className="py-1 px-1 text-center align-top">{item.quantity}</td>
+                                    <td className="py-1 px-1 text-right align-top">{itemTotal.toFixed(2)}</td>
                                 </tr>
                             )
                         })}
@@ -222,7 +236,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                     </div>
                     <div className="text-center">
                         <div className="border-t border-black border-dotted w-48 mb-1"></div>
-                        {transaction.staffId ? transaction.staffId : "User/Cashier"}
+                        Assigned By: {assignedStaffName}
                     </div>
                 </div>
             </div>
@@ -255,6 +269,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   }
                                   /* Reset/normalize some Tailwind styles */
                                   .border { border-width: 1px; border-style: solid; border-color: black; }
+                                  .border-dashed { border-style: dashed; }
                                   .border-black { border-color: black !important; }
                                   .border-b { border-bottom-width: 1px; border-style: solid; border-color: black; }
                                   .border-r { border-right-width: 1px; border-style: solid; border-color: black; }
@@ -296,6 +311,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .w-full { width: 100%; }
                                   .text-center { text-align: center; }
                                   .text-right { text-align: right; }
+                                  .text-gray-500 { color: #6b7280; }
                                   .text-\\[10px\\] { font-size: 10px; }
                                   .text-\\[11px\\] { font-size: 11px; }
                                   .text-\\[12px\\] { font-size: 12px; }

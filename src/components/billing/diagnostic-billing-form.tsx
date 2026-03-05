@@ -202,6 +202,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 discountPercentage: item.discountPercentage,
                 discountAmount: item.discountAmount,
                 deliveryDate: item.deliveryDate,
+                testBy: allStaff.find(s => s.id === item.staffId)?.name || "",
                 medicineId: "",
                 batchNumber: "",
                 expiryDate: ""
@@ -526,6 +527,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 onOpenChange={setReceiptOpen}
                 transaction={completedSale}
                 doctors={doctorsRes?.data || []}
+                staffs={staffRes?.data || []}
             />
         </div>
     )

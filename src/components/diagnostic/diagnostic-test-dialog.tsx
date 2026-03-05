@@ -94,7 +94,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                 })
                 toast.success("Diagnostic test updated successfully")
             } else {
-                await createMutation.mutateAsync(formData)
+                const { branchId, ...createPayload } = formData
+                await createMutation.mutateAsync(createPayload)
                 toast.success("Diagnostic test created successfully")
             }
             onSuccess?.()

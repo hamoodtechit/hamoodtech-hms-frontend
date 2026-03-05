@@ -14,6 +14,7 @@ export interface SaleItem {
   expiryDate?: string;
   dosageForm?: string;
   deliveryDate?: string;
+  testBy?: string;
 }
 
 export interface SalePayment {
