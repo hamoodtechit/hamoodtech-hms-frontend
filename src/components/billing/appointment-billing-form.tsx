@@ -2,27 +2,38 @@
 
 import { TimeSlotPicker } from "@/components/appointments/time-slot-picker"
 import { PatientSearch } from "@/components/pharmacy/pos/patient-search"
+import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useCreateAppointment } from "@/hooks/appointment-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
-import { useCreateSale } from "@/hooks/sales-queries"
+import { useCreateSale, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { FinanceAccount } from "@/types/finance"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
-import { SalePayload } from "@/types/sales"
-import { CreditCard, Stethoscope } from "lucide-react"
+import { Sale, SalePayload } from "@/types/sales"
+import { format } from "date-fns"
+import { ChevronLeft, ChevronRight, CreditCard, DollarSign, Eye, Filter, History, Receipt, Search, Stethoscope, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
+import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -34,11 +45,55 @@ export function AppointmentBillingForm() {
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
     const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, limit: 100, isActive: true })
+    
+    // Modal Filters & Pagination
+    const [modalSearch, setModalSearch] = useState("")
+    const debouncedModalSearch = useDebounce(modalSearch, 500)
+    const [modalPage, setModalPage] = useState(1)
+    const [modalType, setModalType] = useState<string>("appointment")
+    const [modalStatus, setModalStatus] = useState<string>("all")
+    const [modalPaymentStatus, setModalPaymentStatus] = useState<string>("all")
+    const [modalPaymentMethod, setModalPaymentMethod] = useState<string>("all")
+    const [modalInvoiceNumber, setModalInvoiceNumber] = useState("")
+    const [modalCreatedBy, setModalCreatedBy] = useState("")
+    const [modalMinAmount, setModalMinAmount] = useState("")
+    const [modalMaxAmount, setModalMaxAmount] = useState("")
+    const [modalDateRange, setModalDateRange] = useState<DateRange | undefined>()
+    const modalLimit = 8
+
+    const { data: recentSalesRes, isLoading: loadingHistory, refetch: refetchSales } = useSales({ 
+        branchId: activeStoreId || undefined, 
+        type: modalType !== "all" ? modalType : undefined, 
+        limit: modalLimit, 
+        page: modalPage,
+        search: debouncedModalSearch || undefined,
+        status: modalStatus !== "all" ? (modalStatus as any) : undefined,
+        paymentStatus: modalPaymentStatus !== "all" ? (modalPaymentStatus as any) : undefined,
+        paymentMethod: modalPaymentMethod !== "all" ? modalPaymentMethod : undefined,
+        invoiceNumber: modalInvoiceNumber || undefined,
+        createdBy: modalCreatedBy || undefined,
+        minAmount: modalMinAmount ? Number(modalMinAmount) : undefined,
+        maxAmount: modalMaxAmount ? Number(modalMaxAmount) : undefined,
+        startDate: modalDateRange?.from ? format(modalDateRange.from, 'yyyy-MM-dd') : undefined,
+        endDate: modalDateRange?.to ? format(modalDateRange.to, 'yyyy-MM-dd') : undefined,
+    })
 
     const departments = departmentsRes?.data || []
     const doctors = doctorsRes?.data || []
     const accounts = accountsRes?.data || []
+    const recentSales = recentSalesRes?.data?.sales || []
+    const historyPagination = recentSalesRes?.data?.pagination
     const vatPercentage = pharmacy?.vatPercentage || 0
+
+    const activeFilterCount = (modalStatus !== 'all' ? 1 : 0) + 
+                            (modalPaymentStatus !== 'all' ? 1 : 0) + 
+                            (modalType !== 'all' ? 1 : 0) +
+                            (modalPaymentMethod !== 'all' ? 1 : 0) +
+                            (modalInvoiceNumber ? 1 : 0) +
+                            (modalCreatedBy ? 1 : 0) +
+                            (modalMinAmount ? 1 : 0) +
+                            (modalMaxAmount ? 1 : 0) +
+                            (modalDateRange ? 1 : 0)
 
     const createSaleMutation = useCreateSale()
     const createAppointmentMutation = useCreateAppointment()
@@ -62,6 +117,16 @@ export function AppointmentBillingForm() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
+
+    // Receipt/History State
+    const [receiptOpen, setReceiptOpen] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [lastSale, setLastSale] = useState<any | null>(null)
+
+    // Details/Collect State
+    const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState(false)
+    const [initialAddPayment, setInitialAddPayment] = useState(false)
 
 
     // Totals
@@ -141,8 +206,14 @@ export function AppointmentBillingForm() {
                 }]
             }
 
-            await createSaleMutation.mutateAsync(payload)
+            const res: any = await createSaleMutation.mutateAsync(payload)
+            setLastSale(res.data)
             toast.success("Appointment successfully scheduled and billed!")
+            
+            // Generate Receipt
+            setReceiptOpen(true)
+
+            // Reset
             setSelectedCustomer(null)
             setSelectedDoctorId("")
             setSelectedDepartmentId("")
@@ -151,6 +222,7 @@ export function AppointmentBillingForm() {
             setPaidAmount(0)
             setDiscount(0)
             setDiscountFixedAmount(0)
+            refetchSales()
             // Optionally router.push('/sales') to see receipt
         } catch (error) {
             toast.error("Failed to process transaction")
@@ -159,9 +231,20 @@ export function AppointmentBillingForm() {
 
     return (
         <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
-            <div>
-                <h1 className="text-3xl font-black tracking-tight text-primary">Appointment Billing</h1>
-                <p className="text-muted-foreground text-sm font-medium">Record and collect consultation fees for doctor appointments.</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-black tracking-tight text-primary">Appointment Billing</h1>
+                    <p className="text-muted-foreground text-sm font-medium">Record and collect consultation fees for doctor appointments.</p>
+                </div>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 border-primary/20 hover:bg-primary/5 shadow-sm"
+                    onClick={() => setHistoryOpen(true)}
+                >
+                    <History className="h-4 w-4 text-primary" />
+                    Billing History
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -370,7 +453,7 @@ export function AppointmentBillingForm() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
                                         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</Label>
-                                        <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                        <Select value={paymentMethod} onValueChange={(v: string) => setPaymentMethod(v as PaymentMethod)}>
                                             <SelectTrigger className="h-9 text-xs font-medium">
                                                 <SelectValue placeholder="Method" />
                                             </SelectTrigger>
@@ -416,6 +499,373 @@ export function AppointmentBillingForm() {
                     </Card>
                 </div>
             </div>
+
+            {/* Billing History Modal */}
+            <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+                <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
+                    <DialogHeader className="p-6 border-b bg-muted/30">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-8">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                <History className="h-5 w-5 text-primary" />
+                                Appointment Billing History
+                            </DialogTitle>
+                            
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search invoice or patient..."
+                                        value={modalSearch}
+                                        onChange={(e) => {
+                                            setModalSearch(e.target.value)
+                                            setModalPage(1)
+                                        }}
+                                        className="pl-9 h-9 bg-background/50 border-primary/20 focus:border-primary transition-all text-xs"
+                                    />
+                                    {modalSearch && (
+                                        <button 
+                                            onClick={() => setModalSearch("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" size="sm" className={cn("h-9 border-primary/20 text-xs", activeFilterCount > 0 && "bg-primary/5 border-primary text-primary")}>
+                                            <Filter className="h-3 w-3 mr-2 text-primary" />
+                                            Filters
+                                            {activeFilterCount > 0 && (
+                                                <Badge variant="default" className="ml-1.5 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]">
+                                                    {activeFilterCount}
+                                                </Badge>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[450px] p-4" align="end">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-medium text-sm">Advanced Filters</h4>
+                                                {activeFilterCount > 0 && (
+                                                    <Button variant="ghost" size="sm" onClick={() => { 
+                                                        setModalStatus("all"); 
+                                                        setModalPaymentStatus("all"); 
+                                                        setModalType("all"); 
+                                                        setModalPaymentMethod("all");
+                                                        setModalInvoiceNumber("");
+                                                        setModalCreatedBy("");
+                                                        setModalMinAmount("");
+                                                        setModalMaxAmount("");
+                                                        setModalDateRange(undefined);
+                                                    }} className="h-8 text-xs text-muted-foreground hover:text-destructive">
+                                                        Reset
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="grid gap-1.5 col-span-2">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Date Range</Label>
+                                                    <DatePickerWithRange 
+                                                        date={modalDateRange} 
+                                                        setDate={setModalDateRange}
+                                                        className="w-full text-xs"
+                                                    />
+                                                </div>
+
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Invoice Number</Label>
+                                                    <Input 
+                                                        placeholder="SALE-..."
+                                                        value={modalInvoiceNumber}
+                                                        onChange={(e) => setModalInvoiceNumber(e.target.value)}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                </div>
+
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Created By</Label>
+                                                    <Input 
+                                                        placeholder="User name"
+                                                        value={modalCreatedBy}
+                                                        onChange={(e) => setModalCreatedBy(e.target.value)}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                </div>
+
+                                                <div className="grid gap-1.5 col-span-2">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Sale Type</Label>
+                                                    <Select value={modalType} onValueChange={(v: string) => { setModalType(v); setModalPage(1); }}>
+                                                        <SelectTrigger className="h-9 text-xs">
+                                                            <SelectValue placeholder="Type" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Types</SelectItem>
+                                                            <SelectItem value="appointment">Appointment</SelectItem>
+                                                            <SelectItem value="pathology">Pathology</SelectItem>
+                                                            <SelectItem value="radiology">Radiology</SelectItem>
+                                                            <SelectItem value="pos">POS</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Sale Status</Label>
+                                                    <Select value={modalStatus} onValueChange={(v: string) => { setModalStatus(v); setModalPage(1); }}>
+                                                        <SelectTrigger className="h-9 text-xs">
+                                                            <SelectValue placeholder="Status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Status</SelectItem>
+                                                            <SelectItem value="completed">Completed</SelectItem>
+                                                            <SelectItem value="pending">Pending</SelectItem>
+                                                            <SelectItem value="rejected">Rejected</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Payment Status</Label>
+                                                    <Select value={modalPaymentStatus} onValueChange={(v: string) => { setModalPaymentStatus(v); setModalPage(1); }}>
+                                                        <SelectTrigger className="h-9 text-xs">
+                                                            <SelectValue placeholder="Payment" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Payment</SelectItem>
+                                                            <SelectItem value="paid">Paid</SelectItem>
+                                                            <SelectItem value="partial">Partial</SelectItem>
+                                                            <SelectItem value="due">Due</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Payment Method</Label>
+                                                    <Select value={modalPaymentMethod} onValueChange={(v: string) => { setModalPaymentMethod(v); setModalPage(1); }}>
+                                                        <SelectTrigger className="h-9 text-xs">
+                                                            <SelectValue placeholder="Method" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Methods</SelectItem>
+                                                            <SelectItem value="cash">Cash</SelectItem>
+                                                            <SelectItem value="card">Card</SelectItem>
+                                                            <SelectItem value="online">Online</SelectItem>
+                                                            <SelectItem value="cheque">Cheque</SelectItem>
+                                                            <SelectItem value="bKash">bKash</SelectItem>
+                                                            <SelectItem value="Nagad">Nagad</SelectItem>
+                                                            <SelectItem value="Rocket">Rocket</SelectItem>
+                                                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Min Amount</Label>
+                                                    <Input 
+                                                        type="number"
+                                                        placeholder="0.00"
+                                                        value={modalMinAmount}
+                                                        onChange={(e) => setModalMinAmount(e.target.value)}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                </div>
+                                                
+                                                <div className="grid gap-1.5">
+                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Max Amount</Label>
+                                                    <Input 
+                                                        type="number"
+                                                        placeholder="0.00"
+                                                        value={modalMaxAmount}
+                                                        onChange={(e) => setModalMaxAmount(e.target.value)}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+
+                                <Button variant="ghost" size="sm" onClick={() => router.push('/sales')} className="text-xs h-9 px-3">Full Report</Button>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-auto p-0">
+                        <Table>
+                            <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="text-xs uppercase font-bold h-12 pl-6">Invoice</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12">Type</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12">Patient</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12">Date</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12">Total</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12 text-emerald-600">Paid</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12 text-rose-600">Due</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12 text-center">Status</TableHead>
+                                    <TableHead className="text-xs uppercase font-bold h-12 text-right pr-6">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loadingHistory ? (
+                                    <TableRow>
+                                        <TableCell colSpan={9} className="h-48 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                                <p className="text-sm text-muted-foreground animate-pulse font-medium">Loading transactions...</p>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : recentSales.map((sale) => (
+                                    <TableRow key={sale.id} className="group hover:bg-primary/5 transition-colors border-b-primary/5">
+                                        <TableCell className="py-3 font-medium pl-6">{sale.invoiceNumber}</TableCell>
+                                        <TableCell className="py-3">
+                                            <Badge variant="outline" className="capitalize text-[10px] font-bold bg-orange-50 text-orange-600 border-orange-200">
+                                                {sale.type || 'Appointment'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold">{sale.patient?.name || "Walk-in"}</span>
+                                                <span className="text-[10px] text-muted-foreground">{sale.patient?.phone}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3 text-muted-foreground text-xs whitespace-nowrap">{format(new Date(sale.createdAt), "dd MMM yy, hh:mm a")}</TableCell>
+                                        <TableCell className="py-3 font-bold text-primary">{formatCurrency(Number(sale.netPrice || sale.totalPrice))}</TableCell>
+                                        <TableCell className="py-3 font-medium text-emerald-600">{formatCurrency(Number(sale.paidAmount || 0))}</TableCell>
+                                        <TableCell className="py-3 font-bold text-rose-600">{formatCurrency(Number(sale.dueAmount || 0))}</TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="flex flex-col gap-1 items-center">
+                                                <Badge 
+                                                    variant={sale.status === 'completed' ? 'success' : sale.status === 'pending' ? 'warning' : 'destructive'}
+                                                    className="justify-center w-20 text-[10px] px-2 py-0 capitalize"
+                                                >
+                                                    {sale.status}
+                                                </Badge>
+                                                <Badge 
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "justify-center w-20 text-[10px] px-2 py-0 capitalize border-none",
+                                                        sale.paymentStatus === 'paid' ? "bg-emerald-50 text-emerald-600" :
+                                                        sale.paymentStatus === 'partial' ? "bg-amber-50 text-amber-600" :
+                                                        "bg-rose-50 text-rose-600"
+                                                    )}
+                                                >
+                                                    {sale.paymentStatus}
+                                                </Badge>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3 text-right pr-6">
+                                            <div className="flex justify-end gap-1.5 transition-opacity">
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-all"
+                                                    title="View Details"
+                                                    onClick={() => {
+                                                        setSelectedSale(sale)
+                                                        setInitialAddPayment(false)
+                                                        setDetailsOpen(true)
+                                                    }}
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                                {Number(sale.dueAmount) > 0 && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-8 w-8 text-rose-600 hover:bg-rose-50 transition-all"
+                                                        title="Collect Payment"
+                                                        onClick={() => {
+                                                            setSelectedSale(sale)
+                                                            setInitialAddPayment(true)
+                                                            setDetailsOpen(true)
+                                                        }}
+                                                    >
+                                                        <DollarSign className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-all"
+                                                    title="Print Receipt"
+                                                    onClick={() => {
+                                                        setLastSale(sale)
+                                                        setReceiptOpen(true)
+                                                    }}
+                                                >
+                                                    <Receipt className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {recentSales.length === 0 && !loadingHistory && (
+                                    <TableRow>
+                                        <TableCell colSpan={9} className="h-48 text-center">
+                                            <div className="flex flex-col items-center gap-1.5 opacity-50">
+                                                <Search className="h-8 w-8 text-muted-foreground" />
+                                                <p className="text-sm font-medium">No appointment transactions found matching your criteria.</p>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="p-4 border-t bg-muted/30 flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground italic">
+                            Strictly filtered by <strong>Appointment</strong> category.
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 w-8 p-0" 
+                                disabled={modalPage === 1}
+                                onClick={() => setModalPage(p => p - 1)}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="flex items-center gap-1 min-w-[60px] justify-center text-xs font-bold">
+                                <span>{modalPage}</span>
+                                {recentSalesRes?.data?.pagination?.totalPages && (
+                                    <>
+                                        <span className="text-muted-foreground">/</span>
+                                        <span className="text-muted-foreground">{recentSalesRes.data.pagination.totalPages}</span>
+                                    </>
+                                )}
+                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 w-8 p-0" 
+                                disabled={modalPage >= (recentSalesRes?.data?.pagination?.totalPages || 1)}
+                                onClick={() => setModalPage(p => p + 1)}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <SaleDetailsDialog 
+                sale={selectedSale}
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                initialAddPayment={initialAddPayment}
+                onSuccess={() => {
+                    refetchSales()
+                }}
+            />
+
+            <DiagnosticReceiptDialog 
+                open={receiptOpen}
+                onOpenChange={setReceiptOpen}
+                transaction={lastSale ? { sale: lastSale } : null}
+                doctors={doctors}
+            />
         </div>
     )
 }

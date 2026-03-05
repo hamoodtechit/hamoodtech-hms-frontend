@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { useCurrency } from "@/hooks/use-currency"
+import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { Printer } from "lucide-react"
 
@@ -176,7 +177,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                         {items.map((item: any, index: number) => {
                              const itemTotal = Number(item.price) * Number(item.quantity)
                              return (
-                                <tr key={index} className="border-b border-gray-300/50">
+                                <tr key={index} className={cn("border-b border-gray-300/50", index === items.length - 1 && "border-b-0")}>
                                     <td className="py-1 px-1 align-top">{index + 1}</td>
                                     <td className="py-1 px-1">
                                         <div>{item.itemName}</div>
@@ -267,23 +268,45 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                               <meta charset="UTF-8">
                               <title>Print Receipt</title>
                               <style>
-                                  @page { margin: 10mm; }
+                                  @page { 
+                                      size: A4; 
+                                      margin: 0; 
+                                  }
                                   body { 
                                       font-family: Arial, sans-serif; 
                                       -webkit-print-color-adjust: exact; 
                                       print-color-adjust: exact;
                                       margin: 0;
                                       padding: 0;
+                                      display: flex;
+                                      justify-content: center;
+                                      background: #f5f5f5;
                                   }
-                                  /* Reset/normalize some Tailwind styles */
-                                  .border { border-width: 1px; border-style: solid; border-color: black; }
-                                  .border-dashed { border-style: dashed !important; }
+                                  .print-container {
+                                      width: 210mm;
+                                      min-height: 297mm;
+                                      background: white;
+                                      padding: 15mm;
+                                      box-sizing: border-box;
+                                      position: relative;
+                                  }
+                                  /* Reset/normalize some Tailwind styles for absolute consistency */
+                                  .border { border: 1px solid black !important; }
+                                  .border-dashed { border-style: dashed !important; border-width: 1px !important; }
                                   .border-dotted { border-style: dotted !important; }
                                   .border-black { border-color: black !important; }
-                                  .border-b { border-bottom-width: 1px; }
-                                  .border-r { border-right-width: 1px; }
-                                  .border-t { border-top-width: 1px; }
-                                  .border-y { border-top-width: 1px; border-bottom-width: 1px; }
+                                  
+                                  /* Prevent double borders */
+                                  .border-t-0 { border-top-width: 0 !important; }
+                                  .border-b-0 { border-bottom-width: 0 !important; }
+                                  .border-r-0 { border-right-width: 0 !important; }
+                                  .border-l-0 { border-left-width: 0 !important; }
+                                  
+                                  .border-b { border-bottom-width: 1px !important; }
+                                  .border-r { border-right-width: 1px !important; }
+                                  .border-t { border-top-width: 1px !important; }
+                                  .border-y { border-top-width: 1px !important; border-bottom-width: 1px !important; }
+                                  
                                   .grid { display: grid !important; }
                                   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
                                   .flex { display: flex !important; }
@@ -364,7 +387,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                               </style>
                           </head>
                           <body>
-                              <div style="width: 210mm;">
+                              <div class="print-container">
                                   ${printContent}
                               </div>
                           </body>

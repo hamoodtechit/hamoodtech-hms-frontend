@@ -129,8 +129,24 @@ export default function SalesHistoryPage() {
                   placeholder="Search invoice or patient..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-background/50 border-primary/20 focus:border-primary transition-all rounded-xl"
+                  className="pl-10 h-10 bg-background/50 border-primary/20 focus:border-primary transition-all rounded-xl"
                 />
+              </div>
+
+              <div className="w-full md:w-40">
+                <Select value={saleType} onValueChange={(v) => { setSaleType(v); setPage(1); }}>
+                  <SelectTrigger className="h-10 rounded-xl bg-background/50 border-primary/20 text-xs font-medium">
+                    <SelectValue placeholder="Sale Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Sale Type: All</SelectItem>
+                    <SelectItem value="pos">POS</SelectItem>
+                    <SelectItem value="appointment">Appointment</SelectItem>
+                    <SelectItem value="pathology">Pathology</SelectItem>
+                    <SelectItem value="radiology">Radiology</SelectItem>
+                    <SelectItem value="general-sale">General Sale</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Popover>
@@ -253,24 +269,6 @@ export default function SalesHistoryPage() {
                           </SelectContent>
                         </Select>
                       </div>
-
-                      <div className="grid gap-2">
-                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Sale Type</Label>
-                        <Select value={saleType} onValueChange={(v) => { setSaleType(v); setPage(1); }}>
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="All Types" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="pos">POS</SelectItem>
-                            <SelectItem value="appointment">Appointment</SelectItem>
-                            <SelectItem value="pathology">Pathology</SelectItem>
-                            <SelectItem value="radiology">Radiology</SelectItem>
-                            <SelectItem value="general-sale">General Sale</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       <div className="grid gap-2">
                         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Method</Label>
                         <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
