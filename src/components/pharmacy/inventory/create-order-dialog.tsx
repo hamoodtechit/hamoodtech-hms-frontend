@@ -431,9 +431,18 @@ export function CreateOrderDialog() {
                                                     item.medicineId === medicine.id ? "opacity-100" : "opacity-0"
                                                     )}
                                                 />
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">{medicine.name}</span>
-                                                    <span className="text-[10px] text-muted-foreground">{medicine.genericName}</span>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 overflow-hidden">
+                                                        <span className="font-medium truncate">{medicine.name}</span>
+                                                        {medicine.dosageForm && (
+                                                            <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded-full font-bold uppercase shrink-0">
+                                                                {medicine.dosageForm}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                                                        {medicine.genericName}
+                                                    </div>
                                                 </div>
                                             </CommandItem>
                                         ))}
