@@ -23,8 +23,11 @@ import {
     Mail,
     MapPin,
     Phone,
-    User as UserIcon
+    User as UserIcon,
+    UserPlus
 } from "lucide-react"
+import { useState } from "react"
+import { UserDialog } from "../../app/[locale]/(dashboard)/settings/users/components/user-dialog"
 
 interface EmployeeDetailsDialogProps {
     open: boolean
@@ -35,6 +38,7 @@ interface EmployeeDetailsDialogProps {
 export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: EmployeeDetailsDialogProps) {
     const { data: employeeRes, isLoading } = useEmployee(employeeId || "")
     const employee = employeeRes?.data
+    const [userDialogOpen, setUserDialogOpen] = useState(false)
 
     if (!employeeId) return null
 
@@ -198,10 +202,38 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                             <Separator />
                             
                             <div className="flex justify-end gap-3 pb-4">
+                                <Button 
+                                    variant="outline" 
+                                    className="gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+                                    onClick={() => setUserDialogOpen(true)}
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    Create User Account
+                                </Button>
                                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                                     Close Details
                                 </Button>
                             </div>
+
+                            {employee && (
+                                <UserDialog 
+                                    open={userDialogOpen}
+                                    onOpenChange={setUserDialogOpen}
+                                    onSuccess={() => {
+                                        setUserDialogOpen(false)
+                                    }}
+                                    userToEdit={null}
+                                    defaultValues={{
+                                        fullName: employee.name,
+                                        fullNameBangla: employee.nameBangla || "",
+                                        email: employee.email || "",
+                                        phone: employee.phone || "",
+                                        branchId: employee.branchId || "",
+                                        employeeId: employee.id,
+                                        username: employee.email?.split('@')[0] || employee.name.toLowerCase().replace(/\s+/g, '.'),
+                                    }}
+                                />
+                            )}
                         </div>
                     )}
                 </ScrollArea>

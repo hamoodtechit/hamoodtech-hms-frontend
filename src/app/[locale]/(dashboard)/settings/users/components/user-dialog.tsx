@@ -20,22 +20,28 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useBranches } from "@/hooks/pharmacy-queries"
 import { roleService } from "@/services/role-service"
 import { userService } from "@/services/user-service"
 import { Role } from "@/types/role"
-import { CreateUserPayload, User } from "@/types/user"
+import { User } from "@/types/user"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Eye, EyeOff, Loader2, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
+import { RoleDialog } from "../../roles/components/role-dialog"
 
 const userSchema = z.object({
     username: z.string().min(3, "Username must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     fullName: z.string().min(1, "Full name is required"),
+    fullNameBangla: z.string().optional(),
+    phone: z.string().optional(),
     roleId: z.string().min(1, "Role is required"),
+    branchId: z.string().optional(),
+    employeeId: z.string().optional(),
     password: z.string().optional()
         .refine(val => !val || val.length >= 8, 'Password must be at least 8 characters')
         .refine(val => !val || /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(val), 'Password must contain uppercase, lowercase, and number'),
@@ -46,12 +52,26 @@ interface UserDialogProps {
     onOpenChange: (open: boolean) => void
     onSuccess: () => void
     userToEdit: User | null
+    defaultValues?: Partial<z.infer<typeof userSchema>>
 }
 
-export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDialogProps) {
+export function UserDialog({ open, onOpenChange, onSuccess, userToEdit, defaultValues }: UserDialogProps) {
     const [loading, setLoading] = useState(false)
     const [roles, setRoles] = useState<Role[]>([])
     const [showPassword, setShowPassword] = useState(false)
+    const [roleDialogOpen, setRoleDialogOpen] = useState(false)
+
+    const fetchRoles = async () => {
+        try {
+            const response = await roleService.getRoles()
+            setRoles(response.data)
+        } catch (error) {
+            console.error("Failed to fetch roles", error)
+        }
+    }
+
+    const { data: branchesRes } = useBranches({ limit: 100 })
+    const branches = branchesRes?.data || []
 
     const form = useForm<z.infer<typeof userSchema>>({
         resolver: zodResolver(userSchema),
@@ -59,20 +79,16 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
             username: "",
             email: "",
             fullName: "",
+            fullNameBangla: "",
+            phone: "",
             roleId: "",
+            branchId: "",
+            employeeId: "",
             password: "",
         },
     })
 
     useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const response = await roleService.getRoles()
-                setRoles(response.data)
-            } catch (error) {
-                console.error("Failed to fetch roles", error)
-            }
-        }
         if (open) {
             fetchRoles()
         }
@@ -84,19 +100,32 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                 username: userToEdit.username,
                 email: userToEdit.email,
                 fullName: userToEdit.fullName,
+                fullNameBangla: userToEdit.fullNameBangla || "",
+                phone: userToEdit.phone || "",
                 roleId: userToEdit.roleId,
-                password: "", // Password not editable directly or hidden
+                branchId: userToEdit.branchId || "",
+                employeeId: userToEdit.employeeId || "",
+                password: "",
+            })
+        } else if (defaultValues) {
+            form.reset({
+                ...form.getValues(),
+                ...defaultValues,
             })
         } else {
             form.reset({
                 username: "",
                 email: "",
                 fullName: "",
+                fullNameBangla: "",
+                phone: "",
                 roleId: "",
+                branchId: "",
+                employeeId: "",
                 password: "",
             })
         }
-    }, [userToEdit, form, open])
+    }, [userToEdit, defaultValues, form, open])
 
     const onSubmit = async (values: z.infer<typeof userSchema>) => {
         try {
@@ -109,7 +138,7 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                      toast.error("Password is required for new users")
                      return
                 }
-                await userService.createUser(values as CreateUserPayload)
+                await userService.createUser(values as any)
                 toast.success("User created successfully")
             }
             onSuccess()
@@ -149,17 +178,45 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                         />
                         <FormField
                             control={form.control}
-                            name="username"
+                            name="fullNameBangla"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Username</FormLabel>
+                                    <FormLabel>Full Name (Bangla) - Optional</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="johndoe" {...field} />
+                                        <Input placeholder="জন ডো" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="username"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Username</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="johndoe" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Phone</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="017xxxxxxxx" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                         <FormField
                             control={form.control}
                             name="email"
@@ -173,30 +230,69 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="roleId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Role</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a role" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {roles.map((role) => (
-                                                <SelectItem key={role.id} value={role.id}>
-                                                    {role.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="roleId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>Role</FormLabel>
+                                            <Button 
+                                                type="button" 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-5 px-1 text-primary hover:bg-primary/10"
+                                                onClick={() => setRoleDialogOpen(true)}
+                                            >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                New
+                                            </Button>
+                                        </div>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {roles.map((role) => (
+                                                    <SelectItem key={role.id} value={role.id}>
+                                                        {role.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="branchId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Branch (Optional)</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="All Branches" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="null">None (Super Admin)</SelectItem>
+                                                {branches.map((branch) => (
+                                                    <SelectItem key={branch.id} value={branch.id}>
+                                                        {branch.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                         {!userToEdit && (
                             <FormField
                                 control={form.control}
@@ -243,6 +339,17 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit }: UserDi
                         </DialogFooter>
                     </form>
                 </Form>
+
+                <RoleDialog 
+                    open={roleDialogOpen}
+                    onOpenChange={setRoleDialogOpen}
+                    onSuccess={(newRole) => {
+                        fetchRoles()
+                        if (newRole?.id) {
+                            form.setValue("roleId", newRole.id)
+                        }
+                    }}
+                />
             </DialogContent>
         </Dialog>
     )

@@ -24,7 +24,7 @@ import { toast } from "sonner"
 interface RoleDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onSuccess: (role?: any) => void
   roleToEdit?: Role | null
 }
 
@@ -108,13 +108,14 @@ export function RoleDialog({
       }
 
       if (roleToEdit) {
-        await roleService.updateRole(roleToEdit.id, payload)
+        const response: any = await roleService.updateRole(roleToEdit.id, payload)
         toast.success("Role updated successfully")
+        onSuccess(response.data)
       } else {
-        await roleService.createRole(payload)
+        const response: any = await roleService.createRole(payload)
         toast.success("Role created successfully")
+        onSuccess(response.data)
       }
-      onSuccess()
       onOpenChange(false)
     } catch (error) {
       toast.error("Failed to save role")

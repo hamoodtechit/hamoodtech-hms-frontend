@@ -16,6 +16,8 @@ export interface User {
   roleId: string;
   role?: UserRole;
   lastLoginAt?: string;
+  branchId?: string | null;
+  employeeId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,7 +27,11 @@ export interface CreateUserPayload {
   email: string;
   password?: string;
   fullName: string;
+  fullNameBangla?: string;
+  phone?: string;
   roleId: string;
+  branchId?: string;
+  employeeId?: string;
 }
 
 export interface UpdateUserPayload {
