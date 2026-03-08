@@ -15,7 +15,7 @@ import {
     Title,
     Tooltip,
 } from 'chart.js'
-import { AlertTriangle, DollarSign, FileDown, Package, Printer } from "lucide-react"
+import { AlertTriangle, DollarSign, FileDown, Package, Printer, ShoppingCart } from "lucide-react"
 import { Doughnut, Line } from "react-chartjs-2"
 import { createRoot } from 'react-dom/client'
 import { toast } from "sonner"
@@ -156,7 +156,6 @@ export function AnalyticsDashboard() {
             startDate: format(date.from, 'yyyy-MM-dd'),
             endDate: format(date.to, 'yyyy-MM-dd')
         })
-        console.log("Purchase Report Response:", data)
         toast.dismiss(loadingToast)
 
         if (type === 'print') {
@@ -263,6 +262,8 @@ export function AnalyticsDashboard() {
     // If no date range is selected, default to 7 days, otherwise don't send days
     days: !startDate ? 7 : undefined 
   })
+
+  
 
   if (statsLoading || graphLoading || summaryLoading) {
     return (
@@ -379,55 +380,82 @@ export function AnalyticsDashboard() {
                 </DropdownMenu>
             </div>
         </div>
-        {/* Financial KPI Cards */}
+        {/* Financial KPI Cards - Matched with Main Dashboard */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+            {/* Sales Revenue */}
+            <Card className="border-l-4 border-l-emerald-500 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Sales Revenue (Gross)</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-emerald-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{formatCurrency(summary?.sales?.totalAmount || 0)}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                         Net: {formatCurrency(summary?.sales?.netSales || 0)} 
-                         <span className="text-emerald-500 ml-1">({summary?.sales?.count || 0} Tx)</span>
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-muted-foreground">
+                            Net: <span className="font-semibold">{formatCurrency(summary?.sales?.netSales || 0)}</span> 
+                        </p>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded font-bold">{summary?.sales?.count || 0} Tx</span>
+                    </div>
                 </CardContent>
             </Card>
-            <Card>
+
+            {/* Total Returns */}
+            <Card className="border-l-4 border-l-rose-500 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-                    <Package className="h-4 w-4 text-orange-500" />
+                    <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-rose-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{pStats?.lowStockCount || 0}</div>
-                    <p className="text-xs text-muted-foreground">
-                        Medicines requiring attention
-                    </p>
+                    <div className="text-2xl font-bold text-rose-600">{formatCurrency(summary?.returns?.saleReturnAmount || 0)}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-muted-foreground truncate">
+                             Val: {formatCurrency(summary?.returns?.purchaseReturnAmount || 0)} (Pur)
+                        </p>
+                        <span className="text-[10px] bg-rose-100 text-rose-700 px-1 rounded font-bold">{summary?.returns?.saleReturnCount || 0} Items</span>
+                    </div>
                 </CardContent>
             </Card>
-            <Card>
+
+            {/* Total Purchases */}
+            <Card className="border-l-4 border-l-amber-500 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Medicine Inventory</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+                    <ShoppingCart className="h-4 w-4 text-amber-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{pStats?.totalMedicines || 0}</div>
-                    <p className="text-xs text-muted-foreground">
-                         Total distinct medicines
-                    </p>
+                    <div className="text-2xl font-bold">{formatCurrency(summary?.purchases?.totalAmount || 0)}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-muted-foreground">
+                            Due: <span className="font-semibold text-rose-600">{formatCurrency(summary?.purchases?.dueAmount || 0)}</span> 
+                        </p>
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1 rounded font-bold">{summary?.purchases?.count || 0} POs</span>
+                    </div>
                 </CardContent>
             </Card>
-            <Card>
+
+            {/* Pharmacy Stock / Operational */}
+            <Card className="border-l-4 border-l-indigo-500 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <CardTitle className="text-sm font-medium">Pharmacy Inventory</CardTitle>
+                    <Package className="h-4 w-4 text-indigo-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-red-600">{pStats?.expiringIn30Days || 0}</div>
-                    <p className="text-xs text-muted-foreground">
-                         Expiring within 30 days
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                        <div>
+                            <div className="text-2xl font-bold">{pStats?.totalMedicines || 0} Items</div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Total Distinct</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <div className="text-right border-l pl-2">
+                                <div className="text-lg font-bold text-orange-600 leading-none">{pStats?.lowStockCount || 0}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low</p>
+                            </div>
+                            <div className="text-right border-l pl-2">
+                                <div className="text-lg font-bold text-red-600 leading-none">{pStats?.expiringIn30Days || 0}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>

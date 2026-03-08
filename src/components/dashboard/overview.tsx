@@ -9,16 +9,16 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
 import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Filler,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip
 } from 'chart.js'
 
 import { endOfDay, format, formatDistanceToNow, startOfMonth } from "date-fns"

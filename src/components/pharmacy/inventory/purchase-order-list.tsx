@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { Purchase, PurchaseStatus } from "@/types/pharmacy"
 import { format } from "date-fns"
 import { Loader2, Search } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { PurchaseDetailsDialog } from "./purchase-details-dialog"
@@ -32,6 +33,9 @@ export function PurchaseOrderList() {
     const { formatCurrency } = useCurrency()
     const { activeStoreId } = useStoreContext()
 
+    const searchParams = useSearchParams()
+    const urlType = searchParams.get('type')
+
     // Filter state
     const [filters, setFilters] = useState<PurchaseFilterValues>({
         search: "",
@@ -39,10 +43,17 @@ export function PurchaseOrderList() {
         supplierId: undefined,
         status: "all",
         paymentStatus: "all",
-        type: "all",
+        type: (urlType as any) || "all",
         startDate: undefined,
         endDate: undefined
     })
+
+    // Sync with URL type if it changes
+    useEffect(() => {
+        if (urlType) {
+            setFilters(prev => ({ ...prev, type: urlType as any }))
+        }
+    }, [urlType])
 
     // Sync with global store if not manually changed? 
     // Usually, if the user changes the global store, they expect the page to update.
@@ -101,11 +112,11 @@ export function PurchaseOrderList() {
     const handleReset = () => {
         setFilters({
             search: "",
-            branchId: undefined,
+            branchId: activeStoreId || undefined,
             supplierId: undefined,
             status: "all",
             paymentStatus: "all",
-            type: "all",
+            type: (urlType as any) || "all",
             startDate: undefined,
             endDate: undefined
         })

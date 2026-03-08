@@ -22,86 +22,51 @@ export function PharmacyPurchaseReport({ data, dateRange, activeBranch }: Purcha
 
   const renderPurchaseTable = (title: string, sectionData: any) => {
     const purchases = sectionData.purchases || []
-    const returns = sectionData.returns || []
     const subTotals = sectionData.subTotals || {}
 
-    if (purchases.length === 0 && returns.length === 0) return null
+    if (purchases.length === 0) return null
 
     return (
       <div className="mb-6">
         <h3 className="text-center font-bold border-y border-black py-1 mb-2 bg-gray-100 uppercase text-[11px]">{title}</h3>
-        {purchases.length > 0 && (
-          <table className="w-full border-collapse border border-black text-[9px] mb-4">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="border border-black px-1 py-1">SL No</th>
-                <th className="border border-black px-1 py-1">Date</th>
-                <th className="border border-black px-1 py-1">PO Number</th>
-                <th className="border border-black px-1 py-1">Supplier</th>
-                <th className="border border-black px-1 py-1 text-right">Gross Price</th>
-                <th className="border border-black px-1 py-1 text-right">Discount</th>
-                <th className="border border-black px-1 py-1 text-right">Net Amount</th>
-                <th className="border border-black px-1 py-1 text-right">Paid</th>
-                <th className="border border-black px-1 py-1 text-right">Due</th>
+        <table className="w-full border-collapse border border-black text-[9px] mb-4">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-black px-1 py-1">SL No</th>
+              <th className="border border-black px-1 py-1">Date</th>
+              <th className="border border-black px-1 py-1">PO Number</th>
+              <th className="border border-black px-1 py-1">Supplier</th>
+              <th className="border border-black px-1 py-1 text-right">Gross Price</th>
+              <th className="border border-black px-1 py-1 text-right">Discount</th>
+              <th className="border border-black px-1 py-1 text-right">Net Amount</th>
+              <th className="border border-black px-1 py-1 text-right">Paid</th>
+              <th className="border border-black px-1 py-1 text-right">Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.map((po: any, idx: number) => (
+              <tr key={po.id || idx}>
+                <td className="border border-black px-1 py-1 text-center">{po.slNo || idx + 1}</td>
+                <td className="border border-black px-1 py-1">{po.createdAt ? format(new Date(po.createdAt), "dd MMM yy") : '-'}</td>
+                <td className="border border-black px-1 py-1 font-medium">{po.poNumber}</td>
+                <td className="border border-black px-1 py-1">{po.supplierName || 'N/A'}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(po.totalPrice || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(po.discountAmount || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(po.netAmount || (Number(po.totalPrice) - Number(po.discountAmount))).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(po.paidAmount || po.paid || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right font-semibold">{Number(po.dueAmount || po.due || 0).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {purchases.map((po: any, idx: number) => (
-                <tr key={po.id || idx}>
-                  <td className="border border-black px-1 py-1 text-center">{po.slNo || idx + 1}</td>
-                  <td className="border border-black px-1 py-1">{po.createdAt ? format(new Date(po.createdAt), "dd MMM yy") : '-'}</td>
-                  <td className="border border-black px-1 py-1 font-medium">{po.poNumber}</td>
-                  <td className="border border-black px-1 py-1">{po.supplierName || 'N/A'}</td>
-                  <td className="border border-black px-1 py-1 text-right">{Number(po.totalPrice || 0).toFixed(2)}</td>
-                  <td className="border border-black px-1 py-1 text-right">{Number(po.discountAmount || 0).toFixed(2)}</td>
-                  <td className="border border-black px-1 py-1 text-right">{Number(po.netAmount || (Number(po.totalPrice) - Number(po.discountAmount))).toFixed(2)}</td>
-                  <td className="border border-black px-1 py-1 text-right">{Number(po.paidAmount || po.paid || 0).toFixed(2)}</td>
-                  <td className="border border-black px-1 py-1 text-right font-semibold">{Number(po.dueAmount || po.due || 0).toFixed(2)}</td>
-                </tr>
-              ))}
-              <tr className="font-bold bg-gray-50">
-                <td colSpan={4} className="border border-black px-2 py-1 text-right uppercase text-[10px]">Sub Totals :</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(subTotals.totalPrice || 0).toFixed(2)}</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(subTotals.discountAmount || 0).toFixed(2)}</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(subTotals.netAmount || 0).toFixed(2)}</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(subTotals.paid || 0).toFixed(2)}</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(subTotals.due || 0).toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-
-        {returns.length > 0 && (
-          <div className="mt-2">
-            <h4 className="text-[10px] font-bold mb-1 ml-1 text-red-700">Returns</h4>
-            <table className="w-full border-collapse border border-black text-[9px]">
-              <thead>
-                <tr className="bg-red-50">
-                  <th className="border border-black px-1 py-1">SL No</th>
-                  <th className="border border-black px-1 py-1">Date</th>
-                  <th className="border border-black px-1 py-1">PO Number</th>
-                  <th className="border border-black px-1 py-1">Supplier</th>
-                  <th className="border border-black px-1 py-1 text-right">Return Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {returns.map((ret: any, idx: number) => (
-                  <tr key={idx}>
-                    <td className="border border-black px-1 py-1 text-center">{idx + 1}</td>
-                    <td className="border border-black px-1 py-1">{ret.createdAt ? format(new Date(ret.createdAt), "dd MMM yy") : '-'}</td>
-                    <td className="border border-black px-1 py-1">{ret.poNumber}</td>
-                    <td className="border border-black px-1 py-1">{ret.supplierName}</td>
-                    <td className="border border-black px-1 py-1 text-right">{Number(ret.totalReturn || 0).toFixed(2)}</td>
-                  </tr>
-                ))}
-                <tr className="font-bold bg-red-50">
-                  <td colSpan={4} className="border border-black px-2 py-1 text-right uppercase text-[10px]">Total Return :</td>
-                  <td className="border border-black px-1 py-1 text-right">{Number(subTotals.totalReturn || 0).toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
+            ))}
+            <tr className="font-bold bg-gray-50">
+              <td colSpan={4} className="border border-black px-2 py-1 text-right uppercase text-[10px]">Sub Totals :</td>
+              <td className="border border-black px-1 py-1 text-right">{Number(subTotals.totalPrice || 0).toFixed(2)}</td>
+              <td className="border border-black px-1 py-1 text-right">{Number(subTotals.discountAmount || 0).toFixed(2)}</td>
+              <td className="border border-black px-1 py-1 text-right">{Number(subTotals.netAmount || 0).toFixed(2)}</td>
+              <td className="border border-black px-1 py-1 text-right">{Number(subTotals.paid || 0).toFixed(2)}</td>
+              <td className="border border-black px-1 py-1 text-right">{Number(subTotals.due || 0).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     )
   }

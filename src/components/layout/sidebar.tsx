@@ -9,22 +9,13 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
-    BarChart3,
-    Briefcase,
     Building2,
-    CalendarDays,
     ChevronLeft,
     ChevronRight,
-    Image as ImageIcon,
     LayoutDashboard,
-    Microscope,
     Pill,
     Receipt,
     Settings,
-    ShoppingBag,
-    ShoppingCart,
-    Truck,
-    Users,
     Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -86,30 +77,85 @@ export function Sidebar() {
       permission: "dashboard:read",
     },
     {
-      label: "Sales",
-      icon: ShoppingCart,
-      color: "text-emerald-500",
-      module: "sales",
+      label: "Pharmacy",
+      icon: Pill,
+      color: "text-pink-400",
+      module: "pharmacy",
       children: [
           {
-              label: "POS System",
-              href: "/pharmacy/pos",
-              permission: "sale:create",
+                label: "POS System",
+                href: "/pharmacy/pos",
+                permission: "sale:create",
           },
           {
-              label: "Sale History",
-              href: "/sales",
-              permission: "sale:read",
+                label: "Sales History",
+                href: "/sales?type=pos",
+                permission: "sale:read",
           },
           {
-              label: "Returns",
-              href: "/sales/returns",
-              permission: "sale-return:read",
+                label: "Returns",
+                href: "/sales/returns?type=pos",
+                permission: "sale-return:read",
+          },
+          {
+              label: "Stocks",
+              href: "/pharmacy/inventory",
+              permission: "stock:read",
+          },
+          {
+              label: "Purchase Orders",
+              href: "/purchases?type=pharmacy",
+              permission: "purchase:read",
+          },
+          {
+              label: "Suppliers",
+              href: "/suppliers",
+              permission: "supplier:read",
+          },
+          {
+              label: "Medicines",
+              href: "/pharmacy/inventory/medicines",
+              permission: "medicine:read",
+          },
+          {
+            label: "Pharmacy Reports",
+            href: "/reports",
+            permission: "report:read",
+          },
+          {
+            label: "Pharmacy Setup",
+            href: "/pharmacy/setup",
+            permission: "medicine-category:read",
           }
       ]
     },
     {
-      label: "Billing",
+      label: "Clinical Operations",
+      icon: Building2,
+      color: "text-blue-400",
+      children: [
+          {
+              label: "Appointments",
+              href: "/appointments",
+              module: "appointment",
+              permission: "appointment:read",
+          },
+          {
+              label: t("patients"),
+              href: "/patients",
+              module: "patients",
+              permission: "patient:read",
+          },
+          {
+              label: "Diagnostic Center",
+              href: "/diagnostic",
+              module: "diagnostic",
+              permission: "diagnostic-test:read",
+          }
+      ]
+    },
+    {
+      label: "Billing & Collection",
       icon: Receipt,
       color: "text-indigo-600",
       children: [
@@ -131,148 +177,72 @@ export function Sidebar() {
       ]
     },
     {
-      label: "Pharmacy",
-      icon: Pill,
-      color: "text-pink-400",
-      module: "pharmacy",
+      label: "Finance & HR",
+      icon: Wallet,
+      color: "text-emerald-500",
       children: [
           {
-              label: "Medicines",
-              href: "/pharmacy/inventory/medicines",
-              permission: "medicine:read",
+              label: "Finance / Accounts",
+              href: "/finance",
+              module: "finance",
+              permission: "account:read",
           },
           {
-              label: "Stock Adjustment",
-              href: "/pharmacy/inventory",
-              permission: "stock:read",
+                label: "Employees",
+                href: "/hr/employees",
+                module: "hr",
+                permission: "user:read",
           },
           {
-            label: "Pharmacy Setup",
-            href: "/pharmacy/setup",
-            permission: "medicine-category:read",
+                label: "Departments",
+                href: "/hr/departments",
+                module: "hr",
+                permission: "department:read",
+          },
+          {
+                label: "Designations",
+                href: "/hr/designations",
+                module: "hr",
+                permission: "designation:read",
           }
       ]
     },
     {
-      label: "Appointments",
-      icon: CalendarDays,
-      href: "/appointments",
-      color: "text-orange-400",
-      module: "appointment",
-      permission: "appointment:read",
-    },
-    {
-      label: t("patients"),
-      icon: Users,
-      href: "/patients",
-      color: "text-violet-400",
-      module: "patients",
-      permission: "patient:read",
-    },
-    {
-        label: "Reports",
-        icon: BarChart3,
-        href: "/reports",
-        color: "text-indigo-500",
-        module: "reports",
-        permission: "report:read",
-    },
-    {
-        label: "Branches",
-        icon: Building2,
-        href: "/branches",
-        color: "text-cyan-500",
-        module: "branches",
-        permission: "branch:read",
-    },
-    {
-        label: "Diagnostic",
-        icon: Microscope,
-        href: "/diagnostic",
-        color: "text-blue-400",
-        module: "diagnostic",
-        permission: "diagnostic-test:read",
-    },
-    {
-        label: "Finance",
-        icon: Wallet,
-        href: "/finance",
-        color: "text-green-500",
-        module: "finance",
-        permission: "account:read",
-    },
-    {
-      label: "Purchases",
-      icon: ShoppingBag,
-      href: "/purchases",
-      color: "text-amber-500",
-      module: "purchases",
-      permission: "purchase:read",
-    },
-    {
-      label: "Suppliers",
-      icon: Truck,
-      href: "/suppliers",
-      color: "text-blue-500",
-      module: "suppliers",
-      permission: "supplier:read",
-    },
-    {
-        label: "HR Management",
-        icon: Briefcase,
-        color: "text-orange-500",
-        module: "hr",
-        children: [
-            {
-                label: "Employees",
-                href: "/hr/employees",
-                permission: "user:read",
-            },
-            {
-                label: "Departments",
-                href: "/hr/departments",
-                permission: "department:read",
-            },
-            {
-                label: "Designations",
-                href: "/hr/designations",
-                permission: "designation:read",
-            }
-        ]
-    },
-    {
-        label: "Media Library",
-        icon: ImageIcon,
-        href: "/media",
-        color: "text-purple-400",
-        module: "media",
-        permission: "media:read",
-    },
-    {
-      label: "User Management",
-      icon: Users,
-      color: "text-indigo-400",
-      module: "users",
+      label: "Administration",
+      icon: Settings,
+      color: "text-zinc-500",
       children: [
           {
-              label: "Users",
+              label: "Branches",
+              href: "/branches",
+              module: "branches",
+              permission: "branch:read",
+          },
+          {
+              label: "User Management",
               href: "/settings/users",
+              module: "users",
               permission: "user:read",
           },
           {
               label: "Roles & Permissions",
               href: "/settings/roles",
+              module: "users",
               permission: "role:read",
           },
+          {
+              label: "Media Library",
+              href: "/media",
+              module: "media",
+              permission: "media:read",
+          },
+          {
+            label: t("settings"),
+            href: "/settings",
+            module: "settings",
+            permission: "settings:read",
+          },
       ]
-    },
-    {
-      label: t("settings"),
-      icon: Settings,
-      href: "/settings",
-      color: "text-emerald-400",
-      module: "settings",
-      permission: "settings:read",
     },
   ]
 

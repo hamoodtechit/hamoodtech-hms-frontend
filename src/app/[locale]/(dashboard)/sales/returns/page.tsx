@@ -38,11 +38,13 @@ import {
     X,
     XCircle
 } from "lucide-react"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 
 export default function SalesReturnsPage() {
+  const router = useRouter()
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [search, setSearch] = useState("")
@@ -56,9 +58,34 @@ export default function SalesReturnsPage() {
   const [isIndoorSale, setIsIndoorSale] = useState<string>("all")
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
+  const searchParams = useSearchParams()
+  const urlType = searchParams.get('type')
+  const [type, setType] = useState<string>(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
+
+  // Sync with URL type if it changes
+  useEffect(() => {
+    if (urlType) {
+        setType(urlType === 'pharmacy' ? 'pos' : urlType)
+    }
+  }, [urlType])
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [selectedReturn, setSelectedReturn] = useState<SaleReturn | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+
+  const handleTypeChange = (value: string) => {
+    setType(value)
+    setPage(1)
+    
+    // Update URL to keep it as single source of truth
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === 'all') {
+      params.delete('type')
+    } else {
+      params.set('type', value)
+    }
+    router.push(`/sales/returns?${params.toString()}`)
+  }
   const limit = 10
 
   const activeFilterCount = (status !== "all" ? 1 : 0) + 
@@ -69,7 +96,8 @@ export default function SalesReturnsPage() {
                             (isIndoorSale !== "all" ? 1 : 0) +
                             (minAmount ? 1 : 0) +
                             (maxAmount ? 1 : 0) +
-                            (dateRange ? 1 : 0)
+                            (dateRange ? 1 : 0) +
+                            (type !== 'all' ? 1 : 0)
 
   const { data: returnsRes, isLoading } = useSaleReturns({
     page,
@@ -85,7 +113,8 @@ export default function SalesReturnsPage() {
     startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
     endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     search: debouncedSearch || undefined,
-    branchId: activeStoreId || undefined
+    branchId: activeStoreId || undefined,
+    type: type !== 'all' ? type : undefined
   })
 
   const updateStatus = useUpdateSaleReturnStatus()
@@ -133,6 +162,21 @@ export default function SalesReturnsPage() {
                 />
               </div>
 
+              <div className="w-full md:w-40">
+                <Select value={type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="h-10 rounded-xl bg-background/50 border-primary/20 text-xs font-medium">
+                    <SelectValue placeholder="Return Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Return Type: All</SelectItem>
+                    <SelectItem value="pos">POS</SelectItem>
+                    <SelectItem value="appointment">Appointment</SelectItem>
+                    <SelectItem value="pathology">Pathology</SelectItem>
+                    <SelectItem value="radiology">Radiology</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button 
@@ -169,6 +213,7 @@ export default function SalesReturnsPage() {
                             setMinAmount("")
                             setMaxAmount("")
                             setDateRange(undefined)
+                            setType(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
                           }}
                           className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
                         >

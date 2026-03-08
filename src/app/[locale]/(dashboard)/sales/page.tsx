@@ -10,24 +10,24 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
 import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -37,11 +37,12 @@ import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X } from "lucide-react"
-import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 
 export default function SalesHistoryPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const urlPatientId = searchParams.get('patientId')
   
@@ -59,9 +60,32 @@ export default function SalesHistoryPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [saleType, setSaleType] = useState<string>("all")
+  const urlType = searchParams.get('type')
+  const [saleType, setSaleType] = useState<string>(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
+
+  // Sync with URL type if it changes
+  useEffect(() => {
+    if (urlType) {
+        setSaleType(urlType === 'pharmacy' ? 'pos' : urlType)
+    }
+  }, [urlType])
+
   const [patientIdFilter, setPatientIdFilter] = useState<string | null>(urlPatientId)
   const limit = 10
+
+  const handleTypeChange = (value: string) => {
+    setSaleType(value)
+    setPage(1)
+    
+    // Update URL to keep it as single source of truth
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === 'all') {
+      params.delete('type')
+    } else {
+      params.set('type', value)
+    }
+    router.push(`/sales?${params.toString()}`)
+  }
 
   const activeFilterCount = (status !== "all" ? 1 : 0) + 
                             (paymentStatus !== "all" ? 1 : 0) + 
@@ -134,7 +158,7 @@ export default function SalesHistoryPage() {
               </div>
 
               <div className="w-full md:w-40">
-                <Select value={saleType} onValueChange={(v) => { setSaleType(v); setPage(1); }}>
+                <Select value={saleType} onValueChange={handleTypeChange}>
                   <SelectTrigger className="h-10 rounded-xl bg-background/50 border-primary/20 text-xs font-medium">
                     <SelectValue placeholder="Sale Type" />
                   </SelectTrigger>
@@ -185,7 +209,7 @@ export default function SalesHistoryPage() {
                             setMinAmount("")
                             setMaxAmount("")
                             setDateRange(undefined)
-                            setSaleType("all")
+                            setSaleType(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
                             setPatientIdFilter(null)
                           }}
                           className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
