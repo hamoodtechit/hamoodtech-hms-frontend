@@ -14,6 +14,10 @@ export interface PurchaseFilterValues {
     branchId?: string
     supplierId?: string
     status?: PurchaseStatus | 'all'
+    paymentStatus?: 'all' | 'paid' | 'due' | 'partial'
+    type?: 'all' | 'pharmacy' | 'hospital' | 'clinic'
+    startDate?: string
+    endDate?: string
 }
 
 interface PurchaseFiltersProps {
@@ -95,6 +99,63 @@ export function PurchaseFilters({ values, onChange, onReset }: PurchaseFiltersPr
                             <SelectItem value="rejected">Rejected</SelectItem>
                         </SelectContent>
                     </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">Payment Status</Label>
+                    <Select 
+                        value={values.paymentStatus || "all"} 
+                        onValueChange={(v) => handleFieldChange('paymentStatus', v)}
+                    >
+                        <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Payment Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="due">Due</SelectItem>
+                            <SelectItem value="partial">Partial</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">Type</Label>
+                    <Select 
+                        value={values.type || "all"} 
+                        onValueChange={(v) => handleFieldChange('type', v)}
+                    >
+                        <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Type</SelectItem>
+                            <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                            <SelectItem value="hospital">Hospital</SelectItem>
+                            <SelectItem value="clinic">Clinic</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Date Filters */}
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">From Date</Label>
+                    <Input 
+                        type="date"
+                        className="h-9 text-xs"
+                        value={values.startDate || ""} 
+                        onChange={(e) => handleFieldChange('startDate', e.target.value)} 
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">To Date</Label>
+                    <Input 
+                        type="date"
+                        className="h-9 text-xs"
+                        value={values.endDate || ""} 
+                        onChange={(e) => handleFieldChange('endDate', e.target.value)} 
+                    />
                 </div>
             </div>
         </div>

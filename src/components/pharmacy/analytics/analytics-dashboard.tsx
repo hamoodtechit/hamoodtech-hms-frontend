@@ -19,6 +19,7 @@ import { AlertTriangle, DollarSign, FileDown, Package, Printer } from "lucide-re
 import { Doughnut, Line } from "react-chartjs-2"
 import { createRoot } from 'react-dom/client'
 import { toast } from "sonner"
+import { PharmacyPurchaseReport } from "../reports/pharmacy-purchase-report"
 import { PharmacySalesReport } from "../reports/pharmacy-sales-report"
 
 // Register ChartJS components
@@ -142,6 +143,103 @@ export function AnalyticsDashboard() {
     }
   }
 
+  const handleDownloadPurchaseReport = async (type: 'print' | 'excel') => {
+    if (!date?.from || !date?.to) {
+        toast.error("Please select a date range")
+        return
+    }
+
+    try {
+        const loadingToast = toast.loading("Generating purchase report...")
+        const data = await pharmacyService.getPurchaseReport({
+            branchId: activeStoreId || 'default-branch',
+            startDate: format(date.from, 'yyyy-MM-dd'),
+            endDate: format(date.to, 'yyyy-MM-dd')
+        })
+        console.log("Purchase Report Response:", data)
+        toast.dismiss(loadingToast)
+
+        if (type === 'print') {
+            const printWindow = window.open('', '_blank')
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Pharmacy Purchase Statement</title>')
+                printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
+                printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
+                printWindow.document.close()
+                
+                const container = printWindow.document.getElementById('report-root')
+                if (container) {
+                    const root = createRoot(container)
+                    const activeBranch = stores.find(s => s.id === activeStoreId)
+                    root.render(<PharmacyPurchaseReport data={data.data} dateRange={{ from: date.from, to: date.to }} activeBranch={activeBranch} />)
+                    
+                    setTimeout(() => {
+                        printWindow.print()
+                    }, 1000)
+                }
+            }
+        } else {
+            // Excel/CSV logic — Purchase Report
+            const pharmacy = data.data.pharmacy || { purchases: [], subTotals: {} }
+            const hospital = data.data.hospital || { purchases: [], subTotals: {} }
+            const clinic = data.data.clinic || { purchases: [], subTotals: {} }
+            const summary = data.data.summary || {}
+
+            let csvContent = "data:text/csv;charset=utf-8,"
+
+            const headers = ["SL No", "Date", "PO Number", "Supplier", "Total Price", "Discount", "Net Amount", "Paid", "Due"]
+            
+            const addSection = (title: string, section: any) => {
+                if (!section.purchases || section.purchases.length === 0) return ""
+                let content = `\n${title.toUpperCase()}\n`
+                content += headers.join(",") + "\n"
+                content += section.purchases.map((p: any) =>
+                    [
+                        p.slNo || '',
+                        p.createdAt ? format(new Date(p.createdAt), 'yyyy-MM-dd') : '',
+                        p.poNumber || '',
+                        p.supplierName || 'N/A',
+                        p.totalPrice || 0,
+                        p.discountAmount || 0,
+                        p.netAmount || (Number(p.totalPrice) - Number(p.discountAmount)),
+                        p.paidAmount || p.paid || 0,
+                        p.dueAmount || p.due || 0
+                    ].join(",")
+                ).join("\n") + "\n"
+                
+                // Add Section Subtotals
+                const st = section.subTotals || {}
+                content += `SUBTOTALS,,,,${st.totalPrice || 0},${st.discountAmount || 0},${st.netAmount || 0},${st.paid || 0},${st.due || 0}\n`
+                return content
+            }
+
+            csvContent += "PHARMACY PURCHASE REPORT\n"
+            csvContent += addSection("Pharmacy", pharmacy)
+            csvContent += addSection("Hospital", hospital)
+            csvContent += addSection("Clinic", clinic)
+
+            // Summary
+            csvContent += "\n\nCONSOLIDATED SUMMARY\n"
+            csvContent += `Total Gross Purchase,${summary.totalPurchase || 0}\n`
+            csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
+            csvContent += `Total Net Purchase,${summary.totalNetPurchase || 0}\n`
+            csvContent += `Total Paid,${summary.totalPaid || 0}\n`
+            csvContent += `Total Return,${summary.totalReturn || 0}\n`
+            csvContent += `Net Balance,${Number(summary.totalNetPurchase || 0) - Number(summary.totalPaid || 0)}\n`
+            
+            const encodedUri = encodeURI(csvContent)
+            const link = document.createElement("a")
+            link.setAttribute("href", encodedUri)
+            link.setAttribute("download", `pharmacy_purchase_report_${format(date.from, 'yyyyMMdd')}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        }
+    } catch (error) {
+        toast.error("Failed to generate purchase report")
+    }
+  }
+
   // Format dates for API
   const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined
   const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined
@@ -257,18 +355,25 @@ export function AnalyticsDashboard() {
                             Download Report
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('print')}>
-                            <FileDown className="h-4 w-4" />
-                            Download PDF Statement
-                        </DropdownMenuItem>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <div className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50">Sales Reports</div>
                         <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('print')}>
                             <Printer className="h-4 w-4" />
-                            Print Statement
+                            Print Sales Statement
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2" onClick={() => handleDownloadReport('excel')}>
                             <FileDown className="h-4 w-4" />
-                            Export Excel (CSV)
+                            Export Sales (CSV)
+                        </DropdownMenuItem>
+                        
+                        <div className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 mt-1">Purchase Reports</div>
+                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadPurchaseReport('print')}>
+                            <Printer className="h-4 w-4" />
+                            Print Purchase Statement
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={() => handleDownloadPurchaseReport('excel')}>
+                            <FileDown className="h-4 w-4" />
+                            Export Purchase (CSV)
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

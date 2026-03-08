@@ -18,6 +18,7 @@ export const PHARMACY_KEYS = {
   suppliers: (params: any) => [...PHARMACY_KEYS.all, "suppliers", params] as const,
   purchases: (params: any) => [...PHARMACY_KEYS.all, "purchases", params] as const,
   purchase: (id: string) => [...PHARMACY_KEYS.all, "purchase", id] as const,
+  reports: (params: any) => [...PHARMACY_KEYS.all, "reports", params] as const,
   cashRegisters: (params: any) => [...PHARMACY_KEYS.all, "cash-registers", params] as const,
   branches: (params: any) => [...PHARMACY_KEYS.all, "branches", params] as const,
 };
@@ -354,6 +355,10 @@ export function usePurchases(params: {
   branchId?: string;
   supplierId?: string;
   status?: PurchaseStatus;
+  paymentStatus?: 'paid' | 'due' | 'partial';
+  type?: 'pharmacy' | 'hospital' | 'clinic';
+  startDate?: string;
+  endDate?: string;
 } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.purchases(params),
@@ -425,4 +430,12 @@ export function useDeleteBranch() {
             toast.error(error?.response?.data?.message || "Failed to delete branch");
         }
     });
+}
+
+export function usePurchaseReport(params: { branchId: string; startDate: string; endDate: string }) {
+  return useQuery({
+    queryKey: PHARMACY_KEYS.reports(params),
+    queryFn: () => pharmacyService.getPurchaseReport(params),
+    enabled: !!params.branchId && !!params.startDate && !!params.endDate,
+  });
 }

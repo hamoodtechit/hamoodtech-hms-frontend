@@ -1,37 +1,37 @@
 import { api } from '@/lib/api';
 import {
-  AddOpeningStockDto,
-  AdjustStockDto,
-  Branch,
-  BranchListResponse,
-  BranchPayload,
-  CashRegisterClosePayload,
-  CashRegisterListResponse,
-  CashRegisterOpenPayload,
-  CashRegisterResponse,
-  Manufacturer,
-  ManufacturerListResponse,
-  ManufacturerPayload,
-  Medicine,
-  MedicinePayload,
-  PharmacyEntity,
-  PharmacyEntityType,
-  PharmacyGraphResponse,
-  PharmacyPayload,
-  PharmacyResponse,
-  PharmacyStatsResponse,
-  PharmacySummaryResponse,
-  Purchase,
-  PurchaseListResponse,
-  PurchasePayload,
-  PurchaseStatus,
-  SalePayload,
-  Stock,
-  StockTransferPayload,
-  Supplier,
-  SupplierListResponse,
-  SupplierPayload,
-  UpdateOpeningStockDto
+    AddOpeningStockDto,
+    AdjustStockDto,
+    Branch,
+    BranchListResponse,
+    BranchPayload,
+    CashRegisterClosePayload,
+    CashRegisterListResponse,
+    CashRegisterOpenPayload,
+    CashRegisterResponse,
+    Manufacturer,
+    ManufacturerListResponse,
+    ManufacturerPayload,
+    Medicine,
+    MedicinePayload,
+    PharmacyEntity,
+    PharmacyEntityType,
+    PharmacyGraphResponse,
+    PharmacyPayload,
+    PharmacyResponse,
+    PharmacyStatsResponse,
+    PharmacySummaryResponse,
+    Purchase,
+    PurchaseListResponse,
+    PurchasePayload,
+    PurchaseStatus,
+    SalePayload,
+    Stock,
+    StockTransferPayload,
+    Supplier,
+    SupplierListResponse,
+    SupplierPayload,
+    UpdateOpeningStockDto
 } from '@/types/pharmacy';
 
 export const pharmacyService = {
@@ -227,6 +227,10 @@ export const pharmacyService = {
     branchId?: string;
     supplierId?: string;
     status?: PurchaseStatus;
+    paymentStatus?: string;
+    type?: string;
+    startDate?: string;
+    endDate?: string;
     search?: string;
   }): Promise<PurchaseListResponse> => {
     const response = await api.get<PurchaseListResponse>('/pharmacy/purchases', { params });
@@ -377,6 +381,15 @@ export const pharmacyService = {
     endDate: string; 
   }): Promise<any> => {
     const response = await api.get('/reports/pharmacy/sales-report', { params });
+    return response.data;
+  },
+  
+  getPurchaseReport: async (params: { 
+    branchId: string; 
+    startDate: string; 
+    endDate: string; 
+  }): Promise<any> => {
+    const response = await api.get('/reports/pharmacy/purchase-report', { params });
     return response.data;
   },
 

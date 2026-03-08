@@ -863,7 +863,7 @@ export function AppointmentBillingForm() {
             <DiagnosticReceiptDialog 
                 open={receiptOpen}
                 onOpenChange={setReceiptOpen}
-                transaction={lastSale ? { sale: lastSale } : null}
+                transaction={lastSale}
                 doctors={doctors}
             />
         </div>

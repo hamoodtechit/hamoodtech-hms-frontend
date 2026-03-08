@@ -3,19 +3,20 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
@@ -42,6 +43,11 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
               <DialogTitle className="text-xl flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
                 {purchase.poNumber || "Purchase Order"}
+                {purchase.type && (
+                  <Badge variant="outline" className="ml-2 text-[10px] uppercase font-bold text-primary border-primary/20">
+                    {purchase.type}
+                  </Badge>
+                )}
               </DialogTitle>
               <DialogDescription>
                 Created on {format(new Date(purchase.createdAt), "PPP p")}
@@ -149,21 +155,24 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
 
         {/* Payment Details */}
         {(purchase.paymentMethod || purchase.paidAmount !== undefined) && (
-          <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-3">
-             <h3 className="font-semibold flex items-center gap-2 text-sm text-primary uppercase tracking-wider">
-               <DollarSign className="h-4 w-4" /> Payment Information
-             </h3>
+          <div className="p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-4">
+             <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2 text-sm text-primary uppercase tracking-wider">
+                  <DollarSign className="h-4 w-4" /> Payment Information
+                </h3>
+             </div>
+             
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block">Method</span>
+                    <span className="text-xs text-muted-foreground block text-primary/70 font-bold uppercase tracking-tighter">Method</span>
                     <span className="font-bold capitalize">{purchase.paymentMethod || "N/A"}</span>
                 </div>
                 <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block">Paid Amount</span>
+                    <span className="text-xs text-muted-foreground block text-emerald-600/70 font-bold uppercase tracking-tighter">Paid Amount</span>
                     <span className="font-bold text-emerald-600">{formatCurrency(Number(purchase.paidAmount || 0))}</span>
                 </div>
                 <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block">Balance Due</span>
+                    <span className="text-xs text-muted-foreground block text-destructive/70 font-bold uppercase tracking-tighter">Balance Due</span>
                     <span className={cn(
                         "font-bold",
                         Number(purchase.dueAmount || 0) > 0 ? "text-destructive" : "text-emerald-600"
@@ -175,7 +184,55 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
                     </span>
                 </div>
              </div>
+
+             {purchase.note && (
+                <div className="pt-3 border-t border-primary/10">
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest block mb-1">Purchase Note</span>
+                    <p className="text-xs italic text-muted-foreground bg-muted/50 p-2 rounded border border-dashed">
+                        {purchase.note}
+                    </p>
+                </div>
+             )}
           </div>
+        )}
+
+        {/* Transactions Table */}
+        {purchase.transactions && purchase.transactions.length > 0 && (
+            <div className="space-y-2">
+                <h3 className="font-semibold text-sm flex items-center gap-2 text-muted-foreground">
+                    <FileText className="h-4 w-4" /> Transaction History
+                </h3>
+                <div className="rounded-md border overflow-hidden">
+                    <Table>
+                        <TableHeader className="bg-muted/50">
+                            <TableRow>
+                                <TableHead className="text-[10px] uppercase font-bold">Date</TableHead>
+                                <TableHead className="text-[10px] uppercase font-bold">TXN ID</TableHead>
+                                <TableHead className="text-[10px] uppercase font-bold">Method</TableHead>
+                                <TableHead className="text-[10px] uppercase font-bold text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {purchase.transactions.map((txn: any) => (
+                                <TableRow key={txn.id} className="hover:bg-muted/30">
+                                    <TableCell className="text-xs">
+                                        {format(new Date(txn.createdAt), "dd MMM yyyy")}
+                                    </TableCell>
+                                    <TableCell className="text-xs font-mono text-muted-foreground">
+                                        {txn.txnId}
+                                    </TableCell>
+                                    <TableCell className="text-xs capitalize">
+                                        {txn.paymentMethod}
+                                    </TableCell>
+                                    <TableCell className="text-xs text-right font-medium text-emerald-600">
+                                        {formatCurrency(Number(txn.amount))}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
         )}
 
         {/* Footer Totals */}
@@ -183,27 +240,38 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
           <div className="text-xs text-muted-foreground italic">
             * All prices are in local currency
           </div>
-          <div className="bg-muted p-4 rounded-lg min-w-[280px] space-y-2 ml-auto">
-            <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Subtotal:</span>
+          <div className="bg-muted p-4 rounded-lg min-w-[280px] space-y-2 ml-auto shadow-sm border">
+            <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground uppercase font-bold tracking-tighter">Subtotal (Items):</span>
                 <span className="font-medium">{formatCurrency(Number(purchase.totalPrice || 0))}</span>
             </div>
-            <div className="flex justify-between items-center text-lg font-bold text-primary pt-1 border-t border-black/5">
-                <span>Grand Total:</span>
-                <span>{formatCurrency(Number(purchase.totalPrice || 0))}</span>
+            {Number(purchase.discountAmount || 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-blue-600">
+                    <span className="uppercase font-bold tracking-tighter">Global Discount:</span>
+                    <span className="font-bold">-{formatCurrency(Number(purchase.discountAmount))}</span>
+                </div>
+            )}
+            <div className="flex justify-between items-center text-lg font-bold text-primary pt-2 border-t border-primary/20">
+                <span>Net Payable:</span>
+                <span>{formatCurrency(Number(purchase.totalPrice || 0) - Number(purchase.discountAmount || 0))}</span>
             </div>
-            {Number(purchase.paidAmount || 0) > 0 && (
-                <div className="flex justify-between items-center text-sm text-emerald-600 font-medium">
-                    <span>Total Paid:</span>
-                    <span>-{formatCurrency(Number(purchase.paidAmount))}</span>
+            
+            <Separator className="my-1 bg-primary/10" />
+
+            <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between items-center text-xs text-emerald-600">
+                    <span className="uppercase font-bold tracking-tighter">Total Amount Paid:</span>
+                    <span className="font-bold">{formatCurrency(Number(purchase.paidAmount || 0))}</span>
                 </div>
-            )}
-            {Number(purchase.dueAmount || 0) > 0 && (
-                <div className="flex justify-between items-center text-sm text-destructive font-bold pt-1 border-t border-black/5">
-                    <span>Outstanding Due:</span>
-                    <span>{formatCurrency(Number(purchase.dueAmount))}</span>
+                <div className="flex justify-between items-center text-sm font-black border-t pt-1.5 mt-1">
+                    <span className="uppercase tracking-tighter">Outstanding Due:</span>
+                    <span className={cn(
+                        Number(purchase.dueAmount || 0) > 0 ? "text-destructive" : "text-emerald-600"
+                    )}>
+                        {formatCurrency(Number(purchase.dueAmount || 0))}
+                    </span>
                 </div>
-            )}
+            </div>
           </div>
         </div>
         

@@ -14,6 +14,7 @@ import {
 import { usePurchases, useUpdatePurchaseStatus } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 import { Purchase, PurchaseStatus } from "@/types/pharmacy"
 import { format } from "date-fns"
 import { Loader2, Search } from "lucide-react"
@@ -36,7 +37,11 @@ export function PurchaseOrderList() {
         search: "",
         branchId: activeStoreId || undefined,
         supplierId: undefined,
-        status: "all"
+        status: "all",
+        paymentStatus: "all",
+        type: "all",
+        startDate: undefined,
+        endDate: undefined
     })
 
     // Sync with global store if not manually changed? 
@@ -55,6 +60,10 @@ export function PurchaseOrderList() {
         if (filters.branchId) count++
         if (filters.supplierId) count++
         if (filters.status && filters.status !== 'all') count++
+        if (filters.paymentStatus && filters.paymentStatus !== 'all') count++
+        if (filters.type && filters.type !== 'all') count++
+        if (filters.startDate) count++
+        if (filters.endDate) count++
         return count
     }, [filters])
 
@@ -64,7 +73,11 @@ export function PurchaseOrderList() {
         search: debouncedSearch,
         branchId: filters.branchId,
         supplierId: filters.supplierId,
-        status: filters.status === 'all' ? undefined : filters.status as PurchaseStatus
+        status: filters.status === 'all' ? undefined : filters.status as PurchaseStatus,
+        paymentStatus: filters.paymentStatus === 'all' ? undefined : filters.paymentStatus as any,
+        type: filters.type === 'all' ? undefined : filters.type as any,
+        startDate: filters.startDate,
+        endDate: filters.endDate
     })
     const purchases = purchasesRes?.data?.purchases || []
     const pagination = purchasesRes?.data?.pagination
@@ -90,7 +103,11 @@ export function PurchaseOrderList() {
             search: "",
             branchId: undefined,
             supplierId: undefined,
-            status: "all"
+            status: "all",
+            paymentStatus: "all",
+            type: "all",
+            startDate: undefined,
+            endDate: undefined
         })
         setPage(1)
     }
@@ -98,7 +115,7 @@ export function PurchaseOrderList() {
     // Reset page when filters change
     useEffect(() => {
         setPage(1)
-    }, [debouncedSearch, filters.branchId, filters.supplierId, filters.status])
+    }, [debouncedSearch, filters.branchId, filters.supplierId, filters.status, filters.paymentStatus, filters.type, filters.startDate, filters.endDate])
 
     return (
         <div className="space-y-4">
@@ -132,9 +149,11 @@ export function PurchaseOrderList() {
                         <TableRow>
                             <TableHead>PO Number</TableHead>
                             <TableHead>Date</TableHead>
+                            <TableHead>Type</TableHead>
                             <TableHead>Supplier</TableHead>
                             <TableHead>Total Amount</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Payment</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -154,6 +173,9 @@ export function PurchaseOrderList() {
                                     {po.poNumber || `#${po.id.slice(-6).toUpperCase()}`}
                                 </TableCell>
                                 <TableCell className="text-xs">{format(new Date(po.createdAt), "PPP")}</TableCell>
+                                <TableCell className="font-medium text-[10px] uppercase">
+                                    {(po as any).type || 'N/A'}
+                                </TableCell>
                                 <TableCell className="text-xs">{po.supplier?.name || 'Unknown Supplier'}</TableCell>
                                 <TableCell className="text-xs">
                                     {formatCurrency(po.totalPrice || 0)}
@@ -164,6 +186,16 @@ export function PurchaseOrderList() {
                                         po.status === 'pending' ? 'secondary' : 'destructive'
                                     } className="text-[10px] uppercase font-bold py-0.5">
                                         {po.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="outline" className={cn(
+                                        "text-[10px] uppercase font-bold py-0.5",
+                                        (po as any).paymentStatus === 'paid' ? "text-emerald-600 border-emerald-200 bg-emerald-50" :
+                                        (po as any).paymentStatus === 'partial' ? "text-amber-600 border-amber-200 bg-amber-50" :
+                                        "text-destructive border-red-200 bg-red-50"
+                                    )}>
+                                        {(po as any).paymentStatus || 'unknown'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">

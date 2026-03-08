@@ -993,7 +993,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             <DiagnosticReceiptDialog 
                 open={receiptOpen}
                 onOpenChange={setReceiptOpen}
-                transaction={lastSale ? { sale: lastSale } : null}
+                transaction={lastSale}
                 doctors={doctors}
                 staffs={staffs}
             />

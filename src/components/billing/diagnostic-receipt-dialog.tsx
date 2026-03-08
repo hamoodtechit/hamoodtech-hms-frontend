@@ -45,17 +45,20 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   if (!transaction) return null
   console.log("RECEIPT_TRANSACTION_DATA:", transaction)
 
-  // The API might return the sale nested under a 'sale' property or directly
-  const data = transaction.sale || transaction
-  const items = data.saleItems || []
+  // The API might return the sale nested under a 'sale' property, 'data.sale', or directly
+  const data = transaction?.data?.sale || transaction?.sale || transaction?.data || transaction
+  const items = data?.saleItems || []
   
-  const netTotal = Number(data.netPrice || data.totalPrice || 0)
-  const grossTotal = items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0)
-  const paidAmount = Number(data.paidAmount || 0)
-  const dueAmount = Number(data.dueAmount || 0)
-  const taxAmount = Number(data.taxAmount || 0)
+  const netTotal = Number(data?.netPrice || data?.totalPrice || 0)
+  const grossTotal = items.length > 0 
+      ? items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0)
+      : netTotal // Fallback to netTotal if no items (though unlikely in a valid sale)
   
-  const patient = data.patient || {}
+  const paidAmount = Number(data?.paidAmount || 0)
+  const dueAmount = Number(data?.dueAmount || 0)
+  const taxAmount = Number(data?.taxAmount || 0)
+  
+  const patient = data?.patient || {}
   const patientName = patient.name || data.customerName || "Walk-in Patient"
   const patientAge = patient.age ? `${patient.age}Y` : "N/A"
   const patientSex = patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : "N/A"

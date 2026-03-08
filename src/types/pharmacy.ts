@@ -128,6 +128,9 @@ export interface PurchaseItem {
   totalPrice?: number | string;
   batchNumber?: string;
   expiryDate: string;
+  rackNumber?: string;
+  discountPercentage?: number | string;
+  discountAmount?: number | string;
 }
 
 export type PurchaseStatus = 'pending' | 'completed' | 'rejected';
@@ -140,11 +143,15 @@ export interface Purchase {
   totalPrice?: number | string;
   netPrice?: number | string;
   status: PurchaseStatus;
+  type?: 'pharmacy' | 'hospital' | 'clinic';
+  note?: string;
+  discountPercentage?: number | string;
+  discountAmount?: number | string;
   purchaseItems: PurchaseItem[];
   paymentMethod?: PaymentMethod;
   paidAmount?: number | string;
   dueAmount?: number | string;
-  payments?: any[];
+  transactions?: any[];
   createdAt: string;
   updatedAt: string;
   branch?: Branch;
@@ -154,8 +161,12 @@ export interface Purchase {
 export interface PurchasePayload {
   branchId: string;
   supplierId: string;
+  type?: 'pharmacy' | 'hospital' | 'clinic';
+  discountPercentage?: number;
+  discountAmount?: number;
   status: PurchaseStatus;
   paymentMethod: PaymentMethod;
+  paymentStatus?: 'due' | 'paid' | 'partial';
   paidAmount: number;
   dueAmount: number;
   payments: {
