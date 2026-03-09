@@ -19,6 +19,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useDrugInteraction } from "@/hooks/use-drug-interaction"
 import { Link } from "@/i18n/navigation"
+import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -807,7 +808,10 @@ export default function POSPage() {
             {loadingProducts && medicines.length === 0 ? (
                 <div className={`grid gap-3 sm:gap-4 pb-2 ${viewMode === 'grid' ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
                     {Array.from({ length: 12 }).map((_, i) => (
-                        <Card key={i} className="overflow-hidden border-transparent shadow-sm">
+                        <Card key={i} className={cn(
+                            "overflow-hidden border-transparent shadow-sm",
+                            viewMode === 'list' ? "h-12" : "h-[110px] sm:h-[120px]"
+                        )}>
                             {viewMode === 'grid' ? (
                                 <>
                                     <CardHeader className="p-3 sm:p-4 bg-secondary/10">
@@ -853,11 +857,13 @@ export default function POSPage() {
                         return (
                         <Card 
                             key={product.id} 
-                            className={`cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col h-[110px] sm:h-[120px] relative ${
+                            className={cn(
+                                "cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col relative py-0 gap-0 p-0",
+                                viewMode === 'grid' ? "h-[110px] sm:h-[120px]" : "h-auto mb-1",
                                 quantity > 0 ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.02]' : 
                                 isOutOfStock ? 'bg-muted/50 border-destructive/30 border-dashed opacity-80' :
                                 index === selectedIndex && searchQuery.trim() !== "" ? 'border-primary ring-2 ring-primary/50' : colorClass
-                            }`}
+                            )}
                             onClick={() => handleAddToCart(product)}
                         >
                             {viewMode === 'grid' ? (
