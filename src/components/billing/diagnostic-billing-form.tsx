@@ -60,6 +60,7 @@ interface CartItem {
     staffName: string
     discountAmount: number
     discountPercentage: number
+    diagnosticTestId: string
 }
 
 export function DiagnosticBillingForm({ type, title, description }: DiagnosticBillingFormProps) {
@@ -201,7 +202,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             staffId: staff?.id || "",
             staffName: staff?.name || "",
             discountAmount: 0,
-            discountPercentage: 0
+            discountPercentage: 0,
+            diagnosticTestId: test.id
         }
 
         setCart([...cart, newItem])
@@ -286,7 +288,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 testBy: item.staffName || "",
                 medicineId: "",
                 batchNumber: "",
-                expiryDate: ""
+                expiryDate: "",
+                diagnosticTestId: item.diagnosticTestId
             }))
         }
 

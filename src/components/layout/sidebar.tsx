@@ -147,10 +147,16 @@ export function Sidebar() {
               permission: "patient:read",
           },
           {
-              label: "Diagnostic Center",
+              label: "Diagnostic Tests",
               href: "/diagnostic",
               module: "diagnostic",
               permission: "diagnostic-test:read",
+          },
+          {
+              label: "Diagnostic Reports",
+              href: "/diagnostic/reports",
+              module: "diagnostic",
+              permission: "report:read",
           }
       ]
     },

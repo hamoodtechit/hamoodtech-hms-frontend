@@ -319,6 +319,7 @@ export type PharmacyEntityType = 'generics' | 'categories' | 'groups' | 'units' 
 
 export interface Patient {
   id: string;
+  uhid: string;
   name: string;
   nameBangla?: string;
   age: number;
@@ -379,6 +380,7 @@ export interface SaleItem {
   batchNumber: string;
   expiryDate: string;
   dosageForm?: string;
+  diagnosticTestId?: string;
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer';
