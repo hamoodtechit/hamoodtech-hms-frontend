@@ -73,8 +73,8 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                     {/* Report Summary */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-3 rounded-xl bg-muted/30 border">
-                            <Label className="text-[10px] font-black uppercase text-muted-foreground opacity-70">Patient ID</Label>
-                            <p className="font-bold text-sm">{report?.patient?.uhid}</p>
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground opacity-70">Patient Phone</Label>
+                            <p className="font-bold text-sm">{report?.patient?.phone || '—'}</p>
                         </div>
                         <div className="p-3 rounded-xl bg-muted/30 border">
                             <Label className="text-[10px] font-black uppercase text-muted-foreground opacity-70">Test Name</Label>

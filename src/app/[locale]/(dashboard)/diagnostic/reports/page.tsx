@@ -61,7 +61,7 @@ export default function DiagnosticReportsPage() {
 
     const handleAction = (report: DiagnosticReport) => {
         setSelectedReport(report)
-        switch (report.status) {
+        switch (report.reportStatus) {
             case 'pending-sample-collection':
                 setCollectionOpen(true)
                 break
@@ -117,7 +117,7 @@ export default function DiagnosticReportsPage() {
                         <CardContent className="p-3 pt-0">
                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70 leading-none mb-1 group-hover:text-primary transition-colors">{config.label}</p>
                             <p className="text-xl font-black tracking-tighter">
-                                {reports.filter(r => r.status === key).length}
+                                {reports.filter(r => r.reportStatus === key).length}
                             </p>
                         </CardContent>
                     </Card>
@@ -194,7 +194,6 @@ export default function DiagnosticReportsPage() {
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="font-bold text-sm tracking-tight">{report.patient?.name}</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-muted-foreground font-medium">{report.patient?.uhid}</span>
                                                     <span className="text-[10px] text-muted-foreground font-medium">{report.patient?.phone}</span>
                                                 </div>
                                             </div>
@@ -202,17 +201,19 @@ export default function DiagnosticReportsPage() {
                                         <TableCell>
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="font-bold text-sm tracking-tight">{report.diagnosticTest?.name}</span>
-                                                <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-tight py-0 h-4 border-primary/20 text-primary">
-                                                    {report.diagnosticTest?.department?.name || 'General'}
-                                                </Badge>
+                                                {report.diagnosticTest?.type && (
+                                                    <Badge variant="outline" className="w-fit text-[9px] font-black uppercase tracking-tight py-0 h-4 border-primary/20 text-primary">
+                                                        {report.diagnosticTest.type}
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <Badge className={cn(
                                                 "rounded-lg font-black uppercase text-[10px] tracking-tight py-1 px-3 border",
-                                                statusConfig[report.status as string]?.color || "bg-muted text-muted-foreground"
+                                                statusConfig[report.reportStatus as string]?.color || "bg-muted text-muted-foreground"
                                             )}>
-                                                {statusConfig[report.status as string]?.label || report.status}
+                                                {statusConfig[report.reportStatus as string]?.label || report.reportStatus}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -222,22 +223,22 @@ export default function DiagnosticReportsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right pr-6">
-                                            {report.status !== 'completed' && report.status !== 'pending-billing' ? (
+                                            {report.reportStatus !== 'completed' && report.reportStatus !== 'pending-billing' ? (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
                                                     onClick={() => handleAction(report)}
                                                     className={cn(
                                                         "rounded-lg h-8 text-[11px] font-black uppercase border-none px-4",
-                                                        report.status === 'pending-sample-collection' ? "bg-indigo-600 hover:bg-indigo-700 text-white" :
-                                                        report.status === 'sample-collected' ? "bg-blue-600 hover:bg-blue-700 text-white" :
-                                                        report.status === 'pending-verification' ? "bg-rose-600 hover:bg-rose-700 text-white" :
+                                                        report.reportStatus === 'pending-sample-collection' ? "bg-indigo-600 hover:bg-indigo-700 text-white" :
+                                                        report.reportStatus === 'sample-collected' ? "bg-blue-600 hover:bg-blue-700 text-white" :
+                                                        report.reportStatus === 'pending-verification' ? "bg-rose-600 hover:bg-rose-700 text-white" :
                                                         "bg-primary hover:bg-primary/90 text-primary-foreground"
                                                     )}
                                                 >
-                                                    {report.status === 'pending-sample-collection' ? 'Collect' : 
-                                                     report.status === 'sample-collected' ? 'Results' : 
-                                                     report.status === 'pending-verification' ? 'Approve' : 'Action'}
+                                                    {report.reportStatus === 'pending-sample-collection' ? 'Collect' : 
+                                                     report.reportStatus === 'sample-collected' ? 'Results' : 
+                                                     report.reportStatus === 'pending-verification' ? 'Approve' : 'Action'}
                                                 </Button>
                                             ) : (
                                                 <Button 

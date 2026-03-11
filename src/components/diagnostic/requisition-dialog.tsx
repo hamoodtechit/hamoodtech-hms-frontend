@@ -30,7 +30,7 @@ export function RequisitionDialog({ open, onOpenChange, onSuccess }: Requisition
     const { activeStoreId } = useStoreContext()
     const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({
         search: testQuery,
-        branchId: activeStoreId,
+        branchId: activeStoreId || undefined,
         limit: 50
     })
 

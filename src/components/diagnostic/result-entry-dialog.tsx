@@ -63,7 +63,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             const payload = {
                 technicianId,
                 result: resultObject,
-                reportNotes
+                reportNotes,
+                status: 'pending-verification'
             }
             console.log("ENTER_RESULT_PAYLOAD:", { id: report.id, data: payload })
             

@@ -8,6 +8,7 @@ export interface DiagnosticTest {
   price: number | string;
   createdAt: string;
   updatedAt: string;
+  type?: string | null;
   department?: {
     id: string;
     name: string;
@@ -28,41 +29,54 @@ export interface DiagnosticTestPayload {
   staffId: string;
 }
 
-export type ReportStatus = 
-  | 'pending-billing' 
-  | 'pending-sample-collection' 
-  | 'sample-collected' 
-  | 'processing' 
-  | 'pending-verification' 
+export type ReportStatus =
+  | 'pending-billing'
+  | 'pending-sample-collection'
+  | 'sample-collected'
+  | 'processing'
+  | 'pending-verification'
   | 'completed'
   | 'cancelled';
+
+export type SampleStatus = 'not-required' | 'pending' | 'collected';
 
 export interface DiagnosticReport {
   id: string;
   patientId: string;
   branchId: string;
   diagnosticTestId: string;
-  saleItemId?: string;
-  status: ReportStatus;
-  barcode?: string;
-  collectedById?: string;
-  collectedAt?: string;
-  sampleDetails?: string;
-  technicianId?: string;
-  result?: Record<string, any>;
-  reportNotes?: string;
-  approvedById?: string;
-  approvedAt?: string;
-  digitalSignature?: string;
+  saleItemId?: string | null;
+  employeeId?: string | null;
+  // API uses reportStatus (not status)
+  reportStatus: ReportStatus;
+  sampleStatus: SampleStatus;
+  barcode?: string | null;
+  qrCode?: string | null;
+  collectedById?: string | null;
+  sampleCollectedAt?: string | null;
+  sampleDetails?: string | null;
+  technicianId?: string | null;
+  result?: Record<string, any> | null;
+  reportNotes?: string | null;
+  approvedById?: string | null;
+  approvedAt?: string | null;
+  digitalSignature?: string | null;
   createdAt: string;
   updatedAt: string;
   patient?: {
     id: string;
     name: string;
-    uhid: string;
     phone?: string;
   };
-  diagnosticTest?: DiagnosticTest;
+  saleItem?: any | null;
+  collectedBy?: any | null;
+  technician?: any | null;
+  approvedBy?: any | null;
+  diagnosticTest?: {
+    id: string;
+    name: string;
+    type?: string | null;
+  };
 }
 
 export interface RequisitionPayload {
@@ -80,6 +94,7 @@ export interface ResultEntryPayload {
   technicianId: string;
   result: Record<string, any>;
   reportNotes?: string;
+  status?: string;
 }
 
 export interface ApprovalPayload {
