@@ -139,6 +139,8 @@ export const pharmacyService = {
     search?: string;
     batchNumber?: string;
     rackNumber?: string;
+    expiryStartDate?: string;
+    expiryEndDate?: string;
   }): Promise<PharmacyResponse<Stock>> => {
     const response = await api.get<PharmacyResponse<Stock>>('/pharmacy/stocks', { params });
     return response.data;

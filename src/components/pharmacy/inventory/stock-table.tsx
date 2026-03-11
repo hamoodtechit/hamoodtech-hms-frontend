@@ -43,6 +43,10 @@ export function StockTable() {
   // Filter State
   const [filterBatch, setFilterBatch] = useState("")
   const [filterRack, setFilterRack] = useState("")
+  const [expiryStartDate, setExpiryStartDate] = useState("")
+  const [expiryEndDate, setExpiryEndDate] = useState("")
+
+  const activeFilterCount = [filterBatch, filterRack, expiryStartDate, expiryEndDate].filter(Boolean).length
 
   const { data: stocksRes, isLoading: loading } = useStocks({
     page,
@@ -50,7 +54,9 @@ export function StockTable() {
     search: debouncedSearch,
     branchId: activeStoreId || undefined,
     batchNumber: filterBatch || undefined,
-    rackNumber: filterRack || undefined
+    rackNumber: filterRack || undefined,
+    expiryStartDate: expiryStartDate || undefined,
+    expiryEndDate: expiryEndDate || undefined,
   })
 
   const stocks = stocksRes?.data || []
@@ -86,6 +92,8 @@ export function StockTable() {
   const resetFilters = () => {
     setFilterBatch("")
     setFilterRack("")
+    setExpiryStartDate("")
+    setExpiryEndDate("")
     setSearch("")
     setPage(1)
   }
@@ -108,8 +116,11 @@ export function StockTable() {
             </div>
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" className={activeFilterCount > 0 ? 'border-primary text-primary' : ''}>
                         <Filter className="h-4 w-4" />
+                        {activeFilterCount > 0 && (
+                            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[9px] text-white flex items-center justify-center font-bold">{activeFilterCount}</span>
+                        )}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-4" align="start">
@@ -127,6 +138,31 @@ export function StockTable() {
                         <div className="space-y-2">
                             <Label htmlFor="filRack">Rack Number</Label>
                             <Input id="filRack" value={filterRack} onChange={e => setFilterRack(e.target.value)} placeholder="Filter by rack" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry Date Range</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label htmlFor="filExpFrom" className="text-[10px] text-muted-foreground">From</Label>
+                                    <Input
+                                        id="filExpFrom"
+                                        type="date"
+                                        value={expiryStartDate}
+                                        onChange={e => { setExpiryStartDate(e.target.value); setPage(1) }}
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="filExpTo" className="text-[10px] text-muted-foreground">To</Label>
+                                    <Input
+                                        id="filExpTo"
+                                        type="date"
+                                        value={expiryEndDate}
+                                        onChange={e => { setExpiryEndDate(e.target.value); setPage(1) }}
+                                        className="h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </PopoverContent>
