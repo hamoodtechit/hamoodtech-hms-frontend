@@ -34,7 +34,7 @@ export default function DiagnosticTestsPage() {
         page,
         limit: 10,
         search,
-        branchId: activeStoreId
+        branchId: activeStoreId || undefined
     })
 
     const deleteMutation = useDeleteDiagnosticTest()
