@@ -144,7 +144,9 @@ export function Overview() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        {/* Sales Revenue */}
+        <Link href="/dashboard/overview" className="group">
+        <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all cursor-pointer border-2 border-transparent hover:border-emerald-500/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sales Revenue (Gross)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -166,7 +168,11 @@ export function Overview() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        </Link>
+
+        {/* Returns */}
+        <Link href="/dashboard/overview" className="group">
+        <Card className="hover:shadow-lg hover:shadow-rose-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-rose-500/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
             <AlertTriangle className="h-4 w-4 text-rose-500" />
@@ -187,7 +193,11 @@ export function Overview() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        </Link>
+
+        {/* Purchases */}
+        <Link href="/dashboard/overview" className="group">
+        <Card className="hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-indigo-500/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -208,9 +218,11 @@ export function Overview() {
             )}
           </CardContent>
         </Card>
+        </Link>
 
-        {/* Operational Card */}
-        <Card>
+        {/* Active Stock */}
+        <Link href="/dashboard/overview" className="group">
+        <Card className="hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-orange-500/30">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Stock</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -241,6 +253,7 @@ export function Overview() {
             )}
           </CardContent>
         </Card>
+        </Link>
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
