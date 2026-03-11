@@ -103,11 +103,11 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
 
                     {/* Technician Notes */}
                     {report?.reportNotes && (
-                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 space-y-1">
-                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-amber-600">
+                        <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-1">
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-amber-500">
                                 <Info className="w-3 h-3" /> Technician Notes
                             </div>
-                            <p className="text-sm text-amber-900 font-medium italic">"{report.reportNotes}"</p>
+                            <p className="text-sm text-foreground font-medium italic">"{report.reportNotes}"</p>
                         </div>
                     )}
 
@@ -119,7 +119,7 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                             <User className="w-3 h-3" /> Approving Pathologist
                         </Label>
                         <Select value={approvedById} onValueChange={setApprovedById}>
-                            <SelectTrigger className="h-11 rounded-xl bg-emerald-50 text-emerald-900 border-emerald-100 shadow-sm font-bold">
+                            <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-none font-bold">
                                 <SelectValue placeholder="Select specialist..." />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl shadow-2xl border-emerald-100">

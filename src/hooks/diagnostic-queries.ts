@@ -1,6 +1,6 @@
 import { diagnosticService } from "@/services/diagnostic-service";
 import { DiagnosticReportParams, DiagnosticTestParams, DiagnosticTestPayload } from "@/types/diagnostic";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const DIAGNOSTIC_KEYS = {
   all: ["diagnostic"] as const,
@@ -54,6 +54,7 @@ export function useDiagnosticReports(params?: DiagnosticReportParams) {
   return useQuery({
     queryKey: DIAGNOSTIC_KEYS.reports(params),
     queryFn: () => diagnosticService.getReports(params),
+    placeholderData: keepPreviousData,
   });
 }
 

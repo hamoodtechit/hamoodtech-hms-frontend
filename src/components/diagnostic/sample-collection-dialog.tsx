@@ -71,9 +71,9 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
                 </DialogHeader>
 
                 <div className="p-6 space-y-5">
-                    <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 flex flex-col gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Test Required</span>
-                        <span className="font-bold text-sm text-indigo-900">{report?.diagnosticTest?.name}</span>
+                    <div className="bg-muted/50 p-4 rounded-xl border border-border flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Test Required</span>
+                        <span className="font-bold text-sm">{report?.diagnosticTest?.name}</span>
                     </div>
 
                     <div className="space-y-2">
