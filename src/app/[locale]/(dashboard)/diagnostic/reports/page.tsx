@@ -37,7 +37,6 @@ import {
     Filter,
     FlaskConical,
     Loader2,
-    Plus,
     Search,
     X
 } from "lucide-react"
@@ -53,7 +52,6 @@ export default function DiagnosticReportsPage() {
     const [debouncedBarcode] = useDebounce(barcodeFilter, 500)
 
     // Dialog States
-    const [requisitionOpen, setRequisitionOpen] = useState(false)
     const [collectionOpen, setCollectionOpen] = useState(false)
     const [resultOpen, setResultOpen] = useState(false)
     const [approvalOpen, setApprovalOpen] = useState(false)
@@ -115,14 +113,6 @@ export default function DiagnosticReportsPage() {
                         Lab Worklist
                     </h1>
                     <p className="text-muted-foreground text-sm font-medium">Manage the diagnostic lifecycle from requisition to approval.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        onClick={() => setRequisitionOpen(true)}
-                        className="rounded-xl shadow-lg shadow-primary/20 gap-2 h-11 px-6 font-bold"
-                    >
-                        <Plus className="h-4 w-4" /> New Requisition
-                    </Button>
                 </div>
             </div>
 
@@ -387,12 +377,6 @@ export default function DiagnosticReportsPage() {
             />
 
             {/* Workflow Dialogs */}
-            <RequisitionDialog
-                open={requisitionOpen}
-                onOpenChange={setRequisitionOpen}
-                onSuccess={refetch}
-            />
-
             <SampleCollectionDialog
                 open={collectionOpen}
                 onOpenChange={setCollectionOpen}
