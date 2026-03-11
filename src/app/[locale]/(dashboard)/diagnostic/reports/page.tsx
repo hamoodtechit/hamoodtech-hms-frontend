@@ -1,6 +1,7 @@
 "use client"
 
 import { ApprovalDialog } from "@/components/diagnostic/approval-dialog"
+import { ReportDetailSheet } from "@/components/diagnostic/report-detail-sheet"
 import { RequisitionDialog } from "@/components/diagnostic/requisition-dialog"
 import { ResultEntryDialog } from "@/components/diagnostic/result-entry-dialog"
 import { SampleCollectionDialog } from "@/components/diagnostic/sample-collection-dialog"
@@ -32,6 +33,7 @@ import {
     CheckCircle2,
     ClipboardList,
     Clock,
+    Eye,
     Filter,
     FlaskConical,
     Loader2,
@@ -55,6 +57,7 @@ export default function DiagnosticReportsPage() {
     const [collectionOpen, setCollectionOpen] = useState(false)
     const [resultOpen, setResultOpen] = useState(false)
     const [approvalOpen, setApprovalOpen] = useState(false)
+    const [detailOpen, setDetailOpen] = useState(false)
     const [selectedReport, setSelectedReport] = useState<DiagnosticReport | null>(null)
 
     const { activeStoreId } = useStoreContext()
@@ -336,26 +339,37 @@ export default function DiagnosticReportsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right pr-6">
-                                            {report.reportStatus !== 'completed' && report.reportStatus !== 'pending-billing' && report.reportStatus !== 'cancelled' ? (
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                {/* View Details button — always visible */}
                                                 <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleAction(report)}
-                                                    className={cn(
-                                                        "rounded-lg h-8 text-[11px] font-black uppercase border-none px-4",
-                                                        report.reportStatus === 'pending-sample-collection' ? "bg-indigo-600 hover:bg-indigo-700 text-white" :
-                                                        report.reportStatus === 'sample-collected' ? "bg-blue-600 hover:bg-blue-700 text-white" :
-                                                        report.reportStatus === 'pending-verification' ? "bg-rose-600 hover:bg-rose-700 text-white" :
-                                                        "bg-primary hover:bg-primary/90 text-primary-foreground"
-                                                    )}
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => { setSelectedReport(report); setDetailOpen(true) }}
+                                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                                                    title="View Details"
                                                 >
-                                                    {report.reportStatus === 'pending-sample-collection' ? 'Collect' :
-                                                     report.reportStatus === 'sample-collected' ? 'Results' :
-                                                     report.reportStatus === 'pending-verification' ? 'Approve' : 'Action'}
+                                                    <Eye className="h-4 w-4" />
                                                 </Button>
-                                            ) : (
-                                                <Badge variant="outline" className="text-[10px] font-bold opacity-60">—</Badge>
-                                            )}
+                                                {/* Action button — only for actionable statuses */}
+                                                {report.reportStatus !== 'completed' && report.reportStatus !== 'pending-billing' && report.reportStatus !== 'cancelled' ? (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleAction(report)}
+                                                        className={cn(
+                                                            "rounded-lg h-8 text-[11px] font-black uppercase border-none px-4",
+                                                            report.reportStatus === 'pending-sample-collection' ? "bg-indigo-600 hover:bg-indigo-700 text-white" :
+                                                            report.reportStatus === 'sample-collected' ? "bg-blue-600 hover:bg-blue-700 text-white" :
+                                                            report.reportStatus === 'pending-verification' ? "bg-rose-600 hover:bg-rose-700 text-white" :
+                                                            "bg-primary hover:bg-primary/90 text-primary-foreground"
+                                                        )}
+                                                    >
+                                                        {report.reportStatus === 'pending-sample-collection' ? 'Collect' :
+                                                         report.reportStatus === 'sample-collected' ? 'Results' :
+                                                         report.reportStatus === 'pending-verification' ? 'Approve' : 'Action'}
+                                                    </Button>
+                                                ) : null}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -364,6 +378,13 @@ export default function DiagnosticReportsPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {/* Detail Sheet */}
+            <ReportDetailSheet
+                open={detailOpen}
+                onOpenChange={setDetailOpen}
+                report={selectedReport}
+            />
 
             {/* Workflow Dialogs */}
             <RequisitionDialog
