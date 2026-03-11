@@ -108,7 +108,7 @@ export function TransactionHistory() {
         const promises = []
         
         const baseParams: any = {
-            branchId: activeStoreId,
+            branchId: activeStoreId || undefined,
             limit: 10,
             page,
             search: debouncedSearch || undefined,

@@ -90,7 +90,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                 await createMutation.mutateAsync({
                     categoryId,
                     accountId,
-                    branchId: activeStoreId,
+                    branchId: activeStoreId || undefined,
                     amount,
                     date: new Date(date).toISOString(),
                     note

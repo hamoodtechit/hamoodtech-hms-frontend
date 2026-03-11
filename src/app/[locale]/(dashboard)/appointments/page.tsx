@@ -42,7 +42,7 @@ export default function AppointmentsPage() {
         page,
         limit: 10,
         search,
-        branchId: activeStoreId,
+        branchId: activeStoreId || undefined,
         ...filters
     })
 

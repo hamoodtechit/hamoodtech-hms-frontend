@@ -372,7 +372,7 @@ export default function POSPage() {
           }
 
           const salePayload: SalePayload = {
-              branchId: activeStoreId,
+              branchId: activeStoreId || undefined,
               patientId: selectedCustomer?.id,
               status: "completed" as const,
               paymentStatus,

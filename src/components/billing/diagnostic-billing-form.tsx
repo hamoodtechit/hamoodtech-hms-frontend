@@ -71,10 +71,10 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const { user } = useAuthStore()
 
     // Data Fetching
-    const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId, limit: 1000 })
-    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 1000 })
-    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId, employeeType: "staff", limit: 1000 })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, limit: 100, isActive: true })
+    const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
+    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "doctor", limit: 1000 })
+    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "staff", limit: 1000 })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 100, isActive: true })
 
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")
