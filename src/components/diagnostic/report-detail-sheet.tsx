@@ -1,5 +1,6 @@
 "use client"
 
+import { PrintReport } from "@/components/diagnostic/print-report"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -20,6 +21,7 @@ import {
     Clock,
     FlaskConical,
     Loader2,
+    Printer,
     QrCode,
     User,
 } from "lucide-react"
@@ -63,16 +65,67 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
     )
 }
 
+/** Render result value — handles both old string format and new {value, unit, referenceRange} format */
+function ResultValue({ param, data }: { param: string; data: any }) {
+    if (typeof data === "object" && data !== null && "value" in data) {
+        return (
+            <div key={param} className="px-4 py-2.5 border-b border-border/50 last:border-0">
+                <div className="flex justify-between items-start text-sm">
+                    <span className="font-medium text-muted-foreground">{param}</span>
+                    <div className="text-right">
+                        <span className="font-black text-foreground">{data.value}</span>
+                        {data.unit && <span className="text-xs text-muted-foreground ml-1">{data.unit}</span>}
+                    </div>
+                </div>
+                {data.referenceRange && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 text-right">Ref: {data.referenceRange}</p>
+                )}
+            </div>
+        )
+    }
+    return (
+        <div className="flex justify-between items-center px-4 py-3 text-sm border-b border-border/50 last:border-0">
+            <span className="font-medium text-muted-foreground">{param}</span>
+            <span className="font-black text-foreground">{String(data)}</span>
+        </div>
+    )
+}
+
+function handlePrint() {
+    const el = document.getElementById("print-report")
+    if (!el) return
+    const win = window.open("", "_blank", "width=900,height=700")
+    if (!win) return
+    win.document.write(`
+        <html>
+        <head>
+            <title>Lab Report</title>
+            <style>
+                body { margin: 0; padding: 0; font-family: 'Times New Roman', serif; background: white; color: black; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { padding: 3px 6px; }
+                th { font-weight: bold; }
+                hr { border: 1px solid black; }
+                @page { margin: 6mm; size: A4; }
+                @media print { body { -webkit-print-color-adjust: exact; } }
+            </style>
+        </head>
+        <body>${el.innerHTML}</body>
+        </html>
+    `)
+    win.document.close()
+    win.focus()
+    setTimeout(() => { win.print(); win.close() }, 400)
+}
+
 export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSheetProps) {
-    // Fetch full report details (includes full patient, saleItem, collectedBy, technician, approvedBy)
     const { data: detailRes, isLoading } = useDiagnosticReport(report?.id ?? "")
     const detail = detailRes?.data ?? report
-
     const results = detail?.result ? Object.entries(detail.result) : []
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-[480px] w-full overflow-y-auto p-0 flex flex-col gap-0">
+            <SheetContent className="sm:max-w-[500px] w-full overflow-y-auto p-0 flex flex-col gap-0">
                 <SheetHeader className="p-6 pb-4 border-b bg-muted/20">
                     <SheetTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
                         <FlaskConical className="w-5 h-5 text-primary" />
@@ -124,7 +177,7 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                             <InfoRow label="Requested" value={format(new Date(detail.createdAt), 'dd MMM yyyy, hh:mm a')} />
                         </Section>
 
-                        {/* Sample Collection */}
+                        {/* Sample */}
                         <Section title="Sample Collection" icon={Beaker}>
                             <InfoRow label="Status" value={detail.sampleStatus} />
                             <InfoRow label="Collected By" value={(detail as any).collectedBy?.name} />
@@ -139,12 +192,9 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                     <Activity className="w-3.5 h-3.5 text-primary" />
                                     <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Test Results</p>
                                 </div>
-                                <div className="bg-muted/30 rounded-xl overflow-hidden divide-y divide-border/50">
-                                    {results.map(([param, value]) => (
-                                        <div key={param} className="flex justify-between items-center px-4 py-3 text-sm">
-                                            <span className="font-medium text-muted-foreground">{param}</span>
-                                            <span className="font-black text-foreground">{String(value)}</span>
-                                        </div>
+                                <div className="bg-muted/30 rounded-xl overflow-hidden">
+                                    {results.map(([param, data]) => (
+                                        <ResultValue key={param} param={param} data={data} />
                                     ))}
                                 </div>
                                 {detail.reportNotes && (
@@ -174,6 +224,10 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                             <InfoRow label="Last Updated" value={format(new Date(detail.updatedAt), 'dd MMM yyyy, hh:mm a')} />
                         </Section>
 
+                        {/* Hidden print template */}
+                        <div className="hidden">
+                            <PrintReport report={detail as DiagnosticReport} />
+                        </div>
                     </div>
                 ) : (
                     <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
@@ -181,8 +235,17 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                     </div>
                 )}
 
-                <div className="p-4 border-t bg-muted/10">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full rounded-xl font-bold">
+                <div className="p-4 border-t bg-muted/10 flex gap-2">
+                    {detail?.reportStatus === 'completed' && (
+                        <Button
+                            onClick={handlePrint}
+                            className="flex-1 rounded-xl font-bold gap-2 bg-primary"
+                        >
+                            <Printer className="h-4 w-4" />
+                            Print Report
+                        </Button>
+                    )}
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 rounded-xl font-bold">
                         Close
                     </Button>
                 </div>
