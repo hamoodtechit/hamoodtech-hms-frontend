@@ -28,6 +28,9 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useStoreContext } from "@/store/use-store-context"
 import { Eye, Filter, MoreHorizontal, Search } from "lucide-react"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
 import { useState } from "react"
 
 export function StockTable() {
@@ -43,10 +46,12 @@ export function StockTable() {
   // Filter State
   const [filterBatch, setFilterBatch] = useState("")
   const [filterRack, setFilterRack] = useState("")
-  const [expiryStartDate, setExpiryStartDate] = useState("")
-  const [expiryEndDate, setExpiryEndDate] = useState("")
+  const [expiryRange, setExpiryRange] = useState<DateRange | undefined>(undefined)
 
-  const activeFilterCount = [filterBatch, filterRack, expiryStartDate, expiryEndDate].filter(Boolean).length
+  const expiryStartDate = expiryRange?.from ? format(expiryRange.from, 'yyyy-MM-dd') : undefined
+  const expiryEndDate   = expiryRange?.to   ? format(expiryRange.to,   'yyyy-MM-dd') : undefined
+
+  const activeFilterCount = [filterBatch, filterRack, expiryRange].filter(Boolean).length
 
   const { data: stocksRes, isLoading: loading } = useStocks({
     page,
@@ -55,8 +60,8 @@ export function StockTable() {
     branchId: activeStoreId || undefined,
     batchNumber: filterBatch || undefined,
     rackNumber: filterRack || undefined,
-    expiryStartDate: expiryStartDate || undefined,
-    expiryEndDate: expiryEndDate || undefined,
+    expiryStartDate,
+    expiryEndDate,
   })
 
   const stocks = stocksRes?.data || []
@@ -92,8 +97,7 @@ export function StockTable() {
   const resetFilters = () => {
     setFilterBatch("")
     setFilterRack("")
-    setExpiryStartDate("")
-    setExpiryEndDate("")
+    setExpiryRange(undefined)
     setSearch("")
     setPage(1)
   }
@@ -141,28 +145,16 @@ export function StockTable() {
                         </div>
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry Date Range</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-1">
-                                    <Label htmlFor="filExpFrom" className="text-[10px] text-muted-foreground">From</Label>
-                                    <Input
-                                        id="filExpFrom"
-                                        type="date"
-                                        value={expiryStartDate}
-                                        onChange={e => { setExpiryStartDate(e.target.value); setPage(1) }}
-                                        className="h-9 text-xs"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="filExpTo" className="text-[10px] text-muted-foreground">To</Label>
-                                    <Input
-                                        id="filExpTo"
-                                        type="date"
-                                        value={expiryEndDate}
-                                        onChange={e => { setExpiryEndDate(e.target.value); setPage(1) }}
-                                        className="h-9 text-xs"
-                                    />
-                                </div>
-                            </div>
+                            <DatePickerWithRange
+                                date={expiryRange}
+                                setDate={(range) => { setExpiryRange(range); setPage(1) }}
+                                className="w-full text-xs"
+                            />
+                            {expiryRange && (
+                                <p className="text-[10px] text-muted-foreground">
+                                    {expiryStartDate} → {expiryEndDate || '…'}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </PopoverContent>
