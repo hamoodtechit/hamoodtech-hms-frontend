@@ -96,13 +96,13 @@ export default function DiagnosticReportsPage() {
     }
 
     const statusConfig: Record<string, { label: string, color: string, icon: any }> = {
-        'pending-billing':           { label: 'Pending Billing',  color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',   icon: Clock },
-        'pending-sample-collection': { label: 'Collect Sample',   color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', icon: Beaker },
-        'sample-collected':          { label: 'Test Run',         color: 'bg-blue-500/10 text-blue-500 border-blue-500/20',       icon: Activity },
-        'processing':                { label: 'Processing',       color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', icon: FlaskConical },
-        'pending-verification':      { label: 'Verification',     color: 'bg-rose-500/10 text-rose-500 border-rose-500/20',       icon: ClipboardList },
-        'completed':                 { label: 'Completed',        color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: CheckCircle2 },
-        'cancelled':                 { label: 'Cancelled',        color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
+        'pending-billing':           { label: 'Pending Billing',      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',    icon: Clock },
+        'pending-sample-collection': { label: 'Pending Collection',   color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', icon: Beaker },
+        'sample-collected':          { label: 'Sample Collected',     color: 'bg-blue-500/10 text-blue-500 border-blue-500/20',       icon: Activity },
+        'processing':                { label: 'Processing',           color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', icon: FlaskConical },
+        'pending-verification':      { label: 'Pending Verification', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20',       icon: ClipboardList },
+        'completed':                 { label: 'Completed',            color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: CheckCircle2 },
+        'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
 
     return (
