@@ -8,14 +8,12 @@ export interface DiagnosticTest {
   price: number | string;
   createdAt: string;
   updatedAt: string;
-  type?: string | null;
   department?: {
     id: string;
     name: string;
     nameBangla?: string;
   };
   reportDays?: number;
-  staffId?: string;
 }
 
 export interface DiagnosticTestPayload {
@@ -26,7 +24,6 @@ export interface DiagnosticTestPayload {
   departmentId: string;
   price: number | string;
   reportDays?: number;
-  staffId: string;
 }
 
 export type ReportStatus =
@@ -101,7 +98,6 @@ export interface DiagnosticReport {
   diagnosticTest?: {
     id: string;
     name: string;
-    type?: string | null;
   };
 }
 
@@ -152,13 +148,11 @@ export interface DiagnosticReportParams {
   branchId?: string;
   patientId?: string;
 }
-
 export interface DiagnosticTestParams {
   page?: number;
   limit?: number;
   search?: string;
   departmentId?: string;
-  type?: string; // e.g., pathology, radiology
   branchId?: string;
   isActive?: boolean;
 }

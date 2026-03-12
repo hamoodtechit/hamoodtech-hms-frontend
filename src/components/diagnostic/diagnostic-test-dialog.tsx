@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateDiagnosticTest, useUpdateDiagnosticTest } from "@/hooks/diagnostic-queries"
-import { useDepartments, useEmployees } from "@/hooks/hr-queries"
+import { useDepartments } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest, DiagnosticTestPayload } from "@/types/diagnostic"
 import { Loader2 } from "lucide-react"
@@ -33,7 +33,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     const { activeStoreId } = useStoreContext()
 
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
-    const { data: staffRes } = useEmployees({ branchId: activeStoreId, employeeType: "staff", limit: 100 })
+
 
     const createMutation = useCreateDiagnosticTest()
     const updateMutation = useUpdateDiagnosticTest()
@@ -48,7 +48,6 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         departmentId: "",
         price: 0,
         reportDays: 0,
-        staffId: "",
     })
 
     useEffect(() => {
@@ -62,7 +61,6 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     departmentId: test.departmentId,
                     price: test.price,
                     reportDays: test.reportDays || 0,
-                    staffId: test.staffId || "",
                 })
             } else {
                 setFormData({
@@ -73,15 +71,14 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     departmentId: "",
                     price: 0,
                     reportDays: 0,
-                    staffId: "",
                 })
             }
         }
     }, [open, test, activeStoreId])
 
     const handleSave = async () => {
-        if (!formData.name || !formData.departmentId || formData.price === undefined || !formData.staffId) {
-            toast.error("Please fill in required fields (Name, Department, Price, Staff)")
+        if (!formData.name || !formData.departmentId || formData.price === undefined) {
+            toast.error("Please fill in required fields (Name, Department, Price)")
             return
         }
 
@@ -149,15 +146,6 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                         />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label>Assigned Staff *</Label>
-                        <SearchableSelect 
-                            value={formData.staffId}
-                            onChange={(val) => setFormData(prev => ({ ...prev, staffId: val }))}
-                            options={staffRes?.data?.map(s => ({ id: s.id, name: s.name })) || []}
-                            placeholder="Select Staff"
-                        />
-                    </div>
 
                     <div className="grid gap-2">
                         <Label htmlFor="price">Standard Price *</Label>

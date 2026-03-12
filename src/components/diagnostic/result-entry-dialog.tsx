@@ -90,9 +90,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     // Initialize/Reset
     useEffect(() => {
         if (open && report) {
-            const testType = report.diagnosticTest?.type;
             const testName = report.diagnosticTest?.name;
-            const defaultHeader = (testType || testName || "DIAGNOSTIC").toUpperCase() + " REPORT";
+            const defaultHeader = (testName || "DIAGNOSTIC").toUpperCase() + " REPORT";
             
             setReportHeader(defaultHeader)
             
