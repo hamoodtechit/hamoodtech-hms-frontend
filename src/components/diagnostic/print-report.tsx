@@ -1,46 +1,26 @@
 "use client"
 
 import { useDiagnosticReport } from "@/hooks/diagnostic-queries"
-import { DiagnosticReport } from "@/types/diagnostic"
+import { DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
-import { useEffect } from "react"
+import { cn } from "@/lib/utils"
 
 interface PrintReportProps {
     report: DiagnosticReport
 }
 
-/**
- * Parses the result field which may be:
- *  - New format: { param: { value, unit, referenceRange } }
- *  - Legacy format: { param: "string value" }
- */
-function parseResults(result: Record<string, any> | null) {
-    if (!result) return []
-    return Object.entries(result).map(([param, data]) => {
-        if (typeof data === "object" && data !== null && "value" in data) {
-            return {
-                parameter: param,
-                value: String(data.value ?? ""),
-                unit: String(data.unit ?? ""),
-                referenceRange: String(data.referenceRange ?? ""),
-            }
-        }
-        return { parameter: param, value: String(data), unit: "", referenceRange: "" }
-    })
-}
-
 export function PrintReport({ report }: PrintReportProps) {
     // Fetch full details (has full patient object with patientNumber etc.)
     const { data: detailRes, isLoading } = useDiagnosticReport(report.id)
-    const detail = detailRes?.data
+    const detail = detailRes?.data ?? report
 
-    const patient = (detail?.patient ?? report.patient) as any
+    const patient = (detail?.patient) as any
     const saleItem = (detail as any)?.saleItem
     const technician = (detail as any)?.technician
     const approvedBy = (detail as any)?.approvedBy
 
-    const results = parseResults((detail?.result ?? report.result) as any)
+    const result = detail?.result as DiagnosticResult | null
     const barcode = detail?.barcode ?? report.barcode ?? report.id
 
     if (isLoading) {
@@ -54,107 +34,154 @@ export function PrintReport({ report }: PrintReportProps) {
     return (
         <div
             id="print-report"
-            className="bg-white text-black font-['Times_New_Roman',serif] text-[11pt] leading-tight"
-            style={{ width: "210mm", minHeight: "160mm", padding: "6mm 8mm 10mm" }}
+            className="bg-white text-black font-['Times_New_Roman',serif] text-[10.5pt] leading-tight mx-auto"
+            style={{ width: "210mm", minHeight: "297mm", padding: "8mm 12mm" }}
         >
-            {/* Top barcodes row */}
-            <div className="flex justify-between items-start mb-3">
-                <div className="font-mono text-xs tracking-widest border border-black px-1 py-0.5">
-                    {/* barcode placeholder — actual barcode rendering */}
-                    <span className="text-[8pt] font-mono">{barcode}</span>
+            {/* Top row - Single barcode or ID */}
+            <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-2">
+                <div className="text-[12pt] font-black tracking-tight text-primary uppercase">
+                    Lab Report
                 </div>
-                <div className="font-mono text-xs tracking-widest border border-black px-1 py-0.5">
-                    <span className="text-[8pt] font-mono">{barcode}</span>
+                <div className="font-mono text-[9pt] bg-black text-white px-2 py-0.5 rounded-sm">
+                    ID: {barcode.toUpperCase()}
                 </div>
             </div>
 
-            {/* Report title */}
-            <div className="text-center font-bold text-[13pt] uppercase tracking-wider mb-2 underline">
-                {report.diagnosticTest?.name
-                    ? `${report.diagnosticTest.name} Report`
-                    : "Diagnostic Report"}
+            {/* Custom Report Header */}
+            <div className="text-center font-bold text-[15pt] uppercase tracking-wider mb-2 underline decoration-1 underline-offset-4">
+                {result?.reportHeader || (detail?.diagnosticTest?.name ? `${detail.diagnosticTest.name} Report` : "Diagnostic Report")}
             </div>
 
             {/* Patient info table */}
-            <table className="w-full border-collapse text-[10pt] mb-3">
-                <tbody>
-                    <tr>
-                        <td className="pr-2 py-0.5 w-24 font-semibold whitespace-nowrap">Bill ID</td>
-                        <td className="pr-4 py-0.5">: {saleItem?.invoiceNumber ?? barcode}</td>
-                        <td className="pr-2 py-0.5 font-semibold whitespace-nowrap">Delivery Date</td>
-                        <td className="py-0.5">: {detail?.approvedAt ? format(new Date(detail.approvedAt), "dd-MM-yyyy hh:mm a") : "—"}</td>
-                    </tr>
-                    <tr>
-                        <td className="pr-2 py-0.5 font-semibold whitespace-nowrap">UHID</td>
-                        <td className="pr-4 py-0.5">: {patient?.patientNumber ?? patient?.id?.substring(0, 8)}</td>
-                        <td className="pr-2 py-0.5 font-semibold whitespace-nowrap">Received Date</td>
-                        <td className="py-0.5">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd-MM-yyyy hh:mm a") : "—"}</td>
-                    </tr>
-                    <tr>
-                        <td className="pr-2 py-0.5 font-semibold">Patient Name</td>
-                        <td className="pr-4 py-0.5">: {patient?.name}</td>
-                        <td className="pr-2 py-0.5 font-semibold">Age</td>
-                        <td className="py-0.5">: {patient?.age ? `${patient.age}Y 0M 0D` : "—"}</td>
-                    </tr>
-                    <tr>
-                        <td className="pr-2 py-0.5 font-semibold">Consultant</td>
-                        <td className="pr-4 py-0.5">: {(detail as any)?.approvedBy?.name ?? "—"}</td>
-                        <td className="pr-2 py-0.5 font-semibold">Sex</td>
-                        <td className="py-0.5">: {patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : "—"}</td>
-                    </tr>
-                    <tr>
-                        <td className="pr-2 py-0.5 font-semibold">Specimen</td>
-                        <td className="pr-4 py-0.5" colSpan={3}>: {detail?.sampleDetails ?? "Blood"}</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            {/* Separator */}
-            <hr className="border-black mb-2" />
-
-            {/* Results table */}
-            <table className="w-full border-collapse text-[10pt] mb-4">
-                <thead>
-                    <tr className="border-y border-black">
-                        <th className="text-left py-1 pr-4 font-bold">Test</th>
-                        <th className="text-left py-1 pr-4 font-bold">Result</th>
-                        <th className="text-left py-1 pr-4 font-bold">Unit</th>
-                        <th className="text-left py-1 font-bold">Reference Range</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {results.length > 0 ? results.map((row, i) => (
-                        <tr key={i} className="border-b border-gray-300">
-                            <td className="py-1 pr-4">{row.parameter}</td>
-                            <td className="py-1 pr-4 font-bold">{row.value}</td>
-                            <td className="py-1 pr-4">{row.unit}</td>
-                            <td className="py-1">{row.referenceRange}</td>
-                        </tr>
-                    )) : (
+            <div className="border border-black p-3 rounded-md mb-4 bg-muted/5">
+                <table className="w-full border-collapse text-[10.5pt]">
+                    <tbody>
                         <tr>
-                            <td colSpan={4} className="py-2 text-center text-gray-500 italic text-[9pt]">No results recorded</td>
+                            <td className="pr-1 py-1 w-[15%] font-bold">Lab ID</td>
+                            <td className="pr-4 py-1 w-[35%]">: <span className="font-mono">{barcode.toUpperCase()}</span></td>
+                            <td className="pr-1 py-1 w-[20%] font-bold">Delivery Date</td>
+                            <td className="py-1 w-[30%]">: {detail?.approvedAt ? format(new Date(detail.approvedAt), "dd-MM-yyyy hh:mm a") : format(new Date(), "dd-MM-yyyy hh:mm a")}</td>
                         </tr>
+                        <tr>
+                            <td className="pr-1 py-1 font-bold">UHID</td>
+                            <td className="pr-4 py-1">: {patient?.patientNumber ?? patient?.uhid ?? patient?.id?.substring(0, 8)}</td>
+                            <td className="pr-1 py-1 font-bold">Received Date</td>
+                            <td className="py-1">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd-MM-yyyy hh:mm a") : "—"}</td>
+                        </tr>
+                        <tr>
+                            <td className="pr-1 py-1 font-bold">Patient Name</td>
+                            <td className="pr-4 py-1">: <span className="font-black uppercase text-[11pt]">{patient?.name}</span></td>
+                            <td className="pr-1 py-1 font-bold">Age / Sex</td>
+                            <td className="py-1">: {patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</td>
+                        </tr>
+                        <tr>
+                            <td className="pr-1 py-1 font-bold">Consultant</td>
+                            <td className="pr-4 py-1 text-[10pt]">: <span className="font-bold">{result?.consultantName || (detail as any)?.sale?.doctor?.name || "—"}</span></td>
+                            <td className="pr-1 py-1 font-bold">Specimen</td>
+                            <td className="py-1">: <span className="font-bold">{detail?.sampleDetails || "—"}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Machine/Method Info */}
+            {result?.machineInfo && (
+                <div className="text-center italic text-[9.5pt] mb-4 font-semibold text-gray-700">
+                    ({result.machineInfo})
+                </div>
+            )}
+
+            {/* TABLE MODE RENDERING */}
+            {result?.mode === 'table' && result.rows && (
+                <table className="w-full border-collapse text-[11pt] mb-8">
+                    <thead>
+                        <tr className="border-y-2 border-black bg-gray-100/50">
+                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[40%]">Test / Parameter</th>
+                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[18%] text-center">Result</th>
+                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[12%] text-center">Unit</th>
+                            <th className="text-left py-2 font-black uppercase text-[9.5pt] w-[30%]">Reference Range</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {result.rows.map((row, i) => (
+                            row.isHeader ? (
+                                <tr key={i}>
+                                    <td colSpan={4} className="py-2.5 pt-5 font-black text-blue-900 uppercase text-[10pt] border-b border-gray-200">
+                                        {row.parameter}
+                                    </td>
+                                </tr>
+                            ) : (
+                                <tr key={i} className="border-b border-gray-100">
+                                    <td className={cn("py-2 pr-4", row.isBold && "font-bold")}>{row.parameter}</td>
+                                    <td className={cn("py-2 pr-4 font-black text-center", row.isAbnormal && "text-red-700 underline")}>
+                                        {row.value}
+                                        {row.isAbnormal && <span className="ml-1 text-[8pt] text-red-600 font-black"> (H)</span>}
+                                    </td>
+                                    <td className="py-2 pr-4 text-[10pt] text-center">{row.unit}</td>
+                                    <td className="py-2 text-[10pt] whitespace-pre-line leading-tight italic text-gray-600">{row.referenceRange}</td>
+                                </tr>
+                            )
+                        ))}
+                    </tbody>
+                </table>
+            )}
+
+            {/* NARRATIVE MODE RENDERING */}
+            {result?.mode === 'narrative' && (
+                <div className="space-y-10 py-6 border-b border-gray-100 mb-8">
+                    <div 
+                        className="whitespace-pre-wrap leading-[1.8] text-[11.5pt] font-medium" 
+                        style={{ textAlign: 'justify' }}
+                        dangerouslySetInnerHTML={{ __html: result.content || "" }}
+                    />
+                    {result.interpretation && (
+                        <div className="pt-10 mt-10 border-t border-dashed border-gray-300">
+                            <div className="flex items-start gap-4">
+                                <span className="font-black underline text-[11pt] shrink-0">IMPRESSION:</span>
+                                <span className="font-bold text-[11.5pt] leading-snug">{result.interpretation}</span>
+                            </div>
+                        </div>
                     )}
-                </tbody>
-            </table>
+                </div>
+            )}
 
             {/* Notes */}
             {detail?.reportNotes && (
-                <p className="text-[9pt] italic mb-4">Note: {detail.reportNotes}</p>
+                <div className="p-3 bg-amber-50/30 rounded-lg border border-amber-100 mb-8">
+                    <p className="text-[9pt] italic text-amber-800"><span className="font-bold not-italic">Note:</span> {detail.reportNotes}</p>
+                </div>
             )}
 
-            {/* Footer */}
-            <div className="flex justify-between items-end mt-6">
-                <div className="text-[9pt]">
-                    <p className="font-bold">{technician?.name ?? "—"}</p>
-                    <p>Medical Technologist (Lab)</p>
+            {/* Signature Section - Balanced Left & Right */}
+            <div className="mt-auto pt-12 flex justify-between items-end gap-10">
+                <div className="text-[10pt] w-[250px]">
+                    <div className="border-t-2 border-black pt-1.5 mt-auto">
+                        <p className="font-black text-[10.5pt]">
+                            {result?.preparedBy || technician?.name || "Medical Technologist"}
+                        </p>
+                        <p className="text-[8.5pt] leading-tight text-gray-700">Medical Technologist (Lab)</p>
+                        <p className="text-[8.5pt] text-gray-500 font-bold uppercase tracking-tighter">Patwary General Hospital</p>
+                    </div>
                 </div>
-                <div className="text-[9pt] text-right">
-                    <p>Printed By: {approvedBy?.name ?? technician?.name ?? "—"}</p>
-                    {detail?.approvedAt && (
-                        <p>Printing Time: {format(new Date(detail.approvedAt), "dd-MM-yyyy hh:mm a")}</p>
-                    )}
+                
+                <div className="text-[10pt] text-right min-w-[300px]">
+                    <div className="border-t-2 border-black pt-1.5 inline-block text-right">
+                        <p className="font-black text-[11pt] uppercase tracking-tight">
+                            {approvedBy?.name || "—"}
+                        </p>
+                        <p className="text-[9.5pt] font-bold text-gray-800 italic">
+                            {result?.doctorDegrees || "—"}
+                        </p>
+                        <p className="text-[8pt] text-gray-500 mt-1 font-medium">Verified & Signed Digitally</p>
+                    </div>
                 </div>
+            </div>
+
+            {/* Footer Row */}
+            <div className="mt-10 flex justify-between items-center text-[8.5pt] text-gray-400 border-t pt-2 italic">
+                <p>Printing Time: {format(new Date(), "dd-MM-yyyy hh:mm a")}</p>
+                <p>Printed By: {approvedBy?.name || technician?.name || "System"}</p>
+                <p>HSM-DR-{barcode.toUpperCase().substring(0, 10)}</p>
             </div>
         </div>
     )

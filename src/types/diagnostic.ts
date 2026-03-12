@@ -40,6 +40,32 @@ export type ReportStatus =
 
 export type SampleStatus = 'not-required' | 'pending' | 'collected';
 
+export type ResultMode = 'table' | 'narrative';
+
+export interface ResultTableRow {
+  parameter: string;
+  value: string;
+  unit?: string;
+  referenceRange?: string;
+  isHeader?: boolean;
+  isAbnormal?: boolean;
+  isBold?: boolean;
+}
+
+export interface DiagnosticResult {
+  mode: ResultMode;
+  reportHeader?: string; // e.g., "BIOCHEMISTRY REPORT"
+  machineInfo?: string;  // e.g., "Tests are carried out by Rayto RT-9200..."
+  // Table fields
+  rows?: ResultTableRow[];
+  // Narrative fields
+  content?: string;      // Findings
+  interpretation?: string; // Comment/Impression
+  preparedBy?: string;   // Name of technical person
+  consultantName?: string; // Referred by doctor name
+  doctorDegrees?: string;  // Approving pathologist degrees
+}
+
 export interface DiagnosticReport {
   id: string;
   patientId: string;
@@ -56,7 +82,7 @@ export interface DiagnosticReport {
   sampleCollectedAt?: string | null;
   sampleDetails?: string | null;
   technicianId?: string | null;
-  result?: Record<string, any> | null;
+  result?: DiagnosticResult | Record<string, any> | null;
   reportNotes?: string | null;
   approvedById?: string | null;
   approvedAt?: string | null;
@@ -92,7 +118,7 @@ export interface CollectSamplePayload {
 
 export interface ResultEntryPayload {
   technicianId: string;
-  result: Record<string, any>;
+  result: DiagnosticResult | Record<string, any>;
   reportNotes?: string;
   status?: string;
 }

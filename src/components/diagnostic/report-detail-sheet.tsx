@@ -12,18 +12,20 @@ import {
 } from "@/components/ui/sheet"
 import { useDiagnosticReport } from "@/hooks/diagnostic-queries"
 import { cn } from "@/lib/utils"
-import { DiagnosticReport } from "@/types/diagnostic"
+import { DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import {
     Activity,
     Beaker,
     CheckCircle2,
     Clock,
+    FileText,
     FlaskConical,
     Loader2,
     Printer,
     QrCode,
     User,
+    ClipboardList
 } from "lucide-react"
 
 interface ReportDetailSheetProps {
@@ -65,32 +67,6 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
     )
 }
 
-/** Render result value — handles both old string format and new {value, unit, referenceRange} format */
-function ResultValue({ param, data }: { param: string; data: any }) {
-    if (typeof data === "object" && data !== null && "value" in data) {
-        return (
-            <div key={param} className="px-4 py-2.5 border-b border-border/50 last:border-0">
-                <div className="flex justify-between items-start text-sm">
-                    <span className="font-medium text-muted-foreground">{param}</span>
-                    <div className="text-right">
-                        <span className="font-black text-foreground">{data.value}</span>
-                        {data.unit && <span className="text-xs text-muted-foreground ml-1">{data.unit}</span>}
-                    </div>
-                </div>
-                {data.referenceRange && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 text-right">Ref: {data.referenceRange}</p>
-                )}
-            </div>
-        )
-    }
-    return (
-        <div className="flex justify-between items-center px-4 py-3 text-sm border-b border-border/50 last:border-0">
-            <span className="font-medium text-muted-foreground">{param}</span>
-            <span className="font-black text-foreground">{String(data)}</span>
-        </div>
-    )
-}
-
 function handlePrint() {
     const el = document.getElementById("print-report")
     if (!el) return
@@ -102,11 +78,11 @@ function handlePrint() {
             <title>Lab Report</title>
             <style>
                 body { margin: 0; padding: 0; font-family: 'Times New Roman', serif; background: white; color: black; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { padding: 3px 6px; }
-                th { font-weight: bold; }
-                hr { border: 1px solid black; }
-                @page { margin: 6mm; size: A4; }
+                table { border-collapse: collapse; width: 100%; border: 1px solid black; }
+                th, td { padding: 4px 8px; border: 1px solid #ddd; }
+                th { background-color: #f8f9fa; font-weight: bold; }
+                .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; }
+                @page { margin: 10mm; size: A4; }
                 @media print { body { -webkit-print-color-adjust: exact; } }
             </style>
         </head>
@@ -115,21 +91,22 @@ function handlePrint() {
     `)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print(); win.close() }, 400)
+    setTimeout(() => { win.print(); win.close() }, 500)
 }
 
 export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSheetProps) {
     const { data: detailRes, isLoading } = useDiagnosticReport(report?.id ?? "")
     const detail = detailRes?.data ?? report
-    const results = detail?.result ? Object.entries(detail.result) : []
+    
+    const result = detail?.result as DiagnosticResult | null
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-[500px] w-full overflow-y-auto p-0 flex flex-col gap-0">
+            <SheetContent className="sm:max-w-[550px] w-full overflow-y-auto p-0 flex flex-col gap-0 border-l-0 shadow-2xl">
                 <SheetHeader className="p-6 pb-4 border-b bg-muted/20">
                     <SheetTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
                         <FlaskConical className="w-5 h-5 text-primary" />
-                        Report Details
+                        Diagnostic Report Analysis
                     </SheetTitle>
                     {detail && (
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -146,12 +123,6 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                             )}>
                                 Sample: {detail.sampleStatus}
                             </Badge>
-                            {detail.barcode && (
-                                <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
-                                    <QrCode className="w-3 h-3" />
-                                    {detail.barcode}
-                                </div>
-                            )}
                         </div>
                     )}
                 </SheetHeader>
@@ -161,70 +132,132 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                         <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
                     </div>
                 ) : detail ? (
-                    <div className="p-6 space-y-6 flex-1">
+                    <div className="p-6 space-y-8 flex-1">
 
-                        {/* Patient */}
-                        <Section title="Patient" icon={User}>
-                            <InfoRow label="Name" value={detail.patient?.name} />
-                            <InfoRow label="Phone" value={detail.patient?.phone} />
-                        </Section>
+                        {/* Patient & Test Identification */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <Section title="Patient" icon={User}>
+                                <InfoRow label="Name" value={detail.patient?.name} />
+                                <InfoRow label="Phone" value={detail.patient?.phone} />
+                            </Section>
+                            <Section title="Identification" icon={QrCode}>
+                                <InfoRow label="Barcode" value={detail.barcode} />
+                                <InfoRow label="UHID" value={(detail.patient as any)?.patientNumber || detail.patientId.substring(0,8)} />
+                            </Section>
+                        </div>
 
-                        {/* Test */}
-                        <Section title="Test" icon={FlaskConical}>
-                            <InfoRow label="Test Name" value={detail.diagnosticTest?.name} />
-                            <InfoRow label="Barcode" value={detail.barcode} />
-                            <InfoRow label="QR Code" value={detail.qrCode} />
-                            <InfoRow label="Requested" value={format(new Date(detail.createdAt), 'dd MMM yyyy, hh:mm a')} />
-                        </Section>
-
-                        {/* Sample */}
-                        <Section title="Sample Collection" icon={Beaker}>
-                            <InfoRow label="Status" value={detail.sampleStatus} />
-                            <InfoRow label="Collected By" value={(detail as any).collectedBy?.name} />
-                            <InfoRow label="Collected At" value={detail.sampleCollectedAt ? format(new Date(detail.sampleCollectedAt), 'dd MMM yyyy, hh:mm a') : null} />
-                            <InfoRow label="Details" value={detail.sampleDetails} />
-                        </Section>
-
-                        {/* Results */}
-                        {results.length > 0 && (
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Activity className="w-3.5 h-3.5 text-primary" />
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Test Results</p>
-                                </div>
-                                <div className="bg-muted/30 rounded-xl overflow-hidden">
-                                    {results.map(([param, data]) => (
-                                        <ResultValue key={param} param={param} data={data} />
-                                    ))}
-                                </div>
-                                {detail.reportNotes && (
-                                    <div className="px-4 py-3 bg-muted/30 rounded-xl text-sm text-muted-foreground italic">
-                                        "{detail.reportNotes}"
+                        {/* RESULT CONTENT */}
+                        {result && (
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-blue-600" />
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-blue-900">
+                                            {result.reportHeader || "Test Results"}
+                                        </h3>
                                     </div>
+                                    <Badge variant="secondary" className="rounded-lg text-[9px] font-bold">
+                                        {result.mode === 'table' ? <ClipboardList className="w-3 h-3 mr-1" /> : <FileText className="w-3 h-3 mr-1" />}
+                                        {result.mode.toUpperCase()}
+                                    </Badge>
+                                </div>
+
+                                {result.machineInfo && (
+                                    <p className="text-[10px] italic text-muted-foreground bg-muted/50 p-2 rounded-lg border border-dashed text-center">
+                                        {result.machineInfo}
+                                    </p>
                                 )}
-                                <InfoRow label="Technician" value={(detail as any).technician?.name} />
+
+                                <div className="bg-muted/30 rounded-2xl overflow-hidden border">
+                                    {result.mode === 'table' && result.rows ? (
+                                        <div className="divide-y divide-border/40">
+                                            {result.rows.map((row, idx) => (
+                                                <div key={idx} className={cn(
+                                                    "px-4 py-3 flex items-center justify-between gap-4",
+                                                    row.isHeader ? "bg-blue-600/5 py-4" : ""
+                                                )}>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={cn(
+                                                            "text-xs font-semibold truncate",
+                                                            row.isHeader && "font-black text-blue-800 uppercase tracking-tight",
+                                                            row.isBold && "font-black underline underline-offset-2"
+                                                        )}>
+                                                            {row.parameter}
+                                                        </p>
+                                                        {!row.isHeader && row.referenceRange && (
+                                                            <p className="text-[9px] text-muted-foreground mt-0.5">Ref: {row.referenceRange}</p>
+                                                        )}
+                                                    </div>
+                                                    {!row.isHeader && (
+                                                        <div className="flex items-center gap-3 shrink-0">
+                                                            <div className="text-right">
+                                                                <p className={cn(
+                                                                    "text-sm font-black",
+                                                                    row.isAbnormal && "text-red-600"
+                                                                )}>
+                                                                    {row.value}
+                                                                </p>
+                                                                {row.unit && <p className="text-[10px] text-muted-foreground uppercase font-bold">{row.unit}</p>}
+                                                            </div>
+                                                            {row.isAbnormal && (
+                                                                <Badge className="bg-red-600/10 text-red-600 border-red-600/20 text-[9px] font-black italic px-1 h-5 rounded hover:bg-red-600/10">HB</Badge>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-5 space-y-4">
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                                                {result.content}
+                                            </p>
+                                            {result.interpretation && (
+                                                <div className="pt-3 border-t border-dashed">
+                                                    <p className="text-xs font-black uppercase text-muted-foreground mb-1 underline">Impression / Comment</p>
+                                                    <p className="text-sm font-black text-rose-900">{result.interpretation}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="flex items-center justify-between gap-4 pt-2">
+                                     <div className="flex items-center gap-2">
+                                        <User className="w-3 h-3 text-muted-foreground" />
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Prepared: {result.preparedBy || detail.technician?.name || "System"}</p>
+                                     </div>
+                                     {detail.approvedBy && (
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                            <p className="text-[10px] font-bold text-emerald-800 uppercase">Signed: {detail.approvedBy.name}</p>
+                                        </div>
+                                     )}
+                                </div>
                             </div>
                         )}
 
-                        {/* Approval */}
-                        {detail.approvedById && (
-                            <>
-                                <Separator />
-                                <Section title="Approval" icon={CheckCircle2}>
-                                    <InfoRow label="Approved By" value={(detail as any).approvedBy?.name} />
-                                    <InfoRow label="Approved At" value={detail.approvedAt ? format(new Date(detail.approvedAt), 'dd MMM yyyy, hh:mm a') : null} />
-                                    <InfoRow label="Digital Signature" value={detail.digitalSignature} />
-                                </Section>
-                            </>
+                        {/* Metadata Sections */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <Section title="Collection" icon={Beaker}>
+                                <InfoRow label="Status" value={detail.sampleStatus} />
+                                <InfoRow label="At" value={detail.sampleCollectedAt ? format(new Date(detail.sampleCollectedAt), 'dd MMM, hh:mm a') : null} />
+                            </Section>
+                            <Section title="Timings" icon={Clock}>
+                                <InfoRow label="Requested" value={format(new Date(detail.createdAt), 'dd MMM, hh:mm a')} />
+                                <InfoRow label="Updated" value={format(new Date(detail.updatedAt), 'dd MMM, hh:mm a')} />
+                            </Section>
+                        </div>
+
+                        {/* Signature (if approved) */}
+                        {detail.digitalSignature && (
+                            <div className="p-4 bg-muted/20 border-2 border-dashed rounded-2xl text-center space-y-1">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Digital Signature Seal</p>
+                                <p className="text-sm font-mono font-black italic">"{detail.digitalSignature}"</p>
+                            </div>
                         )}
 
-                        {/* Timestamps */}
-                        <Section title="Timestamps" icon={Clock}>
-                            <InfoRow label="Created" value={format(new Date(detail.createdAt), 'dd MMM yyyy, hh:mm a')} />
-                            <InfoRow label="Last Updated" value={format(new Date(detail.updatedAt), 'dd MMM yyyy, hh:mm a')} />
-                        </Section>
-
-                        {/* Hidden print template */}
+                        {/* Hidden print template for handlePrint */}
                         <div className="hidden">
                             <PrintReport report={detail as DiagnosticReport} />
                         </div>
@@ -235,18 +268,18 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                     </div>
                 )}
 
-                <div className="p-4 border-t bg-muted/10 flex gap-2">
+                <div className="p-6 border-t bg-muted/10 flex gap-4 shrink-0">
                     {detail?.reportStatus === 'completed' && (
                         <Button
                             onClick={handlePrint}
-                            className="flex-1 rounded-xl font-bold gap-2 bg-primary"
+                            className="flex-1 h-12 rounded-xl font-black gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
                         >
                             <Printer className="h-4 w-4" />
-                            Print Report
+                            Generate Print Report
                         </Button>
                     )}
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 rounded-xl font-bold">
-                        Close
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-12 rounded-xl font-black transition-all active:scale-95">
+                        Close Details
                     </Button>
                 </div>
             </SheetContent>

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { useApproveReport } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
+import { cn } from "@/lib/utils"
 import { DiagnosticReport } from "@/types/diagnostic"
 import { CheckCircle2, FileText, Info, Loader2, User } from "lucide-react"
 import { useState } from "react"
@@ -54,7 +55,6 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
         }
     }
 
-    const results = report?.result ? Object.entries(report.result) : []
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,20 +84,78 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
 
                     {/* Findings Review */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                            <FileText className="w-3 h-3" /> Review Findings
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                <FileText className="w-3 h-3" /> Review Findings
+                            </div>
+                            {report?.result && (report.result as any).reportHeader && (
+                                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                    {(report.result as any).reportHeader}
+                                </span>
+                            )}
                         </div>
-                        <div className="border rounded-xl overflow-hidden divide-y bg-card/50">
-                            {results.length === 0 ? (
+                        
+                        <div className="border rounded-xl overflow-hidden bg-card/50">
+                            {!report?.result ? (
                                 <div className="p-8 text-center text-xs text-muted-foreground italic">
                                     No findings recorded.
                                 </div>
-                            ) : results.map(([param, value]) => (
-                                <div key={param} className="flex justify-between p-3 text-sm">
-                                    <span className="font-medium text-muted-foreground">{param}</span>
-                                    <span className="font-bold text-foreground">{String(value)}</span>
+                            ) : (report.result as any).mode === 'narrative' ? (
+                                <div className="p-4 space-y-4">
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Clinical Findings</Label>
+                                        <div 
+                                            className="text-sm leading-relaxed font-medium rich-text-preview" 
+                                            dangerouslySetInnerHTML={{ __html: (report.result as any).content }}
+                                        />
+                                    </div>
+                                    {(report.result as any).interpretation && (
+                                        <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 space-y-1">
+                                            <Label className="text-[9px] font-black uppercase text-amber-600">Impression</Label>
+                                            <p className="text-sm font-bold text-amber-900 italic">{(report.result as any).interpretation}</p>
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-muted/30 border-b">
+                                            <tr className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                                <th className="px-4 py-2 text-left">Parameter</th>
+                                                <th className="px-4 py-2 text-center">Result</th>
+                                                <th className="px-4 py-2 text-center">Unit</th>
+                                                <th className="px-4 py-2 text-left">Ref Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {((report.result as any).rows || []).map((row: any, idx: number) => (
+                                                <tr key={idx} className={cn(
+                                                    "transition-colors",
+                                                    row.isHeader ? "bg-blue-50/50" : "hover:bg-muted/10",
+                                                    row.isAbnormal && "bg-red-50/30"
+                                                )}>
+                                                    <td className={cn(
+                                                        "px-4 py-2",
+                                                        row.isHeader ? "font-black text-blue-700 uppercase underline" : "font-medium",
+                                                        row.isBold && "font-bold"
+                                                    )}>
+                                                        {row.parameter}
+                                                    </td>
+                                                    <td className={cn(
+                                                        "px-4 py-2 text-center",
+                                                        row.isAbnormal ? "text-red-600 font-extrabold" : "font-bold"
+                                                    )}>
+                                                        {row.isHeader ? "" : row.value}
+                                                        {row.isAbnormal && <span className="ml-1">(H)</span>}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-center text-muted-foreground">{row.unit}</td>
+                                                    <td className="px-4 py-2 text-xs italic text-muted-foreground">{row.referenceRange}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     </div>
 
