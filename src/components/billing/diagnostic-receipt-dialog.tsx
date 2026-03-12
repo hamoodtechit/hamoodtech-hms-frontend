@@ -79,10 +79,12 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   }
 
   // Find assigned staff
-  let assignedStaffName = data.staffId || "User/Cashier"
+  let assignedStaffName = "User/Cashier"
   if (data.staffId && staffs.length > 0) {
       const staff = staffs.find(s => s.id === data.staffId)
       if (staff) assignedStaffName = staff.name
+  } else if (data.staffId) {
+      assignedStaffName = data.staffId
   }
 
   const deliveryDateRaw = items[0]?.deliveryDate || date;

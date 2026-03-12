@@ -191,7 +191,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         delivery.setDate(delivery.getDate() + (test.reportDays || 0))
         const deliveryStr = delivery.toISOString().split('T')[0]
 
-        const staff = allStaff.find(s => s.id === (selectedStaffId || test.staffId))
+        const staff = allStaff.find(s => s.id === selectedStaffId)
         const newItem: CartItem = {
             id: Math.random().toString(36).substring(7),
             testId: test.id,
