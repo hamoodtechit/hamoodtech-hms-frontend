@@ -74,7 +74,9 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const { user } = useAuthStore()
 
     // Permission check
-    const canCreateSale = hasPermission('sale:create')
+    const canCreateSale = type === 'pathology' 
+        ? hasPermission('pathology:create') 
+        : hasPermission('radiology:create')
 
     // Data Fetching
     const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })

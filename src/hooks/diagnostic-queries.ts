@@ -1,5 +1,5 @@
 import { diagnosticService } from "@/services/diagnostic-service";
-import { DiagnosticReportParams, DiagnosticTestParams, DiagnosticTestPayload } from "@/types/diagnostic";
+import { DiagnosticReportParams, DiagnosticTestParams, DiagnosticTestPayload, ReportTemplate, ReportTemplatePayload } from "@/types/diagnostic";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const DIAGNOSTIC_KEYS = {
@@ -8,6 +8,7 @@ export const DIAGNOSTIC_KEYS = {
   test: (id: string) => [...DIAGNOSTIC_KEYS.all, "test", id] as const,
   reports: (params?: DiagnosticReportParams) => [...DIAGNOSTIC_KEYS.all, "reports", params] as const,
   report: (id: string) => [...DIAGNOSTIC_KEYS.all, "report", id] as const,
+  templates: (params?: any) => [...DIAGNOSTIC_KEYS.all, "templates", params] as const,
 };
 
 export function useDiagnosticTests(params?: DiagnosticTestParams) {
@@ -108,6 +109,46 @@ export function useApproveReport() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
+    },
+  });
+}
+
+// Report Template Hooks
+
+export function useReportTemplates(params?: any) {
+  return useQuery({
+    queryKey: DIAGNOSTIC_KEYS.templates(params),
+    queryFn: () => diagnosticService.getReportTemplates(params),
+  });
+}
+
+export function useCreateReportTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ReportTemplatePayload) => diagnosticService.createReportTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.templates() });
+    },
+  });
+}
+
+export function useUpdateReportTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ReportTemplatePayload> }) => 
+      diagnosticService.updateReportTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.templates() });
+    },
+  });
+}
+
+export function useDeleteReportTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => diagnosticService.deleteReportTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.templates() });
     },
   });
 }

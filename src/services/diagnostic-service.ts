@@ -9,7 +9,9 @@ import {
   DiagnosticTestParams,
   DiagnosticTestPayload,
   RequisitionPayload,
-  ResultEntryPayload
+  ResultEntryPayload,
+  ReportTemplate,
+  ReportTemplatePayload
 } from "@/types/diagnostic";
 
 export const diagnosticService = {
@@ -72,5 +74,29 @@ export const diagnosticService = {
     const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/approve`, data);
     console.log("Approve Report API Response:", response.data);
     return response.data;
+  },
+
+  // Report Template APIs
+  getReportTemplates: async (params?: any): Promise<DiagnosticPaginatedResponse<ReportTemplate>> => {
+    const response = await api.get<DiagnosticPaginatedResponse<ReportTemplate>>("/reports/templates", { params });
+    console.log("Get Report Templates API Response:", response.data);
+    return response.data;
+  },
+
+  createReportTemplate: async (data: ReportTemplatePayload): Promise<ReportTemplate> => {
+    const response = await api.post("/reports/templates", data);
+    console.log("Create Report Template API Response:", response.data);
+    return response.data;
+  },
+
+  updateReportTemplate: async (id: string, data: Partial<ReportTemplatePayload>): Promise<ReportTemplate> => {
+    const response = await api.patch(`/reports/templates/${id}`, data);
+    console.log("Update Report Template API Response:", response.data);
+    return response.data;
+  },
+
+  deleteReportTemplate: async (id: string): Promise<void> => {
+    await api.delete(`/reports/templates/${id}`);
+    console.log("Delete Report Template: Success");
   },
 };

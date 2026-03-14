@@ -156,3 +156,24 @@ export interface DiagnosticTestParams {
   branchId?: string;
   isActive?: boolean;
 }
+
+// Report Template Types
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  result: DiagnosticResult | Record<string, any>;
+  diagnosticTestId?: string;
+  userId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportTemplatePayload {
+  name: string;
+  type: string;
+  description?: string;
+  result: DiagnosticResult | Record<string, any>;
+  diagnosticTestId?: string;
+}

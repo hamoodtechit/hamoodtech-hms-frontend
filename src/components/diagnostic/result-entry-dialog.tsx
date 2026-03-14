@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useEnterResult } from "@/hooks/diagnostic-queries"
+import { useEnterResult, useReportTemplates, useCreateReportTemplate, useUpdateReportTemplate, useDeleteReportTemplate } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { usePermissions } from "@/hooks/use-permissions"
 import { DiagnosticReport, DiagnosticResult, ResultMode, ResultTableRow } from "@/types/diagnostic"
@@ -88,6 +88,19 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const employees = employeesRes?.data || []
 
     const enterResult = useEnterResult()
+    
+    // Template Hooks
+    const { data: templatesRes, isLoading: loadingTemplates, refetch: refetchTemplates } = useReportTemplates({ 
+        diagnosticTestId: report?.diagnosticTestId || undefined,
+        limit: 100 
+    })
+    const templates = templatesRes?.data || []
+    
+    const createTemplate = useCreateReportTemplate()
+    const updateTemplate = useUpdateReportTemplate()
+    const deleteTemplate = useDeleteReportTemplate()
+
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none")
 
     // Initialize/Reset
     useEffect(() => {
@@ -153,20 +166,45 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     }
 
     // Template Logic
-    const saveTemplate = () => {
+    const handleSaveTemplate = async () => {
         if (!report?.diagnosticTestId) return
-        const templateData = { mode, reportHeader, machineInfo, rows, content, interpretation, consultantName, doctorDegrees }
-        localStorage.setItem(`diag_template_${report.diagnosticTestId}`, JSON.stringify(templateData))
-        toast.success("Template saved for this test type")
+        
+        const name = prompt("Enter a name for this template:", report.diagnosticTest?.name || "New Template")
+        if (!name) return
+
+        const templateData = { 
+            mode, 
+            reportHeader, 
+            machineInfo, 
+            rows, 
+            content, 
+            interpretation, 
+            consultantName, 
+            doctorDegrees 
+        }
+
+        try {
+            await createTemplate.mutateAsync({
+                name,
+                type: mode,
+                description: `Template for ${report.diagnosticTest?.name}`,
+                result: templateData,
+                diagnosticTestId: report.diagnosticTestId
+            })
+            toast.success("Template saved successfully")
+            refetchTemplates()
+        } catch {
+            toast.error("Failed to save template")
+        }
     }
 
-    const loadTemplate = () => {
-        if (!report?.diagnosticTestId) return
-        const saved = localStorage.getItem(`diag_template_${report.diagnosticTestId}`)
-        if (!saved) return toast.error("No template found for this test")
+    const handleLoadTemplate = (templateId: string) => {
+        if (templateId === "none") return
+        const template = templates.find(t => t.id === templateId)
+        if (!template) return
         
         try {
-            const data = JSON.parse(saved)
+            const data = template.result as any
             if (data.mode) setMode(data.mode)
             if (data.reportHeader) setReportHeader(data.reportHeader)
             if (data.machineInfo) setMachineInfo(data.machineInfo)
@@ -175,9 +213,24 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             if (data.interpretation) setInterpretation(data.interpretation)
             if (data.consultantName) setConsultantName(data.consultantName)
             if (data.doctorDegrees) setDoctorDegrees(data.doctorDegrees)
-            toast.success("Template loaded")
+            setSelectedTemplateId(templateId)
+            toast.success(`Template "${template.name}" loaded`)
         } catch {
-            toast.error("Failed to load template")
+            toast.error("Failed to load template data")
+        }
+    }
+
+    const handleDeleteTemplate = async (templateId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (window.confirm("Are you sure you want to delete this template?")) {
+            try {
+                await deleteTemplate.mutateAsync(templateId)
+                toast.success("Template deleted")
+                if (selectedTemplateId === templateId) setSelectedTemplateId("none")
+                refetchTemplates()
+            } catch {
+                toast.error("Failed to delete template")
+            }
         }
     }
 
@@ -237,12 +290,38 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                 Finding entry for <strong>{report?.diagnosticTest?.name}</strong> — {report?.patient?.name}
                             </DialogDescription>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={loadTemplate} className="rounded-xl h-9 gap-2 font-bold bg-amber-500/5 text-amber-600 border-amber-500/20 hover:bg-amber-500/10">
-                                <Zap className="w-3.5 h-3.5" /> Load Template
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={saveTemplate} className="rounded-xl h-9 gap-2 font-bold bg-emerald-500/5 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/10">
-                                <Save className="w-3.5 h-3.5" /> Save Template
+                        <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-1 min-w-[200px]">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Report Template</Label>
+                                <Select value={selectedTemplateId} onValueChange={handleLoadTemplate}>
+                                    <SelectTrigger className="h-9 rounded-xl border-amber-500/20 bg-amber-500/5 text-amber-700 font-bold text-xs ring-0 focus:ring-0">
+                                        <div className="flex items-center gap-2">
+                                            <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                            <SelectValue placeholder="Select Template" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl shadow-2xl border-amber-500/10">
+                                        <SelectItem value="none" className="text-xs font-medium">None (Standard)</SelectItem>
+                                        {templates.map(t => (
+                                            <SelectItem key={t.id} value={t.id} className="text-xs font-bold group">
+                                                <div className="flex items-center justify-between w-full gap-4">
+                                                    <span>{t.name}</span>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-5 w-5 rounded-md text-red-500 hover:bg-red-50 ml-auto opacity-0 group-hover:opacity-100"
+                                                        onClick={(e) => handleDeleteTemplate(t.id, e)}
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={handleSaveTemplate} className="rounded-xl h-10 mt-5 gap-2 font-bold bg-emerald-500/5 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/10">
+                                <Save className="w-3.5 h-3.5" /> Save Current as Template
                             </Button>
                         </div>
                     </div>

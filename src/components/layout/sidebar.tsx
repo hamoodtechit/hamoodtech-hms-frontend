@@ -176,13 +176,13 @@ export function Sidebar() {
               label: "Pathology Billing",
               href: "/billing/pathology",
               module: "diagnostic",
-              permission: "sale:create",
+              permission: "pathology:create",
           },
           {
               label: "Radiology Billing",
               href: "/billing/radiology",
               module: "diagnostic",
-              permission: "sale:create",
+              permission: "radiology:create",
           }
       ]
     },
