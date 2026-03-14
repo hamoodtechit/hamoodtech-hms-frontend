@@ -23,10 +23,12 @@ import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { format } from "date-fns"
 import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, Stethoscope, Trash2 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
 
 export default function AppointmentsPage() {
+    const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [filters, setFilters] = useState<AppointmentFilterValues>({})
@@ -84,15 +86,17 @@ export default function AppointmentsPage() {
                     <h1 className="text-3xl font-black tracking-tight text-primary">Appointments</h1>
                     <p className="text-muted-foreground text-sm font-medium">Manage patient schedules and doctor availability.</p>
                 </div>
-                <Button 
-                    onClick={() => {
-                        setSelectedAppointment(null)
-                        setAppointmentDialogOpen(true)
-                    }}
-                    className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                >
-                    <Plus className="h-4 w-4" /> Schedule Appointment
-                </Button>
+                {hasPermission('appointment:create') && (
+                    <Button 
+                        onClick={() => {
+                            setSelectedAppointment(null)
+                            setAppointmentDialogOpen(true)
+                        }}
+                        className="rounded-xl shadow-lg shadow-primary/20 gap-2"
+                    >
+                        <Plus className="h-4 w-4" /> Schedule Appointment
+                    </Button>
+                )}
             </div>
 
             <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -198,26 +202,30 @@ export default function AppointmentsPage() {
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary"
-                                                    onClick={() => {
-                                                        setSelectedAppointment(apt)
-                                                        setAppointmentDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    className="h-8 w-8 rounded-lg hover:bg-destructive/5 hover:text-destructive text-muted-foreground"
-                                                    onClick={() => handleDelete(apt.id)}
-                                                    disabled={deleteMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                {hasPermission('appointment:update') && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary"
+                                                        onClick={() => {
+                                                            setSelectedAppointment(apt)
+                                                            setAppointmentDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {hasPermission('appointment:delete') && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-lg hover:bg-destructive/5 hover:text-destructive text-muted-foreground"
+                                                        onClick={() => handleDelete(apt.id)}
+                                                        disabled={deleteMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

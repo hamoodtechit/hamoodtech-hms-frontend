@@ -156,7 +156,7 @@ export function Sidebar() {
           {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
-              module: "diagnostic",
+              module: "reports",
               permission: "report:read",
           }
       ]
@@ -176,13 +176,13 @@ export function Sidebar() {
               label: "Pathology Billing",
               href: "/billing/pathology",
               module: "diagnostic",
-              permission: "pathology:create",
+              permission: "sale:create",
           },
           {
               label: "Radiology Billing",
               href: "/billing/radiology",
               module: "diagnostic",
-              permission: "radiology:create",
+              permission: "sale:create",
           }
       ]
     },
@@ -208,7 +208,7 @@ export function Sidebar() {
                 label: "Employees",
                 href: "/hr/employees",
                 module: "hr",
-                permission: "employee:read",
+                permission: "user:read",
           },
           {
                 label: "Departments",
@@ -226,7 +226,7 @@ export function Sidebar() {
                 label: "Commission Agents",
                 href: "/hr/commission-agents",
                 module: "hr",
-                permission: "agent:read",
+                permission: "user:read",
           }
       ]
     },

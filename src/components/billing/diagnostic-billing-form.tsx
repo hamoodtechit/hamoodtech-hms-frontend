@@ -26,6 +26,7 @@ import { useCreateSale, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -66,10 +67,14 @@ interface CartItem {
 
 export function DiagnosticBillingForm({ type, title, description }: DiagnosticBillingFormProps) {
     const router = useRouter()
+    const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const { pharmacy } = useSettingsStore()
     const { user } = useAuthStore()
+
+    // Permission check
+    const canCreateSale = hasPermission('sale:create')
 
     // Data Fetching
     const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
@@ -320,8 +325,21 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         }
     }
 
+    if (!canCreateSale) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 min-h-[60vh]">
+                <div className="text-destructive mb-4">
+                    <X className="w-16 h-16" />
+                </div>
+                <h2 className="text-2xl font-black mb-2">Access Denied</h2>
+                <p className="text-muted-foreground mb-6">You do not have permission to create diagnostic bills.</p>
+                <Button onClick={() => router.back()}>Go Back</Button>
+            </div>
+        )
+    }
+
     return (
-        <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-primary capitalize">{type} Billing</h1>

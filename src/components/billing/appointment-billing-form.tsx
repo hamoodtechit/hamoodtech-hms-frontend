@@ -22,6 +22,7 @@ import { useCreateSale, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { FinanceAccount } from "@/types/finance"
@@ -37,9 +38,13 @@ import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
+    const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const { pharmacy } = useSettingsStore()
+
+    // Permission check
+    const canCreateSale = hasPermission('sale:create')
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
@@ -242,8 +247,21 @@ export function AppointmentBillingForm() {
         }
     }
 
+    if (!canCreateSale) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 min-h-[60vh]">
+                <div className="text-destructive mb-4">
+                    <X className="w-16 h-16" />
+                </div>
+                <h2 className="text-2xl font-black mb-2">Access Denied</h2>
+                <p className="text-muted-foreground mb-6">You do not have permission to create appointment bills.</p>
+                <Button onClick={() => router.back()}>Go Back</Button>
+            </div>
+        )
+    }
+
     return (
-        <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-primary">Appointment Billing</h1>

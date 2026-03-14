@@ -18,10 +18,12 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest } from "@/types/diagnostic"
 import { Edit, Loader2, Microscope, Plus, Search, Trash2 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
 
 export default function DiagnosticTestsPage() {
+    const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [testDialogOpen, setTestDialogOpen] = useState(false)
@@ -59,15 +61,17 @@ export default function DiagnosticTestsPage() {
                     <h1 className="text-3xl font-black tracking-tight text-primary">Diagnostic Tests</h1>
                     <p className="text-muted-foreground text-sm font-medium">Manage clinical tests, pricing, and availability.</p>
                 </div>
-                <Button 
-                    onClick={() => {
-                        setSelectedTest(null)
-                        setTestDialogOpen(true)
-                    }}
-                    className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                >
-                    <Plus className="h-4 w-4" /> Add New Test
-                </Button>
+                {hasPermission('diagnostic-test:create') && (
+                    <Button 
+                        onClick={() => {
+                            setSelectedTest(null)
+                            setTestDialogOpen(true)
+                        }}
+                        className="rounded-xl shadow-lg shadow-primary/20 gap-2"
+                    >
+                        <Plus className="h-4 w-4" /> Add New Test
+                    </Button>
+                )}
             </div>
 
             <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -146,26 +150,30 @@ export default function DiagnosticTestsPage() {
                                         </TableCell>
                                         <TableCell className="text-right pr-6">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
-                                                    onClick={() => {
-                                                        setSelectedTest(test)
-                                                        setTestDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                                                    onClick={() => handleDelete(test.id)}
-                                                    disabled={deleteMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                {hasPermission('diagnostic-test:update') && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                                                        onClick={() => {
+                                                            setSelectedTest(test)
+                                                            setTestDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {hasPermission('diagnostic-test:delete') && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                                                        onClick={() => handleDelete(test.id)}
+                                                        disabled={deleteMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

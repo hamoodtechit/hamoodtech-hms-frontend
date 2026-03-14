@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tabs"
 import { useDeleteFinanceAccount, useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { FinanceAccount } from "@/types/finance"
 import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
@@ -31,6 +32,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export default function FinancePage() {
+    const { hasPermission } = usePermissions()
     const { formatCurrency } = useCurrency()
     const [mounted, setMounted] = useState(false)
     const [withdrawAccount, setWithdrawAccount] = useState<FinanceAccount | null>(null)
@@ -98,13 +100,15 @@ export default function FinancePage() {
                                     List of all financial accounts and their current status.
                                 </CardDescription>
                             </div>
-                            <Button onClick={() => {
-                                setSelectedAccount(null)
-                                setAccountDialogOpen(true)
-                            }}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Account
-                            </Button>
+                            {hasPermission('account:create') && (
+                                <Button onClick={() => {
+                                    setSelectedAccount(null)
+                                    setAccountDialogOpen(true)
+                                }}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Account
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -167,41 +171,47 @@ export default function FinancePage() {
                                                                 View
                                                             </Button>
                                                         </Link>
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm"
-                                                            onClick={() => setWithdrawAccount(account)}
-                                                        >
-                                                            <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                            Withdraw
-                                                        </Button>
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setSelectedAccount(account)
-                                                                setAccountDialogOpen(true)
-                                                            }}
-                                                        >
-                                                            <Edit className="h-4 w-4 text-primary" />
-                                                        </Button>
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm"
-                                                            disabled={deleteAccountMutation.isPending}
-                                                            onClick={async () => {
-                                                                if (confirm("Are you sure you want to delete this account?")) {
-                                                                    try {
-                                                                        await deleteAccountMutation.mutateAsync(account.id)
-                                                                        toast.success("Account deleted successfully")
-                                                                    } catch (error) {
-                                                                        toast.error("Failed to delete account")
+                                                        {hasPermission('transaction:withdraw') && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm"
+                                                                onClick={() => setWithdrawAccount(account)}
+                                                            >
+                                                                <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                                Withdraw
+                                                            </Button>
+                                                        )}
+                                                        {hasPermission('account:update') && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedAccount(account)
+                                                                    setAccountDialogOpen(true)
+                                                                }}
+                                                            >
+                                                                <Edit className="h-4 w-4 text-primary" />
+                                                            </Button>
+                                                        )}
+                                                        {hasPermission('account:delete') && (
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm"
+                                                                disabled={deleteAccountMutation.isPending}
+                                                                onClick={async () => {
+                                                                    if (confirm("Are you sure you want to delete this account?")) {
+                                                                        try {
+                                                                            await deleteAccountMutation.mutateAsync(account.id)
+                                                                            toast.success("Account deleted successfully")
+                                                                        } catch (error) {
+                                                                            toast.error("Failed to delete account")
+                                                                        }
                                                                     }
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

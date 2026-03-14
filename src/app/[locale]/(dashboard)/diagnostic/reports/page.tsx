@@ -72,17 +72,8 @@ export default function DiagnosticReportsPage() {
 
     const allReports = reportsRes?.data || []
 
-    // Filter reports based on User Permissions (Radiology vs Pathology)
-    const isRadiologyUser = hasPermission('radiology:create')
-    const isPathologyUser = hasPermission('pathology:create')
-
-    const reports = allReports.filter(report => {
-        const saleType = (report.saleItem as any)?.sale?.type;
-        // If user only has one specific permission, restrict the list
-        if (isRadiologyUser && !isPathologyUser) return saleType === 'radiology';
-        if (isPathologyUser && !isRadiologyUser) return saleType === 'pathology';
-        return true; // Show all if they have both or neither (module default)
-    });
+    // List of reports
+    const reports = allReports
 
     const activeFilterCount = [
         sampleStatus !== 'all',
@@ -117,9 +108,8 @@ export default function DiagnosticReportsPage() {
         'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
 
-    // Dynamic Title based on restricted view
-    const pageTitle = (isRadiologyUser && !isPathologyUser) ? "Radiology Worklist" : 
-                     (isPathologyUser && !isRadiologyUser) ? "Pathology Worklist" : "Lab Worklist";
+    // Dynamic Title
+    const pageTitle = "Diagnostic Worklist";
 
     return (
         <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">

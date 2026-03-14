@@ -29,6 +29,7 @@ import {
 import { useDeleteEntity, useManufacturers, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { PharmacyEntity, PharmacyEntityType } from "@/types/pharmacy"
 import { ChevronLeft, ChevronRight, Edit, Loader2, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
 import { useDebounce } from "use-debounce"
@@ -40,6 +41,7 @@ interface MasterDataTableProps {
 }
 
 export function MasterDataTable({ type, title }: MasterDataTableProps) {
+  const { hasPermission } = usePermissions()
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebounce(search, 500)
   const [page, setPage] = useState(1)
@@ -104,9 +106,24 @@ export function MasterDataTable({ type, title }: MasterDataTableProps) {
             }}
           />
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add {title}
-        </Button>
+        {/* Permission check for creating */}
+        {(() => {
+          const typeToKey: Record<string, string> = {
+            'generics': 'medicine-generic',
+            'categories': 'medicine-category',
+            'groups': 'medicine-group',
+            'units': 'medicine-unit',
+            'manufacturers': 'medicine-manufacturer',
+            'branches': 'branch'
+          }
+          const baseKey = typeToKey[type] || 'medicine'
+          
+          return hasPermission(`${baseKey}:create` as any) && (
+            <Button onClick={handleCreate}>
+              <Plus className="mr-2 h-4 w-4" /> Add {title}
+            </Button>
+          )
+        })()}
       </div>
 
       <div className="border rounded-md">
@@ -150,15 +167,35 @@ export function MasterDataTable({ type, title }: MasterDataTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(entity)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteClick(entity)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
+                        {(() => {
+                          const typeToKey: Record<string, string> = {
+                            'generics': 'medicine-generic',
+                            'categories': 'medicine-category',
+                            'groups': 'medicine-group',
+                            'units': 'medicine-unit',
+                            'manufacturers': 'medicine-manufacturer',
+                            'branches': 'branch'
+                          }
+                          const baseKey = typeToKey[type] || 'medicine'
+                          
+                          return (
+                            <>
+                              {hasPermission(`${baseKey}:update` as any) && (
+                                <DropdownMenuItem onClick={() => handleEdit(entity)}>
+                                  <Edit className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission(`${baseKey}:delete` as any) && (
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteClick(entity)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )
+                        })()}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

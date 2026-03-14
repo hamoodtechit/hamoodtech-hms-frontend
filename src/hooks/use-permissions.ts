@@ -12,12 +12,6 @@ export function usePermissions() {
       return true;
     }
 
-    // Emergency Fallback: Allow 'Super Admin' or 'Admin' full access
-    // This fixes the issue where legacy admins don't have granular permissions yet
-    if (user.role && (user.role.name === 'Super Admin' || user.role.name === 'Admin' || user.role.name === 'PRO ADMIN')) {
-        return true;
-    }
-
     // Check role-based permissions
     if (user.role && user.role.permissions) {
       const has = user.role.permissions.some(p => p.key === permission);
@@ -41,7 +35,6 @@ export function usePermissions() {
     
     // Super admin fallback
     if (user.permissions && user.permissions.includes('*')) return true;
-    if (user.role && (user.role.name === 'Super Admin' || user.role.name === 'Admin' || user.role.name === 'PRO ADMIN')) return true;
 
     if (user.role && user.role.permissions) {
         return user.role.permissions.some(p => p.module === moduleName);
