@@ -71,7 +71,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         timeSlot: "",
         note: "",
         fees: 0,
-        status: "pending" as AppointmentStatus,
+        status: "confirmed" as AppointmentStatus,
         chamberOrRoomNumber: "",
         commissionAgentId: ""
     })
@@ -107,7 +107,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     timeSlot: "",
                     note: "",
                     fees: 0,
-                    status: "pending",
+                    status: "confirmed",
                     chamberOrRoomNumber: "",
                     commissionAgentId: ""
                 })
