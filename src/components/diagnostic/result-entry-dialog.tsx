@@ -13,6 +13,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { DiagnosticReport, DiagnosticResult, ResultMode, ResultTableRow } from "@/types/diagnostic"
 import { Activity, Beaker, Bold, ClipboardList, FileText, Italic, List, Loader2, Plus, Save, Trash2, Underline, User, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useStoreContext } from "@/store/use-store-context"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -66,6 +67,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 
 export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: ResultEntryDialogProps) {
     const { hasPermission } = usePermissions()
+    const { activeStoreId } = useStoreContext()
     const [mode, setMode] = useState<ResultMode>("table")
     const [technicianId, setTechnicianId] = useState("")
     const [reportHeader, setReportHeader] = useState("")
@@ -189,7 +191,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 type: mode,
                 description: `Template for ${report.diagnosticTest?.name}`,
                 result: templateData,
-                diagnosticTestId: report.diagnosticTestId
+                diagnosticTestId: report.diagnosticTestId,
+                branchId: activeStoreId || ""
             })
             toast.success("Template saved successfully")
             refetchTemplates()

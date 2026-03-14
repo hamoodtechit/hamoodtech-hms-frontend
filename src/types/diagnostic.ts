@@ -176,4 +176,5 @@ export interface ReportTemplatePayload {
   description?: string;
   result: DiagnosticResult | Record<string, any>;
   diagnosticTestId?: string;
+  branchId: string;
 }

@@ -175,7 +175,9 @@ export function PrintReport({ report }: PrintReportProps) {
                                     {approvedBy?.name || "—"}
                                 </p>
                                 <p className="text-[9.5pt] font-black italic leading-tight mt-1">
-                                    {result?.doctorDegrees || "—"}
+                                    {result?.doctorDegrees && result.doctorDegrees !== "—" 
+                                        ? result.doctorDegrees 
+                                        : (approvedBy?.designation?.name || "—")}
                                 </p>
                             </td>
                         </tr>
