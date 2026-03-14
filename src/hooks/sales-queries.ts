@@ -1,3 +1,5 @@
+import { diagnosticService } from "@/services/diagnostic-service";
+import { DIAGNOSTIC_KEYS } from "./diagnostic-queries";
 import { salesService } from "@/services/sales-service";
 import { SalePaymentPayload, UpdateSalePayload } from "@/types/sales";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,9 +36,14 @@ export function useCreateSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: salesService.createSale,
-    onSuccess: () => {
+    onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["pharmacy", "cash-register"] });
+      // Invalidate diagnostic reports - use prefix match
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
+      if (variables && (variables as any).id) {
+        queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report((variables as any).id) });
+      }
     },
   });
 }
@@ -74,6 +81,7 @@ export const useUpdateSale = () => {
       salesService.updateSale(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
       toast.success("Sale updated successfully");
     },
     onError: (error: any) => {
@@ -89,6 +97,7 @@ export const useAddSalePayment = () => {
         salesService.addSalePayment(id, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+        queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
         toast.success("Payment added successfully");
       },
       onError: (error: any) => {

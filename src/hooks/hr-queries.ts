@@ -8,7 +8,56 @@ export const HR_KEYS = {
   designations: (params?: any) => [...HR_KEYS.all, "designations", params] as const,
   employees: (params?: any) => [...HR_KEYS.all, "employees", params] as const,
   employee: (id: string) => [...HR_KEYS.all, "employee", id] as const,
+  commissionAgents: (params?: any) => [...HR_KEYS.all, "commissionAgents", params] as const,
+  commissionAgent: (id: string) => [...HR_KEYS.all, "commissionAgent", id] as const,
 };
+
+// Commission Agent Hooks
+export function useCommissionAgents(params?: any) {
+  return useQuery({
+    queryKey: HR_KEYS.commissionAgents(params),
+    queryFn: () => hrService.getCommissionAgents(params),
+  });
+}
+
+export function useCommissionAgent(id: string) {
+  return useQuery({
+    queryKey: HR_KEYS.commissionAgent(id),
+    queryFn: () => hrService.getCommissionAgent(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateCommissionAgent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => hrService.createCommissionAgent(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.commissionAgents() });
+    },
+  });
+}
+
+export function useUpdateCommissionAgent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      hrService.updateCommissionAgent(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.all });
+    },
+  });
+}
+
+export function useDeleteCommissionAgent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteCommissionAgent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.commissionAgents() });
+    },
+  });
+}
 
 // Department Hooks
 export function useDepartments(params?: any) {

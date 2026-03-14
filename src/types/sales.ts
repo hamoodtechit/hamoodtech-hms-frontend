@@ -47,6 +47,8 @@ export interface Sale {
   type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
   doctorId?: string;
   staffId?: string;
+  commissionAgentId?: string;
+  chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +86,8 @@ export interface SalePayload {
   type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
   doctorId?: string;
   staffId?: string;
+  commissionAgentId?: string;
+  chamberOrRoomNumber?: string;
 }
 
 export interface UpdateSalePayload extends Partial<SalePayload> {

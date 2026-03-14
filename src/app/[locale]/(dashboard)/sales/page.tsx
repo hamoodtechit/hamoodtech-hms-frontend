@@ -33,6 +33,7 @@ import { useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
+import { useEmployees } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
@@ -123,7 +124,12 @@ export default function SalesHistoryPage() {
     type: saleType !== "all" ? saleType : undefined
   })
 
+  const { data: doctorsRes } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
+  const { data: staffsRes } = useEmployees({ branchId: activeStoreId, limit: 100 }) // generic list for staff names
+
   const sales = salesRes?.data?.sales || []
+  const doctors = doctorsRes?.data || []
+  const staffs = staffsRes?.data || []
   const pagination = salesRes?.data?.pagination
 
   return (
@@ -565,6 +571,8 @@ export default function SalesHistoryPage() {
             open={receiptOpen}
             onOpenChange={setReceiptOpen}
             transaction={selectedSale ? { sale: selectedSale } : null}
+            doctors={doctors}
+            staffs={staffs}
         />
       )}
     </div>

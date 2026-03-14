@@ -13,6 +13,8 @@ export interface Appointment {
   fees: number;
   saleId?: string;
   note?: string;
+  commissionAgentId?: string;
+  chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
   patient: {
@@ -54,6 +56,8 @@ export interface AppointmentPayload {
   fees: number;
   note?: string;
   status?: AppointmentStatus;
+  commissionAgentId?: string;
+  chamberOrRoomNumber?: string;
 }
 
 export interface AppointmentPaginatedResponse {

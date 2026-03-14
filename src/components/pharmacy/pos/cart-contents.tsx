@@ -68,7 +68,7 @@ export function CartContents({
     paidAmount,
     setPaidAmount,
     isCheckoutOpen,
-    setIsCheckoutOpen
+    setIsCheckoutOpen,
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()

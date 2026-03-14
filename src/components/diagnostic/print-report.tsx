@@ -34,10 +34,12 @@ export function PrintReport({ report }: PrintReportProps) {
     return (
         <div
             id="print-report"
-            className="bg-white text-black font-['Times_New_Roman',serif] text-[10.5pt] leading-tight mx-auto"
-            style={{ width: "210mm", minHeight: "297mm", padding: "8mm 12mm" }}
+            className="bg-white text-black font-['Times_New_Roman',serif] text-[10.5pt] leading-tight mx-auto relative overflow-hidden"
+            style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
         >
-            {/* Top row - Single barcode or ID */}
+            {/* Main Content Area - Added top margin for Pad compatibility */}
+            <div className="px-10 py-6 pt-[20mm] relative z-10 min-h-[290mm] flex flex-col">
+                {/* Digital header elements removed for Pad compatibility */}
             <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-2">
                 <div className="text-[12pt] font-black tracking-tight text-primary uppercase">
                     Lab Report
@@ -152,36 +154,33 @@ export function PrintReport({ report }: PrintReportProps) {
                 </div>
             )}
 
-            {/* Signature Section - Balanced Left & Right */}
-            <div className="mt-auto pt-12 flex justify-between items-end gap-10">
-                <div className="text-[10pt] w-[250px]">
-                    <div className="border-t-2 border-black pt-1.5 mt-auto">
-                        <p className="font-black text-[10.5pt]">
-                            {result?.preparedBy || technician?.name || "Medical Technologist"}
-                        </p>
-                        <p className="text-[8.5pt] leading-tight text-gray-700">Medical Technologist (Lab)</p>
-                        <p className="text-[8.5pt] text-gray-500 font-bold uppercase tracking-tighter">Patwary General Hospital</p>
-                    </div>
-                </div>
-                
-                <div className="text-[10pt] text-right min-w-[300px]">
-                    <div className="border-t-2 border-black pt-1.5 inline-block text-right">
-                        <p className="font-black text-[11pt] uppercase tracking-tight">
-                            {approvedBy?.name || "—"}
-                        </p>
-                        <p className="text-[9.5pt] font-bold text-gray-800 italic">
-                            {result?.doctorDegrees || "—"}
-                        </p>
-                        <p className="text-[8pt] text-gray-500 mt-1 font-medium">Verified & Signed Digitally</p>
-                    </div>
-                </div>
-            </div>
+                {/* Signature Section - Rock-solid Table Layout for Print */}
+                <table className="w-full mt-auto pt-16 border-none font-serif">
+                    <tbody>
+                        <tr>
+                            {/* Left: Prepared By */}
+                            <td className="text-left align-bottom w-1/3 text-[10.5pt]">
+                                <span className="font-bold border-b-2 border-black pb-0.5">Prepared By</span>
+                                <span className="font-bold whitespace-nowrap">&nbsp; {result?.preparedBy || (technician?.name) || "—"}</span>
+                            </td>
 
-            {/* Footer Row */}
-            <div className="mt-10 flex justify-between items-center text-[8.5pt] text-gray-400 border-t pt-2 italic">
-                <p>Printing Time: {format(new Date(), "dd-MM-yyyy hh:mm a")}</p>
-                <p>Printed By: {approvedBy?.name || technician?.name || "System"}</p>
-                <p>HSM-DR-{barcode.toUpperCase().substring(0, 10)}</p>
+                            {/* Center: Checked By */}
+                            <td className="text-center align-bottom w-1/3 text-[10.5pt]">
+                                <span className="font-bold border-b-2 border-black pb-0.5 whitespace-nowrap">Checked By</span>
+                            </td>
+                            
+                            {/* Right: Doctor / Verified */}
+                            <td className="text-right align-bottom w-1/3">
+                                <p className="font-black border-b-2 border-black pb-0.5 uppercase tracking-tight text-[11pt] whitespace-nowrap inline-block">
+                                    {approvedBy?.name || "—"}
+                                </p>
+                                <p className="text-[9.5pt] font-black italic leading-tight mt-1">
+                                    {result?.doctorDegrees || "—"}
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     )

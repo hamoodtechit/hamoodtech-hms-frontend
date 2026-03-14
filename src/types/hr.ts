@@ -59,6 +59,8 @@ export interface Employee {
   joiningDate: string;
   leavingDate?: string;
   status: 'active' | 'inactive' | 'on_leave' | 'terminated';
+  userId?: string;
+  chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
   department?: Department;
@@ -84,6 +86,8 @@ export interface EmployeePayload {
   joiningDate: string;
   leavingDate?: string;
   status?: 'active' | 'inactive' | 'on_leave' | 'terminated';
+  userId?: string;
+  chamberOrRoomNumber?: string;
 }
 
 export interface HRPaginatedResponse<T> {
@@ -98,4 +102,38 @@ export interface HRPaginatedResponse<T> {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
   };
+}
+
+export interface CommissionAgent {
+  id: string;
+  branchId: string;
+  name: string;
+  nameBangla: string;
+  phone: string;
+  email: string;
+  address: string;
+  commissionPercentage: string | number;
+  createdAt: string;
+  updatedAt: string;
+  branch?: {
+    id: string;
+    name: string;
+  };
+  yearlyStats?: {
+    year: number;
+    totalSalesCount: number;
+    totalSalesAmount: number;
+    commissionPercentage: number;
+    totalCommissionEarned: number;
+  };
+}
+
+export interface CommissionAgentPayload {
+  branchId: string;
+  name: string;
+  nameBangla: string;
+  phone: string;
+  email: string;
+  address: string;
+  commissionPercentage: number;
 }

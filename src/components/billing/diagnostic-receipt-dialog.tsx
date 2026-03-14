@@ -7,10 +7,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { useSale } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
-import { Printer } from "lucide-react"
+import { useStoreContext } from "@/store/use-store-context"
+import { Loader2, Printer } from "lucide-react"
 
 // Simple number to words converter for BDT/Taka (Indian numbering system format)
 function numberToWords(num: number): string {
@@ -36,56 +38,76 @@ interface DiagnosticReceiptDialogProps {
   transaction: any | null // Generic sale object
   doctors?: any[] // To lookup doctor name if not populated
   staffs?: any[] // To lookup staff name
+  patient?: any // Optional: Pass patient object directly if not in transaction
+  doctor?: any // Optional: Pass doctor object directly
 }
 
-export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, doctors = [], staffs = [] }: DiagnosticReceiptDialogProps) {
+export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, doctors = [], staffs = [], patient: propPatient, doctor: propDoctor }: DiagnosticReceiptDialogProps) {
   const { general } = useSettingsStore()
   const { formatCurrency } = useCurrency()
+  const { stores, activeStoreId } = useStoreContext()
+  const activeStore = stores.find(s => s.id === activeStoreId)
   
-  if (!transaction) return null
-  console.log("RECEIPT_TRANSACTION_DATA:", transaction)
-
-  // The API might return the sale nested under a 'sale' property, 'data.sale', or directly
-  const data = transaction?.data?.sale || transaction?.sale || transaction?.data || transaction
+  // Get sale ID - transaction might be the sale itself or have a nested sale object
+  const saleId = transaction?.id || transaction?.sale?.id || transaction?.data?.sale?.id || transaction?.data?.id
+  
+  // Use useSale hook to get full details (branch, patient, doctor etc.)
+  const { data: saleRes, isLoading } = useSale(saleId)
+  
+  // Combine prop/initial data with fetched rich data
+  const initialData = transaction?.data?.sale || transaction?.sale || transaction?.data || transaction
+  const data = saleRes?.data || initialData
+  
+  if (!data && !isLoading) return null
+  
   const items = data?.saleItems || []
   
   const netTotal = Number(data?.netPrice || data?.totalPrice || 0)
   const grossTotal = items.length > 0 
       ? items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0)
-      : netTotal // Fallback to netTotal if no items (though unlikely in a valid sale)
+      : netTotal
   
   const paidAmount = Number(data?.paidAmount || 0)
   const dueAmount = Number(data?.dueAmount || 0)
   const taxAmount = Number(data?.taxAmount || 0)
   
-  const patient = data?.patient || {}
-  const patientName = patient.name || data.customerName || "Walk-in Patient"
-  const patientAge = patient.age ? `${patient.age}Y` : "N/A"
-  const patientSex = patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : "N/A"
-  const patientPhone = patient.phone || "N/A"
-  const patientId = patient.patientNumber || patient.id?.slice(0,8).toUpperCase() || "N/A"
+  const patient = data?.patient || transaction?.patient || propPatient || {}
+  const patientName = patient?.name || data?.customerName || data?.patientName || data?.name || "Walk-in Patient"
+  const patientAge = (patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A")))
+  const patientSex = patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : (data?.customerGender || data?.patientGender || data?.gender || "N/A")
+  const patientPhone = patient?.phone || data?.customerPhone || data?.patientPhone || data?.phone || "N/A"
+  const patientId = patient?.patientNumber || patient?.uhid || patient?.id?.slice(0,8).toUpperCase() || data?.patientUhId || data?.uhid || data?.patientId || "N/A"
   
-  const invoiceNumber = data.invoiceNumber || "N/A"
-  const labNumber = data.id ? data.id.slice(-8).toUpperCase() : "N/A" // Pseudo lab number
-  const date = data.createdAt || new Date().toISOString()
+  const invoiceNumber = data?.invoiceNumber || "N/A"
+  const labNumber = data?.id ? data.id.slice(-8).toUpperCase() : "N/A" // Pseudo lab number
+  const date = data?.createdAt || new Date().toISOString()
   
   // Find consultant
   let consultantName = "N/A"
-  if (data.doctorId) {
+  if (data.doctor?.name) {
+      consultantName = data.doctor.name
+  } else if (propDoctor?.name) {
+      consultantName = propDoctor.name
+  } else if (data.doctorId) {
       const doc = doctors.find(d => d.id === data.doctorId)
       if (doc) consultantName = doc.name
-  } else if (data.doctor?.name) {
-      consultantName = data.doctor.name
+  } else if (data.referredByName) {
+      consultantName = data.referredByName
+  } else if (data.consultantName) {
+      consultantName = data.consultantName
   }
 
   // Find assigned staff
   let assignedStaffName = "User/Cashier"
-  if (data.staffId && staffs.length > 0) {
+  if (data?.staffId && staffs.length > 0) {
       const staff = staffs.find(s => s.id === data.staffId)
       if (staff) assignedStaffName = staff.name
-  } else if (data.staffId) {
+  } else if (data?.staffId) {
       assignedStaffName = data.staffId
   }
+
+  // Find Assigned Commission Agent
+  const agentName = data?.commissionAgent?.name || data?.agentName || data?.commissionAgentName || data?.agent?.name || "N/A"
 
   const deliveryDateRaw = items[0]?.deliveryDate || date;
   // Format as DD/MM/YYYY
@@ -96,6 +118,166 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   const isFullPaid = dueAmount <= 0;
 
+  const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
+    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
+        <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
+        {/* Side Watermark / Vertical Text */}
+        <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-400 tracking-wider whitespace-nowrap hidden print:block">
+            Powered by Hamood Tech
+        </div>
+
+        {/* PAID Hologram */}
+        {isFullPaid && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.08]">
+                <div className="text-[150px] font-black uppercase text-red-600 -rotate-[35deg] border-[12px] border-red-600 px-12 py-6 rounded-[40px] tracking-[15px]">
+                    PAID
+                </div>
+            </div>
+        )}
+
+        {/* Header */}
+        <div className="text-center mb-4 relative z-10">
+            <h1 className="text-2xl font-bold uppercase tracking-wider">{data.branch?.name || general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
+            <p className="text-[13px] mt-1">{data.branch?.address || general?.address || "Bonpara Bazar, Boraigram, Natore-6430"}</p>
+            <p className="text-[13px]">{data.branch?.phone || general?.phone || "01711862547"}</p>
+            
+            <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
+                {(data.branch?.licenseNumber || activeStore?.licenseNumber) && <span>License No: {data.branch?.licenseNumber || activeStore?.licenseNumber}</span>}
+                {(data.branch?.taxRegistration || activeStore?.taxRegistration) && <span>TX Registration No: {data.branch?.taxRegistration || activeStore?.taxRegistration}</span>}
+            </div>
+
+            <div className="mt-2 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
+                {copyTitle}
+            </div>
+        </div>
+
+        {/* Info Table Box */}
+        <div className="border border-black border-dashed mb-4 relative z-10">
+            {/* Row 1 */}
+            <div className="grid grid-cols-2 border-b border-black border-dashed">
+                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[40px] flex items-center">
+                    UHID : {patientId}
+                </div>
+                <div className="p-2 px-3 flex flex-col justify-center min-h-[40px]">
+                    <div className="font-bold">Bill No. : {invoiceNumber}</div>
+                    <div className="font-bold">Lab. No. : {labNumber}</div>
+                </div>
+            </div>
+            {/* Row 2 */}
+            <div className="grid grid-cols-2 border-b border-black border-dashed">
+                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
+                    Name <span className="mx-2">:</span> {patientName}
+                </div>
+                <div className="p-2 px-3 font-bold flex items-center min-h-[30px]">
+                    <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                </div>
+            </div>
+            {/* Row 3 */}
+            <div className="grid grid-cols-2 border-b border-black border-dashed">
+                <div className="p-2 px-3 border-r border-black border-dashed font-bold flex gap-6 items-center min-h-[30px]">
+                    <span>Age <span className="mx-1">:</span> {patientAge}</span>
+                    <span>Sex : {patientSex}</span>
+                </div>
+                <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
+                    Contact No. : {patientPhone}
+                </div>
+            </div>
+            {/* Row 4 */}
+            <div className="grid grid-cols-2 border-b border-black border-dashed">
+                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
+                    Consultant <span className="mx-1">:</span> {consultantName}
+                </div>
+                <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
+                    Agent : {agentName}
+                </div>
+            </div>
+        </div>
+
+        {/* Items Table */}
+        <table className="w-full text-left border-collapse mb-2 max-w-full relative z-10">
+            <thead>
+                <tr className="border-y border-black border-dashed font-bold">
+                    <th className="py-1 px-1 w-12">SL No</th>
+                    <th className="py-1 px-1">Test Name</th>
+                    <th className="py-1 px-1 text-right w-24">Unit Price</th>
+                    <th className="py-1 px-1 text-center w-12">Qty</th>
+                    <th className="py-1 px-1 text-right w-24">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items.map((item: any, index: number) => {
+                    const itemTotal = Number(item.price) * Number(item.quantity)
+                    return (
+                        <tr key={index} className={cn("border-b border-gray-300/50", index === items.length - 1 && "border-b-0")}>
+                            <td className="py-1 px-1 align-top">{index + 1}</td>
+                            <td className="py-1 px-1">
+                                <div>{item.itemName}</div>
+                                {item.testBy && (
+                                    <div className="text-[10px] text-gray-500 mt-0.5">Test By: {item.testBy}</div>
+                                )}
+                            </td>
+                            <td className="py-1 px-1 text-right align-top">{Number(item.price).toFixed(2)}</td>
+                            <td className="py-1 px-1 text-center align-top">{item.quantity}</td>
+                            <td className="py-1 px-1 text-right align-top">{itemTotal.toFixed(2)}</td>
+                        </tr>
+                    )
+                })}
+            </tbody>
+        </table>
+
+        {/* Totals Section */}
+        <div className="flex justify-between items-start mt-4 mb-6 relative z-10">
+            <div className="pt-2 pl-4">
+            </div>
+            <div className="w-[250px]">
+                <div className="flex justify-between py-0.5 font-bold">
+                    <span>Sub Total Tk.</span>
+                    <span>{grossTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-bold">
+                    <span>+ Vat Tk.</span>
+                    <span>{taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-bold text-[14px] border-y border-black border-dashed mt-1 pb-1">
+                    <span>Net Payable Tk.</span>
+                    <span>{netTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-bold">
+                    <span>Advanced Tk.</span>
+                    <span>{paidAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-bold">
+                    <span>Due Tk.</span>
+                    <span>{dueAmount.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>
+
+        {/* Footer Info */}
+        <div className="grid grid-cols-2 border-t border-black border-dashed pt-2 font-bold text-[11px] relative z-10">
+            <div className="space-y-1">
+                <div>In Word : {amountInWords}</div>
+                <div>Delivery : {formattedDeliveryDate} {formattedDeliveryTime}</div>
+            </div>
+            <div className="text-right space-y-1">
+                <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
+                <div>Cashier : {assignedStaffName}</div>
+            </div>
+        </div>
+
+        <div className="flex justify-between items-end mt-8 pt-8 font-bold text-xs relative z-10">
+            <div className="italic">
+                যে সকল রুমে যাবেনঃ {data?.roomNumber || data?.chamberOrRoomNumber || "N/A"}
+            </div>
+            <div className="text-center">
+                <div className="border-t border-black border-dashed w-40 mb-1"></div>
+                Authorized Signature
+            </div>
+        </div>
+    </div>
+  </div>
+  )
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none">
@@ -103,155 +285,18 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
           <DialogTitle>Diagnostic Receipt</DialogTitle>
         </DialogHeader>
         
-        <div className="p-8 max-h-[75vh] overflow-y-auto print:max-h-none print:p-0" id="receipt-content">
-            <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans min-h-[500px]">
-                {/* Side Watermark / Vertical Text */}
-                <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-400 tracking-wider whitespace-nowrap hidden print:block">
-                    Powered by Hamood Tech
+        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white" id="receipt-content" style={{ width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
+            {isLoading ? (
+                <div className="h-40 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-
-                {/* PAID Hologram */}
-                {isFullPaid && (
-                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.08]">
-                       <div className="text-[150px] font-black uppercase text-red-600 -rotate-[35deg] border-[12px] border-red-600 px-12 py-6 rounded-[40px] tracking-[15px]">
-                           PAID
-                       </div>
-                   </div>
-                )}
-
-                {/* Header */}
-                <div className="text-center mb-4 relative z-10">
-                    <h1 className="text-2xl font-bold uppercase tracking-wider">{general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
-                    <p className="text-[13px] mt-1">{general?.address || "Bonpara Bazar, Boraigram, Natore-6430"}</p>
-                    <p className="text-[13px]">{general?.phone || "01711862547"}</p>
-                    
-                    <div className="mt-3 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
-                        OFFICE COPY
-                    </div>
-                </div>
-
-                {/* Info Table Box */}
-                <div className="border border-black border-dashed mb-4 relative z-10">
-                    {/* Row 1 */}
-                    <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[40px] flex items-center">
-                            UHID : {patientId}
-                        </div>
-                        <div className="p-2 px-3 flex flex-col justify-center min-h-[40px]">
-                            <div className="font-bold">Bill No. : {invoiceNumber}</div>
-                            <div className="font-bold">Lab. No. : {labNumber}</div>
-                        </div>
-                    </div>
-                    {/* Row 2 */}
-                    <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
-                            Name <span className="mx-2">:</span> {patientName}
-                        </div>
-                        <div className="p-2 px-3 font-bold flex items-center min-h-[30px]">
-                            <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
-                        </div>
-                    </div>
-                    {/* Row 3 */}
-                    <div className="grid grid-cols-2 border-b border-black border-dashed">
-                        <div className="p-2 px-3 border-r border-black border-dashed font-bold flex gap-6 items-center min-h-[30px]">
-                            <span>Age <span className="mx-1">:</span> {patientAge}</span>
-                            <span>Sex : {patientSex}</span>
-                        </div>
-                        <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
-                            Contact No. : {patientPhone}
-                        </div>
-                    </div>
-                    {/* Row 4 */}
-                    <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
-                        Consultant : {consultantName}
-                    </div>
-                </div>
-
-                {/* Items Table */}
-                <table className="w-full text-left border-collapse mb-2 max-w-full relative z-10">
-                    <thead>
-                        <tr className="border-y border-black border-dashed font-bold">
-                            <th className="py-1 px-1 w-12">SL No</th>
-                            <th className="py-1 px-1">Test Name</th>
-                            <th className="py-1 px-1 text-right w-24">Unit Price</th>
-                            <th className="py-1 px-1 text-center w-12">Qty</th>
-                            <th className="py-1 px-1 text-right w-24">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((item: any, index: number) => {
-                             const itemTotal = Number(item.price) * Number(item.quantity)
-                             return (
-                                <tr key={index} className={cn("border-b border-gray-300/50", index === items.length - 1 && "border-b-0")}>
-                                    <td className="py-1 px-1 align-top">{index + 1}</td>
-                                    <td className="py-1 px-1">
-                                        <div>{item.itemName}</div>
-                                        {item.testBy && (
-                                            <div className="text-[10px] text-gray-500 mt-0.5">Test By: {item.testBy}</div>
-                                        )}
-                                    </td>
-                                    <td className="py-1 px-1 text-right align-top">{Number(item.price).toFixed(2)}</td>
-                                    <td className="py-1 px-1 text-center align-top">{item.quantity}</td>
-                                    <td className="py-1 px-1 text-right align-top">{itemTotal.toFixed(2)}</td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-
-                {/* Totals Section */}
-                <div className="flex justify-between items-start mt-4 mb-6 relative z-10">
-                    <div className="pt-2 pl-4">
-                        {/* Status Hologram used in background */}
-                    </div>
-                    <div className="w-[250px]">
-                        <div className="flex justify-between py-0.5 font-bold">
-                            <span>Sub Total Tk.</span>
-                            <span>{grossTotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-0.5 font-bold">
-                            <span>+ Vat Tk.</span>
-                            <span>{taxAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-0.5 font-bold">
-                            <span>Net Payable Tk.</span>
-                            <span>{netTotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-0.5 font-bold">
-                            <span>Advanced Tk.</span>
-                            <span>{paidAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-0.5 font-bold">
-                            <span>Due Tk.</span>
-                            <span>{dueAmount.toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer Info */}
-                <div className="flex gap-6 mt-4 font-bold text-[11px] relative z-10">
-                    <div>
-                        In Word : {amountInWords}
-                    </div>
-                    <div>
-                        TYPE : {data.paymentMethod?.toUpperCase() || "CASH"}
-                    </div>
-                </div>
-                
-                <div className="font-bold text-[11px] mt-1 relative z-10">
-                    Delivery Date : {formattedDeliveryDate} {formattedDeliveryTime}
-                </div>
-
-                <div className="flex justify-between items-end mt-16 pt-4 font-bold text-sm relative z-10">
-                    <div>
-                        যে সকল রুমে যাবেনঃ
-                    </div>
-                    <div className="text-center">
-                        <div className="border-t border-black border-dashed w-48 mb-1"></div>
-                        Authorized Signature
-                    </div>
-                </div>
-            </div>
+            ) : (
+                <>
+                    <ReceiptContent copyTitle="OFFICE COPY" />
+                    <div className="print:block" style={{ height: "40px" }}></div>
+                    <ReceiptContent copyTitle="CUSTOMER COPY" />
+                </>
+            )}
         </div>
 
         <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
@@ -291,9 +336,11 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                       width: 210mm;
                                       min-height: 297mm;
                                       background: white;
-                                      padding: 15mm;
+                                      padding: 5mm;
                                       box-sizing: border-box;
                                       position: relative;
+                                      display: flex;
+                                      flex-direction: column;
                                   }
                                   /* Reset/normalize some Tailwind styles for absolute consistency */
                                   .border { border: 1px solid black !important; }

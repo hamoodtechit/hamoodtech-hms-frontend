@@ -1,8 +1,6 @@
 "use client"
 
-import { DesignationDialog } from "@/components/hr/designation-dialog"
-import { DesignationFilters, DesignationFilterValues } from "@/components/hr/hr-filters"
-import { FilterPopover } from "@/components/shared/filter-popover"
+import { CommissionAgentDialog } from "@/components/hr/commission-agent-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -16,57 +14,41 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useDeleteDesignation, useDepartments, useDesignations } from "@/hooks/hr-queries"
-import { useBranches } from "@/hooks/pharmacy-queries"
+import { useDeleteCommissionAgent, useCommissionAgents } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
-import { Designation } from "@/types/hr"
-import { Edit, Loader2, Plus, Search, Trash2 } from "lucide-react"
+import { CommissionAgent } from "@/types/hr"
+import { Edit, Eye, Loader2, Plus, Search, Trash2, Wallet } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Link } from "@/i18n/navigation"
 
-export default function DesignationsPage() {
+export default function CommissionAgentsPage() {
     const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
-    const [filters, setFilters] = useState<DesignationFilterValues>({})
-    const [designationDialogOpen, setDesignationDialogOpen] = useState(false)
-    const [selectedDesignation, setSelectedDesignation] = useState<Designation | null>(null)
-    const { activeStoreId } = useStoreContext()
+    const [agentDialogOpen, setAgentDialogOpen] = useState(false)
+    const [selectedAgent, setSelectedAgent] = useState<CommissionAgent | null>(null)
+    const { activeStoreId, stores } = useStoreContext()
 
-    const activeFilterCount = Object.values(filters).filter(v => !!v).length
-
-    const resetFilters = () => {
-        setFilters({})
-        setSearch("")
-        setPage(1)
-    }
-
-    const { data: designationsRes, isLoading, refetch } = useDesignations({ 
+    const { data: agentsRes, isLoading, refetch } = useCommissionAgents({ 
         page, 
         limit: 10, 
         search, 
-        branchId: activeStoreId || undefined,
-        ...filters
+        branchId: activeStoreId || undefined
     })
     
-    const { data: branchesRes } = useBranches()
-    const { data: departmentsRes } = useDepartments({ 
-        branchId: activeStoreId || undefined,
-        limit: 100 
-    })
-    const deleteMutation = useDeleteDesignation()
+    const deleteMutation = useDeleteCommissionAgent()
 
-    const designations = designationsRes?.data || []
-    const branches = branchesRes?.data || []
-    const departments = departmentsRes?.data || []
+    const agents = agentsRes?.data || []
+    const meta = agentsRes?.meta
 
     const handleDelete = async (id: string) => {
-        if (confirm("Are you sure you want to delete this designation?")) {
+        if (confirm("Are you sure you want to delete this commission agent?")) {
             try {
                 await deleteMutation.mutateAsync(id)
-                toast.success("Designation deleted successfully")
+                toast.success("Commission agent deleted successfully")
             } catch (error) {
-                toast.error("Failed to delete designation")
+                toast.error("Failed to delete commission agent")
             }
         }
     }
@@ -75,16 +57,16 @@ export default function DesignationsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Designations</h1>
-                    <p className="text-muted-foreground">Manage job roles within departments.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Commission Agents</h1>
+                    <p className="text-muted-foreground">Manage hospital agents and their commission rates.</p>
                 </div>
-                {hasPermission('designation:create') && (
+                {hasPermission('agent:create') && (
                 <Button onClick={() => {
-                    setSelectedDesignation(null)
-                    setDesignationDialogOpen(true)
+                    setSelectedAgent(null)
+                    setAgentDialogOpen(true)
                 }}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Designation
+                    Add Agent
                 </Button>
                 )}
             </div>
@@ -93,14 +75,14 @@ export default function DesignationsPage() {
                 <CardHeader className="pb-3">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                           <h3 className="font-semibold text-lg">Designation List</h3>
-                           <p className="text-sm text-muted-foreground">Detailed list of all job roles.</p>
+                           <h3 className="font-semibold text-lg">Agent List</h3>
+                           <p className="text-sm text-muted-foreground">Detailed list of all registered commission agents.</p>
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto">
                             <div className="relative flex-1 md:w-64">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search designations..."
+                                    placeholder="Search agents..."
                                     className="pl-8 h-9"
                                     value={search}
                                     onChange={(e) => {
@@ -109,19 +91,6 @@ export default function DesignationsPage() {
                                     }}
                                 />
                             </div>
-                            <FilterPopover 
-                                activeFilterCount={activeFilterCount}
-                                onReset={resetFilters}
-                            >
-                                <DesignationFilters 
-                                    values={filters}
-                                    onChange={(v) => {
-                                        setFilters(v)
-                                        setPage(1)
-                                    }}
-                                    departments={departments}
-                                />
-                            </FilterPopover>
                         </div>
                     </div>
                 </CardHeader>
@@ -129,9 +98,9 @@ export default function DesignationsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Designation</TableHead>
-                                <TableHead>Bangla Name</TableHead>
-                                <TableHead>Department</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Phone</TableHead>
+                                <TableHead>Commission (%)</TableHead>
                                 <TableHead>Branch</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -143,47 +112,60 @@ export default function DesignationsPage() {
                                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                     </TableCell>
                                 </TableRow>
-                            ) : designations.length === 0 ? (
+                            ) : agents.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        No designations found.
+                                        No agents found.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                designations.map((desg) => (
-                                    <TableRow key={desg.id}>
-                                        <TableCell className="font-medium">{desg.name}</TableCell>
-                                        <TableCell>{desg.nameBangla || '-'}</TableCell>
+                                agents.map((agent) => (
+                                    <TableRow key={agent.id}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex flex-col">
+                                                <span>{agent.name}</span>
+                                                <span className="text-xs text-muted-foreground">{agent.nameBangla}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{agent.phone}</TableCell>
                                         <TableCell>
-                                            <Badge variant="secondary">
-                                                {desg.department?.name || desg.departmentId}
+                                            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                                                <Wallet className="w-3 h-3 mr-1" />
+                                                {agent.commissionPercentage}%
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline">
-                                                {branches.find(b => b.id === desg.branchId)?.name || desg.branchId}
+                                                {agent.branch?.name || agent.branchId}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
-                                                {hasPermission('designation:update') && (
+                                                {hasPermission('agent:read') && (
+                                                <Link href={`/hr/commission-agents/${agent.id}`}>
+                                                    <Button variant="outline" size="sm">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
+                                                )}
+                                                {hasPermission('agent:update') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
                                                     onClick={() => {
-                                                        setSelectedDesignation(desg)
-                                                        setDesignationDialogOpen(true)
+                                                        setSelectedAgent(agent)
+                                                        setAgentDialogOpen(true)
                                                     }}
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                                 )}
-                                                {hasPermission('designation:delete') && (
+                                                {hasPermission('agent:delete') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
                                                     className="text-destructive hover:text-destructive"
-                                                    onClick={() => handleDelete(desg.id)}
+                                                    onClick={() => handleDelete(agent.id)}
                                                     disabled={deleteMutation.isPending}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -196,13 +178,37 @@ export default function DesignationsPage() {
                             )}
                         </TableBody>
                     </Table>
+
+                    {meta && meta.totalPages > 1 && (
+                        <div className="flex items-center justify-end space-x-2 py-4">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                                disabled={!meta.hasPreviousPage}
+                            >
+                                Previous
+                            </Button>
+                            <div className="text-sm font-medium">
+                                Page {meta.page} of {meta.totalPages}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(prev => prev + 1)}
+                                disabled={!meta.hasNextPage}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
-            <DesignationDialog 
-                open={designationDialogOpen}
-                onOpenChange={setDesignationDialogOpen}
-                designation={selectedDesignation}
+            <CommissionAgentDialog 
+                open={agentDialogOpen}
+                onOpenChange={setAgentDialogOpen}
+                agent={selectedAgent}
                 onSuccess={() => refetch()}
             />
         </div>

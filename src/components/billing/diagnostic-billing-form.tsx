@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useEmployees } from "@/hooks/hr-queries"
+import { useDepartments, useEmployees, useCommissionAgents } from "@/hooks/hr-queries"
 import { useCreateSale, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -41,6 +41,7 @@ import { toast } from "sonner"
 
 import { PatientSearch } from "@/components/pharmacy/pos/patient-search"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { CommissionAgentSearch } from "@/components/hr/agent-search"
 import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 interface DiagnosticBillingFormProps {
@@ -74,7 +75,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "doctor", limit: 1000 })
     const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "staff", limit: 1000 })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 100, isActive: true })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
 
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")
@@ -144,8 +145,10 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     // Form State
     const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
+    const [selectedCommissionAgentId, setSelectedCommissionAgentId] = useState<string>("")
     const [selectedTestId, setSelectedTestId] = useState<string>("")
     const [selectedStaffId, setSelectedStaffId] = useState<string>("") // Global assigned staff default
+    const [roomNumber, setRoomNumber] = useState<string>("")
     const [cart, setCart] = useState<CartItem[]>([])
     
     // Payment State
@@ -263,6 +266,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             staffId: cart.find(c => c.staffId)?.staffId,
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,
+            commissionAgentId: selectedCommissionAgentId || undefined,
+            chamberOrRoomNumber: roomNumber || undefined,
             paymentStatus: paidAmount >= total ? 'paid' : paidAmount > 0 ? 'partial' : 'due',
             paidAmount: paidAmount,
             dueAmount: Math.max(0, total - paidAmount),
@@ -305,8 +310,9 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             setCart([])
             setSelectedCustomer(null)
             setSelectedDoctorId("")
-            setDiscount(0)
             setPaidAmount(0)
+            setSelectedCommissionAgentId("")
+            setDiscount(0)
             refetchSales()
             setDiscountFixedAmount(0)
         } catch (error) {
@@ -368,10 +374,32 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={doctorsRes?.data?.map(d => ({ id: d.id, name: d.name })) || []}
-                                        placeholder="Select Referring Doctor"
+                                        options={doctors.map((d: any) => ({ id: d.id, name: d.name }))}
+                                        placeholder="Select Doctor"
                                         loading={loadingDoctors}
                                         showAll={false}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                        Commission Agent
+                                    </Label>
+                                    <CommissionAgentSearch 
+                                        selectedAgentId={selectedCommissionAgentId}
+                                        onSelect={(agent) => setSelectedCommissionAgentId(agent?.id || "")}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                        Room / Chamber Number
+                                    </Label>
+                                    <Input 
+                                        placeholder="e.g. Room 101"
+                                        value={roomNumber}
+                                        onChange={(e) => setRoomNumber(e.target.value)}
+                                        className="h-9 text-sm"
                                     />
                                 </div>
                             </div>
@@ -998,6 +1026,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 onOpenChange={setReceiptOpen}
                 transaction={lastSale}
                 doctors={doctors}
+                patient={selectedCustomer}
+                doctor={doctors.find(d => d.id === selectedDoctorId)}
                 staffs={staffs}
             />
         </div>

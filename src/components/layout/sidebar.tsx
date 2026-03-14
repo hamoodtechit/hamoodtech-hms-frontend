@@ -16,6 +16,7 @@ import {
     Pill,
     Receipt,
     Settings,
+    Users,
     Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -169,21 +170,24 @@ export function Sidebar() {
               label: "Appointment Billing",
               href: "/billing/appointment",
               module: "appointment",
+              permission: "appointment:create",
           },
           {
               label: "Pathology Billing",
               href: "/billing/pathology",
               module: "diagnostic",
+              permission: "pathology:create",
           },
           {
               label: "Radiology Billing",
               href: "/billing/radiology",
               module: "diagnostic",
+              permission: "radiology:create",
           }
       ]
     },
     {
-      label: "Finance & HR",
+      label: "Finance & Accounts",
       icon: Wallet,
       color: "text-emerald-500",
       children: [
@@ -192,12 +196,19 @@ export function Sidebar() {
               href: "/finance",
               module: "finance",
               permission: "account:read",
-          },
+          }
+      ]
+    },
+    {
+      label: "HR Management",
+      icon: Users,
+      color: "text-orange-500",
+      children: [
           {
                 label: "Employees",
                 href: "/hr/employees",
                 module: "hr",
-                permission: "user:read",
+                permission: "employee:read",
           },
           {
                 label: "Departments",
@@ -210,6 +221,12 @@ export function Sidebar() {
                 href: "/hr/designations",
                 module: "hr",
                 permission: "designation:read",
+          },
+          {
+                label: "Commission Agents",
+                href: "/hr/commission-agents",
+                module: "hr",
+                permission: "agent:read",
           }
       ]
     },

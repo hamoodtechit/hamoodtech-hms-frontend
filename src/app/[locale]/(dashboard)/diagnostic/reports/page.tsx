@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDiagnosticReports } from "@/hooks/diagnostic-queries"
 import { useDebounce } from "@/hooks/use-debounce"
+import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticReport, ReportStatus, SampleStatus } from "@/types/diagnostic"
@@ -43,6 +44,7 @@ import {
 import { useState } from "react"
 
 export default function DiagnosticReportsPage() {
+    const { hasPermission } = usePermissions()
     const [reportStatus, setReportStatus] = useState<ReportStatus | 'all'>('all')
     const [sampleStatus, setSampleStatus] = useState<SampleStatus | 'all'>('all')
     const [search, setSearch] = useState("")
@@ -68,7 +70,19 @@ export default function DiagnosticReportsPage() {
         barcode: debouncedBarcode || undefined,
     })
 
-    const reports = reportsRes?.data || []
+    const allReports = reportsRes?.data || []
+
+    // Filter reports based on User Permissions (Radiology vs Pathology)
+    const isRadiologyUser = hasPermission('radiology:create')
+    const isPathologyUser = hasPermission('pathology:create')
+
+    const reports = allReports.filter(report => {
+        const saleType = (report.saleItem as any)?.sale?.type;
+        // If user only has one specific permission, restrict the list
+        if (isRadiologyUser && !isPathologyUser) return saleType === 'radiology';
+        if (isPathologyUser && !isRadiologyUser) return saleType === 'pathology';
+        return true; // Show all if they have both or neither (module default)
+    });
 
     const activeFilterCount = [
         sampleStatus !== 'all',
@@ -103,6 +117,10 @@ export default function DiagnosticReportsPage() {
         'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
 
+    // Dynamic Title based on restricted view
+    const pageTitle = (isRadiologyUser && !isPathologyUser) ? "Radiology Worklist" : 
+                     (isPathologyUser && !isRadiologyUser) ? "Pathology Worklist" : "Lab Worklist";
+
     return (
         <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">
             {/* Header */}
@@ -110,13 +128,13 @@ export default function DiagnosticReportsPage() {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-primary flex items-center gap-3">
                         <FlaskConical className="w-8 h-8" />
-                        Lab Worklist
+                        {pageTitle}
                     </h1>
                     <p className="text-muted-foreground text-sm font-medium">Manage the diagnostic lifecycle from requisition to approval.</p>
                 </div>
             </div>
 
-            {/* Hub Stats / Overview — only count from all-reports data */}
+            {/* Hub Stats / Overview — only count from filtered data */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 {Object.entries(statusConfig).map(([key, config]) => (
                     <Card

@@ -176,7 +176,7 @@ function SidebarBase() {
       permission: "diagnostic-test:read"
     },
     {
-        label: "Finance",
+        label: "Finance & Accounts",
         icon: Wallet,
         href: "/finance",
         color: "text-green-500",
@@ -198,7 +198,7 @@ function SidebarBase() {
     },
     {
       label: "HR Management",
-      icon: Briefcase as any,
+      icon: Users,
       color: "text-orange-500",
       children: [
           {
@@ -215,6 +215,11 @@ function SidebarBase() {
               label: "Designations",
               href: "/hr/designations",
               permission: "designation:read",
+          },
+          {
+              label: "Commission Agents",
+              href: "/hr/commission-agents",
+              permission: "user:read",
           }
       ]
     },

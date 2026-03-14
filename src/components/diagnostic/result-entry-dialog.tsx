@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useEnterResult } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
+import { usePermissions } from "@/hooks/use-permissions"
 import { DiagnosticReport, DiagnosticResult, ResultMode, ResultTableRow } from "@/types/diagnostic"
 import { Activity, Beaker, Bold, ClipboardList, FileText, Italic, List, Loader2, Plus, Save, Trash2, Underline, User, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -64,6 +65,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 }
 
 export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: ResultEntryDialogProps) {
+    const { hasPermission } = usePermissions()
     const [mode, setMode] = useState<ResultMode>("table")
     const [technicianId, setTechnicianId] = useState("")
     const [reportHeader, setReportHeader] = useState("")
@@ -101,21 +103,40 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 setMode(res.mode || 'table')
                 setReportHeader(res.reportHeader || defaultHeader)
                 setMachineInfo(res.machineInfo || "")
-                    if (res.mode === 'table' && res.rows) setRows(res.rows)
-                    if (res.mode === 'narrative') {
-                        setContent(res.content || "")
-                        setInterpretation(res.interpretation || "")
-                        setPreparedBy(res.preparedBy || "")
-                    }
-                    setConsultantName(res.consultantName || (report.saleItem as any)?.sale?.doctor?.name || "")
-                    setDoctorDegrees(res.doctorDegrees || "")
-                } else {
-                    // Pre-fill consultant from sale even if no result yet
-                    const saleDoc = (report.saleItem as any)?.sale?.doctor?.name;
-                    if (saleDoc) setConsultantName(saleDoc);
+                if (res.mode === 'table' && res.rows) setRows(res.rows)
+                if (res.mode === 'narrative') {
+                    setContent(res.content || "")
+                    setInterpretation(res.interpretation || "")
+                    setPreparedBy(res.preparedBy || "")
                 }
+                setConsultantName(res.consultantName || (report.saleItem as any)?.sale?.doctor?.name || "")
+                setDoctorDegrees(res.doctorDegrees || "")
+            } else {
+                // If no result exists yet, determine default mode
+                // Priority 1: User granular permissions (from on-the-fly request)
+                const isRadiologyUser = hasPermission('radiology:create');
+                const isPathologyUser = hasPermission('pathology:create');
+
+                if (isRadiologyUser && !isPathologyUser) {
+                    setMode('narrative');
+                } else if (isPathologyUser && !isRadiologyUser) {
+                    setMode('table');
+                } else {
+                    // Priority 2: Sale type from billing
+                    const saleType = (report.saleItem as any)?.sale?.type;
+                    if (saleType === 'radiology') {
+                        setMode('narrative');
+                    } else {
+                        setMode('table');
+                    }
+                }
+
+                // Pre-fill consultant from sale even if no result yet
+                const saleDoc = (report.saleItem as any)?.sale?.doctor?.name;
+                if (saleDoc) setConsultantName(saleDoc);
             }
-        }, [open, report])
+        }
+    }, [open, report, hasPermission])
 
     const addRow = () => {
         setRows([...rows, { parameter: "", value: "", unit: "", referenceRange: "" }])

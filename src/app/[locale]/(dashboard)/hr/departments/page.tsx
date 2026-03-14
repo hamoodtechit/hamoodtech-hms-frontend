@@ -15,6 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useDeleteDepartment, useDepartments } from "@/hooks/hr-queries"
 import { useBranches } from "@/hooks/pharmacy-queries"
 import { useStoreContext } from "@/store/use-store-context"
@@ -24,6 +25,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 export default function DepartmentsPage() {
+    const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [filters, setFilters] = useState<DepartmentFilterValues>({})
@@ -70,6 +72,7 @@ export default function DepartmentsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Departments</h1>
                     <p className="text-muted-foreground">Manage departments across branches.</p>
                 </div>
+                {hasPermission('department:create') && (
                 <Button onClick={() => {
                     setSelectedDepartment(null)
                     setDepartmentDialogOpen(true)
@@ -77,6 +80,7 @@ export default function DepartmentsPage() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add Department
                 </Button>
+                )}
             </div>
 
             <Card>
@@ -153,6 +157,7 @@ export default function DepartmentsPage() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
+                                                {hasPermission('department:update') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
@@ -163,6 +168,8 @@ export default function DepartmentsPage() {
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
+                                                )}
+                                                {hasPermission('department:delete') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
@@ -172,6 +179,7 @@ export default function DepartmentsPage() {
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -186,7 +194,7 @@ export default function DepartmentsPage() {
                 open={departmentDialogOpen}
                 onOpenChange={setDepartmentDialogOpen}
                 department={selectedDepartment}
-                onSuccess={refetch}
+                onSuccess={() => refetch()}
             />
         </div>
     )

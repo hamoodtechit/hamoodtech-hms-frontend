@@ -6,7 +6,9 @@ import {
     DesignationPayload,
     Employee,
     EmployeePayload,
-    HRPaginatedResponse
+    HRPaginatedResponse,
+    CommissionAgent,
+    CommissionAgentPayload
 } from "@/types/hr";
 
 export const hrService = {
@@ -93,5 +95,35 @@ export const hrService = {
 
   deleteEmployee: async (id: string): Promise<void> => {
     await api.delete(`/hr/employees/${id}`);
+  },
+
+  // Commission Agent APIs
+  getCommissionAgents: async (params?: { 
+    page?: number | string; 
+    limit?: number | string; 
+    search?: string; 
+    branchId?: string;
+  }): Promise<HRPaginatedResponse<CommissionAgent>> => {
+    const response = await api.get<HRPaginatedResponse<CommissionAgent>>("/commission-agents", { params });
+    return response.data;
+  },
+
+  getCommissionAgent: async (id: string): Promise<{ success: boolean; data: CommissionAgent }> => {
+    const response = await api.get<{ success: boolean; data: CommissionAgent }>(`/commission-agents/${id}`);
+    return response.data;
+  },
+
+  createCommissionAgent: async (data: CommissionAgentPayload): Promise<CommissionAgent> => {
+    const response = await api.post("/commission-agents", data);
+    return response.data;
+  },
+
+  updateCommissionAgent: async (id: string, data: Partial<CommissionAgentPayload>): Promise<CommissionAgent> => {
+    const response = await api.put(`/commission-agents/${id}`, data);
+    return response.data;
+  },
+
+  deleteCommissionAgent: async (id: string): Promise<void> => {
+    await api.delete(`/commission-agents/${id}`);
   },
 };

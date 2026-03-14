@@ -16,6 +16,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useDeleteEmployee, useDepartments, useDesignations, useEmployees } from "@/hooks/hr-queries"
 import { useBranches } from "@/hooks/pharmacy-queries"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 export default function EmployeesPage() {
+    const { hasPermission } = usePermissions()
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [filters, setFilters] = useState<EmployeeFilterValues>({})
@@ -100,6 +102,7 @@ export default function EmployeesPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
                     <p className="text-muted-foreground">Manage hospital staff and medical professionals.</p>
                 </div>
+                {hasPermission('employee:create') && (
                 <Button onClick={() => {
                     setSelectedEmployee(null)
                     setEmployeeDialogOpen(true)
@@ -107,6 +110,7 @@ export default function EmployeesPage() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add Employee
                 </Button>
+                )}
             </div>
 
             <Card>
@@ -228,6 +232,7 @@ export default function EmployeesPage() {
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
+                                                {hasPermission('employee:update') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
@@ -239,6 +244,8 @@ export default function EmployeesPage() {
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
+                                                )}
+                                                {hasPermission('employee:delete') && (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
@@ -248,6 +255,7 @@ export default function EmployeesPage() {
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -262,7 +270,7 @@ export default function EmployeesPage() {
                 open={employeeDialogOpen}
                 onOpenChange={setEmployeeDialogOpen}
                 employee={selectedEmployee}
-                onSuccess={refetch}
+                onSuccess={() => refetch()}
             />
 
             <EmployeeDetailsDialog 

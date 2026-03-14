@@ -64,7 +64,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         grossSalary: 0,
         joiningDate: new Date().toISOString().split('T')[0],
         leavingDate: "",
-        status: "active" as "active" | "inactive" | "on_leave" | "terminated"
+        status: "active" as "active" | "inactive" | "on_leave" | "terminated",
+        chamberOrRoomNumber: ""
     })
 
     const { data: departmentsRes } = useDepartments({ 
@@ -98,7 +99,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     grossSalary: Number(employee.grossSalary),
                     joiningDate: employee.joiningDate ? employee.joiningDate.split('T')[0] : "",
                     leavingDate: employee.leavingDate ? employee.leavingDate.split('T')[0] : "",
-                    status: employee.status
+                    status: employee.status,
+                    chamberOrRoomNumber: employee.chamberOrRoomNumber || ""
                 })
             } else {
                 setFormData({
@@ -119,7 +121,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     grossSalary: 0,
                     joiningDate: new Date().toISOString().split('T')[0],
                     leavingDate: "",
-                    status: "active"
+                    status: "active",
+                    chamberOrRoomNumber: ""
                 })
             }
         }
@@ -257,6 +260,14 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                             <SelectItem value="terminated">Terminated</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>{formData.employeeType === 'doctor' ? 'Chamber Number' : 'Room Number'}</Label>
+                                    <Input 
+                                        value={formData.chamberOrRoomNumber}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, chamberOrRoomNumber: e.target.value }))}
+                                        placeholder={formData.employeeType === 'doctor' ? "e.g. Room 302" : "e.g. 201"}
+                                    />
                                 </div>
                             </div>
                         </div>

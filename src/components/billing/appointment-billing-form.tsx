@@ -110,6 +110,7 @@ export function AppointmentBillingForm() {
     const [appointmentDate, setAppointmentDate] = useState<string>(new Date().toISOString().split('T')[0])
     const [timeSlot, setTimeSlot] = useState<string>("")
     const [consultationFee, setConsultationFee] = useState<number>(500) // Default fee
+    const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     
     // Payment State
     const [discount, setDiscount] = useState<number>(0)
@@ -127,6 +128,16 @@ export function AppointmentBillingForm() {
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [initialAddPayment, setInitialAddPayment] = useState(false)
+    
+    // Auto-fill room based on doctor
+    useEffect(() => {
+        if (selectedDoctorId) {
+            const doctor: any = doctors.find((d: any) => d.id === selectedDoctorId)
+            if (doctor?.chamberOrRoomNumber) {
+                setChamberOrRoomNumber(doctor.chamberOrRoomNumber)
+            }
+        }
+    }, [selectedDoctorId, doctors])
 
 
     // Totals
@@ -168,6 +179,7 @@ export function AppointmentBillingForm() {
                 date: appointmentDate,
                 timeSlot: timeSlot,
                 fees: consultationFee,
+                chamberOrRoomNumber: chamberOrRoomNumber,
                 status: 'confirmed'
             })
 
@@ -219,6 +231,7 @@ export function AppointmentBillingForm() {
             setSelectedDepartmentId("")
             setTimeSlot("")
             setConsultationFee(500)
+            setChamberOrRoomNumber("")
             setPaidAmount(0)
             setDiscount(0)
             setDiscountFixedAmount(0)
@@ -320,6 +333,17 @@ export function AppointmentBillingForm() {
                                         type="date"
                                         value={appointmentDate}
                                         onChange={(e: any) => setAppointmentDate(e.target.value)}
+                                        className="h-10 border-primary/20"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                        Room / Chamber
+                                    </Label>
+                                    <Input 
+                                        value={chamberOrRoomNumber}
+                                        onChange={(e: any) => setChamberOrRoomNumber(e.target.value)}
+                                        placeholder="e.g. Room 302"
                                         className="h-10 border-primary/20"
                                     />
                                 </div>
@@ -865,6 +889,8 @@ export function AppointmentBillingForm() {
                 onOpenChange={setReceiptOpen}
                 transaction={lastSale}
                 doctors={doctors}
+                patient={selectedCustomer}
+                doctor={doctors.find(d => d.id === selectedDoctorId)}
             />
         </div>
     )
