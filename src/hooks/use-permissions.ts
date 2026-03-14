@@ -7,16 +7,25 @@ export function usePermissions() {
   const hasPermission = (permission: string) => {
     if (!user) return false;
 
-    // Check for super admin wildcard
+    // 1. Check for super admin wildcard in direct permissions
     if (user.permissions && user.permissions.includes('*')) {
       return true;
     }
 
-    // Check role-based permissions
+    // 2. Check Role name as a reliable fallback for Super Admin access
+    const roleName = user.role?.name?.toLowerCase();
+    if (roleName === 'super admin' || roleName === 'admin') {
+      return true;
+    }
+
+    // 3. Check specific permissions in the role
     if (user.role && user.role.permissions) {
-      const has = user.role.permissions.some(p => p.key === permission);
-      
-      return has;
+      // Check for wildcard inside role permissions array
+      const hasWildcard = user.role.permissions.some(p => p.key === '*');
+      if (hasWildcard) return true;
+
+      // Check for specific key
+      return user.role.permissions.some(p => p.key === permission);
     }
 
     return false;
@@ -33,10 +42,19 @@ export function usePermissions() {
   const hasModuleAccess = (moduleName: string) => {
     if (!user) return false;
     
-    // Super admin fallback
+    // 1. Super admin fallback (direct or role name)
     if (user.permissions && user.permissions.includes('*')) return true;
+    
+    const roleName = user.role?.name?.toLowerCase();
+    if (roleName === 'super admin' || roleName === 'admin') {
+      return true;
+    }
 
+    // 2. Check if any permission in the role matches this module
     if (user.role && user.role.permissions) {
+        // If they have a wildcard permission, they have access to all modules
+        if (user.role.permissions.some(p => p.key === '*')) return true;
+        
         return user.role.permissions.some(p => p.module === moduleName);
     }
     return false;
