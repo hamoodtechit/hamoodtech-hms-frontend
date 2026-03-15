@@ -159,12 +159,6 @@ export function Sidebar() {
               href: "/diagnostic/reports",
               module: "diagnostic",
               permission: ["pathology:read", "radiology:read"],
-          },
-          {
-              label: "Report Templates",
-              href: "/diagnostic/templates",
-              module: "diagnostic",
-              permission: "report-template:read",
           }
       ]
     },
