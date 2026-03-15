@@ -74,7 +74,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const [machineInfo, setMachineInfo] = useState("")
     const [reportNotes, setReportNotes] = useState("")
     const [consultantName, setConsultantName] = useState("")
+    const [consultantDesignation, setConsultantDesignation] = useState("")
     const [doctorDegrees, setDoctorDegrees] = useState("")
+    const [doctorDesignation, setDoctorDesignation] = useState("")
     
     // Table mode state
     const [rows, setRows] = useState<ResultTableRow[]>([
@@ -125,7 +127,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                     setPreparedBy(res.preparedBy || "")
                 }
                 setConsultantName(res.consultantName || (report.saleItem as any)?.sale?.doctor?.name || "")
+                setConsultantDesignation(res.consultantDesignation || "")
                 setDoctorDegrees(res.doctorDegrees || "")
+                setDoctorDesignation(res.doctorDesignation || "")
             } else {
                 // If no result exists yet, determine default mode
                 // Priority 1: User granular permissions (from on-the-fly request)
@@ -147,8 +151,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 }
 
                 // Pre-fill consultant from sale even if no result yet
-                const saleDoc = (report.saleItem as any)?.sale?.doctor?.name;
-                if (saleDoc) setConsultantName(saleDoc);
+                const saleDoc = (report.saleItem as any)?.sale?.doctor;
+                if (saleDoc?.name) setConsultantName(saleDoc.name);
+                if (saleDoc?.designation?.name) setConsultantDesignation(saleDoc.designation.name);
             }
         }
     }, [open, report, hasPermission])
@@ -182,7 +187,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             content, 
             interpretation, 
             consultantName, 
-            doctorDegrees 
+            consultantDesignation,
+            doctorDegrees,
+            doctorDesignation
         }
 
         try {
@@ -215,7 +222,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             if (data.content) setContent(data.content)
             if (data.interpretation) setInterpretation(data.interpretation)
             if (data.consultantName) setConsultantName(data.consultantName)
+            if (data.consultantDesignation) setConsultantDesignation(data.consultantDesignation)
             if (data.doctorDegrees) setDoctorDegrees(data.doctorDegrees)
+            if (data.doctorDesignation) setDoctorDesignation(data.doctorDesignation)
             setSelectedTemplateId(templateId)
             toast.success(`Template "${template.name}" loaded`)
         } catch {
@@ -253,12 +262,21 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             reportHeader,
             machineInfo,
             consultantName,
+            consultantDesignation,
             doctorDegrees,
+            doctorDesignation,
             rows: mode === 'table' ? rows.filter(r => r.parameter.trim() !== "") : undefined,
             content: mode === 'narrative' ? content : undefined,
             interpretation: mode === 'narrative' ? interpretation : undefined,
             preparedBy: mode === 'narrative' ? preparedBy : undefined,
         }
+
+        console.log("RESULT_ENTRY_SUBMIT_PAYLOAD:", {
+            id: report.id,
+            technicianId,
+            result: payload,
+            reportNotes
+        })
 
         try {
             await enterResult.mutateAsync({ 
@@ -367,27 +385,53 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                             className="h-10 rounded-xl bg-background border-none text-xs shadow-sm"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                            <User className="w-3 h-3 text-amber-500" /> Referred Consultant
-                                        </Label>
-                                        <Input 
-                                            value={consultantName} 
-                                            onChange={e => setConsultantName(e.target.value)} 
-                                            placeholder="Doctor Name (e.g. Dr. Ebrahim)"
-                                            className="h-10 rounded-xl bg-background border-none font-bold shadow-sm"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                <User className="w-3 h-3 text-amber-500" /> Referred Consultant Name
+                                            </Label>
+                                            <Input 
+                                                value={consultantName} 
+                                                onChange={e => setConsultantName(e.target.value)} 
+                                                placeholder="Doctor Name (e.g. Dr. Ebrahim)"
+                                                className="h-10 rounded-xl bg-background border-none font-bold shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                <User className="w-3 h-3 text-amber-300" /> Consultant Designation
+                                            </Label>
+                                            <Input 
+                                                value={consultantDesignation} 
+                                                onChange={e => setConsultantDesignation(e.target.value)} 
+                                                placeholder="e.g. Cardiologi"
+                                                className="h-10 rounded-xl bg-background border-none text-xs shadow-sm"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                            <ClipboardList className="w-3 h-3 text-indigo-500" /> Pathologist Degrees
-                                        </Label>
-                                        <Input 
-                                            value={doctorDegrees} 
-                                            onChange={e => setDoctorDegrees(e.target.value)} 
-                                            placeholder="e.g. MBBS, BCS (Health) CMU"
-                                            className="h-10 rounded-xl bg-background border-none text-xs shadow-sm"
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                <ClipboardList className="w-3 h-3 text-indigo-500" /> Pathologist Degrees
+                                            </Label>
+                                            <Input 
+                                                value={doctorDegrees} 
+                                                onChange={e => setDoctorDegrees(e.target.value)} 
+                                                placeholder="e.g. MBBS, BCS (Health) CMU"
+                                                className="h-10 rounded-xl bg-background border-none text-xs shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                <ClipboardList className="w-3 h-3 text-indigo-300" /> Pathologist Designation
+                                            </Label>
+                                            <Input 
+                                                value={doctorDesignation} 
+                                                onChange={e => setDoctorDesignation(e.target.value)} 
+                                                placeholder="e.g. Senior Pathologist"
+                                                className="h-10 rounded-xl bg-background border-none text-xs shadow-sm"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 

@@ -60,7 +60,9 @@ export interface DiagnosticResult {
   interpretation?: string; // Comment/Impression
   preparedBy?: string;   // Name of technical person
   consultantName?: string; // Referred by doctor name
+  consultantDesignation?: string;
   doctorDegrees?: string;  // Approving pathologist degrees
+  doctorDesignation?: string;
 }
 
 export interface DiagnosticReport {

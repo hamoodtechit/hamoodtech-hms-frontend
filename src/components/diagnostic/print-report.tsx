@@ -1,10 +1,10 @@
 "use client"
 
 import { useDiagnosticReport } from "@/hooks/diagnostic-queries"
+import { cn } from "@/lib/utils"
 import { DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 interface PrintReportProps {
     report: DiagnosticReport
@@ -14,6 +14,8 @@ export function PrintReport({ report }: PrintReportProps) {
     // Fetch full details (has full patient object with patientNumber etc.)
     const { data: detailRes, isLoading } = useDiagnosticReport(report.id)
     const detail = detailRes?.data ?? report
+
+    
 
     const patient = (detail?.patient) as any
     const saleItem = (detail as any)?.saleItem
@@ -78,7 +80,10 @@ export function PrintReport({ report }: PrintReportProps) {
                         </tr>
                         <tr>
                             <td className="pr-1 py-1 font-bold">Consultant</td>
-                            <td className="pr-4 py-1 text-[10pt]">: <span className="font-bold">{result?.consultantName || (detail as any)?.sale?.doctor?.name || "—"}</span></td>
+                            <td className="pr-4 py-1 text-[10pt]">
+                                : <span className="font-bold">{result?.consultantName || (detail as any)?.sale?.doctor?.name || "—"}</span>
+                                {result?.consultantDesignation && <span className="text-[8.5pt] ml-1 opacity-70">({result.consultantDesignation})</span>}
+                            </td>
                             <td className="pr-1 py-1 font-bold">Specimen</td>
                             <td className="py-1">: <span className="font-bold">{detail?.sampleDetails || "—"}</span></td>
                         </tr>
@@ -174,11 +179,14 @@ export function PrintReport({ report }: PrintReportProps) {
                                 <p className="font-black border-b-2 border-black pb-0.5 uppercase tracking-tight text-[11pt] whitespace-nowrap inline-block">
                                     {approvedBy?.name || "—"}
                                 </p>
-                                <p className="text-[9.5pt] font-black italic leading-tight mt-1">
-                                    {result?.doctorDegrees && result.doctorDegrees !== "—" 
-                                        ? result.doctorDegrees 
-                                        : (approvedBy?.designation?.name || "—")}
-                                </p>
+                                <div className="mt-1 flex flex-col items-end">
+                                    <p className="text-[9.5pt] font-black italic leading-tight">
+                                        {result?.doctorDegrees && result.doctorDegrees !== "—" ? result.doctorDegrees : "—"}
+                                    </p>
+                                    <p className="text-[8.5pt] font-bold text-gray-700 italic leading-tight uppercase tracking-tight">
+                                        {result?.doctorDesignation || approvedBy?.designation?.name || "—"}
+                                    </p>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
