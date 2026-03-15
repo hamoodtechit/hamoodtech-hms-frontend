@@ -39,13 +39,13 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
                 collectedById,
                 sampleDetails
             }
-            console.log("COLLECT_SAMPLE_PAYLOAD:", { id: report.id, data: payload })
+           
             
             const res = await collectSample.mutateAsync({
                 id: report.id,
                 data: payload
             })
-            console.log("COLLECT_SAMPLE_RESPONSE:", res)
+            
             
             toast.success("Sample collection recorded")
             setCollectedById("")

@@ -47,10 +47,10 @@ export function RequisitionDialog({ open, onOpenChange, onSuccess }: Requisition
                 branchId: activeStoreId || "",
                 diagnosticTestId: selectedTest.id
             }
-            console.log("CREATING_REQUISITION_PAYLOAD:", payload)
+            
             
             const res = await createRequisition.mutateAsync(payload)
-            console.log("REQUISITION_CREATED_RESPONSE:", res)
+            
             
             toast.success("Test requisition created successfully")
             setSelectedPatient(null)

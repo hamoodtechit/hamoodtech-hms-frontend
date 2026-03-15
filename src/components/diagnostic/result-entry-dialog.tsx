@@ -5,17 +5,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useEnterResult, useReportTemplates, useCreateReportTemplate, useUpdateReportTemplate, useDeleteReportTemplate } from "@/hooks/diagnostic-queries"
+import { Textarea } from "@/components/ui/textarea"
+import { useCreateReportTemplate, useDeleteReportTemplate, useEnterResult, useReportTemplates, useUpdateReportTemplate } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { usePermissions } from "@/hooks/use-permissions"
+import { cn } from "@/lib/utils"
+import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticReport, DiagnosticResult, ResultMode, ResultTableRow } from "@/types/diagnostic"
 import { Activity, Beaker, Bold, ClipboardList, FileText, Italic, List, Loader2, Plus, Save, Trash2, Underline, User, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useStoreContext } from "@/store/use-store-context"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 
 interface ResultEntryDialogProps {
     open: boolean
@@ -112,7 +112,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             const testName = report.diagnosticTest?.name;
             const defaultHeader = (testName || "DIAGNOSTIC").toUpperCase() + " REPORT";
             
-            setReportHeader(defaultHeader)
+            
+            setReportHeader(prev => prev || defaultHeader)
             
             // Try to load any existing result if editing
             if (report.result && typeof report.result === 'object' && 'mode' in report.result) {
@@ -131,32 +132,58 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 setDoctorDegrees(res.doctorDegrees || "")
                 setDoctorDesignation(res.doctorDesignation || "")
             } else {
-                // If no result exists yet, determine default mode
-                // Priority 1: User granular permissions (from on-the-fly request)
+                // If no result exists yet, determine default mode ONLY IF not already set
+                // Priority 1: User granular permissions
                 const isRadiologyUser = hasPermission('radiology:create');
                 const isPathologyUser = hasPermission('pathology:create');
 
-                if (isRadiologyUser && !isPathologyUser) {
+                // Priority 2: Smarter detection
+                const saleItem = (report.saleItem as any);
+                const saleType = saleItem?.sale?.type || saleItem?.type;
+                const diagnosticTest = report.diagnosticTest as any;
+                const deptName = (diagnosticTest?.department?.name || "").toLowerCase();
+                const tName = (diagnosticTest?.name || "").toLowerCase();
+                
+                const radiologyKeywords = [
+                    'radiology', 'imaging', 'x-ray', 'usg', 'ultrasonography', 
+                    'mri', 'ct scan', 'ecg', 'echo', 'doppler', 'scan', 'view',
+                    'ultrasound', 'radiography', 'ecg', 'xray'
+                ];
+                
+                const isRadiologyTest = 
+                    saleType === 'radiology' || 
+                    radiologyKeywords.some(kw => deptName.includes(kw) || tName.includes(kw));
+
+                const isExplicitPathology = 
+                    tName.includes('cbc') || 
+                    tName.includes('blood') || 
+                    tName.includes('serum') ||
+                    tName.includes('urine') ||
+                    tName.includes('stool') || 
+                    deptName.includes('pathology') || 
+                    deptName.includes('biochemistry') || 
+                    deptName.includes('hematology');
+
+                
+
+                // Only set default mode if there's no result and it's currently the initial 'table' state
+                // but we might want to switch to narrative. 
+                // To be safe, we only do this once when 'open' becomes true.
+                if (isRadiologyTest && !isExplicitPathology) {
                     setMode('narrative');
-                } else if (isPathologyUser && !isRadiologyUser) {
-                    setMode('table');
+                } else if (isRadiologyUser && !isPathologyUser) {
+                    setMode('narrative');
                 } else {
-                    // Priority 2: Sale type from billing
-                    const saleType = (report.saleItem as any)?.sale?.type;
-                    if (saleType === 'radiology') {
-                        setMode('narrative');
-                    } else {
-                        setMode('table');
-                    }
+                    setMode('table');
                 }
 
-                // Pre-fill consultant from sale even if no result yet
+                // Pre-fill consultant from sale
                 const saleDoc = (report.saleItem as any)?.sale?.doctor;
                 if (saleDoc?.name) setConsultantName(saleDoc.name);
                 if (saleDoc?.designation?.name) setConsultantDesignation(saleDoc.designation.name);
             }
         }
-    }, [open, report, hasPermission])
+    }, [open, report?.id, hasPermission]) // Depend on report?.id instead of report object
 
     const addRow = () => {
         setRows([...rows, { parameter: "", value: "", unit: "", referenceRange: "" }])
@@ -271,12 +298,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             preparedBy: mode === 'narrative' ? preparedBy : undefined,
         }
 
-        console.log("RESULT_ENTRY_SUBMIT_PAYLOAD:", {
-            id: report.id,
-            technicianId,
-            result: payload,
-            reportNotes
-        })
+        
 
         try {
             await enterResult.mutateAsync({ 

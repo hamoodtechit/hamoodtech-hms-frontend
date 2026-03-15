@@ -50,7 +50,7 @@ export function BatchList({ itemId, initialStocks, branchId }: BatchListProps) {
         try {
             setLoading(true)
             const response = await pharmacyService.getMedicine(itemId)
-            console.log("Batch List Data fetched:", response.data.stocks)
+           
             setAllStocks(response.data.stocks || [])
         } catch (error) {
             toast.error("Failed to load batch data")

@@ -1,10 +1,11 @@
 
 import { useAuthStore } from "@/store/use-auth-store";
+import { useCallback } from "react";
 
 export function usePermissions() {
   const { user } = useAuthStore();
 
-  const hasPermission = (permission: string) => {
+  const hasPermission = useCallback((permission: string) => {
     if (!user) return false;
 
     // 1. Check for super admin wildcard in direct permissions
@@ -29,17 +30,17 @@ export function usePermissions() {
     }
 
     return false;
-  };
+  }, [user]);
 
-  const hasAnyPermission = (permissions: string[]) => {
+  const hasAnyPermission = useCallback((permissions: string[]) => {
     return permissions.some(permission => hasPermission(permission));
-  };
+  }, [hasPermission]);
 
-  const hasAllPermissions = (permissions: string[]) => {
+  const hasAllPermissions = useCallback((permissions: string[]) => {
     return permissions.every(permission => hasPermission(permission));
-  };
+  }, [hasPermission]);
 
-  const hasModuleAccess = (moduleName: string) => {
+  const hasModuleAccess = useCallback((moduleName: string) => {
     if (!user) return false;
     
     // 1. Super admin fallback (direct or role name)
@@ -58,7 +59,7 @@ export function usePermissions() {
         return user.role.permissions.some(p => p.module === moduleName);
     }
     return false;
-  };
+  }, [user]);
 
   return {
     hasPermission,

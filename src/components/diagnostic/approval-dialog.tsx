@@ -38,13 +38,13 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                 approvedById,
                 digitalSignature: "verified-digital-signature"
             }
-            console.log("APPROVE_REPORT_PAYLOAD:", { id: report.id, data: payload })
+            
             
             const res = await approveReport.mutateAsync({
                 id: report.id,
                 data: payload
             })
-            console.log("APPROVE_REPORT_RESPONSE:", res)
+            
             
             toast.success("Report approved and finalized")
             setApprovedById("")

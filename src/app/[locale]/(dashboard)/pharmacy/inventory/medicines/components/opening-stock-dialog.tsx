@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 import { Medicine } from "@/types/pharmacy"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2, Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { MasterDataDialog } from "../../../setup/components/master-data-dialog"
 
@@ -66,15 +66,7 @@ export function OpeningStockDialog({ open, onOpenChange, medicine, branchId }: O
     const { data: unitsRes } = usePharmacyEntities('units')
     const units = unitsRes?.data || []
 
-    useEffect(() => {
-        if (open && medicine) {
-            console.log("Opening Stock Medicine Data:", medicine)
-            setUnit(medicine.unit || "")
-            setUnitPrice(Number(medicine.salePrice) || 0)
-            setMrp(Number(medicine.mrp) || 0)
-            setRackNumber(medicine.rackNumber || "")
-        }
-    }, [medicine, open])
+    
 
     const handleSave = async () => {
         if (!medicine || !branchId) return
