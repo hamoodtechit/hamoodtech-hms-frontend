@@ -39,12 +39,12 @@ export function Sidebar() {
     icon: any
     href?: string
     color?: string
-    permission?: string
+    permission?: string | string[]
     module?: string
     children?: {
         label: string
         href: string
-        permission?: string
+        permission?: string | string[]
         module?: string
     }[]
   }
@@ -121,7 +121,8 @@ export function Sidebar() {
           {
             label: "Pharmacy Reports",
             href: "/reports",
-            permission: "report:read",
+            module: "sales",
+            permission: "sale:read",
           },
           {
             label: "Pharmacy Setup",
@@ -156,8 +157,14 @@ export function Sidebar() {
           {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
-              module: "reports",
-              permission: "report:read",
+              module: "diagnostic",
+              permission: ["pathology:read", "radiology:read"],
+          },
+          {
+              label: "Report Templates",
+              href: "/diagnostic/templates",
+              module: "diagnostic",
+              permission: "report-template:read",
           }
       ]
     },
@@ -276,14 +283,16 @@ export function Sidebar() {
   // The user asked "is that you show menu... based on permission right?". 
   // Yes, I should ensure it.
   
-  const filterRoutes = (items: typeof routes): typeof routes => {
-      // Helper to check access for a single route item
-      const checkAccess = (route: { permission?: string; module?: string }) => {
+      // Helper to check access for a route item
+      const checkAccess = (route: { permission?: string | string[]; module?: string }) => {
           if (route.module) {
               if (hasModuleAccess(route.module)) return true
           }
            
           if (route.permission) {
+              if (Array.isArray(route.permission)) {
+                  return route.permission.some(p => hasPermission(p))
+              }
               return hasPermission(route.permission)
           }
           
@@ -292,6 +301,7 @@ export function Sidebar() {
           return false
       }
 
+  const filterRoutes = (items: typeof routes): typeof routes => {
       return items.reduce<typeof routes>((acc, route) => {
           if (route.children) {
               const filteredChildren = route.children.filter(child => checkAccess(child))
@@ -387,8 +397,8 @@ export function Sidebar() {
                         {isOpen && isExpanded && (
                             <div className="pl-12 space-y-1 animate-in slide-in-from-top-2 duration-200">
                                 {route.children.map(child => {
-                                    // Check child permission
-                                    if (child.permission && !hasPermission(child.permission)) return null
+                                    // Check child permission using robust checkAccess
+                                    if (!checkAccess(child)) return null
 
                                     const isChildActive = pathname === child.href
                                     return (

@@ -15,7 +15,13 @@ export function usePermissions() {
 
     // 2. Check Role name as a reliable fallback for Super Admin access
     const roleName = user.role?.name?.toLowerCase();
-    if (roleName === 'super admin' || roleName === 'admin') {
+    if (
+      roleName === 'super admin' || 
+      roleName === 'admin' || 
+      roleName === 'system admin' || 
+      roleName === 'hospital admin' ||
+      roleName === 'branch admin'
+    ) {
       return true;
     }
 
