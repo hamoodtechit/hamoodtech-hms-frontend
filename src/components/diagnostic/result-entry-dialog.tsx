@@ -66,7 +66,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 }
 
 export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: ResultEntryDialogProps) {
-    const { hasPermission } = usePermissions()
+    const { hasPermission, user } = usePermissions()
     const { activeStoreId } = useStoreContext()
     const [mode, setMode] = useState<ResultMode>("table")
     const [technicianId, setTechnicianId] = useState("")
@@ -169,9 +169,13 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 // Only set default mode if there's no result and it's currently the initial 'table' state
                 // but we might want to switch to narrative. 
                 // To be safe, we only do this once when 'open' becomes true.
-                if (isRadiologyTest && !isExplicitPathology) {
-                    setMode('narrative');
+                // Priority 3: Final default mode based strictly on permissions
+                if (isPathologyUser && !isRadiologyUser) {
+                    setMode('table');
                 } else if (isRadiologyUser && !isPathologyUser) {
+                    setMode('narrative');
+                } else if (isRadiologyTest && !isExplicitPathology) {
+                    // Fallback for admins or users with both
                     setMode('narrative');
                 } else {
                     setMode('table');
@@ -372,12 +376,16 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                     <Tabs value={mode} onValueChange={(v) => setMode(v as ResultMode)} className="h-full flex flex-col">
                         <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b bg-muted/5">
                             <TabsList className="grid w-[300px] grid-cols-2 rounded-xl h-11 p-1 bg-muted/50">
-                                <TabsTrigger value="table" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                                    <ClipboardList className="w-4 h-4 mr-2" /> Table Mode
-                                </TabsTrigger>
-                                <TabsTrigger value="narrative" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                                    <FileText className="w-4 h-4 mr-2" /> Narrative Mode
-                                </TabsTrigger>
+                                {(hasPermission('pathology:create') || (user?.role?.name?.toLowerCase() === 'admin' || user?.role?.name?.toLowerCase() === 'super admin')) && (
+                                    <TabsTrigger value="table" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                        <ClipboardList className="w-4 h-4 mr-2" /> Table Mode
+                                    </TabsTrigger>
+                                )}
+                                {(hasPermission('radiology:create') || (user?.role?.name?.toLowerCase() === 'admin' || user?.role?.name?.toLowerCase() === 'super admin')) && (
+                                    <TabsTrigger value="narrative" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                        <FileText className="w-4 h-4 mr-2" /> Narrative Mode
+                                    </TabsTrigger>
+                                )}
                             </TabsList>
                         </div>
 

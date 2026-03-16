@@ -152,7 +152,7 @@ export function Sidebar() {
               label: "Diagnostic Tests",
               href: "/diagnostic",
               module: "diagnostic",
-              permission: "diagnostic-test:read",
+              permission: "diagnostic-test:create",
           },
           {
               label: "Diagnostic Reports",
@@ -279,20 +279,21 @@ export function Sidebar() {
   
       // Helper to check access for a route item
       const checkAccess = (route: { permission?: string | string[]; module?: string }) => {
-          if (route.module) {
-              if (hasModuleAccess(route.module)) return true
-          }
-           
+          // 1. If specific permission is required, check that first (strongest check)
           if (route.permission) {
               if (Array.isArray(route.permission)) {
                   return route.permission.some(p => hasPermission(p))
               }
               return hasPermission(route.permission)
           }
+
+          // 2. If no specific permission, fall back to module access if defined
+          if (route.module) {
+              return hasModuleAccess(route.module)
+          }
           
-          if (!route.module && !route.permission) return true
-          
-          return false
+          // 3. If neither is defined, show by default
+          return true
       }
 
   const filterRoutes = (items: typeof routes): typeof routes => {
