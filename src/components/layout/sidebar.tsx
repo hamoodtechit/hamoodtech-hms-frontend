@@ -176,13 +176,13 @@ export function Sidebar() {
           {
               label: "Pathology Billing",
               href: "/billing/pathology",
-              module: "diagnostic",
+              module: "sales",
               permission: "pathology:create",
           },
           {
               label: "Radiology Billing",
               href: "/billing/radiology",
-              module: "diagnostic",
+              module: "sales",
               permission: "radiology:create",
           }
       ]
@@ -279,21 +279,25 @@ export function Sidebar() {
   
       // Helper to check access for a route item
       const checkAccess = (route: { permission?: string | string[]; module?: string }) => {
-          // 1. If specific permission is required, check that first (strongest check)
-          if (route.permission) {
-              if (Array.isArray(route.permission)) {
-                  return route.permission.some(p => hasPermission(p))
-              }
-              return hasPermission(route.permission)
+          let hasMod = true;
+          let hasPerm = true;
+
+          // 1. Check module access if defined
+          if (route.module) {
+              hasMod = hasModuleAccess(route.module);
           }
 
-          // 2. If no specific permission, fall back to module access if defined
-          if (route.module) {
-              return hasModuleAccess(route.module)
+          // 2. Check specific permission if defined
+          if (route.permission) {
+              if (Array.isArray(route.permission)) {
+                  hasPerm = route.permission.some(p => hasPermission(p));
+              } else {
+                  hasPerm = hasPermission(route.permission);
+              }
           }
-          
-          // 3. If neither is defined, show by default
-          return true
+
+          // Both MUST be true if they are defined
+          return hasMod && hasPerm;
       }
 
   const filterRoutes = (items: typeof routes): typeof routes => {
