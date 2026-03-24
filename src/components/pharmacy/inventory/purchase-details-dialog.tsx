@@ -20,19 +20,80 @@ import {
 } from "@/components/ui/table"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
-import { Purchase } from "@/types/pharmacy"
+import { PaymentMethod, Purchase } from "@/types/pharmacy"
 import { format } from "date-fns"
-import { Building2, DollarSign, FileText, MapPin, Phone, User } from "lucide-react"
+import { Building2, CreditCard, DollarSign, FileText, Loader2, MapPin, Phone, User, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
+import { useAddPurchasePayment } from "@/hooks/pharmacy-queries"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 interface PurchaseDetailsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   purchase: Purchase | null
+  initialAddPayment?: boolean
+  onSuccess?: () => void
 }
 
-export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: PurchaseDetailsDialogProps) {
+export function PurchaseDetailsDialog({ open, onOpenChange, purchase, initialAddPayment = false, onSuccess }: PurchaseDetailsDialogProps) {
   const { formatCurrency } = useCurrency()
+  
+  // Payment UI state
+  const [isAddingPayment, setIsAddingPayment] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState<number>(0)
+  const [paymentAccountId, setPaymentAccountId] = useState<string>('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [paymentNote, setPaymentNote] = useState('')
+
+  const { data: accountsRes } = useFinanceAccounts()
+  const accounts = accountsRes?.data || []
+  const { mutate: addPayment, isPending: submittingPayment } = useAddPurchasePayment()
+
+  const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
+
+  // Auto-open payment section if requested
+  useEffect(() => {
+    if (open && purchase && initialAddPayment) {
+        setIsAddingPayment(true)
+        setPaymentAmount(Number(purchase.dueAmount || 0))
+    } else if (!open) {
+        setIsAddingPayment(false)
+    }
+  }, [open, purchase, initialAddPayment])
+
   if (!purchase) return null
+
+  const handlePaymentSubmit = () => {
+    if (!purchase || !paymentAccountId || paymentAmount <= 0) return
+
+    console.log('Submitting purchase payment:', { id: purchase.id, amount: paymentAmount });
+
+    addPayment({
+        id: purchase.id,
+        data: {
+            accountId: paymentAccountId,
+            amount: paymentAmount,
+            paymentMethod: paymentMethod,
+            note: paymentNote || undefined
+        }
+    }, {
+        onSuccess: () => {
+            setIsAddingPayment(false)
+            setPaymentAmount(0)
+            setPaymentNote('')
+            onSuccess?.()
+        }
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,30 +221,118 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase }: Purchase
                 <h3 className="font-semibold flex items-center gap-2 text-sm text-primary uppercase tracking-wider">
                   <DollarSign className="h-4 w-4" /> Payment Information
                 </h3>
+                {Number(purchase.dueAmount || 0) > 0 && !isAddingPayment && (
+                    <Button 
+                        type="button"
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-primary hover:text-primary hover:bg-primary/10 font-bold"
+                        onClick={() => {
+                            setIsAddingPayment(true)
+                            setPaymentAmount(Number(purchase.dueAmount))
+                        }}
+                    >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Settle Balance
+                    </Button>
+                )}
              </div>
              
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block text-primary/70 font-bold uppercase tracking-tighter">Method</span>
-                    <span className="font-bold capitalize">{purchase.paymentMethod || "N/A"}</span>
+             {isAddingPayment && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border-2 border-dashed border-primary/20 rounded-xl bg-background animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest">Amount to Pay</Label>
+                        <Input 
+                            type="number" 
+                            className="h-8"
+                            value={paymentAmount} 
+                            onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                            max={Number(purchase.dueAmount)}
+                            min={0.01}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest">Account</Label>
+                        <Select value={paymentAccountId} onValueChange={setPaymentAccountId}>
+                            <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select Account" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {accounts.map(acc => (
+                                    <SelectItem key={acc.id} value={acc.id} className="text-xs">
+                                        {acc.name} ({formatCurrency(acc.currentBalance)})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest">Method</Label>
+                        <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                            <SelectTrigger className="h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {paymentMethods.map((method) => (
+                                    <SelectItem key={method} value={method} className="text-xs">
+                                        <span className="capitalize">{method}</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest">Note (Optional)</Label>
+                        <div className="flex gap-2">
+                            <Input 
+                                placeholder="Payment note..." 
+                                className="h-8 flex-1"
+                                value={paymentNote} 
+                                onChange={(e) => setPaymentNote(e.target.value)}
+                            />
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => setIsAddingPayment(false)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="sm:col-span-2 pt-2">
+                        <Button 
+                            type="button"
+                            className="w-full h-9 bg-primary hover:bg-primary/90" 
+                            onClick={handlePaymentSubmit}
+                            disabled={submittingPayment || paymentAmount <= 0 || !paymentAccountId}
+                        >
+                            {submittingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Confirm Payment & Update Balance
+                        </Button>
+                    </div>
                 </div>
-                <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block text-emerald-600/70 font-bold uppercase tracking-tighter">Paid Amount</span>
-                    <span className="font-bold text-emerald-600">{formatCurrency(Number(purchase.paidAmount || 0))}</span>
+             )}
+
+             {!isAddingPayment && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-0.5">
+                        <span className="text-xs text-muted-foreground block text-primary/70 font-bold uppercase tracking-tighter">Method</span>
+                        <span className="font-bold capitalize">{purchase.paymentMethod || "N/A"}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                        <span className="text-xs text-muted-foreground block text-emerald-600/70 font-bold uppercase tracking-tighter">Paid Amount</span>
+                        <span className="font-bold text-emerald-600">{formatCurrency(Number(purchase.paidAmount || 0))}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                        <span className="text-xs text-muted-foreground block text-destructive/70 font-bold uppercase tracking-tighter">Balance Due</span>
+                        <span className={cn(
+                            "font-bold",
+                            Number(purchase.dueAmount || 0) > 0 ? "text-destructive" : "text-emerald-600"
+                        )}>
+                            {Number(purchase.dueAmount || 0) > 0 
+                                ? formatCurrency(Number(purchase.dueAmount)) 
+                                : "Fully Paid"
+                            }
+                        </span>
+                    </div>
                 </div>
-                <div className="space-y-0.5">
-                    <span className="text-xs text-muted-foreground block text-destructive/70 font-bold uppercase tracking-tighter">Balance Due</span>
-                    <span className={cn(
-                        "font-bold",
-                        Number(purchase.dueAmount || 0) > 0 ? "text-destructive" : "text-emerald-600"
-                    )}>
-                        {Number(purchase.dueAmount || 0) > 0 
-                            ? formatCurrency(Number(purchase.dueAmount)) 
-                            : "Fully Paid"
-                        }
-                    </span>
-                </div>
-             </div>
+             )}
 
              {purchase.note && (
                 <div className="pt-3 border-t border-primary/10">

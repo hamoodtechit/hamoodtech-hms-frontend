@@ -29,6 +29,7 @@ import { useStoreContext } from "@/store/use-store-context"
 export function PurchaseOrderList() {
     const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
+    const [detailsAddPayment, setDetailsAddPayment] = useState(false)
     const [page, setPage] = useState(1)
     const { formatCurrency } = useCurrency()
     const { activeStoreId } = useStoreContext()
@@ -104,8 +105,9 @@ export function PurchaseOrderList() {
         }
     }
 
-    const handleViewDetails = (purchase: Purchase) => {
+    const handleViewDetails = (purchase: Purchase, addPayment = false) => {
         setSelectedPurchase(purchase)
+        setDetailsAddPayment(addPayment)
         setDetailsOpen(true)
     }
 
@@ -219,6 +221,16 @@ export function PurchaseOrderList() {
                                         >
                                             View
                                         </Button>
+                                        {Number(po.dueAmount || 0) > 0 && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 text-xs border-primary text-primary hover:bg-primary/5 font-bold"
+                                                onClick={() => handleViewDetails(po, true)}
+                                            >
+                                                Settle Payment
+                                            </Button>
+                                        )}
                                         {po.status === 'pending' && (
                                             <>
                                                 <Button 
@@ -286,8 +298,12 @@ export function PurchaseOrderList() {
             
             <PurchaseDetailsDialog 
                 open={detailsOpen} 
-                onOpenChange={setDetailsOpen} 
+                onOpenChange={(open) => {
+                    setDetailsOpen(open)
+                    if (!open) setDetailsAddPayment(false)
+                }} 
                 purchase={selectedPurchase} 
+                initialAddPayment={detailsAddPayment}
             />
         </div>
     )

@@ -254,6 +254,11 @@ export const pharmacyService = {
     return response.data;
   },
 
+  addPurchasePayment: async (id: string, data: { accountId: string; amount: number; paymentMethod: string; note?: string }): Promise<{ success: boolean; message: string; data: Purchase }> => {
+    const response = await api.post<{ success: boolean; message: string; data: Purchase }>(`/pharmacy/purchases/${id}/payments`, data);
+    return response.data;
+  },
+
   // Sales APIs
   createSale: async (data: SalePayload): Promise<{ success: boolean, message: string, data: any }> => {
     const response = await api.post<{ success: boolean, message: string, data: any }>('/pharmacy/sales', data);

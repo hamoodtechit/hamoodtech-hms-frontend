@@ -387,6 +387,21 @@ export function useUpdatePurchaseStatus() {
   });
 }
 
+export function useAddPurchasePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { accountId: string; amount: number; paymentMethod: string; note?: string } }) => 
+        pharmacyService.addPurchasePayment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
+      toast.success("Payment added successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to add payment");
+    }
+  });
+}
+
 export function usePurchase(id: string) {
   return useQuery({
     queryKey: PHARMACY_KEYS.purchase(id),
