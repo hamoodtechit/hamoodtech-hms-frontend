@@ -243,6 +243,12 @@ export function Sidebar() {
               permission: "branch:read",
           },
           {
+              label: "Facility Management",
+              href: "/facility",
+              module: "branches",
+              permission: "branch:read",
+          },
+          {
               label: "User Management",
               href: "/settings/users",
               module: "users",

@@ -75,8 +75,6 @@ export function PurchaseDetailsDialog({ open, onOpenChange, purchase, initialAdd
   const handlePaymentSubmit = () => {
     if (!purchase || !paymentAccountId || paymentAmount <= 0) return
 
-    console.log('Submitting purchase payment:', { id: purchase.id, amount: paymentAmount });
-
     addPayment({
         id: purchase.id,
         data: {
