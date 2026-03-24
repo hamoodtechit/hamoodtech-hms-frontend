@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -31,10 +33,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   // Use useSale hook to get full details (branch, patient, doctor etc.)
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
-  if (!transaction && !isLoading) return null
-  
   // Combine initial/prop data with fetched rich data
-  const data = saleRes?.data || transaction
+  // Handle case where useSale returns the response object { success, message, data: { sale: ... } }
+  const fetchedData = (saleRes?.data as any)?.data?.sale || (saleRes?.data as any)?.sale || (saleRes?.data as any)?.data || saleRes?.data
+  const data = fetchedData || transaction
+
+  if (!transaction && !isLoading) return null
   if (!data && !isLoading) return null
 
   // Normalize data between POS Transaction and API Sale
@@ -64,22 +68,21 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const invoiceNumber = (data as any)?.invoiceNumber || (data as any)?.number || "N/A"
   const date = (data as any)?.date || (data as any)?.createdAt || new Date().toISOString()
   
-  const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => {
+  const ReceiptContent = ({ copyTitle }: { copyTitle?: string }) => {
     const branch = (data as any)?.branch || activeBranch
+    const branchLogo = branch?.logoUrl || activeBranch?.logoUrl || "/Logo.png"
     return (
     <div className="p-2 space-y-3 border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0">
         <div className="text-center space-y-0.5">
-             {branch?.logoUrl && (
-                <div className="flex justify-center mb-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={branch.logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
-                </div>
-            )}
-            <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1">{copyTitle}</div>
+             <div className="flex justify-center mb-1">
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                 <img src={branchLogo} alt="Logo" className="h-10 w-auto object-contain font-bold italic" />
+             </div>
+             {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1">{copyTitle}</div>}
             <h2 className="text-sm font-bold uppercase tracking-tight leading-tight">{branch?.name || general?.hospitalName || "Hospital Name"}</h2>
-            <div className="text-[10px] leading-tight text-black space-y-0.5 font-semibold">
-                <p>{branch?.address || general?.address || "Hospital Address"}</p>
-                <p>Ph: {branch?.phone || general?.phone || "Phone"}</p>
+            <div className="text-[10px] leading-tight text-black space-y-0.5">
+                <p className="font-bold">{branch?.address || general?.address || "Hospital Address"}</p>
+                <p className="font-semibold">Ph: {branch?.phone || general?.phone || "Phone"}</p>
             </div>
         </div>
 
@@ -88,13 +91,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         {/* Patient Details */}
         <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-y border-black/20 py-1 leading-tight">
             <div className="space-y-0.5">
-                <p className="text-black uppercase text-[8px] font-semibold">Patient Details:</p>
+                <p className="text-black uppercase text-[8px] font-bold underline">Patient Details:</p>
                 <p className="font-bold">{(data as any)?.customerName || (data as any)?.patient?.name || "Walk-in"}</p>
             </div>
-            <div className="text-right space-y-0.5">
-                <p className="font-bold">Invoice #: {invoiceNumber}</p>
-                <p className="font-bold">Date: {new Date(date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
-                <p className="font-bold uppercase">Mode: {(data as any)?.paymentMethod}</p>
+            <div className="text-right space-y-0.5 font-bold">
+                <p>Invoice #: {invoiceNumber}</p>
+                <p>Date: {new Date(date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
+                <p className="uppercase">Mode: {(data as any)?.paymentMethod}</p>
             </div>
         </div>
 
@@ -116,7 +119,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         <div className="col-span-6 pr-1">
                             <span className="block font-bold">
                                 {item.name}
-                                {item.dosageForm && <span className="text-[8px] font-normal ml-1">({item.dosageForm})</span>}
+                                {item.dosageForm && <span className="text-[10px] font-bold ml-1 uppercase">({item.dosageForm})</span>}
                                 {item.batchNumber && <span className="block text-[8px] font-normal text-muted-foreground italic">B: {item.batchNumber}</span>}
                             </span>
                         </div>
@@ -177,9 +180,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <Separator className="border-black/20" />
         
         {/* Footer */}
-        <div className="text-center text-[10px] text-black space-y-1.5 pt-2 font-semibold">
-            <p>Thank you for visiting {branch?.name || general?.hospitalName || "Hospital"}!</p>
-            <p className="italic font-bold text-[9px]">Note: Medicines once sold cannot be returned without receipt.</p>
+        <div className="text-center text-[10px] text-black space-y-1.5 pt-2">
+            <p className="font-bold">Thank you for visiting {branch?.name || general?.hospitalName || "Hospital"}!</p>
+            <p className="italic font-bold text-[9px] border-t border-black/20 pt-1">Note: Medicines once sold cannot be returned without receipt.</p>
             <div className="pt-4 mt-2 border-t border-black/30 w-32 mx-auto font-bold uppercase tracking-wider text-[9px]">
                 Authorized Signatory
             </div>
@@ -201,9 +204,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                 </div>
             ) : (
                 <>
-                    <ReceiptContent copyTitle="OFFICE COPY" />
-                    <div style={{ height: "40px" }} className="print:block shrink-0"></div>
-                    <ReceiptContent copyTitle="CUSTOMER COPY" />
+                    <ReceiptContent />
                 </>
             )}
         </div>

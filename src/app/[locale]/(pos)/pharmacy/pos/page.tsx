@@ -74,7 +74,7 @@ const getStock = (medicine: Medicine) => {
 }
 
 export default function POSPage() {
-  const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister } = usePosStore()
+  const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister, setActiveBranch } = usePosStore()
   
   // State
   const [isMounted, setIsMounted] = useState(false)
@@ -285,6 +285,9 @@ export default function POSPage() {
     }
     if (sessionRes?.data) {
         setActiveRegister(sessionRes.data)
+        if (sessionRes.data.branch) {
+            setActiveBranch(sessionRes.data.branch as any)
+        }
     }
   }, [sessionRes])
 
@@ -406,11 +409,14 @@ export default function POSPage() {
 
           }
 
-          const response = await createSaleMutation.mutateAsync(salePayload)
-          
-          const fallbackId = `TRX-${Date.now()}`
+           const response = await createSaleMutation.mutateAsync(salePayload)
+           
+           // Extract sale data from response - handle both { data: { sale: ... } } and other variations
+           const saleData = (response as any)?.data?.sale || (response as any)?.sale || (response as any)?.data || response
+           
+           const fallbackId = `TRX-${Date.now()}`
           const transaction = {
-              id: response.data?.id || fallbackId,
+              id: saleData?.id || fallbackId,
               customerName: selectedCustomer ? selectedCustomer.name : "Walk-in Customer",
               items: [...cart],
               total,
@@ -424,7 +430,7 @@ export default function POSPage() {
               date: new Date().toLocaleString(),
               status: "Completed" as const,
               paymentMethod,
-              invoiceNumber: response.data?.invoiceNumber || response.data?.id
+              invoiceNumber: saleData?.invoiceNumber || saleData?.id
           }
           
           addTransaction(transaction)
@@ -895,12 +901,12 @@ export default function POSPage() {
                                             <h3 className="font-bold text-[10px] sm:text-[11px] line-clamp-1 group-hover:text-primary transition-colors leading-tight" title={product.name}>
                                                 {product.name}
                                             </h3>
-                                            <div className="flex items-center text-[8px] sm:text-[9px] text-muted-foreground line-clamp-1">
+                                            <div className="flex items-center text-[9px] sm:text-[10px] text-muted-foreground line-clamp-1">
                                                 <span className="truncate">{product.genericName}</span>
                                                 <span className="mx-0.5">•</span>
-                                                <span className="font-medium shrink-0">
+                                                <span className="font-bold text-primary shrink-0 uppercase">
                                                     {product.dosageForm && <span className="mr-1">{product.dosageForm}</span>}
-                                                    {product.strength}
+                                                    <span className="text-muted-foreground font-medium">{product.strength}</span>
                                                 </span>
                                             </div>
                                         </div>
@@ -928,8 +934,8 @@ export default function POSPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5 leading-none">
                                             <h3 className="font-bold text-xs truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
-                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium shrink-0">
-                                                {product.dosageForm && <span>{product.dosageForm}</span>}
+                                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium shrink-0">
+                                                {product.dosageForm && <span className="font-bold text-primary uppercase">{product.dosageForm}</span>}
                                                 <span>{product.strength}</span>
                                             </div>
                                         </div>

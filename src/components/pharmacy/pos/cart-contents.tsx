@@ -142,7 +142,7 @@ export function CartContents({
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-sm truncate leading-tight">
                                                 {item.name}
-                                                {item.dosageForm && <span className="text-[10px] font-normal text-muted-foreground ml-1">({item.dosageForm})</span>}
+                                                {item.dosageForm && <span className="text-[11px] font-bold text-primary ml-1 uppercase">({item.dosageForm})</span>}
                                             </p>
                                             <p className="text-[11px] text-muted-foreground font-medium">{formatCurrency(item.price)}</p>
                                             

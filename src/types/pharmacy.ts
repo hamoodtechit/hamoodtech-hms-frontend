@@ -435,7 +435,7 @@ export interface Sale {
   };
   createdAt: string;
   updatedAt: string;
-  branch?: { name: string };
+  branch?: Branch;
   patient?: { name: string };
   saleItems: SaleItemDetails[];
 }
@@ -586,7 +586,7 @@ export interface CashRegister {
   createdAt: string;
   updatedAt: string;
   user?: { name: string };
-  branch?: { name: string };
+  branch?: Branch;
   sales?: {
     id: string;
     branchId: string;

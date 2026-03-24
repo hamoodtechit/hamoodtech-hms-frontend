@@ -288,7 +288,7 @@ export function SaleDetailsDialog({
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                             {item.itemName}
-                            {item.dosageForm && <span className="text-[10px] text-muted-foreground">({item.dosageForm})</span>}
+                            {item.dosageForm && <span className="text-[12px] font-bold text-primary ml-1 uppercase">({item.dosageForm})</span>}
                             {item.saleReturnId && (
                                 <Badge variant="outline" className="text-[10px] h-4 border-red-200 text-red-600 bg-red-50">
                                     Returned
