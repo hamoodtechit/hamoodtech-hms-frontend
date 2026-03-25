@@ -1,14 +1,20 @@
+"use client";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BuildingList } from "@/components/facility/building-list";
 import { FloorList } from "@/components/facility/floor-list";
 import { SectionList } from "@/components/facility/section-list";
 import { BedTypeList } from "@/components/facility/bed-type-list";
 import { BedList } from "@/components/facility/bed-list";
-import { Building2, Layers, LayoutGrid, BedDouble, Settings2 } from "lucide-react";
+import { Building2, Layers, LayoutGrid, BedDouble, Settings2, AlertCircle } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
+
+import { PermissionGuard } from "@/components/shared/permission-guard";
 
 export default function FacilityPage() {
     return (
-        <div className="flex-1 space-y-4 p-4 pt-6">
+        <PermissionGuard permission="facility:read">
+            <div className="flex-1 space-y-4 p-4 pt-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Facility Management</h2>
@@ -88,5 +94,6 @@ export default function FacilityPage() {
                 </TabsContent>
             </Tabs>
         </div>
+        </PermissionGuard>
     );
 }

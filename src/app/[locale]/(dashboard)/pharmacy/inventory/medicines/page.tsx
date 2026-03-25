@@ -59,6 +59,7 @@ import { ImportMedicinesDialog } from "./components/import-medicines-dialog"
 import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 import { OpeningStockDialog } from "./components/opening-stock-dialog"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function MedicinesPage() {
   const { hasPermission } = usePermissions()
@@ -106,7 +107,6 @@ export default function MedicinesPage() {
     setPage(1)
   }
 
-  // ... existing handlers ...
   const handleCreate = () => {
     setEditingMedicine(null)
     setDialogOpen(true)
@@ -141,297 +141,299 @@ export default function MedicinesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/pharmacy/inventory">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Medicine List</h1>
-                {meta?.totalItems !== undefined && (
-                    <Badge variant="outline" className="text-base px-2 py-0.5 border-primary/20 bg-primary/5 text-primary">
-                        {meta.totalItems}
-                    </Badge>
-                )}
-            </div>
-            <p className="text-muted-foreground">Manage medicine definitions and configurations.</p>
-          </div>
-        </div>
-
-        {hasPermission('medicine:create') && (
-            <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
-                    <Upload className="mr-2 h-4 w-4" /> Import
-                </Button>
-                <Button onClick={handleCreate}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Medicine
-                </Button>
-            </div>
-        )}
-      </div>
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <PermissionGuard permission="medicine:read">
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/pharmacy/inventory">
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
             <div>
-              <CardTitle>All Medicines</CardTitle>
-              <CardDescription>
-                A list of all registered medicines in the system.
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-60">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Quick search..."
-                  className="pl-9"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value)
-                    setPage(1)
-                  }}
-                />
+              <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold tracking-tight">Medicine List</h1>
+                  {meta?.totalItems !== undefined && (
+                      <Badge variant="outline" className="text-base px-2 py-0.5 border-primary/20 bg-primary/5 text-primary">
+                          {meta.totalItems}
+                      </Badge>
+                  )}
               </div>
-              <FilterPopover 
-                activeFilterCount={activeFilterCount}
-                onReset={resetFilters}
-              >
-                <MedicineFilters 
-                    values={filters} 
-                    onChange={(newFilters) => {
-                        setFilters(newFilters)
-                        setPage(1)
-                    }} 
-                    onReset={resetFilters} 
-                />
-              </FilterPopover>
+              <p className="text-muted-foreground">Manage medicine definitions and configurations.</p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="font-semibold">Medicine Info</TableHead>
-                  <TableHead className="font-semibold">Generic Name</TableHead>
-                  <TableHead className="font-semibold">Strength</TableHead>
-                  <TableHead className="font-semibold">Dosage Form</TableHead>
-                  <TableHead className="font-semibold">Manufacturer</TableHead>
-                  <TableHead className="font-semibold text-center">Price (Sale)</TableHead>
-                  <TableHead className="font-semibold text-center">Stock</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+
+          {hasPermission('medicine:create') && (
+              <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                      <Upload className="mr-2 h-4 w-4" /> Import
+                  </Button>
+                  <Button onClick={handleCreate}>
+                      <Plus className="mr-2 h-4 w-4" /> Add Medicine
+                  </Button>
+              </div>
+          )}
+        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <CardTitle>All Medicines</CardTitle>
+                <CardDescription>
+                  A list of all registered medicines in the system.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="relative flex-1 md:w-60">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Quick search..."
+                    className="pl-9"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value)
+                      setPage(1)
+                    }}
+                  />
+                </div>
+                <FilterPopover 
+                  activeFilterCount={activeFilterCount}
+                  onReset={resetFilters}
+                >
+                  <MedicineFilters 
+                      values={filters} 
+                      onChange={(newFilters) => {
+                          setFilters(newFilters)
+                          setPage(1)
+                      }} 
+                      onReset={resetFilters} 
+                  />
+                </FilterPopover>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                        <span>Fetching medicines...</span>
-                      </div>
-                    </TableCell>
+                    <TableHead className="font-semibold">Medicine Info</TableHead>
+                    <TableHead className="font-semibold">Generic Name</TableHead>
+                    <TableHead className="font-semibold">Strength</TableHead>
+                    <TableHead className="font-semibold">Dosage Form</TableHead>
+                    <TableHead className="font-semibold">Manufacturer</TableHead>
+                    <TableHead className="font-semibold text-center">Price (Sale)</TableHead>
+                    <TableHead className="font-semibold text-center">Stock</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : medicines.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                      No medicines found matching filters.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  medicines.map((medicine) => (
-                    <TableRow key={medicine.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-primary">{medicine.name}</span>
-                          {medicine.barcode && (
-                             <Badge variant="outline" className="w-fit text-[10px] h-4 px-1 mt-1 font-mono">
-                                {medicine.barcode}
-                             </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                         <span className="text-xs text-muted-foreground font-medium">{medicine.genericName || '-'}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-medium">{medicine.strength || 'N/A'}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-medium">{medicine.dosageForm || 'N/A'}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-medium">{medicine.medicineManufacturer?.name || 'N/A'}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex flex-col gap-0.5">
-                           <span className="font-bold text-emerald-600 text-xs" title="Sales Price">
-                             S: {formatCurrency(medicine.salePrice)}
-                           </span>
-                           <span className="text-[10px] text-orange-600 font-semibold" title="Purchase Price">
-                             P: {formatCurrency(medicine.purchasePrice || medicine.unitPrice)}
-                           </span>
-                           <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
-                        </div>
-                      </TableCell>
-                       <TableCell className="text-center">
-                        <div className="flex flex-col items-center">
-                           <span className={`text-sm font-bold ${(() => {
-                              const currentStock = activeStoreId 
-                                ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
-                                : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0);
-                              return currentStock <= medicine.reorderLevel ? 'text-destructive' : 'text-primary';
-                           })()}`}>
-                             {activeStoreId 
-                                ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
-                                : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0)}
-                           </span>
-                           <span className="text-[10px] text-muted-foreground uppercase">{medicine.unit || 'Units'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {medicine.isActive ? (
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
-                        ) : (
-                          <Badge variant="secondary">Inactive</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleViewDetails(medicine)}>
-                                <Eye className="mr-2 h-4 w-4" /> View Details
-                              </DropdownMenuItem>
-                              {hasPermission('medicine:update') && (
-                                <>
-                                    <DropdownMenuItem onClick={() => handleEdit(medicine)}>
-                                        <Edit className="mr-2 h-4 w-4" /> Edit Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSelectedMedicineForStock(medicine)}>
-                                        <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => {
-                                        setSelectedMedicineForOpeningStock(medicine)
-                                        setOpeningStockOpen(true)
-                                    }}>
-                                        <Plus className="mr-2 h-4 w-4" /> Add Opening Stock
-                                    </DropdownMenuItem>
-                                </>
-                              )}
-                              <DropdownMenuSeparator />
-                              {hasPermission('medicine:delete') && (
-                                <DropdownMenuItem 
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => handleDeleteClick(medicine)}
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Medicine
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                          <span>Fetching medicines...</span>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {meta && meta.totalPages > 1 && (
-            <div className="flex items-center justify-between py-4">
-               <p className="text-sm text-muted-foreground italic">
-                  Showing {(meta.page - 1) * meta.pageSize + 1} to {Math.min(meta.page * meta.pageSize, meta.totalItems)} of {meta.totalItems} medicines
-               </p>
-               <div className="flex items-center space-x-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={!meta.hasPreviousPage}
-                >
-                    Previous
-                </Button>
-                <div className="text-xs font-medium px-4">
-                    Page {meta.page} of {meta.totalPages}
-                </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
-                    disabled={!meta.hasNextPage}
-                >
-                    Next
-                </Button>
-              </div>
+                  ) : medicines.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                        No medicines found matching filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    medicines.map((medicine) => (
+                      <TableRow key={medicine.id} className="hover:bg-muted/30 transition-colors">
+                        <TableCell>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-semibold text-primary">{medicine.name}</span>
+                            {medicine.barcode && (
+                               <Badge variant="outline" className="w-fit text-[10px] h-4 px-1 mt-1 font-mono">
+                                  {medicine.barcode}
+                               </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                           <span className="text-xs text-muted-foreground font-medium">{medicine.genericName || '-'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs font-medium">{medicine.strength || 'N/A'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs font-medium">{medicine.dosageForm || 'N/A'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs font-medium">{medicine.medicineManufacturer?.name || 'N/A'}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col gap-0.5">
+                             <span className="font-bold text-emerald-600 text-xs" title="Sales Price">
+                               S: {formatCurrency(medicine.salePrice)}
+                             </span>
+                             <span className="text-[10px] text-orange-600 font-semibold" title="Purchase Price">
+                               P: {formatCurrency(medicine.purchasePrice || medicine.unitPrice)}
+                             </span>
+                             <span className="text-[10px] text-muted-foreground line-through">MRP: {formatCurrency(medicine.mrp)}</span>
+                          </div>
+                        </TableCell>
+                         <TableCell className="text-center">
+                          <div className="flex flex-col items-center">
+                             <span className={`text-sm font-bold ${(() => {
+                                const currentStock = activeStoreId 
+                                  ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
+                                  : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0);
+                                return currentStock <= medicine.reorderLevel ? 'text-destructive' : 'text-primary';
+                             })()}`}>
+                               {activeStoreId 
+                                  ? (medicine.stocks?.filter(s => s.branchId === activeStoreId).reduce((acc, s) => acc + Number(s.quantity), 0) || 0)
+                                  : (medicine.stock || medicine.stocks?.reduce((acc, s) => acc + Number(s.quantity), 0) || 0)}
+                             </span>
+                             <span className="text-[10px] text-muted-foreground uppercase">{medicine.unit || 'Units'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {medicine.isActive ? (
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
+                          ) : (
+                            <Badge variant="secondary">Inactive</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleViewDetails(medicine)}>
+                                  <Eye className="mr-2 h-4 w-4" /> View Details
+                                </DropdownMenuItem>
+                                {hasPermission('medicine:update') && (
+                                  <>
+                                      <DropdownMenuItem onClick={() => handleEdit(medicine)}>
+                                          <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => setSelectedMedicineForStock(medicine)}>
+                                          <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => {
+                                          setSelectedMedicineForOpeningStock(medicine)
+                                          setOpeningStockOpen(true)
+                                      }}>
+                                          <Plus className="mr-2 h-4 w-4" /> Add Opening Stock
+                                      </DropdownMenuItem>
+                                  </>
+                                )}
+                                <DropdownMenuSeparator />
+                                {hasPermission('medicine:delete') && (
+                                  <DropdownMenuItem 
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => handleDeleteClick(medicine)}
+                                  >
+                                      <Trash2 className="mr-2 h-4 w-4" /> Delete Medicine
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <MedicineDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        medicineToEdit={editingMedicine}
-      />
+            {meta && meta.totalPages > 1 && (
+              <div className="flex items-center justify-between py-4">
+                 <p className="text-sm text-muted-foreground italic">
+                    Showing {(meta.page - 1) * meta.pageSize + 1} to {Math.min(meta.page * meta.pageSize, meta.totalItems)} of {meta.totalItems} medicines
+                 </p>
+                 <div className="flex items-center space-x-2">
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={!meta.hasPreviousPage}
+                  >
+                      Previous
+                  </Button>
+                  <div className="text-xs font-medium px-4">
+                      Page {meta.page} of {meta.totalPages}
+                  </div>
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                      disabled={!meta.hasNextPage}
+                  >
+                      Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <ImportMedicinesDialog 
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen} 
-      />
+        <MedicineDialog 
+          open={dialogOpen} 
+          onOpenChange={setDialogOpen} 
+          medicineToEdit={editingMedicine}
+        />
 
-      <MedicineDetailsDialog 
-        open={detailsOpen} 
-        onOpenChange={setDetailsOpen} 
-        medicine={selectedMedicine}
-      />
+        <ImportMedicinesDialog 
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen} 
+        />
 
-      <OpeningStockDialog 
-        open={openingStockOpen}
-        onOpenChange={setOpeningStockOpen}
-        medicine={selectedMedicineForOpeningStock}
-        branchId={activeStoreId || ""}
-      />
+        <MedicineDetailsDialog 
+          open={detailsOpen} 
+          onOpenChange={setDetailsOpen} 
+          medicine={selectedMedicine}
+        />
 
-      <Dialog open={!!selectedMedicineForStock} onOpenChange={(open) => !open && setSelectedMedicineForStock(null)}>
-        <DialogContent className="max-w-3xl">
-            <DialogHeader>
-                <DialogTitle>Batch Details: {selectedMedicineForStock?.name}</DialogTitle>
-            </DialogHeader>
-            {selectedMedicineForStock && <BatchList itemId={selectedMedicineForStock.id} initialStocks={selectedMedicineForStock.stocks} />}
-        </DialogContent>
-      </Dialog>
+        <OpeningStockDialog 
+          open={openingStockOpen}
+          onOpenChange={setOpeningStockOpen}
+          medicine={selectedMedicineForOpeningStock}
+          branchId={activeStoreId || ""}
+        />
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This will permanently delete <strong>{deletingMedicine?.name}</strong>. 
-                    This action cannot be undone and will remove all associated stock data.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <Dialog open={!!selectedMedicineForStock} onOpenChange={(open) => !open && setSelectedMedicineForStock(null)}>
+          <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                  <DialogTitle>Batch Details: {selectedMedicineForStock?.name}</DialogTitle>
+              </DialogHeader>
+              {selectedMedicineForStock && <BatchList itemId={selectedMedicineForStock.id} initialStocks={selectedMedicineForStock.stocks} />}
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This will permanently delete <strong>{deletingMedicine?.name}</strong>. 
+                      This action cannot be undone and will remove all associated stock data.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PermissionGuard>
   )
 }

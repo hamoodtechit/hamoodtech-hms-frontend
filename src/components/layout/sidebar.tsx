@@ -245,8 +245,7 @@ export function Sidebar() {
           {
               label: "Facility Management",
               href: "/facility",
-              module: "branches",
-              permission: "branch:read",
+              permission: "facility:read",
           },
           {
               label: "User Management",

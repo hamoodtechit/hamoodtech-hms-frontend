@@ -27,7 +27,10 @@ import {
     AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 
+import { usePermissions } from "@/hooks/use-permissions";
+
 export function SectionList() {
+    const { hasPermission } = usePermissions();
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [selectedBuildingId, setSelectedBuildingId] = useState<string>("all");
@@ -112,9 +115,11 @@ export function SectionList() {
                         </SelectContent>
                     </Select>
                 </div>
-                <Button onClick={handleAdd}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Section
-                </Button>
+                {hasPermission("facility:create") && (
+                    <Button onClick={handleAdd}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Section
+                    </Button>
+                )}
             </div>
 
             <div className="rounded-md border">
@@ -125,7 +130,9 @@ export function SectionList() {
                             <TableHead>Name (Bangla)</TableHead>
                             <TableHead>Floor</TableHead>
                             <TableHead>Building</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            {(hasPermission("facility:update") || hasPermission("facility:delete")) && (
+                                <TableHead className="text-right">Actions</TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -143,16 +150,22 @@ export function SectionList() {
                                 <TableCell>{section.nameBangla || "-"}</TableCell>
                                 <TableCell>{section.floor?.name || (section.floorId ? `Floor: ${section.floorId.substring(0, 8)}` : "-")}</TableCell>
                                 <TableCell>{section.floor?.building?.name || "-"}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(section)}>
-                                            <Edit2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(section.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
+                                {(hasPermission("facility:update") || hasPermission("facility:delete")) && (
+                                    <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                            {hasPermission("facility:update") && (
+                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(section)}>
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {hasPermission("facility:delete") && (
+                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(section.id)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

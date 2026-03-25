@@ -26,6 +26,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, S
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function AppointmentsPage() {
     const { hasPermission } = usePermissions()
@@ -80,202 +81,204 @@ export default function AppointmentsPage() {
     const totalPages = data?.meta?.totalPages || 1
 
     return (
-        <div className="flex flex-col gap-6 p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-primary">Appointments</h1>
-                    <p className="text-muted-foreground text-sm font-medium">Manage patient schedules and doctor availability.</p>
-                </div>
-                {hasPermission('appointment:create') && (
-                    <Button 
-                        onClick={() => {
-                            setSelectedAppointment(null)
-                            setAppointmentDialogOpen(true)
-                        }}
-                        className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                    >
-                        <Plus className="h-4 w-4" /> Schedule Appointment
-                    </Button>
-                )}
-            </div>
-
-            <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="p-4 bg-card/80 border-b">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search by Serial Number or Patient..."
-                                className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                        <FilterPopover 
-                            activeFilterCount={Object.values(filters).filter(Boolean).length}
-                            onReset={() => setFilters({})}
-                        >
-                            <AppointmentFilters 
-                                values={filters}
-                                onChange={setFilters}
-                                departments={deptsRes?.data || []}
-                                doctors={docsRes?.data || []}
-                                patients={patsRes?.data?.map(p => ({ id: p.id, name: p.name })) || []}
-                            />
-                        </FilterPopover>
+        <PermissionGuard permission="appointment:read">
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-primary">Appointments</h1>
+                        <p className="text-muted-foreground text-sm font-medium">Manage patient schedules and doctor availability.</p>
                     </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-bold">
-                            <TableRow>
-                                <TableHead className="pl-6">Appointment / Serial</TableHead>
-                                <TableHead>Patient</TableHead>
-                                <TableHead>Professional</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right pr-6">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+                    {hasPermission('appointment:create') && (
+                        <Button 
+                            onClick={() => {
+                                setSelectedAppointment(null)
+                                setAppointmentDialogOpen(true)
+                            }}
+                            className="rounded-xl shadow-lg shadow-primary/20 gap-2"
+                        >
+                            <Plus className="h-4 w-4" /> Schedule Appointment
+                        </Button>
+                    )}
+                </div>
+
+                <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="p-4 bg-card/80 border-b">
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search by Serial Number or Patient..."
+                                    className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                            </div>
+                            <FilterPopover 
+                                activeFilterCount={Object.values(filters).filter(Boolean).length}
+                                onReset={() => setFilters({})}
+                            >
+                                <AppointmentFilters 
+                                    values={filters}
+                                    onChange={setFilters}
+                                    departments={deptsRes?.data || []}
+                                    doctors={docsRes?.data || []}
+                                    patients={patsRes?.data?.map(p => ({ id: p.id, name: p.name })) || []}
+                                />
+                            </FilterPopover>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-bold">
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-72 text-center">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-                                            <span className="text-sm font-medium text-muted-foreground">Fetching Appointments...</span>
-                                        </div>
-                                    </TableCell>
+                                    <TableHead className="pl-6">Appointment / Serial</TableHead>
+                                    <TableHead>Patient</TableHead>
+                                    <TableHead>Professional</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right pr-6">Actions</TableHead>
                                 </TableRow>
-                            ) : appointments.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-72 text-center text-muted-foreground">
-                                        No appointments found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                appointments.map((apt) => (
-                                    <TableRow key={apt.id} className="group hover:bg-muted/30 transition-colors">
-                                        <TableCell className="pl-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-[10px] font-bold text-primary border border-primary/20">
-                                                    <Calendar className="h-3 w-3 mb-0.5 opacity-60" />
-                                                    {format(new Date(apt.date), "dd/MM")}
-                                                </div>
-                                                <div>
-                                                    <div className="font-black text-sm text-foreground">{apt.serialNumber}</div>
-                                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
-                                                        <Clock className="h-3 w-3" /> {apt.timeSlot}
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-72 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+                                                <span className="text-sm font-medium text-muted-foreground">Fetching Appointments...</span>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : appointments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-72 text-center text-muted-foreground">
+                                            No appointments found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    appointments.map((apt) => (
+                                        <TableRow key={apt.id} className="group hover:bg-muted/30 transition-colors">
+                                            <TableCell className="pl-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-[10px] font-bold text-primary border border-primary/20">
+                                                        <Calendar className="h-3 w-3 mb-0.5 opacity-60" />
+                                                        {format(new Date(apt.date), "dd/MM")}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-black text-sm text-foreground">{apt.serialNumber}</div>
+                                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
+                                                            <Clock className="h-3 w-3" /> {apt.timeSlot}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-sm text-foreground/80">{apt.patient.name}</span>
-                                                <span className="text-[10px] font-mono bg-muted w-fit px-1 rounded text-muted-foreground uppercase">{apt.patient.patientNumber}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 rounded-lg bg-primary/5 text-primary">
-                                                    <Stethoscope className="h-3.5 w-3.5" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-sm text-foreground/80">{apt.patient.name}</span>
+                                                    <span className="text-[10px] font-mono bg-muted w-fit px-1 rounded text-muted-foreground uppercase">{apt.patient.patientNumber}</span>
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-sm text-foreground/80">{apt.doctor.name}</div>
-                                                    <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{apt.department.name}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-lg bg-primary/5 text-primary">
+                                                        <Stethoscope className="h-3.5 w-3.5" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-sm text-foreground/80">{apt.doctor.name}</div>
+                                                        <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{apt.department.name}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {getStatusBadge(apt.status)}
-                                        </TableCell>
-                                        <TableCell className="text-right pr-6">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary"
-                                                    onClick={() => {
-                                                        setSelectedAppointment(apt)
-                                                        setDetailsDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                {hasPermission('appointment:update') && (
+                                            </TableCell>
+                                            <TableCell>
+                                                {getStatusBadge(apt.status)}
+                                            </TableCell>
+                                            <TableCell className="text-right pr-6">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <Button 
                                                         variant="ghost" 
                                                         size="icon"
                                                         className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary"
                                                         onClick={() => {
                                                             setSelectedAppointment(apt)
-                                                            setAppointmentDialogOpen(true)
+                                                            setDetailsDialogOpen(true)
                                                         }}
                                                     >
-                                                        <Edit className="h-4 w-4" />
+                                                        <Eye className="h-4 w-4" />
                                                     </Button>
-                                                )}
-                                                {hasPermission('appointment:delete') && (
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-lg hover:bg-destructive/5 hover:text-destructive text-muted-foreground"
-                                                        onClick={() => handleDelete(apt.id)}
-                                                        disabled={deleteMutation.isPending}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                    
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-between p-4 border-t bg-muted/20">
-                            <span className="text-sm text-muted-foreground font-medium">
-                                Page <span className="text-foreground font-bold">{page}</span> of <span className="text-foreground font-bold">{totalPages}</span>
-                            </span>
-                            <div className="flex gap-2">
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1 || isLoading}
-                                >
-                                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-                                </Button>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
-                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={page === totalPages || isLoading}
-                                >
-                                    Next <ChevronRight className="h-4 w-4 ml-1" />
-                                </Button>
+                                                    {hasPermission('appointment:update') && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-lg hover:bg-primary/5 hover:text-primary"
+                                                            onClick={() => {
+                                                                setSelectedAppointment(apt)
+                                                                setAppointmentDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {hasPermission('appointment:delete') && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-lg hover:bg-destructive/5 hover:text-destructive text-muted-foreground"
+                                                            onClick={() => handleDelete(apt.id)}
+                                                            disabled={deleteMutation.isPending}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                        
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between p-4 border-t bg-muted/20">
+                                <span className="text-sm text-muted-foreground font-medium">
+                                    Page <span className="text-foreground font-bold">{page}</span> of <span className="text-foreground font-bold">{totalPages}</span>
+                                </span>
+                                <div className="flex gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1 || isLoading}
+                                    >
+                                        <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors"
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages || isLoading}
+                                    >
+                                        Next <ChevronRight className="h-4 w-4 ml-1" />
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        )}
+                    </CardContent>
+                </Card>
 
-            <AppointmentDialog 
-                open={appointmentDialogOpen}
-                onOpenChange={setAppointmentDialogOpen}
-                appointment={selectedAppointment}
-                onSuccess={refetch}
-            />
+                <AppointmentDialog 
+                    open={appointmentDialogOpen}
+                    onOpenChange={setAppointmentDialogOpen}
+                    appointment={selectedAppointment}
+                    onSuccess={refetch}
+                />
 
-            <AppointmentDetailsDialog 
-                open={detailsDialogOpen}
-                onOpenChange={setDetailsDialogOpen}
-                appointmentId={selectedAppointment?.id || null}
-            />
-        </div>
+                <AppointmentDetailsDialog 
+                    open={detailsDialogOpen}
+                    onOpenChange={setDetailsDialogOpen}
+                    appointmentId={selectedAppointment?.id || null}
+                />
+            </div>
+        </PermissionGuard>
     )
 }

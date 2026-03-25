@@ -40,6 +40,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { UserDetailsDialog } from "./components/user-details-dialog"
 import { UserDialog } from "./components/user-dialog"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function UsersPage() {
   const { hasPermission } = usePermissions()
@@ -110,187 +111,189 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">Manage system users, employees, and their access roles.</p>
-        </div>
-        {hasPermission('user:create') && (
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" /> Add New User
-        </Button>
-        )}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+    <PermissionGuard permission="user:read">
+        <div className="space-y-6 p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>
-                    A list of all registered users in the system.
-                </CardDescription>
+              <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+              <p className="text-muted-foreground">Manage system users, employees, and their access roles.</p>
             </div>
-            <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                />
-            </div>
+            {hasPermission('user:create') && (
+            <Button onClick={handleCreate}>
+              <Plus className="mr-2 h-4 w-4" /> Add New User
+            </Button>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead>Joined Date</TableHead>
-                <TableHead className="w-[100px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-9 w-9 rounded-full" />
-                        <div className="flex flex-col gap-1">
-                          <Skeleton className="h-4 w-[150px]" />
-                          <Skeleton className="h-3 w-[100px]" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-5 w-[80px]" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center">
-                        <Skeleton className="h-5 w-[60px]" />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-[100px]" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Skeleton className="h-8 w-8 rounded-md ml-auto" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : !users || users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                    No users found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                          <UserIcon className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {user.fullName}{" "}
-                            {user.fullNameBangla && `(${user.fullNameBangla})`}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {user.email || user.username}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{user.role?.name || "No Role"}</Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {user.isActive ? (
-                        <Badge className="bg-emerald-500 hover:bg-emerald-600">
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive">Inactive</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setViewUser(user)}>
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          {hasPermission("user:update") && (
-                            <DropdownMenuItem onClick={() => handleEdit(user)}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit User
-                            </DropdownMenuItem>
-                          )}
-                          {hasPermission("user:delete") && (
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteClick(user)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete User
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
 
-      <UserDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        onSuccess={loadUsers}
-        userToEdit={editingUser}
-      />
-      
-      <UserDetailsDialog 
-        open={!!viewUser}
-        onOpenChange={(open) => !open && setViewUser(null)}
-        user={viewUser}
-      />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle>All Users</CardTitle>
+                    <CardDescription>
+                        A list of all registered users in the system.
+                    </CardDescription>
+                </div>
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead>Joined Date</TableHead>
+                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <div className="flex flex-col gap-1">
+                              <Skeleton className="h-4 w-[150px]" />
+                              <Skeleton className="h-3 w-[100px]" />
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-5 w-[80px]" />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center">
+                            <Skeleton className="h-5 w-[60px]" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-[100px]" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : !users || users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                              <UserIcon className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {user.fullName}{" "}
+                                {user.fullNameBangla && `(${user.fullNameBangla})`}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {user.email || user.username}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{user.role?.name || "No Role"}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {user.isActive ? (
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600">
+                              Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">Inactive</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[160px]">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => setViewUser(user)}>
+                                <Eye className="mr-2 h-4 w-4" /> View Details
+                              </DropdownMenuItem>
+                              {hasPermission("user:update") && (
+                                <DropdownMenuItem onClick={() => handleEdit(user)}>
+                                  <Edit className="mr-2 h-4 w-4" /> Edit User
+                                </DropdownMenuItem>
+                              )}
+                              {hasPermission("user:delete") && (
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleDeleteClick(user)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete User
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This will permanently delete the user <strong>{deletingUser?.fullName}</strong>. 
-                    This action cannot be undone.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+          <UserDialog 
+            open={dialogOpen} 
+            onOpenChange={setDialogOpen} 
+            onSuccess={loadUsers}
+            userToEdit={editingUser}
+          />
+          
+          <UserDetailsDialog 
+            open={!!viewUser}
+            onOpenChange={(open) => !open && setViewUser(null)}
+            user={viewUser}
+          />
+
+          <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will permanently delete the user <strong>{deletingUser?.fullName}</strong>. 
+                        This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+    </PermissionGuard>
   )
 }

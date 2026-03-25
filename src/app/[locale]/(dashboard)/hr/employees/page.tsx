@@ -25,6 +25,7 @@ import { Employee } from "@/types/hr"
 import { Briefcase, Edit, Eye, Loader2, MapPin, Phone, Plus, Search, Trash2, User } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function EmployeesPage() {
     const { hasPermission } = usePermissions()
@@ -96,188 +97,190 @@ export default function EmployeesPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
-                    <p className="text-muted-foreground">Manage hospital staff and medical professionals.</p>
-                </div>
-                {hasPermission('employee:create') && (
-                <Button onClick={() => {
-                    setSelectedEmployee(null)
-                    setEmployeeDialogOpen(true)
-                }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Employee
-                </Button>
-                )}
-            </div>
-
-            <Card>
-                <CardHeader className="pb-3">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                           <h3 className="font-semibold text-lg">Employee List</h3>
-                           <p className="text-sm text-muted-foreground">Detailed list of all hospital staff.</p>
-                        </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-64">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search by name, phone, email..."
-                                    className="pl-8 h-9"
-                                    value={search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value)
-                                        setPage(1)
-                                    }}
-                                />
-                            </div>
-                            <FilterPopover 
-                                activeFilterCount={activeFilterCount}
-                                onReset={resetFilters}
-                            >
-                                <EmployeeFilters 
-                                    values={filters}
-                                    onChange={(v) => {
-                                        setFilters(v)
-                                        setPage(1)
-                                    }}
-                                    departments={departments}
-                                    designations={designations}
-                                />
-                            </FilterPopover>
-                        </div>
+        <PermissionGuard permission="user:read">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
+                        <p className="text-muted-foreground">Manage hospital staff and medical professionals.</p>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Employee</TableHead>
-                                <TableHead>Contact</TableHead>
-                                <TableHead>Position</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+                    {hasPermission('employee:create') && (
+                    <Button onClick={() => {
+                        setSelectedEmployee(null)
+                        setEmployeeDialogOpen(true)
+                    }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Employee
+                    </Button>
+                    )}
+                </div>
+
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                               <h3 className="font-semibold text-lg">Employee List</h3>
+                               <p className="text-sm text-muted-foreground">Detailed list of all hospital staff.</p>
+                            </div>
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="relative flex-1 md:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by name, phone, email..."
+                                        className="pl-8 h-9"
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value)
+                                            setPage(1)
+                                        }}
+                                    />
+                                </div>
+                                <FilterPopover 
+                                    activeFilterCount={activeFilterCount}
+                                    onReset={resetFilters}
+                                >
+                                    <EmployeeFilters 
+                                        values={filters}
+                                        onChange={(v) => {
+                                            setFilters(v)
+                                            setPage(1)
+                                        }}
+                                        departments={departments}
+                                        designations={designations}
+                                    />
+                                </FilterPopover>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                                    </TableCell>
+                                    <TableHead>Employee</TableHead>
+                                    <TableHead>Contact</TableHead>
+                                    <TableHead>Position</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : employees.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        No employees found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                employees.map((emp) => (
-                                    <TableRow key={emp.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <User className="h-5 w-5 text-primary" />
-                                                </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="font-semibold text-sm leading-tight">{emp.name}</div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-[9px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground uppercase border shrink-0">
-                                                            {emp.employeeNumber || 'NO ID'}
-                                                        </span>
-                                                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter truncate opacity-70">
-                                                            {emp.employeeType}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1 text-xs">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Phone className="h-3 w-3 text-muted-foreground" />
-                                                    {emp.phone}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 truncate max-w-[150px]" title={emp.address}>
-                                                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                                                    {emp.address}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1 text-xs">
-                                                <div className="flex items-center gap-1.5 font-medium">
-                                                    <Briefcase className="h-3 w-3 text-muted-foreground" />
-                                                    {emp.designation?.name || '-'}
-                                                </div>
-                                                <div className="text-muted-foreground">
-                                                    {emp.department?.name || '-'}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{getStatusBadge(emp.status)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
-                                                    onClick={() => {
-                                                        setSelectedEmployee(emp)
-                                                        setDetailsDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                {hasPermission('employee:update') && (
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
-                                                    onClick={() => {
-                                                        setSelectedEmployee(emp)
-                                                        setEmployeeDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                )}
-                                                {hasPermission('employee:delete') && (
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    className="text-destructive hover:text-destructive"
-                                                    onClick={() => handleDelete(emp.id)}
-                                                    disabled={deleteMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                                )}
-                                            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                ) : employees.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                            No employees found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    employees.map((emp) => (
+                                        <TableRow key={emp.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        <User className="h-5 w-5 text-primary" />
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className="font-semibold text-sm leading-tight">{emp.name}</div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground uppercase border shrink-0">
+                                                                {emp.employeeNumber || 'NO ID'}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter truncate opacity-70">
+                                                                {emp.employeeType}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1 text-xs">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Phone className="h-3 w-3 text-muted-foreground" />
+                                                        {emp.phone}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 truncate max-w-[150px]" title={emp.address}>
+                                                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                                                        {emp.address}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1 text-xs">
+                                                    <div className="flex items-center gap-1.5 font-medium">
+                                                        <Briefcase className="h-3 w-3 text-muted-foreground" />
+                                                        {emp.designation?.name || '-'}
+                                                    </div>
+                                                    <div className="text-muted-foreground">
+                                                        {emp.department?.name || '-'}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{getStatusBadge(emp.status)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp)
+                                                            setDetailsDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                    {hasPermission('employee:update') && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp)
+                                                            setEmployeeDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    )}
+                                                    {hasPermission('employee:delete') && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="text-destructive hover:text-destructive"
+                                                        onClick={() => handleDelete(emp.id)}
+                                                        disabled={deleteMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-            <EmployeeDialog 
-                open={employeeDialogOpen}
-                onOpenChange={setEmployeeDialogOpen}
-                employee={selectedEmployee}
-                onSuccess={() => refetch()}
-            />
+                <EmployeeDialog 
+                    open={employeeDialogOpen}
+                    onOpenChange={setEmployeeDialogOpen}
+                    employee={selectedEmployee}
+                    onSuccess={() => refetch()}
+                />
 
-            <EmployeeDetailsDialog 
-                open={detailsDialogOpen}
-                onOpenChange={setDetailsDialogOpen}
-                employeeId={selectedEmployee?.id || null}
-            />
-        </div>
+                <EmployeeDetailsDialog 
+                    open={detailsDialogOpen}
+                    onOpenChange={setDetailsDialogOpen}
+                    employeeId={selectedEmployee?.id || null}
+                />
+            </div>
+        </PermissionGuard>
     )
 }

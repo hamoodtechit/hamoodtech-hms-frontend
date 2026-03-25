@@ -1,5 +1,8 @@
 
+"use client";
+
 import { useAuthStore } from "@/store/use-auth-store";
+
 import { useCallback } from "react";
 
 export function usePermissions() {

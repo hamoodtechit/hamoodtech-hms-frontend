@@ -278,6 +278,11 @@ function SidebarBase() {
               permission: "branch:read",
           },
           {
+              label: "Facility Management",
+              href: "/facility",
+              permission: "facility:read",
+          },
+          {
               label: "User Management",
               href: "/settings/users",
               module: "users",

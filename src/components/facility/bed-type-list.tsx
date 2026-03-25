@@ -27,7 +27,10 @@ import {
     AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 
+import { usePermissions } from "@/hooks/use-permissions";
+
 export function BedTypeList() {
+    const { hasPermission } = usePermissions();
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const { data: response, isLoading } = useBedTypes({ page, search, limit: 10 });
@@ -69,9 +72,11 @@ export function BedTypeList() {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <Button onClick={handleAdd}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Bed Type
-                </Button>
+                {hasPermission("facility:create") && (
+                    <Button onClick={handleAdd}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Bed Type
+                    </Button>
+                )}
             </div>
 
             <div className="rounded-md border">
@@ -82,7 +87,9 @@ export function BedTypeList() {
                             <TableHead>Name (Bangla)</TableHead>
                             <TableHead>Price / Day</TableHead>
                             <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            {(hasPermission("facility:update") || hasPermission("facility:delete")) && (
+                                <TableHead className="text-right">Actions</TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -100,16 +107,22 @@ export function BedTypeList() {
                                 <TableCell>{bedType.nameBangla || "-"}</TableCell>
                                 <TableCell>{formatCurrency(bedType.pricePerDay)}</TableCell>
                                 <TableCell className="max-w-xs truncate">{bedType.description || "-"}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(bedType)}>
-                                            <Edit2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(bedType.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
+                                {(hasPermission("facility:update") || hasPermission("facility:delete")) && (
+                                    <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                            {hasPermission("facility:update") && (
+                                                <Button variant="ghost" size="icon" onClick={() => handleEdit(bedType)}>
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            {hasPermission("facility:delete") && (
+                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(bedType.id)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

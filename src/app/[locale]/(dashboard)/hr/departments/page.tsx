@@ -23,6 +23,7 @@ import { Department } from "@/types/hr"
 import { Edit, Loader2, Plus, Search, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function DepartmentsPage() {
     const { hasPermission } = usePermissions()
@@ -66,136 +67,138 @@ export default function DepartmentsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Departments</h1>
-                    <p className="text-muted-foreground">Manage departments across branches.</p>
-                </div>
-                {hasPermission('department:create') && (
-                <Button onClick={() => {
-                    setSelectedDepartment(null)
-                    setDepartmentDialogOpen(true)
-                }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Department
-                </Button>
-                )}
-            </div>
-
-            <Card>
-                <CardHeader className="pb-3">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                           <h3 className="font-semibold text-lg">Department List</h3>
-                           <p className="text-sm text-muted-foreground">Detailed list of all departments.</p>
-                        </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-64">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search departments..."
-                                    className="pl-8 h-9"
-                                    value={search}
-                                    onChange={(e) => {
-                                        setSearch(e.target.value)
-                                        setPage(1)
-                                    }}
-                                />
-                            </div>
-                            <FilterPopover 
-                                activeFilterCount={activeFilterCount}
-                                onReset={resetFilters}
-                            >
-                                <DepartmentFilters 
-                                    values={filters}
-                                    onChange={(v) => {
-                                        setFilters(v)
-                                        setPage(1)
-                                    }}
-                                />
-                            </FilterPopover>
-                        </div>
+        <PermissionGuard permission="department:read">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Departments</h1>
+                        <p className="text-muted-foreground">Manage departments across branches.</p>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Bangla Name</TableHead>
-                                <TableHead>Branch</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+                    {hasPermission('department:create') && (
+                    <Button onClick={() => {
+                        setSelectedDepartment(null)
+                        setDepartmentDialogOpen(true)
+                    }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Department
+                    </Button>
+                    )}
+                </div>
+
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                               <h3 className="font-semibold text-lg">Department List</h3>
+                               <p className="text-sm text-muted-foreground">Detailed list of all departments.</p>
+                            </div>
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="relative flex-1 md:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search departments..."
+                                        className="pl-8 h-9"
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value)
+                                            setPage(1)
+                                        }}
+                                    />
+                                </div>
+                                <FilterPopover 
+                                    activeFilterCount={activeFilterCount}
+                                    onReset={resetFilters}
+                                >
+                                    <DepartmentFilters 
+                                        values={filters}
+                                        onChange={(v) => {
+                                            setFilters(v)
+                                            setPage(1)
+                                        }}
+                                    />
+                                </FilterPopover>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
-                                    </TableCell>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Bangla Name</TableHead>
+                                    <TableHead>Branch</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : departments.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        No departments found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                departments.map((dept) => (
-                                    <TableRow key={dept.id}>
-                                        <TableCell className="font-medium">{dept.name}</TableCell>
-                                        <TableCell>{dept.nameBangla || '-'}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
-                                                {branches.find(b => b.id === dept.branchId)?.name || dept.branchId}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="max-w-[200px] truncate" title={dept.description}>
-                                            {dept.description || '-'}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                {hasPermission('department:update') && (
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setSelectedDepartment(dept)
-                                                        setDepartmentDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                )}
-                                                {hasPermission('department:delete') && (
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    className="text-destructive hover:text-destructive"
-                                                    onClick={() => handleDelete(dept.id)}
-                                                    disabled={deleteMutation.isPending}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                                )}
-                                            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                ) : departments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                            No departments found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    departments.map((dept) => (
+                                        <TableRow key={dept.id}>
+                                            <TableCell className="font-medium">{dept.name}</TableCell>
+                                            <TableCell>{dept.nameBangla || '-'}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">
+                                                    {branches.find(b => b.id === dept.branchId)?.name || dept.branchId}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="max-w-[200px] truncate" title={dept.description}>
+                                                {dept.description || '-'}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    {hasPermission('department:update') && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedDepartment(dept)
+                                                            setDepartmentDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    )}
+                                                    {hasPermission('department:delete') && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="text-destructive hover:text-destructive"
+                                                        onClick={() => handleDelete(dept.id)}
+                                                        disabled={deleteMutation.isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-            <DepartmentDialog 
-                open={departmentDialogOpen}
-                onOpenChange={setDepartmentDialogOpen}
-                department={selectedDepartment}
-                onSuccess={() => refetch()}
-            />
-        </div>
+                <DepartmentDialog 
+                    open={departmentDialogOpen}
+                    onOpenChange={setDepartmentDialogOpen}
+                    department={selectedDepartment}
+                    onSuccess={() => refetch()}
+                />
+            </div>
+        </PermissionGuard>
     )
 }

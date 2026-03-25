@@ -21,6 +21,7 @@ import { Edit, Loader2, Microscope, Plus, Search, Trash2 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function DiagnosticTestsPage() {
     const { hasPermission } = usePermissions()
@@ -55,141 +56,143 @@ export default function DiagnosticTestsPage() {
     const tests = data?.data || []
 
     return (
-        <div className="flex flex-col gap-6 p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-primary">Diagnostic Tests</h1>
-                    <p className="text-muted-foreground text-sm font-medium">Manage clinical tests, pricing, and availability.</p>
-                </div>
-                {hasPermission('diagnostic-test:create') && (
-                    <Button 
-                        onClick={() => {
-                            setSelectedTest(null)
-                            setTestDialogOpen(true)
-                        }}
-                        className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                    >
-                        <Plus className="h-4 w-4" /> Add New Test
-                    </Button>
-                )}
-            </div>
-
-            <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="p-4 border-b bg-card/80">
-                    <div className="flex items-center gap-4">
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search by name or code..."
-                                className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
+        <PermissionGuard permission="diagnostic-test:create">
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-primary">Diagnostic Tests</h1>
+                        <p className="text-muted-foreground text-sm font-medium">Manage clinical tests, pricing, and availability.</p>
                     </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-bold">
-                            <TableRow>
-                                <TableHead className="pl-6">Test Info</TableHead>
-                                <TableHead>Department</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Report Days</TableHead>
-                                <TableHead className="text-right pr-6">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+                    {hasPermission('diagnostic-test:create') && (
+                        <Button 
+                            onClick={() => {
+                                setSelectedTest(null)
+                                setTestDialogOpen(true)
+                            }}
+                            className="rounded-xl shadow-lg shadow-primary/20 gap-2"
+                        >
+                            <Plus className="h-4 w-4" /> Add New Test
+                        </Button>
+                    )}
+                </div>
+
+                <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="p-4 border-b bg-card/80">
+                        <div className="flex items-center gap-4">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search by name or code..."
+                                    className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-bold">
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-64 text-center">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
-                                            <span className="text-sm font-medium text-muted-foreground">Loading tests...</span>
-                                        </div>
-                                    </TableCell>
+                                    <TableHead className="pl-6">Test Info</TableHead>
+                                    <TableHead>Department</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead>Report Days</TableHead>
+                                    <TableHead className="text-right pr-6">Actions</TableHead>
                                 </TableRow>
-                            ) : tests.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-64 text-center text-muted-foreground">
-                                        No diagnostic tests found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                tests.map((test) => (
-                                    <TableRow key={test.id} className="group hover:bg-muted/30 transition-colors">
-                                        <TableCell className="pl-6">
-                                            <div className="flex items-center gap-4 text-xs">
-                                                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                                                    <Microscope className="h-4 w-4 text-primary" />
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <div className="font-bold text-foreground truncate">{test.name}</div>
-                                                    {test.nameBangla && (
-                                                        <div className="text-[10px] text-muted-foreground truncate">
-                                                            {test.nameBangla}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="rounded-md font-bold uppercase tracking-tighter bg-secondary/10 border-secondary/30 text-[10px]">
-                                                {test.department?.name || "General"}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="font-black text-primary tracking-tight text-sm">
-                                                {formatCurrency(test.price)}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm font-medium">
-                                                {test.reportDays || 0} Days
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-6">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {hasPermission('diagnostic-test:update') && (
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
-                                                        onClick={() => {
-                                                            setSelectedTest(test)
-                                                            setTestDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                                {hasPermission('diagnostic-test:delete') && (
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                                                        onClick={() => handleDelete(test.id)}
-                                                        disabled={deleteMutation.isPending}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-64 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+                                                <span className="text-sm font-medium text-muted-foreground">Loading tests...</span>
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                ) : tests.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-64 text-center text-muted-foreground">
+                                            No diagnostic tests found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    tests.map((test) => (
+                                        <TableRow key={test.id} className="group hover:bg-muted/30 transition-colors">
+                                            <TableCell className="pl-6">
+                                                <div className="flex items-center gap-4 text-xs">
+                                                    <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                        <Microscope className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <div className="overflow-hidden">
+                                                        <div className="font-bold text-foreground truncate">{test.name}</div>
+                                                        {test.nameBangla && (
+                                                            <div className="text-[10px] text-muted-foreground truncate">
+                                                                {test.nameBangla}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="rounded-md font-bold uppercase tracking-tighter bg-secondary/10 border-secondary/30 text-[10px]">
+                                                    {test.department?.name || "General"}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="font-black text-primary tracking-tight text-sm">
+                                                    {formatCurrency(test.price)}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm font-medium">
+                                                    {test.reportDays || 0} Days
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-6">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {hasPermission('diagnostic-test:update') && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedTest(test)
+                                                                setTestDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {hasPermission('diagnostic-test:delete') && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                                                            onClick={() => handleDelete(test.id)}
+                                                            disabled={deleteMutation.isPending}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-            <DiagnosticTestDialog 
-                open={testDialogOpen}
-                onOpenChange={setTestDialogOpen}
-                test={selectedTest}
-                onSuccess={refetch}
-            />
-        </div>
+                <DiagnosticTestDialog 
+                    open={testDialogOpen}
+                    onOpenChange={setTestDialogOpen}
+                    test={selectedTest}
+                    onSuccess={refetch}
+                />
+            </div>
+        </PermissionGuard>
     )
 }

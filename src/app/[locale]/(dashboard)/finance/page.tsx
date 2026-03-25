@@ -30,6 +30,7 @@ import { FinanceAccount } from "@/types/finance"
 import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function FinancePage() {
     const { hasPermission } = usePermissions()
@@ -57,204 +58,206 @@ export default function FinancePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Finance Management</h1>
-                <p className="text-muted-foreground">Manage accounts, balances, and hospital expenses.</p>
-            </div>
+        <PermissionGuard permission="account:read">
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Finance Management</h1>
+                    <p className="text-muted-foreground">Manage accounts, balances, and hospital expenses.</p>
+                </div>
 
-            <Tabs defaultValue="accounts" className="space-y-4">
-                <TabsList className="bg-background border">
-                    <TabsTrigger value="accounts" className="data-[state=active]:bg-primary/10">Accounts</TabsTrigger>
-                    <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
-                    <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
-                    <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="accounts" className="space-y-4">
+                    <TabsList className="bg-background border">
+                        <TabsTrigger value="accounts" className="data-[state=active]:bg-primary/10">Accounts</TabsTrigger>
+                        <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
+                        <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
+                        <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="accounts" className="space-y-6">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <TabsContent value="accounts" className="space-y-6">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {isLoading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            formatCurrency(
+                                                accounts.reduce((sum, acc) => sum + Number(acc.currentBalance), 0)
+                                            )
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Financial Accounts</CardTitle>
+                                    <CardDescription>
+                                        List of all financial accounts and their current status.
+                                    </CardDescription>
+                                </div>
+                                {hasPermission('account:create') && (
+                                    <Button onClick={() => {
+                                        setSelectedAccount(null)
+                                        setAccountDialogOpen(true)
+                                    }}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Account
+                                    </Button>
+                                )}
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {isLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        formatCurrency(
-                                            accounts.reduce((sum, acc) => sum + Number(acc.currentBalance), 0)
-                                        )
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Financial Accounts</CardTitle>
-                                <CardDescription>
-                                    List of all financial accounts and their current status.
-                                </CardDescription>
-                            </div>
-                            {hasPermission('account:create') && (
-                                <Button onClick={() => {
-                                    setSelectedAccount(null)
-                                    setAccountDialogOpen(true)
-                                }}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Account
-                                </Button>
-                            )}
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Account Name</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Balance</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {isLoading ? (
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
-                                                <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                                            </TableCell>
+                                            <TableHead>Account Name</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Balance</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
-                                    ) : accounts.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                                No accounts found.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        accounts.map((account) => (
-                                            <TableRow key={account.id}>
-                                                <TableCell className="font-medium">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="p-2 bg-primary/10 rounded-full">
-                                                            {account.type === 'cash' ? <Wallet className="h-4 w-4 text-primary" /> : <CreditCard className="h-4 w-4 text-primary" />}
-                                                        </div>
-                                                        <div>
-                                                            <div>{account.name}</div>
-                                                            <div className="text-xs text-muted-foreground">{account.description}</div>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="capitalize">{account.type}</TableCell>
-                                                <TableCell>
-                                                    {account.isActive ? (
-                                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                                            <CheckCircle className="w-3 h-3 mr-1" /> Active
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                                                            <Ban className="w-3 h-3 mr-1" /> Inactive
-                                                        </Badge>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-right font-bold">
-                                                    {formatCurrency(Number(account.currentBalance))}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Link href={`/finance/accounts/${account.id}`}>
-                                                            <Button variant="outline" size="sm">
-                                                                <Eye className="mr-2 h-4 w-4" />
-                                                                View
-                                                            </Button>
-                                                        </Link>
-                                                        {hasPermission('transaction:withdraw') && (
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm"
-                                                                onClick={() => setWithdrawAccount(account)}
-                                                            >
-                                                                <ArrowUpRight className="mr-2 h-4 w-4" />
-                                                                Withdraw
-                                                            </Button>
-                                                        )}
-                                                        {hasPermission('account:update') && (
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    setSelectedAccount(account)
-                                                                    setAccountDialogOpen(true)
-                                                                }}
-                                                            >
-                                                                <Edit className="h-4 w-4 text-primary" />
-                                                            </Button>
-                                                        )}
-                                                        {hasPermission('account:delete') && (
-                                                            <Button 
-                                                                variant="outline" 
-                                                                size="sm"
-                                                                disabled={deleteAccountMutation.isPending}
-                                                                onClick={async () => {
-                                                                    if (confirm("Are you sure you want to delete this account?")) {
-                                                                        try {
-                                                                            await deleteAccountMutation.mutateAsync(account.id)
-                                                                            toast.success("Account deleted successfully")
-                                                                        } catch (error) {
-                                                                            toast.error("Failed to delete account")
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {isLoading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center">
+                                                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                                        ) : accounts.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                    No accounts found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            accounts.map((account) => (
+                                                <TableRow key={account.id}>
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="p-2 bg-primary/10 rounded-full">
+                                                                {account.type === 'cash' ? <Wallet className="h-4 w-4 text-primary" /> : <CreditCard className="h-4 w-4 text-primary" />}
+                                                            </div>
+                                                            <div>
+                                                                <div>{account.name}</div>
+                                                                <div className="text-xs text-muted-foreground">{account.description}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="capitalize">{account.type}</TableCell>
+                                                    <TableCell>
+                                                        {account.isActive ? (
+                                                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                                                <CheckCircle className="w-3 h-3 mr-1" /> Active
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                                                                <Ban className="w-3 h-3 mr-1" /> Inactive
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-bold">
+                                                        {formatCurrency(Number(account.currentBalance))}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Link href={`/finance/accounts/${account.id}`}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <Eye className="mr-2 h-4 w-4" />
+                                                                    View
+                                                                </Button>
+                                                            </Link>
+                                                            {hasPermission('transaction:withdraw') && (
+                                                                <Button 
+                                                                    variant="outline" 
+                                                                    size="sm"
+                                                                    onClick={() => setWithdrawAccount(account)}
+                                                                >
+                                                                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                                                                    Withdraw
+                                                                </Button>
+                                                            )}
+                                                            {hasPermission('account:update') && (
+                                                                <Button 
+                                                                    variant="outline" 
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedAccount(account)
+                                                                        setAccountDialogOpen(true)
+                                                                    }}
+                                                                >
+                                                                    <Edit className="h-4 w-4 text-primary" />
+                                                                </Button>
+                                                            )}
+                                                            {hasPermission('account:delete') && (
+                                                                <Button 
+                                                                    variant="outline" 
+                                                                    size="sm"
+                                                                    disabled={deleteAccountMutation.isPending}
+                                                                    onClick={async () => {
+                                                                        if (confirm("Are you sure you want to delete this account?")) {
+                                                                            try {
+                                                                                await deleteAccountMutation.mutateAsync(account.id)
+                                                                                toast.success("Account deleted successfully")
+                                                                            } catch (error) {
+                                                                                toast.error("Failed to delete account")
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                <TabsContent value="transactions">
-                    <TransactionList />
-                </TabsContent>
+                    <TabsContent value="transactions">
+                        <TransactionList />
+                    </TabsContent>
 
-                <TabsContent value="expenses">
-                    <ExpenseList />
-                </TabsContent>
+                    <TabsContent value="expenses">
+                        <ExpenseList />
+                    </TabsContent>
 
-                <TabsContent value="categories">
-                    <ExpenseCategoryList />
-                </TabsContent>
-            </Tabs>
+                    <TabsContent value="categories">
+                        <ExpenseCategoryList />
+                    </TabsContent>
+                </Tabs>
 
-             <WithdrawDialog 
-                open={!!withdrawAccount} 
-                onOpenChange={(open) => !open && setWithdrawAccount(null)}
-                account={withdrawAccount}
-                onSuccess={() => {
-                    refetch()
-                    setWithdrawAccount(null)
-                }}
-            />
+                 <WithdrawDialog 
+                    open={!!withdrawAccount} 
+                    onOpenChange={(open) => !open && setWithdrawAccount(null)}
+                    account={withdrawAccount}
+                    onSuccess={() => {
+                        refetch()
+                        setWithdrawAccount(null)
+                    }}
+                />
 
-            <AccountDialog 
-                open={accountDialogOpen}
-                onOpenChange={setAccountDialogOpen}
-                account={selectedAccount}
-                onSuccess={() => {
-                    refetch()
-                    setSelectedAccount(null)
-                }}
-            />
-        </div>
+                <AccountDialog 
+                    open={accountDialogOpen}
+                    onOpenChange={setAccountDialogOpen}
+                    account={selectedAccount}
+                    onSuccess={() => {
+                        refetch()
+                        setSelectedAccount(null)
+                    }}
+                />
+            </div>
+        </PermissionGuard>
     )
 }
