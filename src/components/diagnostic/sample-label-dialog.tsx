@@ -20,6 +20,8 @@ interface SampleLabelDialogProps {
 export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDialogProps) {
     if (!report) return null
 
+    const patientId = report.patient?.patientNumber || report.patient?.uhid || report.patient?.id?.slice(0, 8).toUpperCase() || "N/A"
+
     const handlePrint = () => {
         const printContent = document.getElementById('sample-label-content')?.innerHTML
         if (!printContent) return
@@ -81,10 +83,12 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
+                                margin-bottom: 0.5mm;
                             }
                             .id-bits {
                                 font-size: 6pt;
-                                margin-top: 1mm;
+                                display: flex;
+                                justify-content: space-between;
                             }
                             .date {
                                 font-size: 5pt;
@@ -101,7 +105,10 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                             <div class="info-side">
                                 <div class="patient-name">${report.patient?.name}</div>
                                 <div class="test-name">${report.diagnosticTest?.name}</div>
-                                <div class="id-bits">ID: ${report.barcode || report.id.slice(-8).toUpperCase()}</div>
+                                <div class="id-bits">
+                                    <span>UHID: ${patientId}</span>
+                                    <span>LAB: ${report.barcode || report.id.slice(-8).toUpperCase()}</span>
+                                </div>
                                 <div class="date">${new Date().toLocaleString()}</div>
                             </div>
                         </div>
@@ -131,7 +138,6 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                     <div 
                         id="sample-label-content" 
                         className="border p-4 bg-white rounded shadow-inner flex items-center gap-4 w-[50mm] h-[25mm] box-content"
-                        style={{ width: '50mm', height: '25mm' }}
                     >
                         <div id="qr-to-print">
                             <QRCode 
@@ -141,10 +147,13 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                                 viewBox={`0 0 256 256`}
                             />
                         </div>
-                        <div className="flex flex-col justify-center overflow-hidden">
+                        <div className="flex flex-col justify-center overflow-hidden flex-1 min-w-0">
                             <p className="text-[10px] font-bold truncate uppercase">{report.patient?.name}</p>
                             <p className="text-[9px] truncate text-muted-foreground">{report.diagnosticTest?.name}</p>
-                            <p className="text-[8px] font-mono mt-1">ID: {report.barcode || report.id.slice(-8).toUpperCase()}</p>
+                            <div className="flex justify-between items-center mt-1 w-full text-[7px] font-mono leading-none">
+                                <span>UHID: {patientId}</span>
+                            </div>
+                            <p className="text-[7px] font-mono leading-none mt-1">LAB: {report.barcode || report.id.slice(-8).toUpperCase()}</p>
                         </div>
                     </div>
 

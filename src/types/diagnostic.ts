@@ -92,6 +92,8 @@ export interface DiagnosticReport {
     id: string;
     name: string;
     phone?: string;
+    patientNumber?: string;
+    uhid?: string;
   };
   saleItem?: any | null;
   collectedBy?: any | null;
