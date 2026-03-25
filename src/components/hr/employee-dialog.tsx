@@ -24,9 +24,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCreateEmployee, useDepartments, useDesignations, useUpdateEmployee } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Employee } from "@/types/hr"
-import { Loader2 } from "lucide-react"
+import { Loader2, User } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { MediaPicker } from "../media/media-picker"
 
 interface EmployeeDialogProps {
     open: boolean
@@ -65,7 +66,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         joiningDate: new Date().toISOString().split('T')[0],
         leavingDate: "",
         status: "active" as "active" | "inactive" | "on_leave" | "terminated",
-        chamberOrRoomNumber: ""
+        chamberOrRoomNumber: "",
+        photoUrl: ""
     })
 
     const { data: departmentsRes } = useDepartments({ 
@@ -100,7 +102,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     joiningDate: employee.joiningDate ? employee.joiningDate.split('T')[0] : "",
                     leavingDate: employee.leavingDate ? employee.leavingDate.split('T')[0] : "",
                     status: employee.status,
-                    chamberOrRoomNumber: employee.chamberOrRoomNumber || ""
+                    chamberOrRoomNumber: employee.chamberOrRoomNumber || "",
+                    photoUrl: employee.photoUrl || ""
                 })
             } else {
                 setFormData({
@@ -122,7 +125,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     joiningDate: new Date().toISOString().split('T')[0],
                     leavingDate: "",
                     status: "active",
-                    chamberOrRoomNumber: ""
+                    chamberOrRoomNumber: "",
+                    photoUrl: ""
                 })
             }
         }
@@ -275,47 +279,64 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                         {/* Section: Personal */}
                         <div className="space-y-4">
                             <h3 className="text-sm font-semibold border-b pb-2">Personal Information</h3>
+                            
+                            <div className="flex flex-col md:flex-row gap-6">
+                                <div className="space-y-2">
+                                    <Label>Profile Photo</Label>
+                                    <MediaPicker 
+                                        value={formData.photoUrl}
+                                        onChange={(url) => setFormData(prev => ({ ...prev, photoUrl: url }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground italic">
+                                        Best if square (e.g. 400x400)
+                                    </p>
+                                </div>
+
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>Full Name (English) *</Label>
+                                        <Input 
+                                            value={formData.name}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                            placeholder="Dr. John Doe"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Full Name (Bangla)</Label>
+                                        <Input 
+                                            value={formData.nameBangla}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, nameBangla: e.target.value }))}
+                                            placeholder="নাম"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Age *</Label>
+                                        <SmartNumberInput 
+                                            value={formData.age}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, age: val || 18 }))}
+                                            min={18}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Gender *</Label>
+                                        <Select 
+                                            value={formData.gender} 
+                                            onValueChange={(val) => setFormData(prev => ({ ...prev, gender: val }))}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Gender" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="male">Male</SelectItem>
+                                                <SelectItem value="female">Female</SelectItem>
+                                                <SelectItem value="other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Full Name (English) *</Label>
-                                    <Input 
-                                        value={formData.name}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                        placeholder="Dr. John Doe"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Full Name (Bangla)</Label>
-                                    <Input 
-                                        value={formData.nameBangla}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, nameBangla: e.target.value }))}
-                                        placeholder="নাম"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Age *</Label>
-                                    <SmartNumberInput 
-                                        value={formData.age}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, age: val || 18 }))}
-                                        min={18}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Gender *</Label>
-                                    <Select 
-                                        value={formData.gender} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, gender: val }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Gender" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">Male</SelectItem>
-                                            <SelectItem value="female">Female</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                                 <div className="grid gap-2">
                                     <Label>Phone *</Label>
                                     <Input 

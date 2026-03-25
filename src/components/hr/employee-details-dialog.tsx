@@ -95,8 +95,16 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                     ) : (
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div className="flex items-center gap-5">
-                                <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner">
-                                    <UserIcon className="h-10 w-10 text-primary" />
+                                <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner overflow-hidden">
+                                    {employee?.photoUrl ? (
+                                        <img 
+                                            src={employee.photoUrl} 
+                                            alt={employee.name} 
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <UserIcon className="h-10 w-10 text-primary" />
+                                    )}
                                 </div>
                                 <div className="space-y-1">
                                     <DialogTitle className="text-2xl font-bold tracking-tight">

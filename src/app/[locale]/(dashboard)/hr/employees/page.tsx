@@ -181,8 +181,12 @@ export default function EmployeesPage() {
                                         <TableRow key={emp.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        <User className="h-5 w-5 text-primary" />
+                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border">
+                                                        {emp.photoUrl ? (
+                                                            <img src={emp.photoUrl} alt={emp.name} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <User className="h-5 w-5 text-primary" />
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-col gap-0.5">
                                                         <div className="font-semibold text-sm leading-tight">{emp.name}</div>

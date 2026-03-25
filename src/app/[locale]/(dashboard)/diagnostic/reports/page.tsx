@@ -5,6 +5,7 @@ import { ReportDetailSheet } from "@/components/diagnostic/report-detail-sheet"
 import { RequisitionDialog } from "@/components/diagnostic/requisition-dialog"
 import { ResultEntryDialog } from "@/components/diagnostic/result-entry-dialog"
 import { SampleCollectionDialog } from "@/components/diagnostic/sample-collection-dialog"
+import { SampleLabelDialog } from "@/components/diagnostic/sample-label-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -38,6 +39,7 @@ import {
     Filter,
     FlaskConical,
     Loader2,
+    Printer,
     Search,
     X
 } from "lucide-react"
@@ -56,6 +58,7 @@ export default function DiagnosticReportsPage() {
 
     // Dialog States
     const [collectionOpen, setCollectionOpen] = useState(false)
+    const [labelOpen, setLabelOpen] = useState(false)
     const [resultOpen, setResultOpen] = useState(false)
     const [approvalOpen, setApprovalOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
@@ -377,6 +380,21 @@ export default function DiagnosticReportsPage() {
                                                                  report.reportStatus === 'pending-verification' ? 'Approve' : 'Action'}
                                                             </Button>
                                                         ) : null}
+
+                                                        {report.sampleStatus === 'collected' && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                title="Print Label"
+                                                                onClick={() => {
+                                                                    setSelectedReport(report)
+                                                                    setLabelOpen(true)
+                                                                }}
+                                                            >
+                                                                <Printer className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -401,6 +419,12 @@ export default function DiagnosticReportsPage() {
                     onOpenChange={setCollectionOpen}
                     report={selectedReport}
                     onSuccess={refetch}
+                />
+
+                <SampleLabelDialog 
+                    open={labelOpen}
+                    onOpenChange={setLabelOpen}
+                    report={selectedReport}
                 />
 
                 <ResultEntryDialog

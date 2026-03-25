@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCollectSample } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { DiagnosticReport } from "@/types/diagnostic"
-import { Beaker, Loader2, User } from "lucide-react"
+import { Beaker, Loader2, Printer, User } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { SampleLabelDialog } from "./sample-label-dialog"
 
 interface SampleCollectionDialogProps {
     open: boolean
@@ -22,6 +23,8 @@ interface SampleCollectionDialogProps {
 export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }: SampleCollectionDialogProps) {
     const [collectedById, setCollectedById] = useState("")
     const [sampleDetails, setSampleDetails] = useState("")
+    const [labelOpen, setLabelOpen] = useState(false)
+    const [isCollected, setIsCollected] = useState(false)
 
     const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 })
     const employees = employeesRes?.data || []
@@ -48,10 +51,9 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
             
             
             toast.success("Sample collection recorded")
-            setCollectedById("")
-            setSampleDetails("")
-            onOpenChange(false)
-            onSuccess?.()
+            setIsCollected(true)
+            // We don't clear details yet so the user can see them before printing/closing
+            setLabelOpen(true)
         } catch (error) {
             toast.error("Failed to record sample collection")
         }
@@ -112,21 +114,46 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
                 <DialogFooter className="p-6 bg-muted/20 border-t">
                     <Button 
                         variant="ghost" 
-                        onClick={() => onOpenChange(false)}
+                        onClick={() => {
+                            if (isCollected) {
+                                setCollectedById("")
+                                setSampleDetails("")
+                                setIsCollected(false)
+                                onSuccess?.()
+                            }
+                            onOpenChange(false)
+                        }}
                         className="rounded-xl font-bold"
                     >
-                        Cancel
+                        {isCollected ? "Close" : "Cancel"}
                     </Button>
-                    <Button 
-                        onClick={handleConfirm}
-                        disabled={!collectedById || !sampleDetails || collectSample.isPending}
-                        className="rounded-xl px-8 font-black shadow-lg shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        {collectSample.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Confirm Collection
-                    </Button>
+                    
+                    {isCollected ? (
+                        <Button 
+                            onClick={() => setLabelOpen(true)}
+                            className="rounded-xl px-8 font-black shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 animate-in zoom-in duration-300"
+                        >
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Label
+                        </Button>
+                    ) : (
+                        <Button 
+                            onClick={handleConfirm}
+                            disabled={!collectedById || !sampleDetails || collectSample.isPending}
+                            className="rounded-xl px-8 font-black shadow-lg shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            {collectSample.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Confirm Collection
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
+
+            <SampleLabelDialog 
+                open={labelOpen}
+                onOpenChange={setLabelOpen}
+                report={report}
+            />
         </Dialog>
     )
 }

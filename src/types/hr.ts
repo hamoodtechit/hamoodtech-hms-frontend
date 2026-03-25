@@ -63,6 +63,7 @@ export interface Employee {
   chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
+  photoUrl?: string;
   department?: Department;
   designation?: Designation;
 }
@@ -88,6 +89,7 @@ export interface EmployeePayload {
   status?: 'active' | 'inactive' | 'on_leave' | 'terminated';
   userId?: string;
   chamberOrRoomNumber?: string;
+  photoUrl?: string;
 }
 
 export interface HRPaginatedResponse<T> {
