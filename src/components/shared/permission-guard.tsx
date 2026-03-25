@@ -9,13 +9,15 @@ interface PermissionGuardProps {
     module?: string;
     fallback?: React.ReactNode;
     children: React.ReactNode;
+    mode?: 'page' | 'inline' | 'silent';
 }
 
 export function PermissionGuard({ 
     permission, 
     module, 
     fallback, 
-    children 
+    children,
+    mode = 'page'
 }: PermissionGuardProps) {
     const { hasPermission, hasModuleAccess } = usePermissions();
 
@@ -38,14 +40,28 @@ export function PermissionGuard({
     if (!hasAccess) {
         if (fallback) return <>{fallback}</>;
 
-        // Default "Access Denied" view
+        // Handle different modes
+        if (mode === 'silent') {
+            return null;
+        }
+
+        if (mode === 'inline') {
+            return (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/5 text-destructive text-xs font-medium border border-destructive/10 animate-in fade-in duration-300">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>Access Restricted</span>
+                </div>
+            );
+        }
+
+        // Default "page" mode - "Access Denied" view
         return (
-            <div className="h-[400px] flex flex-col items-center justify-center p-4 text-center">
-                <div className="bg-destructive/10 p-4 rounded-full mb-4">
+            <div className="h-[400px] flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-destructive/10 p-4 rounded-full mb-4 ring-2 ring-destructive/5">
                     <AlertCircle className="h-10 w-10 text-destructive" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-                <p className="text-muted-foreground max-w-md">
+                <p className="text-muted-foreground max-w-md text-sm">
                     You do not have the required permissions to view this content. 
                     Please contact your administrator if you believe this is an error.
                 </p>
