@@ -13,6 +13,7 @@ import {
 import { useDeleteExpenseCategory, useExpenseCategories } from "@/hooks/expense-queries"
 import { ExpenseCategory } from "@/types/expense"
 import { Edit, Loader2, Plus, Trash2 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
 import { ExpenseCategoryDialog } from "./expense-category-dialog"
@@ -21,7 +22,10 @@ export function ExpenseCategoryList() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(null)
 
-    const { data: response, isLoading, refetch } = useExpenseCategories()
+    const { hasPermission } = usePermissions()
+    const canRead = hasPermission('expense-category:read')
+
+    const { data: response, isLoading, refetch } = useExpenseCategories(undefined, { enabled: canRead })
     const deleteMutation = useDeleteExpenseCategory()
 
     const categories = response?.categories || []

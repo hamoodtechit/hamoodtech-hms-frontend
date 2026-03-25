@@ -115,19 +115,21 @@ export function useInfiniteMedicines(params: any = {}) {
   });
 }
 
-export function usePharmacyEntities(type: any, params: any = { limit: 100 }) {
+export function usePharmacyEntities(type: any, params: any = { limit: 100 }, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.entities(type, params),
     queryFn: () => pharmacyService.getEntities(type, params),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    ...options
   });
 }
 
-export function useManufacturers(params: any = { limit: 100 }) {
+export function useManufacturers(params: any = { limit: 100 }, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.manufacturers(params),
     queryFn: () => pharmacyService.getManufacturers(params),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    ...options
   });
 }
 

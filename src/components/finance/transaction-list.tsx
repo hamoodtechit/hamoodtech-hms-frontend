@@ -24,6 +24,7 @@ import {
     RefreshCcw,
     Search
 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { DateRange } from "react-day-picker"
 
@@ -61,8 +62,12 @@ export function TransactionList({ title = "Recent Transactions", variant = "defa
         endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     }
 
-    const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
-    const { data: transRes, isLoading, isFetching, refetch } = useFinanceTransactions(params)
+    const { hasPermission } = usePermissions()
+    const canReadAccounts = hasPermission('account:read')
+    const canReadTransactions = hasPermission('transaction:read')
+
+    const { data: accountsRes } = useFinanceAccounts({ limit: 100 }, { enabled: canReadAccounts })
+    const { data: transRes, isLoading, isFetching, refetch } = useFinanceTransactions(params, { enabled: canReadTransactions })
 
     const transactions = transRes?.data || []
     const pagination = transRes?.pagination

@@ -67,23 +67,33 @@ export default function PharmacySetupPage() {
               </TabsList>
 
               <TabsContent value="generics" className="mt-0 animate-in fade-in-50">
-                <MasterDataTable type="generics" title="Generic" />
+                <PermissionGuard permission="medicine-generic:read" mode="silent">
+                  <MasterDataTable type="generics" title="Generic" />
+                </PermissionGuard>
               </TabsContent>
               
               <TabsContent value="categories" className="mt-0 animate-in fade-in-50">
-                <MasterDataTable type="categories" title="Category" />
+                <PermissionGuard permission="medicine-category:read" mode="silent">
+                  <MasterDataTable type="categories" title="Category" />
+                </PermissionGuard>
               </TabsContent>
               
               <TabsContent value="groups" className="mt-0 animate-in fade-in-50">
-                <MasterDataTable type="groups" title="Group" />
+                <PermissionGuard permission="medicine-group:read" mode="silent">
+                  <MasterDataTable type="groups" title="Group" />
+                </PermissionGuard>
               </TabsContent>
               
               <TabsContent value="units" className="mt-0 animate-in fade-in-50">
-                <MasterDataTable type="units" title="Unit" />
+                <PermissionGuard permission="medicine-unit:read" mode="silent">
+                  <MasterDataTable type="units" title="Unit" />
+                </PermissionGuard>
               </TabsContent>
 
               <TabsContent value="manufacturers" className="mt-0 animate-in fade-in-50">
-                <MasterDataTable type="manufacturers" title="Manufacturer" />
+                <PermissionGuard permission="medicine-manufacturer:read" mode="silent">
+                  <MasterDataTable type="manufacturers" title="Manufacturer" />
+                </PermissionGuard>
               </TabsContent>
             </Tabs>
           </CardContent>

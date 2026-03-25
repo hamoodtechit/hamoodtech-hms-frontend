@@ -68,9 +68,15 @@ export default function FinancePage() {
                 <Tabs defaultValue="accounts" className="space-y-4">
                     <TabsList className="bg-background border">
                         <TabsTrigger value="accounts" className="data-[state=active]:bg-primary/10">Accounts</TabsTrigger>
-                        <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
-                        <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
-                        <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
+                        {hasPermission('transaction:read') && (
+                            <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
+                        )}
+                        {hasPermission('expense:read') && (
+                            <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
+                        )}
+                        {hasPermission('expense-category:read') && (
+                            <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
+                        )}
                     </TabsList>
 
                     <TabsContent value="accounts" className="space-y-6">
@@ -226,15 +232,21 @@ export default function FinancePage() {
                     </TabsContent>
 
                     <TabsContent value="transactions">
-                        <TransactionList />
+                        <PermissionGuard permission="transaction:read" mode="silent">
+                            <TransactionList />
+                        </PermissionGuard>
                     </TabsContent>
 
                     <TabsContent value="expenses">
-                        <ExpenseList />
+                        <PermissionGuard permission="expense:read" mode="silent">
+                            <ExpenseList />
+                        </PermissionGuard>
                     </TabsContent>
 
                     <TabsContent value="categories">
-                        <ExpenseCategoryList />
+                        <PermissionGuard permission="expense-category:read" mode="silent">
+                            <ExpenseCategoryList />
+                        </PermissionGuard>
                     </TabsContent>
                 </Tabs>
 

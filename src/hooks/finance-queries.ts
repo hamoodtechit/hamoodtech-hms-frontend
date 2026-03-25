@@ -10,12 +10,14 @@ export const FINANCE_KEYS = {
     transaction: (id: string) => [...FINANCE_KEYS.all, "transaction", id] as const,
 };
 
-export function useFinanceAccounts(params?: any) {
+export function useFinanceAccounts(params?: any, options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: FINANCE_KEYS.accounts(params),
         queryFn: () => financeService.getAccounts(params),
+        ...options
     });
 }
+
 
 export function useFinanceAccount(id: string) {
     return useQuery({
@@ -25,12 +27,14 @@ export function useFinanceAccount(id: string) {
     });
 }
 
-export function useFinanceTransactions(params?: any) {
+export function useFinanceTransactions(params?: any, options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: FINANCE_KEYS.transactions(params),
         queryFn: () => financeService.getTransactions(params),
+        ...options
     });
 }
+
 
 export function useFinanceTransaction(id: string) {
     return useQuery({

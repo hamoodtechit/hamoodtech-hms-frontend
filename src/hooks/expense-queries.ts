@@ -16,12 +16,14 @@ export const EXPENSE_KEYS = {
 };
 
 // Expense Categories
-export function useExpenseCategories(params?: ExpenseCategoryQueryParams) {
+export function useExpenseCategories(params?: ExpenseCategoryQueryParams, options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: EXPENSE_KEYS.categories(params),
         queryFn: () => expenseService.getCategories(params),
+        ...options
     });
 }
+
 
 export function useCreateExpenseCategory() {
     const queryClient = useQueryClient();
@@ -55,10 +57,12 @@ export function useDeleteExpenseCategory() {
 }
 
 // Expenses
-export function useExpenses(params?: ExpenseQueryParams) {
+
+export function useExpenses(params?: ExpenseQueryParams, options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: EXPENSE_KEYS.list(params),
         queryFn: () => expenseService.getExpenses(params),
+        ...options
     });
 }
 

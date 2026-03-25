@@ -54,9 +54,20 @@ export function MasterDataTable({ type, title }: MasterDataTableProps) {
   const queryParams = { page, limit: 10, search: debouncedSearch }
   
   // Data Fetching Hooks
+  const typeToKey: Record<string, string> = {
+    'generics': 'medicine-generic',
+    'categories': 'medicine-category',
+    'groups': 'medicine-group',
+    'units': 'medicine-unit',
+    'manufacturers': 'medicine-manufacturer',
+    'branches': 'branch'
+  }
+  const baseKey = typeToKey[type] || 'medicine'
+  const canRead = hasPermission(`${baseKey}:read` as any)
+
   const { data: response, isLoading: loading } = type === 'manufacturers' 
-    ? useManufacturers(queryParams) 
-    : usePharmacyEntities(type, queryParams)
+    ? useManufacturers(queryParams, { enabled: canRead }) 
+    : usePharmacyEntities(type, queryParams, { enabled: canRead })
   
   const entities = response?.data || []
   const meta = response?.meta || null

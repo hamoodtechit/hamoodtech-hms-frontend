@@ -11,10 +11,11 @@ export const DIAGNOSTIC_KEYS = {
   templates: (params?: any) => [...DIAGNOSTIC_KEYS.all, "templates", params] as const,
 };
 
-export function useDiagnosticTests(params?: DiagnosticTestParams) {
+export function useDiagnosticTests(params?: DiagnosticTestParams, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: DIAGNOSTIC_KEYS.tests(params),
     queryFn: () => diagnosticService.getDiagnosticTests(params),
+    ...options
   });
 }
 
@@ -51,11 +52,12 @@ export function useDeleteDiagnosticTest() {
 
 // Diagnostic Report Workflow Hooks
 
-export function useDiagnosticReports(params?: DiagnosticReportParams) {
+export function useDiagnosticReports(params?: DiagnosticReportParams, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: DIAGNOSTIC_KEYS.reports(params),
     queryFn: () => diagnosticService.getReports(params),
     placeholderData: keepPreviousData,
+    ...options
   });
 }
 

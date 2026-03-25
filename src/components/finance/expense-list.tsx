@@ -16,6 +16,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Expense } from "@/types/expense"
 import { format } from "date-fns"
 import { Eye, Loader2, Plus, Search } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { ExpenseDialog } from "./expense-dialog"
 
@@ -28,11 +29,14 @@ export function ExpenseList() {
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
     const [search, setSearch] = useState("")
 
+    const { hasPermission } = usePermissions()
+    const canRead = hasPermission('expense:read')
+
     const { data: response, isLoading, refetch } = useExpenses({ 
         search, 
         branchId: activeStoreId || undefined,
         limit: 100 
-    })
+    }, { enabled: canRead })
     const expenses = response?.expenses || []
 
     return (
