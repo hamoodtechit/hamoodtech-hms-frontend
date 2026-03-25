@@ -2,10 +2,10 @@
 
 import { ApprovalDialog } from "@/components/diagnostic/approval-dialog"
 import { ReportDetailSheet } from "@/components/diagnostic/report-detail-sheet"
-import { RequisitionDialog } from "@/components/diagnostic/requisition-dialog"
 import { ResultEntryDialog } from "@/components/diagnostic/result-entry-dialog"
 import { SampleCollectionDialog } from "@/components/diagnostic/sample-collection-dialog"
 import { SampleLabelDialog } from "@/components/diagnostic/sample-label-dialog"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -44,7 +44,6 @@ import {
     X
 } from "lucide-react"
 import { useState } from "react"
-import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function DiagnosticReportsPage() {
     const { hasPermission } = usePermissions()
@@ -116,7 +115,7 @@ export default function DiagnosticReportsPage() {
         'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
 
-    // Dynamic Title
+    // Dynamic Title    
     const pageTitle = "Diagnostic Worklist";
 
     return (
