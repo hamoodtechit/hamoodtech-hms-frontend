@@ -31,28 +31,31 @@ export function useCashRegisters(params: any = {}) {
   });
 }
 
-export function usePharmacyStats(params: { branchId?: string; startDate?: string; endDate?: string }) {
+export function usePharmacyStats(params: { branchId?: string; startDate?: string; endDate?: string }, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.stats(params),
     queryFn: () => pharmacyService.getPharmacyStats(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    ...options
   });
 }
 
-export function usePharmacyGraph(params: { branchId?: string; startDate?: string; endDate?: string; days?: number }) {
+export function usePharmacyGraph(params: { branchId?: string; startDate?: string; endDate?: string; days?: number }, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.graph(params),
     queryFn: () => pharmacyService.getPharmacyGraph(params),
     staleTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
+    ...options
   });
 }
 
-export function usePharmacySummary(params: { branchId?: string; startDate?: string; endDate?: string }) {
+export function usePharmacySummary(params: { branchId?: string; startDate?: string; endDate?: string }, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.summary(params),
     queryFn: () => pharmacyService.getPharmacySummary(params),
     staleTime: 5 * 60 * 1000,
+    ...options
   });
 }
 
@@ -359,11 +362,12 @@ export function usePurchases(params: {
   type?: 'pharmacy' | 'hospital' | 'clinic';
   startDate?: string;
   endDate?: string;
-} = {}) {
+} = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: PHARMACY_KEYS.purchases(params),
     queryFn: () => pharmacyService.getPurchases(params),
     placeholderData: keepPreviousData,
+    ...options
   });
 }
 

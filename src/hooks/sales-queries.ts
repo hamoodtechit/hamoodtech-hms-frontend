@@ -16,11 +16,12 @@ export const SALES_KEYS = {
   returnDetail: (id: string) => [...SALES_KEYS.returns(), "detail", id] as const,
 };
 
-export function useSales(params: any = {}) {
+export function useSales(params: any = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: SALES_KEYS.list(params),
     queryFn: () => salesService.getSales(params),
     placeholderData: keepPreviousData,
+    ...options
   });
 }
 
