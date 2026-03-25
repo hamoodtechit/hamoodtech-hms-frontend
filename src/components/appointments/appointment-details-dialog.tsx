@@ -98,8 +98,8 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         </section>
     )
 
-    const Field = ({ label, value, icon: Icon }: { label: string, value: any, icon?: any }) => (
-        <div className="flex flex-col gap-1">
+    const Field = ({ label, value, icon: Icon, className }: { label: string, value: any, icon?: any, className?: string }) => (
+        <div className={cn("flex flex-col gap-1", className)}>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
             <div className="flex items-center gap-2">
                 {Icon && <Icon className="h-4 w-4 text-primary/60" />}
@@ -168,7 +168,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             <DetailSection icon={Stethoscope} title="Medical Context">
                                 <Field label="Treating Doctor" value={appointment?.doctor?.name} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
-                                <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
+                                    <Field label="Purpose" value={appointment?.purpose} className="capitalize" />
+                                </div>
                             </DetailSection>
 
                             {/* Billing & Payment Info - Only show if fee is present */}

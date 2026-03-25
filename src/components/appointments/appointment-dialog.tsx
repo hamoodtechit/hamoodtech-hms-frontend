@@ -72,6 +72,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         note: "",
         fees: 0,
         status: "pending" as AppointmentStatus,
+        purpose: "consultation",
         chamberOrRoomNumber: "",
         commissionAgentId: ""
     })
@@ -94,6 +95,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     note: appointment.note || "",
                     fees: Number(appointment.fees) || 0,
                     status: appointment.status,
+                    purpose: appointment.purpose || "consultation",
                     chamberOrRoomNumber: appointment.chamberOrRoomNumber || "",
                     commissionAgentId: appointment.commissionAgentId || ""
                 })
@@ -108,6 +110,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     note: "",
                     fees: 0,
                     status: "pending",
+                    purpose: "consultation",
                     chamberOrRoomNumber: "",
                     commissionAgentId: ""
                 })
@@ -199,6 +202,24 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                         onChange={(e) => setFormData(prev => ({ ...prev, chamberOrRoomNumber: e.target.value }))}
                                         placeholder="e.g. Room 302"
                                     />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Purpose</Label>
+                                    <Select 
+                                        value={formData.purpose} 
+                                        onValueChange={(val: any) => setFormData(prev => ({ ...prev, purpose: val }))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Purpose" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="consultation">Consultation</SelectItem>
+                                            <SelectItem value="follow-up">Follow-up</SelectItem>
+                                            <SelectItem value="emergency">Emergency</SelectItem>
+                                            <SelectItem value="treatment">Treatment</SelectItem>
+                                            <SelectItem value="report">Report Show</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 

@@ -134,6 +134,7 @@ export default function AppointmentsPage() {
                                     <TableHead className="pl-6">Appointment / Serial</TableHead>
                                     <TableHead>Patient</TableHead>
                                     <TableHead>Professional</TableHead>
+                                    <TableHead>Purpose</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right pr-6">Actions</TableHead>
                                 </TableRow>
@@ -187,6 +188,11 @@ export default function AppointmentsPage() {
                                                         <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{apt.department.name}</div>
                                                     </div>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize text-[10px] font-bold">
+                                                    {apt.purpose || 'Consultation'}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {getStatusBadge(apt.status)}

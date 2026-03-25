@@ -13,6 +13,7 @@ export interface Appointment {
   fees: number;
   saleId?: string;
   note?: string;
+  purpose?: string;
   commissionAgentId?: string;
   chamberOrRoomNumber?: string;
   createdAt: string;
