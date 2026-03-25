@@ -55,7 +55,7 @@ export default function CommissionAgentsPage() {
     }
 
     return (
-        <PermissionGuard permission="agent:read">
+        <PermissionGuard permission="user:read">
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -143,7 +143,7 @@ export default function CommissionAgentsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    {hasPermission('agent:read') && (
+                                                    {hasPermission('user:read') && (
                                                     <Link href={`/hr/commission-agents/${agent.id}`}>
                                                         <Button variant="outline" size="sm">
                                                             <Eye className="h-4 w-4" />

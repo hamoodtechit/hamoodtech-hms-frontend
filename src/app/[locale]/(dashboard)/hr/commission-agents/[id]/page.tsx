@@ -34,7 +34,7 @@ export default function CommissionAgentDetailPage() {
     }
 
     return (
-        <PermissionGuard permission="agent:read">
+        <PermissionGuard permission="user:read">
             {!agent ? (
                 <div className="flex flex-col items-center justify-center h-[450px] space-y-4">
                     <h1 className="text-2xl font-bold">Agent Not Found</h1>
