@@ -1,7 +1,7 @@
 "use client"
 
 import { useLocale, useTranslations } from "next-intl"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "@/i18n/navigation"
 import { useEffect, useState } from "react"
 
 import {
@@ -29,8 +29,7 @@ export function LanguageSwitcher() {
   }
 
   const handleChange = (value: string) => {
-    const newPath = pathname.replace(`/${locale}`, `/${value}`)
-    router.push(newPath)
+    router.replace(pathname, { locale: value as any })
   }
 
   return (
