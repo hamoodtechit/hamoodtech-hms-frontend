@@ -1,0 +1,306 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useSettingsStore } from "@/store/use-settings-store"
+import { Admission } from "@/types/patient"
+import { Printer, X } from "lucide-react"
+import { useRef } from "react"
+
+interface AdmissionPrintDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    admission: Admission | null
+}
+
+export function AdmissionPrintDialog({ open, onOpenChange, admission }: AdmissionPrintDialogProps) {
+    const { general } = useSettingsStore()
+    const printRef = useRef<HTMLDivElement>(null)
+
+    if (!admission) return null
+
+    const patient = admission.patient
+    const branch = admission.branch
+    const bed = admission.bed
+
+    const handlePrint = () => {
+        const content = printRef.current?.innerHTML
+        if (!content) return
+
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'fixed'
+        iframe.style.right = '100%'
+        iframe.style.bottom = '100%'
+        iframe.style.width = '0'
+        iframe.style.height = '0'
+        iframe.style.border = 'none'
+        document.body.appendChild(iframe)
+
+        const doc = iframe.contentWindow?.document
+        if (!doc) return
+
+        doc.open()
+        doc.write(`
+            <html>
+                <head>
+                    <title>Admission Form - ${patient?.name}</title>
+                    <style>
+                        @page { size: A4; margin: 10mm; }
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            color: #000; 
+                            line-height: 1.4; 
+                            padding: 0; 
+                            margin: 0; 
+                            background: white;
+                        }
+                        .print-container { width: 210mm; margin: 0 auto; background: white; padding: 10mm; box-sizing: border-box; }
+                        
+                        /* Layout Utilities */
+                        .flex { display: flex !important; }
+                        .flex-col { flex-direction: column !important; }
+                        .justify-between { justify-content: space-between !important; }
+                        .justify-center { justify-content: center !important; }
+                        .items-center { align-items: center !important; }
+                        .items-end { align-items: flex-end !important; }
+                        .text-center { text-align: center !important; }
+                        .text-right { text-align: right !important; }
+                        .grid { display: grid !important; }
+                        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+                        .w-full { width: 100% !important; }
+                        
+                        /* Borders */
+                        .border { border: 1px solid black !important; }
+                        .border-b { border-bottom: 1px solid black !important; }
+                        .border-r { border-right: 1px solid black !important; }
+                        .border-t { border-top: 1px solid black !important; }
+                        .border-dashed { border-style: dashed !important; border-width: 1px !important; }
+                        .border-black { border-color: black !important; }
+                        
+                        /* Typography */
+                        .font-bold { font-weight: bold !important; }
+                        .font-black { font-weight: 900 !important; }
+                        .uppercase { text-transform: uppercase !important; }
+                        .text-xs { font-size: 10px !important; }
+                        .text-sm { font-size: 12px !important; }
+                        .text-lg { font-size: 18px !important; }
+                        .text-2xl { font-size: 24px !important; }
+                        .italic { font-style: italic !important; }
+                        
+                        /* Spacing */
+                        .p-2 { padding: 8px !important; }
+                        .px-3 { padding-left: 12px !important; padding-right: 12px !important; }
+                        .p-4 { padding: 16px !important; }
+                        .mb-4 { margin-bottom: 16px !important; }
+                        .mt-4 { margin-top: 16px !important; }
+                        .mt-8 { margin-top: 32px !important; }
+                        .mt-24 { margin-top: 96px !important; }
+                        
+                        /* Image Handling */
+                        img { max-height: 100px; width: auto !important; object-fit: contain !important; }
+                        .h-16 { height: 64px !important; }
+                        
+                        @media print {
+                            .no-print { display: none; }
+                            body { background: white; shadow: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-container">
+                        ${content}
+                    </div>
+                </body>
+            </html>
+        `)
+        doc.close()
+
+        setTimeout(() => {
+            iframe.contentWindow?.focus()
+            iframe.contentWindow?.print()
+            setTimeout(() => {
+                document.body.removeChild(iframe)
+            }, 1000)
+        }, 500)
+    }
+
+    const FormContent = () => {
+        const branchLogo = branch?.logoUrl || "/Logo.png"
+
+        return (
+            <div className="text-black bg-white antialiased font-sans">
+                {/* Header Section */}
+                <div className="text-center mb-6 space-y-2">
+                    <div className="flex justify-center mb-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={branchLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                    </div>
+                    
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-950">
+                        {branch?.name || general?.hospitalName || 'HamoodTech Hospital'}
+                    </h1>
+                    
+                    <p className="text-xs font-bold leading-tight max-w-[300px] mx-auto text-black">
+                        {branch?.address || 'Branch Address, City, Bangladesh'}
+                    </p>
+                    
+                    <div className="flex justify-center gap-4 text-[10px] font-black border-t border-black/10 mt-3 pt-2 uppercase tracking-tight">
+                        {branch?.phone && (
+                            <span className="flex items-center gap-1">
+                                PH: {branch.phone}
+                            </span>
+                        )}
+                        {branch?.email && (
+                            <span className="flex items-center gap-1">
+                                {branch?.phone && <span className="mr-4">|</span>}
+                                EMAIL: {branch.email}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+            <div className="text-center mb-6 pb-2 border-b-2 border-double border-black">
+                <span className="text-xl font-black underline uppercase tracking-widest bg-gray-100 px-8 py-1 rounded-full border border-black">
+                    Patient Admission Form
+                </span>
+            </div>
+
+            {/* Structured Info Box - Using the professional dashed style */}
+            <div className="border border-black border-dashed mb-6 overflow-hidden">
+                {/* Row 1 */}
+                <div className="grid grid-cols-2 border-b border-black border-dashed">
+                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Reg. ID:</span>
+                        <span className="font-bold text-sm tracking-tight">{patient?.uhid || patient?.patientNumber || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 px-3 flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Admission ID:</span>
+                        <span className="font-bold text-sm italic">A{admission.id.slice(0, 8).toUpperCase()}</span>
+                    </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="grid grid-cols-2 border-b border-black border-dashed">
+                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Patient Name:</span>
+                        <span className="font-black text-sm uppercase">{patient?.name || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 px-3 flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Phone No:</span>
+                        <span className="font-bold text-sm">{patient?.phone || 'N/A'}</span>
+                    </div>
+                </div>
+
+                {/* Row 3 */}
+                <div className="grid grid-cols-2 border-b border-black border-dashed">
+                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center gap-4">
+                        <div className="flex items-center">
+                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Age / Sex:</span>
+                            <span className="font-bold text-sm">{patient?.age} Y / {patient?.gender?.charAt(0).toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <div className="p-2 px-3 flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Guardian:</span>
+                        <span className="font-bold text-sm">{admission.guardianName} ({admission.guardianRelation})</span>
+                    </div>
+                </div>
+
+                {/* Row 4 */}
+                <div className="grid grid-cols-2 border-b border-black border-dashed">
+                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Ward / Bed:</span>
+                        <span className="font-black text-sm text-blue-700">{bed?.section?.name || 'N/A'} - {bed?.bedNumber || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 px-3 flex items-center">
+                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Adm. Date:</span>
+                        <span className="font-bold text-sm">
+                            {new Date(admission.admissionDate).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Full Width Rows */}
+                <div className="border-b border-black border-dashed flex items-start">
+                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Fees (Tk):</span>
+                    <span className="p-2 px-3 font-black text-lg text-black">{Number(admission.fees).toFixed(2)}</span>
+                </div>
+
+                <div className="border-b border-black border-dashed flex items-start">
+                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
+                    <span className="p-2 px-3 font-bold text-sm">{admission.reason || 'Routine Admission'}</span>
+                </div>
+
+                <div className="flex items-start">
+                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Address:</span>
+                    <span className="p-2 px-3 font-bold text-xs opacity-80">{patient?.address || 'N/A'}</span>
+                </div>
+            </div>
+
+            {/* Consent Section - Professional Bangla Typography */}
+            <div className="mt-8 text-center px-4">
+                <h2 className="text-2xl font-black mb-4 font-serif border-b border-black w-fit mx-auto px-4 pb-1">অনুমতি পত্র</h2>
+                <p className="text-justify leading-relaxed text-[15px] font-serif tracking-tight text-gray-900 border border-black/5 p-4 rounded bg-gray-50/50">
+                    আমি প্রতিজ্ঞাপূর্বক ক্লিনিক এর সংশ্লিষ্ট চিকিৎসক দ্বারা আমার রোগীর প্রয়োজনীয় প্রাথমিক চিকিৎসা/ অজ্ঞান করা ইয়া অস্ত্র প্রয়োগ করিতে দিতেছি। ইহাতে রোগীর যদি কোন প্রকার ভালো বা মন্দ হয় তার জন্যে ক্লিনিক কর্তৃপক্ষ অথবা কতব্যরত চিকিৎসক দায়ী থাকিবে না এবং আমি বা রোগীর কোন আত্মীয় ফোন প্রকার দাবি করিতে পারিবোনা।
+                    <br/><br/>
+                    আমি স্ব-জ্ঞানে এবং নিম্ন উল্লেখিত সাক্ষীর উপস্থিতিতে অত্র অঙ্গীকার পত্রে দস্তখত করিলাম।
+                </p>
+            </div>
+
+            {/* Signature Blocks */}
+            <div className="mt-24 flex justify-between px-10">
+                <div className="text-center space-y-1">
+                    <div className="border-t border-black w-48 mx-auto"></div>
+                    <span className="text-[11px] font-black uppercase">Witness Signature</span>
+                    <p className="text-[11px] font-bold text-black italic">সাক্ষীর স্বাক্ষর</p>
+                </div>
+                <div className="text-center space-y-1">
+                    <div className="border-t border-black w-64 mx-auto"></div>
+                    <span className="text-[11px] font-black uppercase">Guardian Signature</span>
+                    <p className="text-[11px] font-bold text-black italic">অভিভাবকের স্বাক্ষর / Responsible Person</p>
+                </div>
+            </div>
+
+            {/* Footer Institutional Brading */}
+            <div className="mt-20 pt-8 border-t border-black/5 text-[10px] text-black font-black flex justify-between uppercase tracking-widest">
+                <span>System Generated Admission Form • HMS v2.0</span>
+                <span>Printed on: {new Date().toLocaleString()}</span>
+            </div>
+        </div>
+        )
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-white border-none shadow-2xl light">
+                <div className="p-4 border-b flex justify-between items-center bg-gray-50/80 backdrop-blur text-slate-900">
+                    <DialogTitle className="text-xl font-black flex items-center gap-2 text-slate-900">
+                        <Printer className="w-5 h-5 text-blue-600" />
+                        Professional Print Preview
+                    </DialogTitle>
+                    <div className="flex items-center gap-2">
+                        <Button onClick={handlePrint} size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20">
+                            <Printer className="w-4 h-4 mr-2" />
+                            Print Now
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-500 hover:bg-black/5" onClick={() => onOpenChange(false)}>
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+
+                <ScrollArea className="max-h-[85vh] p-8 bg-zinc-200/50">
+                    <div className="bg-white shadow-2xl mx-auto p-12 w-[210mm] min-h-[297mm] relative" ref={printRef}>
+                        {/* Center Watermark for authenticity */}
+                        
+                        <FormContent />
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    )
+}

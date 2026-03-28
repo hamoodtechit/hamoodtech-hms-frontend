@@ -149,6 +149,12 @@ export function Sidebar() {
               permission: "patient:read",
           },
           {
+              label: "Admissions (IPD)",
+              href: "/patients/admissions",
+              module: "patients",
+              permission: "patient:read",
+          },
+          {
               label: "Diagnostic Tests",
               href: "/diagnostic",
               module: "diagnostic",

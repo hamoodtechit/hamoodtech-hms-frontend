@@ -1,3 +1,5 @@
+export type { Patient, PatientListResponse, PatientPayload, PatientQueryParams } from './patient';
+
 export interface PharmacyEntity {
   id: string;
   name: string;
@@ -317,55 +319,7 @@ export interface UpdateOpeningStockDto {
 
 export type PharmacyEntityType = 'generics' | 'categories' | 'groups' | 'units' | 'branches' | 'manufacturers';
 
-export interface Patient {
-  id: string;
-  uhid: string;
-  name: string;
-  nameBangla?: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  phone: string;
-  dob?: string;
-  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
-  address: string;
-  visitType?: 'ipd' | 'opd' | 'emergency';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PatientPayload {
-  name: string;
-  nameBangla?: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  phone: string;
-  dob?: string;
-  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
-  address: string;
-  visitType?: 'ipd' | 'opd' | 'emergency';
-}
-
-export interface PatientQueryParams {
-  page?: number;
-  limit?: number;
-  name?: string;
-  phone?: string;
-  visitType?: 'ipd' | 'opd' | 'emergency';
-}
-
-export interface PatientListResponse {
-    success: boolean;
-    message: string;
-    data: Patient[];
-    meta: {
-        page: number;
-        pageSize: number;
-        totalPages: number;
-        totalItems: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-    }
-}
+// Moved to patient.ts
 
 export interface SaleItem {
   medicineId: string;
