@@ -6,6 +6,7 @@ import {
 } from "@/types/patient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { patientService } from "@/services/patient-service";
+import { FACILITY_KEYS } from "./facility-queries";
 
 export const PATIENT_KEYS = {
   all: ["patients"] as const,
@@ -83,6 +84,7 @@ export function useCreateAdmission() {
     mutationFn: (data: AdmissionPayload) => patientService.createAdmission(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions });
+      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
     },
   });
 }
@@ -94,6 +96,7 @@ export function useUpdateAdmission() {
       patientService.updateAdmission(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions });
+      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
     },
   });
 }
@@ -104,6 +107,7 @@ export function useDeleteAdmission() {
     mutationFn: (id: string) => patientService.deleteAdmission(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions });
+      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
     },
   });
 }

@@ -21,7 +21,7 @@ import { useState } from "react"
 interface SearchableSelectProps {
     value?: string
     onChange: (value: string) => void
-    options: { id: string; name: string }[]
+    options: { id: string; name: string; disabled?: boolean }[]
     placeholder?: string
     searchPlaceholder?: string
     emptyMessage?: string
@@ -118,11 +118,16 @@ export function SearchableSelect({
                                     {options.map((opt) => (
                                         <CommandItem
                                             key={opt.id}
+                                            disabled={opt.disabled}
                                             onSelect={() => {
+                                                if (opt.disabled) return
                                                 onChange(opt.id)
                                                 setSelectedLabel(opt.name)
                                                 setOpen(false)
                                             }}
+                                            className={cn(
+                                                opt.disabled && "opacity-50 cursor-not-allowed grayscale"
+                                            )}
                                         >
                                             <Check
                                                 className={cn(

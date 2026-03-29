@@ -26,7 +26,7 @@ export function useCreateBedType() {
     return useMutation({
         mutationFn: (data: BedTypePayload) => facilityService.createBedType(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.bedTypes() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed type created successfully");
         },
         onError: (error: any) => {
@@ -40,8 +40,7 @@ export function useUpdateBedType() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<BedTypePayload> }) => facilityService.updateBedType(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.bedTypes() });
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.beds() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed type updated successfully");
         },
         onError: (error: any) => {
@@ -55,8 +54,7 @@ export function useDeleteBedType() {
     return useMutation({
         mutationFn: (id: string) => facilityService.deleteBedType(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.bedTypes() });
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.beds() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed type deleted successfully");
         },
         onError: (error: any) => {
@@ -79,7 +77,7 @@ export function useCreateBed() {
     return useMutation({
         mutationFn: (data: BedPayload) => facilityService.createBed(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.beds() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed created successfully");
         },
         onError: (error: any) => {
@@ -93,7 +91,7 @@ export function useUpdateBed() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<BedPayload> }) => facilityService.updateBed(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.beds() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed updated successfully");
         },
         onError: (error: any) => {
@@ -107,7 +105,7 @@ export function useDeleteBed() {
     return useMutation({
         mutationFn: (id: string) => facilityService.deleteBed(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.beds() });
+            queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
             toast.success("Bed deleted successfully");
         },
         onError: (error: any) => {

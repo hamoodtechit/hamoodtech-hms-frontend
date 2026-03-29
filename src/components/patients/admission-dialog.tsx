@@ -25,10 +25,17 @@ import {
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useBeds } from "@/hooks/facility-queries"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCreateAdmission, useUpdateAdmission } from "@/hooks/patient-queries"
+import { useAddSalePayment } from "@/hooks/sales-queries"
+import { useCurrency } from "@/hooks/use-currency"
+import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
+import { FinanceAccount } from "@/types/finance"
 import { Admission, AdmissionStatus, Patient } from "@/types/patient"
-import { Loader2 } from "lucide-react"
+import { PaymentMethod } from "@/types/pharmacy"
+import { SalePayload } from "@/types/sales"
+import { Loader2, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -66,8 +73,31 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         commissionAgentId: ""
     })
 
+    // Payment State
+    const [discount, setDiscount] = useState<number>(0)
+    const [discountFixedAmount, setDiscountFixedAmount] = useState<number>(0)
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+    const [selectedAccountId, setSelectedAccountId] = useState<string>("")
+    const [paidAmount, setPaidAmount] = useState<number>(0)
+
+    const { formatCurrency } = useCurrency()
+    const { pharmacy, fetchSettings } = useSettingsStore()
+    const vatPercentage = pharmacy?.vatPercentage || 0
+
+    const addPaymentMutation = useAddSalePayment()
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const accounts = accountsRes?.data || []
+
+    useEffect(() => {
+        if (open) {
+            fetchSettings()
+        }
+    }, [open, fetchSettings])
+
     // Data Fetching
-    const { data: bedsRes } = useBeds({ limit: 100 })
+    const { data: bedsRes } = useBeds({ limit: 100,
+        status: 'available'
+     })
     
     
 
@@ -126,10 +156,23 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         if (formData.bedId && bedsRes?.data) {
             const selectedBed = bedsRes.data.find(b => b.id === formData.bedId)
             if (selectedBed?.bedType?.pricePerDay) {
-                setFormData(prev => ({ ...prev, fees: Number(selectedBed.bedType?.pricePerDay) || 0 }))
+                const price = Number(selectedBed.bedType?.pricePerDay) || 0
+                setFormData(prev => ({ ...prev, fees: price }))
+                // Default paid amount to total if for new admission
+                if (!admission) {
+                    setPaidAmount(price + (price * (vatPercentage / 100)))
+                }
             }
         }
-    }, [formData.bedId, bedsRes])
+    }, [formData.bedId, bedsRes, admission, vatPercentage])
+
+    // Totals logic
+    const subtotal = formData.fees
+    const discountAmount = discountFixedAmount || (subtotal * discount) / 100
+    const discountedSubtotal = Math.max(0, subtotal - discountAmount)
+    const tax = discountedSubtotal * (vatPercentage / 100)
+    const total = discountedSubtotal + tax
+    const dueAmount = Math.max(0, total - paidAmount)
 
     const handleSave = async () => {
         if (!formData.patientId || !formData.bedId) {
@@ -139,9 +182,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
         setLoading(true)
         try {
+            let resAdmission: any;
             if (admission?.id) {
                 // Update
-                const res = await updateMutation.mutateAsync({
+                resAdmission = await updateMutation.mutateAsync({
                     id: admission.id,
                     data: {
                         ...formData,
@@ -149,16 +193,43 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     }
                 })
                 toast.success("Admission updated successfully")
-                onSuccess?.(res.data)
             } else {
                 // Create
-                const res = await createMutation.mutateAsync({
+                if (paidAmount > 0 && !selectedAccountId) {
+                    toast.error("Please select a target finance account for the payment")
+                    setLoading(false)
+                    return
+                }
+
+                resAdmission = await createMutation.mutateAsync({
                     ...formData,
                     branchId: activeStoreId || formData.branchId
                 })
-                toast.success("Patient admitted successfully")
-                onSuccess?.(res.data)
+
+                // Extract Sale ID from the response (Backend auto-creates the Sale)
+                const saleId = resAdmission?.data?.sale?.id
+
+                // 2. Process Payment if amount exists
+                if (saleId && paidAmount > 0) {
+                    try {
+                        await addPaymentMutation.mutateAsync({
+                            id: saleId,
+                            data: {
+                                accountId: selectedAccountId,
+                                amount: paidAmount,
+                                paymentMethod: paymentMethod,
+                            }
+                        })
+                        toast.success("Patient admitted and payment processed!")
+                    } catch (pError) {
+                        console.error("Payment registration failed:", pError)
+                        toast.warning("Admission confirmed, but payment recording failed. Please collect manually via Sales.")
+                    }
+                } else {
+                    toast.success("Patient admitted successfully!")
+                }
             }
+            onSuccess?.(resAdmission.data)
             onOpenChange(false)
         } catch (error) {
             toast.error(admission?.id ? "Failed to update admission" : "Failed to admit patient")
@@ -220,11 +291,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                         options={[
                                             ...(admission?.bed ? [{ 
                                                 id: admission.bedId, 
-                                                name: `${admission.bed.bedNumber} - ${admission.bed.bedType?.name} (${admission.bed.section?.name}) - Tk ${admission.bed.bedType?.pricePerDay}` 
+                                                name: `[CURRENT] ${admission.bed.bedNumber} - ${admission.bed.bedType?.name} (${admission.bed.section?.name}) - Tk ${admission.bed.bedType?.pricePerDay}`,
+                                                disabled: false
                                             }] : []),
                                             ...(bedsRes?.data?.filter(b => b.id !== admission?.bedId).map(b => ({ 
                                                 id: b.id, 
-                                                name: `${b.bedNumber} - ${b.bedType?.name} (${b.section?.name}) - Tk ${b.bedType?.pricePerDay}` 
+                                                name: `[${b.status.toUpperCase()}] ${b.bedNumber} - ${b.bedType?.name} (${b.section?.name}) - Tk ${b.bedType?.pricePerDay}`,
+                                                disabled: b.status !== 'available'
                                             })) || [])
                                         ]}
                                         placeholder="Available beds"
@@ -309,6 +382,128 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     rows={3}
                                 />
                             </div>
+
+                            {!admission && (
+                                <div className="space-y-6 pt-6 border-t mt-4">
+                                    <div className="flex items-center gap-2">
+                                        <Wallet className="h-5 w-5 text-primary" />
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-primary">Billing & Initial Payment</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-4 rounded-xl border border-primary/5">
+                                        {/* Left: Discounts */}
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                                    Discount
+                                                </Label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="relative">
+                                                        <SmartNumberInput 
+                                                            placeholder="%" 
+                                                            className="h-9 text-sm pr-8" 
+                                                            min={0}
+                                                            max={100}
+                                                            value={discount === 0 ? undefined : discount}
+                                                            onChange={(val) => {
+                                                                setDiscount(val || 0)
+                                                                setDiscountFixedAmount(0)
+                                                            }}
+                                                        />
+                                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">%</span>
+                                                    </div>
+                                                    <div className="relative">
+                                                        <SmartNumberInput 
+                                                            placeholder="Fixed" 
+                                                            className="h-9 text-sm pr-8" 
+                                                            min={0}
+                                                            value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
+                                                            onChange={(val) => {
+                                                                setDiscountFixedAmount(val || 0)
+                                                                setDiscount(0)
+                                                            }}
+                                                        />
+                                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">Tk</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5 p-3 bg-background rounded-lg border shadow-sm">
+                                                <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
+                                                    <span>Base Fees</span>
+                                                    <span>{formatCurrency(subtotal)}</span>
+                                                </div>
+                                                {discountAmount > 0 && (
+                                                    <div className="flex justify-between text-[10px] font-medium text-emerald-600 uppercase">
+                                                        <span>Discount</span>
+                                                        <span>-{formatCurrency(discountAmount)}</span>
+                                                    </div>
+                                                )}
+                                                {tax > 0 && (
+                                                    <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
+                                                        <span>Tax ({vatPercentage}%)</span>
+                                                        <span>{formatCurrency(tax)}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between items-baseline pt-2 border-t mt-2">
+                                                    <span className="text-xs font-black uppercase">Total Bill</span>
+                                                    <span className="text-xl font-black text-primary">{formatCurrency(total)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Payment Method & Amount */}
+                                        <div className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid</Label>
+                                                <SmartNumberInput 
+                                                    value={paidAmount}
+                                                    onFocus={(e: any) => e.target.select()} 
+                                                    onChange={(val) => setPaidAmount(val || 0)}
+                                                    className="h-10 text-lg font-black border-primary/20 text-primary bg-background shadow-inner"
+                                                />
+                                                <div className="flex justify-between items-center text-[10px] px-1">
+                                                    <span className="text-muted-foreground font-black uppercase tracking-wider">Due Amount</span>
+                                                    <span className="font-black text-rose-500">{formatCurrency(dueAmount)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</Label>
+                                                    <Select value={paymentMethod} onValueChange={(v: string) => setPaymentMethod(v as PaymentMethod)}>
+                                                        <SelectTrigger className="h-9 text-xs font-medium bg-background">
+                                                            <SelectValue placeholder="Method" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                                                <SelectItem key={method} value={method}>
+                                                                    <span className="capitalize">{method}</span>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account *</Label>
+                                                    <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                                        <SelectTrigger className="h-9 text-xs font-medium bg-background">
+                                                            <SelectValue placeholder="Select Account" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {accounts.map((account: FinanceAccount) => (
+                                                                <SelectItem key={account.id} value={account.id}>
+                                                                    {account.name} ({account.type})
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </ScrollArea>

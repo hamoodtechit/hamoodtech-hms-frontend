@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useCreateAppointment } from "@/hooks/appointment-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
-import { useCreateSale, useSales } from "@/hooks/sales-queries"
+import { useAddSalePayment, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
@@ -100,7 +100,7 @@ export function AppointmentBillingForm() {
                             (modalMaxAmount ? 1 : 0) +
                             (modalDateRange ? 1 : 0)
 
-    const createSaleMutation = useCreateSale()
+    const addPaymentMutation = useAddSalePayment()
     const createAppointmentMutation = useCreateAppointment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
 
@@ -176,7 +176,8 @@ export function AppointmentBillingForm() {
 
         try {
             // 1. Create Appointment Record first
-            await createAppointmentMutation.mutateAsync({
+            // Backend will auto-create the Sale record
+            const resAppointment: any = await createAppointmentMutation.mutateAsync({
                 branchId: activeStoreId || "",
                 patientId: selectedCustomer.id,
                 departmentId: selectedDepartmentId || "",
@@ -188,43 +189,27 @@ export function AppointmentBillingForm() {
                 status: 'confirmed'
             })
 
-            // 2. Process Billing 
-            const payload: SalePayload = {
-                branchId: activeStoreId || "",
-                patientId: selectedCustomer.id,
-                type: 'appointment',
-                doctorId: selectedDoctorId,
-                status: paidAmount >= total ? 'completed' : 'pending',
-                paymentMethod: paymentMethod,
-                paymentStatus: paidAmount >= total ? 'paid' : paidAmount > 0 ? 'partial' : 'due',
-                paidAmount: paidAmount,
-                dueAmount: Math.max(0, total - paidAmount),
-                discountPercentage: discount,
-                discountAmount: discountAmount,
-                taxPercentage: vatPercentage,
-                taxAmount: tax,
-                payments: paidAmount > 0 ? [{
-                    accountId: selectedAccountId,
-                    amount: paidAmount,
-                    paymentMethod: paymentMethod,
-                }] : [],
-                saleItems: [{
-                    itemName: 'Consultation Charge',
-                    unit: 'Item',
-                    price: consultationFee,
-                    mrp: consultationFee,
-                    quantity: 1,
-                    discountPercentage: discount,
-                    discountAmount: discountAmount,
-                    deliveryDate: new Date().toISOString().split('T')[0],
-                    medicineId: "",
-                    batchNumber: "",
-                    expiryDate: ""
-                }]
+            const sale = resAppointment.data?.sale
+            const saleId = sale?.id
+
+            // 2. Process Payment if amount exists
+            if (saleId && paidAmount > 0) {
+                try {
+                    await addPaymentMutation.mutateAsync({
+                        id: saleId,
+                        data: {
+                            accountId: selectedAccountId,
+                            amount: paidAmount,
+                            paymentMethod: paymentMethod,
+                        }
+                    })
+                } catch (pError) {
+                    console.error("Payment registration failed:", pError)
+                    toast.warning("Appointment scheduled, but payment recording failed. Please collect manually.")
+                }
             }
 
-            const res: any = await createSaleMutation.mutateAsync(payload)
-            setLastSale(res.data)
+            setLastSale(sale)
             toast.success("Appointment successfully scheduled and billed!")
             
             // Generate Receipt
@@ -530,11 +515,11 @@ export function AppointmentBillingForm() {
 
                                 <Button 
                                     className="w-full h-14 text-lg font-black shadow-xl"
-                                    disabled={!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot || !selectedAccountId || createSaleMutation.isPending || createAppointmentMutation.isPending}
+                                    disabled={!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot || !selectedAccountId || addPaymentMutation.isPending || createAppointmentMutation.isPending}
                                     onClick={handleCheckout}
                                 >
                                     <CreditCard className="mr-2 h-5 w-5" />
-                                    {createSaleMutation.isPending || createAppointmentMutation.isPending ? "Processing..." : "Confirm & Schedule"}
+                                    {addPaymentMutation.isPending || createAppointmentMutation.isPending ? "Processing..." : "Confirm & Schedule"}
                                 </Button>
                             </div>
                         </CardContent>

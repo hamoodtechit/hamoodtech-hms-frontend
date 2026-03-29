@@ -367,13 +367,11 @@ export default function AdmissionsPage() {
                     admissionId={selectedAdmission?.id || null}
                 />
 
-                {selectedAdmission && (
-                    <AdmissionPrintDialog 
-                        open={printDialogOpen}
-                        onOpenChange={setPrintDialogOpen}
-                        admission={selectedAdmission}
-                    />
-                )}
+                <AdmissionPrintDialog 
+                    open={printDialogOpen}
+                    onOpenChange={setPrintDialogOpen}
+                    admissionId={selectedAdmission?.id || null}
+                />
 
                 <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
                     <AlertDialogContent className="rounded-2xl border-none shadow-2xl">

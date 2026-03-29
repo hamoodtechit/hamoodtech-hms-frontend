@@ -7,26 +7,37 @@ import {
     DialogTitle
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useAdmission } from "@/hooks/patient-queries"
+import { formatCurrency } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
-import { Admission } from "@/types/patient"
-import { Printer, X } from "lucide-react"
+import { SalePayment } from "@/types/pharmacy"
+import { Loader2, Printer, X } from "lucide-react"
 import { useRef } from "react"
 
 interface AdmissionPrintDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    admission: Admission | null
+    admissionId: string | null
 }
 
-export function AdmissionPrintDialog({ open, onOpenChange, admission }: AdmissionPrintDialogProps) {
+export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: AdmissionPrintDialogProps) {
     const { general } = useSettingsStore()
     const printRef = useRef<HTMLDivElement>(null)
 
-    if (!admission) return null
+    const { data: res, isLoading } = useAdmission(admissionId || "")
+    const admission = res?.data?.patientAdmission
+    const sale = res?.data?.sale
 
-    const patient = admission.patient
-    const branch = admission.branch
-    const bed = admission.bed
+    if (!admission && !isLoading) return null
+
+    const patient = admission?.patient
+    const branch = admission?.branch
+    const bed = admission?.bed
+
+    const isPaid = sale ? Number(sale.dueAmount) <= 0 : true
+    const totalPaid = Number(sale?.paidAmount) || 0
+    const totalDue = Number(sale?.dueAmount) || 0
+    
 
     const handlePrint = () => {
         const content = printRef.current?.innerHTML
@@ -104,6 +115,31 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
                         /* Image Handling */
                         img { max-height: 100px; width: auto !important; object-fit: contain !important; }
                         .h-16 { height: 64px !important; }
+
+                        /* Hologram Styles */
+                        .hologram-container {
+                            position: absolute;
+                            inset: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            pointer-events: none;
+                            overflow: hidden;
+                            z-index: 0;
+                            opacity: 0.08 !important;
+                        }
+                        .hologram-text {
+                            font-size: 150px !important;
+                            font-weight: 900 !important;
+                            text-transform: uppercase !important;
+                            transform: rotate(-35deg) !important;
+                            border: 12px solid currentColor !important;
+                            padding: 24px 48px !important;
+                            border-radius: 40px !important;
+                            letter-spacing: 15px !important;
+                        }
+                        .hologram-paid { color: #10b981 !important; } /* Emerald-500 */
+                        .hologram-due { color: #f43f5e !important; } /* Rose-500 */
                         
                         @media print {
                             .no-print { display: none; }
@@ -180,7 +216,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
                     </div>
                     <div className="p-2 px-3 flex items-center">
                         <span className="w-24 text-[10px] font-black uppercase opacity-60">Admission ID:</span>
-                        <span className="font-bold text-sm italic">A{admission.id.slice(0, 8).toUpperCase()}</span>
+                        <span className="font-bold text-sm italic">A{admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
                     </div>
                 </div>
 
@@ -206,7 +242,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
                     </div>
                     <div className="p-2 px-3 flex items-center">
                         <span className="w-24 text-[10px] font-black uppercase opacity-60">Guardian:</span>
-                        <span className="font-bold text-sm">{admission.guardianName} ({admission.guardianRelation})</span>
+                        <span className="font-bold text-sm">{admission?.guardianName} ({admission?.guardianRelation})</span>
                     </div>
                 </div>
 
@@ -219,25 +255,57 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
                     <div className="p-2 px-3 flex items-center">
                         <span className="w-24 text-[10px] font-black uppercase opacity-60">Adm. Date:</span>
                         <span className="font-bold text-sm">
-                            {new Date(admission.admissionDate).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                            {admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase() : 'N/A'}
                         </span>
                     </div>
                 </div>
 
-                {/* Full Width Rows */}
-                <div className="border-b border-black border-dashed flex items-start">
-                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Fees (Tk):</span>
-                    <span className="p-2 px-3 font-black text-lg text-black">{Number(admission.fees).toFixed(2)}</span>
+                {/* Full Width Rows - Financial Details */}
+                <div className="border-b border-black border-dashed grid grid-cols-3">
+                    <div className="p-2 px-3 border-r border-black border-dashed flex flex-col justify-center">
+                        <span className="text-[9px] font-black uppercase opacity-60">Total Fees:</span>
+                        <span className="font-black text-sm">{formatCurrency(sale?.totalPrice || admission?.fees || 0)}</span>
+                    </div>
+                    <div className="p-2 px-3 border-r border-black border-dashed flex flex-col justify-center">
+                        <span className="text-[9px] font-black uppercase opacity-60">Total Paid:</span>
+                        <span className="font-black text-sm text-emerald-600">{formatCurrency(totalPaid)}</span>
+                    </div>
+                    <div className="p-2 px-3 flex flex-col justify-center">
+                        <span className="text-[9px] font-black uppercase opacity-60">Total Due:</span>
+                        <span className="font-black text-sm text-rose-600">{formatCurrency(totalDue)}</span>
+                    </div>
                 </div>
 
                 <div className="border-b border-black border-dashed flex items-start">
                     <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
-                    <span className="p-2 px-3 font-bold text-sm">{admission.reason || 'Routine Admission'}</span>
+                    <span className="p-2 px-3 font-bold text-sm">{admission?.reason || 'Routine Admission'}</span>
                 </div>
 
                 <div className="flex items-start">
                     <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Address:</span>
                     <span className="p-2 px-3 font-bold text-xs opacity-80">{patient?.address || 'N/A'}</span>
+                </div>
+            </div>
+
+            {/* Hologram Overlay (Visible in Print & Preview) */}
+            {sale && (
+                <div className="hologram-container no-print">
+                    {isPaid ? (
+                        <div className="hologram-text hologram-paid">PAID</div>
+                    ) : (
+                        <div className="hologram-text hologram-due">DUE</div>
+                    )}
+                </div>
+            )}
+
+            {/* This is the same hologram but injected for the Iframe specifically */}
+            <div id="hologram-overlay" className="hidden">
+                 <div className="hologram-container">
+                    {isPaid ? (
+                        <div className="hologram-text hologram-paid">PAID</div>
+                    ) : (
+                        <div className="hologram-text hologram-due">DUE</div>
+                    )}
                 </div>
             </div>
 
@@ -267,7 +335,9 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
 
             {/* Footer Institutional Brading */}
             <div className="mt-20 pt-8 border-t border-black/5 text-[10px] text-black font-black flex justify-between uppercase tracking-widest">
-                <span>System Generated Admission Form • HMS v2.0</span>
+                <span>
+                    System Generated Admission Form 
+                </span>
                 <span>Printed on: {new Date().toLocaleString()}</span>
             </div>
         </div>
@@ -295,9 +365,14 @@ export function AdmissionPrintDialog({ open, onOpenChange, admission }: Admissio
 
                 <ScrollArea className="max-h-[85vh] p-8 bg-zinc-200/50">
                     <div className="bg-white shadow-2xl mx-auto p-12 w-[210mm] min-h-[297mm] relative" ref={printRef}>
-                        {/* Center Watermark for authenticity */}
-                        
-                        <FormContent />
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center py-40 gap-4">
+                                <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+                                <span className="text-sm font-black uppercase tracking-widest text-muted-foreground animate-pulse">Preparing Professional Copy</span>
+                            </div>
+                        ) : (
+                            <FormContent />
+                        )}
                     </div>
                 </ScrollArea>
             </DialogContent>

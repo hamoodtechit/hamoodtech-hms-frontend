@@ -27,13 +27,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCreateAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
 import { usePatients } from "@/hooks/patient-queries"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
+import { useAddSalePayment } from "@/hooks/sales-queries"
+import { useCurrency } from "@/hooks/use-currency"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
-import { Loader2, Plus } from "lucide-react"
+import { FinanceAccount } from "@/types/finance"
+import { Loader2, Plus, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { TimeSlotPicker } from "./time-slot-picker"
+import { PaymentMethod } from "@/types/pharmacy"
 
 interface AppointmentDialogProps {
     open: boolean
@@ -51,7 +56,12 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
 
     const createMutation = useCreateAppointment()
     const updateMutation = useUpdateAppointment()
+    const addPaymentMutation = useAddSalePayment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
+    const { formatCurrency } = useCurrency()
+
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const accounts = accountsRes?.data || []
 
     const isEdit = !!appointment
 
@@ -76,6 +86,12 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         chamberOrRoomNumber: "",
         commissionAgentId: ""
     })
+
+    // Payment State
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+    const [selectedAccountId, setSelectedAccountId] = useState<string>("")
+    const [paidAmount, setPaidAmount] = useState<number>(0)
+    const [showPayment, setShowPayment] = useState(false)
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
@@ -143,11 +159,33 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                 })
                 toast.success("Appointment updated successfully")
             } else {
-                await createMutation.mutateAsync({
+                const res: any = await createMutation.mutateAsync({
                     ...formData,
                     branchId: activeStoreId || formData.branchId
                 })
-                toast.success("Appointment scheduled successfully")
+
+                // Extract Sale ID from the response (Backend auto-creates the Sale)
+                const saleId = res?.data?.sale?.id
+
+                // 2. Process Payment if amount exists
+                if (saleId && paidAmount > 0) {
+                    try {
+                        await addPaymentMutation.mutateAsync({
+                            id: saleId,
+                            data: {
+                                accountId: selectedAccountId,
+                                amount: paidAmount,
+                                paymentMethod: paymentMethod,
+                            }
+                        })
+                        toast.success("Appointment scheduled and payment processed!")
+                    } catch (pError) {
+                        console.error("Payment registration failed:", pError)
+                        toast.warning("Appointment scheduled, but payment recording failed. Please collect manually.")
+                    }
+                } else {
+                    toast.success("Appointment scheduled successfully")
+                }
             }
             onSuccess?.()
             onOpenChange(false)
@@ -313,6 +351,80 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                         rows={3}
                                     />
                                 </div>
+
+                                {!isEdit && (
+                                    <div className="pt-4 border-t border-dashed">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <Wallet className="h-4 w-4 text-primary" />
+                                                <h4 className="text-sm font-bold uppercase tracking-wider">Payment Details</h4>
+                                            </div>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className={`h-8 px-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showPayment ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground hover:bg-primary/5"}`}
+                                                onClick={() => {
+                                                    setShowPayment(!showPayment)
+                                                    if (!showPayment) setPaidAmount(formData.fees)
+                                                }}
+                                            >
+                                                {showPayment ? "Cancel Payment" : "Add Payment Now"}
+                                            </Button>
+                                        </div>
+
+                                        {showPayment && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="grid gap-1.5 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Total Fees</Label>
+                                                        <span className="text-lg font-black text-primary">{formatCurrency(formData.fees)}</span>
+                                                    </div>
+                                                    <div className="grid gap-1.5 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                                                        <Label className="text-[10px] font-bold text-emerald-600 uppercase opacity-70">Amount to Pay *</Label>
+                                                        <SmartNumberInput 
+                                                            value={paidAmount}
+                                                            onChange={(val) => setPaidAmount(val || 0)}
+                                                            className="h-8 py-0 border-none bg-transparent font-black text-lg focus-visible:ring-0 text-emerald-700"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="grid gap-2">
+                                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Payment Method *</Label>
+                                                        <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
+                                                            <SelectTrigger className="h-9 text-xs font-medium">
+                                                                <SelectValue placeholder="Select Method" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map((method) => (
+                                                                    <SelectItem key={method} value={method}>
+                                                                        <span className="capitalize">{method}</span>
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Target Account *</Label>
+                                                        <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                                            <SelectTrigger className="h-9 text-xs font-medium">
+                                                                <SelectValue placeholder="Select Account" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {accounts.map((account: FinanceAccount) => (
+                                                                    <SelectItem key={account.id} value={account.id}>
+                                                                        {account.name} ({account.type})
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </ScrollArea>
