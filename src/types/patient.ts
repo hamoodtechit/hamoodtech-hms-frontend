@@ -1,5 +1,7 @@
 import { Bed } from "./facility";
-import { Branch } from "./pharmacy";
+import { Branch, PaymentMethod } from "./pharmacy";
+
+export type { PaymentMethod };
 
 export type AdmissionStatus = 'admitted' | 'discharged' | 'transferred' | 'cancelled';
 
@@ -117,4 +119,36 @@ export interface PatientListResponse {
         hasNextPage: boolean;
         hasPreviousPage: boolean;
     }
+}
+import { Sale } from "./sales";
+
+export interface DischargeInitiateData {
+  patient: Patient;
+  pharmacy: {
+    bills: Sale[];
+    totals: {
+      totalBill: number;
+      totalPaid: number;
+      totalDue: number;
+    };
+  };
+  hospital: {
+    bills: Sale[];
+    totals?: {
+      totalBill: number;
+      totalPaid: number;
+      totalDue: number;
+    };
+  };
+}
+
+export interface DischargePayload {
+  admissionId: string;
+  dischargeDate: string;
+  note?: string;
+  status?: AdmissionStatus;
+  // Financial completion
+  paidAmount?: number;
+  paymentMethod?: string;
+  accountId?: string;
 }

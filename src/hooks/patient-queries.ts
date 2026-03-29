@@ -2,7 +2,8 @@ import {
   AdmissionPayload, 
   AdmissionQueryParams, 
   PatientPayload, 
-  PatientQueryParams 
+  PatientQueryParams,
+  DischargePayload
 } from "@/types/patient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { patientService } from "@/services/patient-service";
@@ -105,6 +106,25 @@ export function useDeleteAdmission() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => patientService.deleteAdmission(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions });
+      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });
+    },
+  });
+}
+
+export function useDischargeInitiate(patientId: string) {
+  return useQuery({
+    queryKey: [...PATIENT_KEYS.admissions, "discharge-initiate", patientId],
+    queryFn: () => patientService.dischargeInitiate(patientId),
+    enabled: !!patientId,
+  });
+}
+
+export function useCompleteDischarge() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: DischargePayload) => patientService.completeDischarge(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions });
       queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.all });

@@ -6,7 +6,9 @@ import {
   Patient,
   PatientListResponse,
   PatientPayload,
-  PatientQueryParams
+  PatientQueryParams,
+  DischargeInitiateData,
+  DischargePayload
 } from '@/types/patient';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -88,6 +90,16 @@ export const patientService = {
   deleteAdmission: async (id: string): Promise<{ success: boolean; message: string }> => {
     const response = await api.delete<{ success: boolean; message: string }>(`/patients/admissions/${id}`);
     console.log('DELETE /patients/admissions response:', response.data);
+    return response.data;
+  },
+
+  dischargeInitiate: async (patientId: string): Promise<{ success: boolean; message: string; data: DischargeInitiateData }> => {
+    const response = await api.get<{ success: boolean; message: string; data: DischargeInitiateData }>(`/patients/discharge-initiate/${patientId}`);
+    return response.data;
+  },
+
+  completeDischarge: async (data: DischargePayload): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/discharge', data);
     return response.data;
   },
 };

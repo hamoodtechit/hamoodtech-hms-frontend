@@ -2,6 +2,7 @@
 
 import { AdmissionDialog } from "@/components/patients/admission-dialog"
 import { AdmissionDetailsDialog } from "@/components/patients/admission-details-dialog"
+import { DischargeDialog } from "@/components/patients/discharge-dialog"
 import { AdmissionFilters } from "@/components/patients/admission-filters"
 import { AdmissionPrintDialog } from "@/components/patients/admission-print-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
@@ -35,7 +36,8 @@ import {
     Printer, 
     Search, 
     Trash2,
-    UserCheck 
+    UserCheck,
+    ClipboardCheck
 } from "lucide-react"
 import { 
     AlertDialog, 
@@ -56,6 +58,7 @@ export default function AdmissionsPage() {
     const [selectedAdmission, setSelectedAdmission] = useState<Admission | null>(null)
     const [admissionDialogOpen, setAdmissionDialogOpen] = useState(false)
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+    const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false)
     const [printDialogOpen, setPrintDialogOpen] = useState(false)
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
@@ -301,6 +304,20 @@ export default function AdmissionsPage() {
                                                     <Button 
                                                         variant="ghost" 
                                                         size="icon" 
+                                                        className="h-9 w-9 rounded-xl hover:bg-emerald-500/20 hover:text-emerald-500 transition-all group/btn bg-emerald-500/5 border border-emerald-500/10 disabled:opacity-30"
+                                                        disabled={adm.status !== 'admitted'}
+                                                        title="Discharge Patient"
+                                                        onClick={() => {
+                                                            setSelectedAdmission(adm)
+                                                            setDischargeDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <ClipboardCheck className="h-4 w-4 transition-all group-hover/btn:scale-110" />
+                                                    </Button>
+
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
                                                         className="h-9 w-9 rounded-xl hover:bg-primary/20 hover:text-primary transition-all group/btn bg-primary/5 border border-primary/10"
                                                         onClick={() => {
                                                             setSelectedAdmission(adm)
@@ -365,6 +382,16 @@ export default function AdmissionsPage() {
                     open={detailsDialogOpen}
                     onOpenChange={setDetailsDialogOpen}
                     admissionId={selectedAdmission?.id || null}
+                />
+
+                <DischargeDialog 
+                    open={dischargeDialogOpen}
+                    onOpenChange={setDischargeDialogOpen}
+                    admission={selectedAdmission}
+                    onSuccess={() => {
+                        refetch()
+                        setPrintDialogOpen(true)
+                    }}
                 />
 
                 <AdmissionPrintDialog 
