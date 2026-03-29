@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAdmission } from "@/hooks/patient-queries"
 import { formatCurrency } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
-import { SalePayment } from "@/types/pharmacy"
+
 import { Loader2, Printer, X } from "lucide-react"
 import { useRef } from "react"
 
