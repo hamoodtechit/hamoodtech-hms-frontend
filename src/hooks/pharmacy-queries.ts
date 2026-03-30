@@ -2,6 +2,8 @@ import { pharmacyService } from "@/services/pharmacy-service";
 import { Medicine, PharmacyEntityType, PharmacyResponse, PurchaseStatus, UpdateOpeningStockDto } from "@/types/pharmacy";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { usePermissions } from "./use-permissions";
+
 
 export const PHARMACY_KEYS = {
   all: ["pharmacy"] as const,
@@ -85,14 +87,17 @@ export function usePatients(params: {
 }
 
 export function useActiveSession(branchId: string) {
+  const { hasPermission } = usePermissions();
   return useQuery({
     queryKey: PHARMACY_KEYS.activeSession(branchId),
     queryFn: () => pharmacyService.getActiveCashRegister(branchId),
-    enabled: !!branchId,
+    enabled: !!branchId && hasPermission('cash-register:read'),
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Poll every 1 minute
+    retry: false,
   });
 }
+
 
 export function useMedicines(params: any = {}) {
   return useQuery({
@@ -225,12 +230,15 @@ export function useDeleteManufacturer() {
 }
 
 export function useActiveCashRegister(branchId: string | null) {
+    const { hasPermission } = usePermissions();
     return useQuery({
         queryKey: ['pharmacy', 'cash-register', 'active', branchId],
         queryFn: () => branchId ? pharmacyService.getActiveCashRegister(branchId) : null,
-        enabled: !!branchId,
+        enabled: !!branchId && hasPermission('cash-register:read'),
+        retry: false,
     });
 }
+
 
 export function useOpenCashRegister() {
     const queryClient = useQueryClient();
