@@ -32,7 +32,8 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
     const { user } = useAuthStore()
 
 
-    const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 })
+    const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 }, { enabled: open })
+
     const employees = employeesRes?.data || []
 
     // Auto-select current user as collector

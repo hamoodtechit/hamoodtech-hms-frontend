@@ -1,6 +1,8 @@
 import { hrService } from "@/services/hr-service";
 import { DepartmentPayload, DesignationPayload, EmployeePayload } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePermissions } from "./use-permissions";
+
 
 export const HR_KEYS = {
   all: ["hr"] as const,
@@ -138,12 +140,17 @@ export function useDeleteDesignation() {
 }
 
 // Employee Hooks
-export function useEmployees(params?: any) {
+export function useEmployees(params?: any, options: { enabled?: boolean } = {}) {
+  const { hasPermission } = usePermissions();
   return useQuery({
     queryKey: HR_KEYS.employees(params),
     queryFn: () => hrService.getEmployees(params),
+    enabled: (options.enabled !== false) && hasPermission('employee:read'),
+    retry: false,
+    ...options
   });
 }
+
 
 export function useEmployee(id: string) {
   return useQuery({
