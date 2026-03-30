@@ -25,7 +25,10 @@ export interface User {
     permissions: Permission[];
   };
   permissions: string[]; // Direct permissions (e.g. ["*"])
+  employeeId?: string | null;
+  branchId?: string | null;
 }
+
 
 interface AuthState {
   user: User | null;

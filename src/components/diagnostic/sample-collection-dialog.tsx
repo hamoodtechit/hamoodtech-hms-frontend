@@ -9,9 +9,12 @@ import { useCollectSample } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { DiagnosticReport } from "@/types/diagnostic"
 import { Beaker, Loader2, Printer, User } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+
 import { toast } from "sonner"
 import { SampleLabelDialog } from "./sample-label-dialog"
+import { useAuthStore } from "@/store/use-auth-store"
+
 
 interface SampleCollectionDialogProps {
     open: boolean
@@ -25,9 +28,21 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
     const [sampleDetails, setSampleDetails] = useState("")
     const [labelOpen, setLabelOpen] = useState(false)
     const [isCollected, setIsCollected] = useState(false)
+    
+    const { user } = useAuthStore()
+
 
     const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 })
     const employees = employeesRes?.data || []
+
+    // Auto-select current user as collector
+    useEffect(() => {
+        if (open && user && !collectedById) {
+            const currentUserId = user.employeeId || user.id;
+            setCollectedById(currentUserId);
+        }
+    }, [open, user, collectedById]);
+
     
     // Filter lab technicians or similar roles if needed, but for now show all employees
     const collectSample = useCollectSample()
