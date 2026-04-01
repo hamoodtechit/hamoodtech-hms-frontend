@@ -70,8 +70,6 @@ export function ConsolidatedReportDialog({ open, onOpenChange, patientId, branch
 
         const reportHtml = `
             <div class="group-section">
-                <div class="category-header">${group.name} REPORT</div>
-                
                 <table class="results-table">
                     <thead>
                         <tr>
