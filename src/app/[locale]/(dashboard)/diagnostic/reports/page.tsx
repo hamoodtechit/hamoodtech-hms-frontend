@@ -1,6 +1,7 @@
 "use client"
 
 import { ApprovalDialog } from "@/components/diagnostic/approval-dialog"
+import { ConsolidatedReportDialog } from "@/components/diagnostic/consolidated-report-dialog"
 import { ReportDetailSheet } from "@/components/diagnostic/report-detail-sheet"
 import { ResultEntryDialog } from "@/components/diagnostic/result-entry-dialog"
 import { SampleCollectionDialog } from "@/components/diagnostic/sample-collection-dialog"
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
     Table,
@@ -36,6 +38,7 @@ import {
     ClipboardList,
     Clock,
     Eye,
+    FileStack,
     Filter,
     FlaskConical,
     Loader2,
@@ -44,13 +47,17 @@ import {
     X
 } from "lucide-react"
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { DateRange } from "react-day-picker"
 
 export default function DiagnosticReportsPage() {
     const { hasPermission } = usePermissions()
     const [reportStatus, setReportStatus] = useState<ReportStatus | 'all'>('all')
     const [sampleStatus, setSampleStatus] = useState<SampleStatus | 'all'>('all')
     const [search, setSearch] = useState("")
+    const [page, setPage] = useState(1)
     const [barcodeFilter, setBarcodeFilter] = useState("")
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [filterOpen, setFilterOpen] = useState(false)
     const [debouncedSearch] = useDebounce(search, 500)
     const [debouncedBarcode] = useDebounce(barcodeFilter, 500)
@@ -62,7 +69,10 @@ export default function DiagnosticReportsPage() {
     const [approvalOpen, setApprovalOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const [selectedReport, setSelectedReport] = useState<DiagnosticReport | null>(null)
+    const [consolidatedOpen, setConsolidatedOpen] = useState(false)
 
+    const searchParams = useSearchParams()
+    const urlPatientId = searchParams.get('patientId')
     const { activeStoreId } = useStoreContext()
 
     const canReadPathology = hasPermission('pathology:read')
@@ -70,11 +80,16 @@ export default function DiagnosticReportsPage() {
     const canRead = canReadPathology || canReadRadiology
 
     const { data: reportsRes, isLoading, isFetching, refetch } = useDiagnosticReports({
+        page,
+        limit: 10,
         branchId: activeStoreId || undefined,
         reportStatus: reportStatus === 'all' ? undefined : reportStatus,
         sampleStatus: sampleStatus === 'all' ? undefined : sampleStatus,
         search: debouncedSearch || undefined,
         barcode: debouncedBarcode || undefined,
+        patientId: urlPatientId || undefined,
+        startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+        endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     }, { enabled: canRead })
 
     const allReports = reportsRes?.data || []
@@ -85,6 +100,8 @@ export default function DiagnosticReportsPage() {
     const activeFilterCount = [
         sampleStatus !== 'all',
         barcodeFilter !== '',
+        !!dateRange?.from,
+        !!dateRange?.to,
     ].filter(Boolean).length
 
     const handleAction = (report: DiagnosticReport) => {
@@ -130,6 +147,27 @@ export default function DiagnosticReportsPage() {
                         </h1>
                         <p className="text-muted-foreground text-sm font-medium">Manage the diagnostic lifecycle from requisition to approval.</p>
                     </div>
+
+                    {urlPatientId && (
+                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
+                             <Button 
+                                onClick={() => setConsolidatedOpen(true)}
+                                className="h-12 rounded-xl px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-600/20 gap-2 border-none"
+                            >
+                                <FileStack className="h-5 w-5" />
+                                Combined Patient Report
+                            </Button>
+                            {/* Clear filter button */}
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-12 w-12 rounded-xl bg-card border-none"
+                                onClick={() => window.location.href = '/diagnostic/reports'}
+                            >
+                                <X className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Hub Stats / Overview — only count from filtered data */}
@@ -138,7 +176,7 @@ export default function DiagnosticReportsPage() {
                         {Object.entries(statusConfig).map(([key, config]) => (
                             <Card
                                 key={key}
-                                onClick={() => { setReportStatus(key as ReportStatus); setSampleStatus('all') }}
+                                onClick={() => { setReportStatus(key as ReportStatus); setSampleStatus('all'); setPage(1) }}
                                 className={cn(
                                     "border-none shadow-sm cursor-pointer hover:shadow-md transition-all group overflow-hidden bg-card/50 backdrop-blur-sm",
                                     reportStatus === key && "ring-2 ring-primary/30"
@@ -165,7 +203,7 @@ export default function DiagnosticReportsPage() {
                             <div className="flex flex-col gap-3">
                                 {/* Tabs row */}
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                                    <Tabs value={reportStatus} onValueChange={(v) => setReportStatus(v as any)} className="w-full md:w-auto">
+                                    <Tabs value={reportStatus} onValueChange={(v) => { setReportStatus(v as any); setPage(1) }} className="w-full md:w-auto">
                                         <TabsList className="bg-muted/50 p-1 h-10 rounded-xl">
                                             <TabsTrigger value="all" className="rounded-lg px-4 text-xs font-bold data-[state=active]:bg-card">All</TabsTrigger>
                                             <TabsTrigger value="pending-billing" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Billing</TabsTrigger>
@@ -184,7 +222,7 @@ export default function DiagnosticReportsPage() {
                                                 placeholder="Search patient..."
                                                 className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
                                                 value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
+                                                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                                             />
                                         </div>
 
@@ -208,7 +246,7 @@ export default function DiagnosticReportsPage() {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-6 px-2 text-[10px] font-bold text-destructive hover:text-destructive"
-                                                                onClick={() => { setSampleStatus('all'); setBarcodeFilter('') }}
+                                                                onClick={() => { setSampleStatus('all'); setBarcodeFilter(''); setPage(1) }}
                                                             >
                                                                 Clear All
                                                             </Button>
@@ -217,7 +255,7 @@ export default function DiagnosticReportsPage() {
 
                                                     <div className="space-y-2">
                                                         <Label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Sample Status</Label>
-                                                        <Select value={sampleStatus} onValueChange={(v) => setSampleStatus(v as any)}>
+                                                        <Select value={sampleStatus} onValueChange={(v) => { setSampleStatus(v as any); setPage(1) }}>
                                                             <SelectTrigger className="h-9 rounded-lg bg-muted/50 border-none text-xs font-bold">
                                                                 <SelectValue placeholder="All sample statuses" />
                                                             </SelectTrigger>
@@ -237,14 +275,23 @@ export default function DiagnosticReportsPage() {
                                                                 placeholder="e.g. SALE-2603-0037"
                                                                 className="h-9 rounded-lg bg-muted/50 border-none text-xs font-bold pr-7"
                                                                 value={barcodeFilter}
-                                                                onChange={(e) => setBarcodeFilter(e.target.value)}
+                                                                onChange={(e) => { setBarcodeFilter(e.target.value); setPage(1) }}
                                                             />
                                                             {barcodeFilter && (
-                                                                <button onClick={() => setBarcodeFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                                                <button onClick={() => { setBarcodeFilter(''); setPage(1) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                                                                     <X className="h-3 w-3" />
                                                                 </button>
                                                             )}
                                                         </div>
+                                                    </div>
+
+                                                    <div className="space-y-2 pt-2 border-t">
+                                                        <Label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Select Date Range</Label>
+                                                        <DatePickerWithRange 
+                                                            date={dateRange}
+                                                            setDate={(v) => { setDateRange(v); setPage(1) }}
+                                                            className="w-full"
+                                                        />
                                                     </div>
                                                 </div>
                                             </PopoverContent>
@@ -265,6 +312,18 @@ export default function DiagnosticReportsPage() {
                                             <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
                                                 Barcode: {barcodeFilter}
                                                 <button onClick={() => setBarcodeFilter('')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {dateRange?.from && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                From: {format(dateRange.from, 'yyyy-MM-dd')}
+                                                <button onClick={() => setDateRange(prev => prev ? { ...prev, from: undefined } : undefined)} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {dateRange?.to && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                To: {format(dateRange.to, 'yyyy-MM-dd')}
+                                                <button onClick={() => setDateRange(prev => prev ? { ...prev, to: undefined } : undefined)} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
                                             </Badge>
                                         )}
                                     </div>
@@ -402,6 +461,37 @@ export default function DiagnosticReportsPage() {
                                 </TableBody>
                             </Table>
                         </CardContent>
+
+                        {reportsRes?.meta && reportsRes.meta.totalPages > 1 && (
+                            <div className="flex items-center justify-between p-4 border-t bg-muted/20">
+                                <p className="text-[11px] text-muted-foreground font-bold tracking-tight">
+                                    Showing {(reportsRes.meta.page - 1) * reportsRes.meta.pageSize + 1} to {Math.min(reportsRes.meta.page * reportsRes.meta.pageSize, reportsRes.meta.totalItems)} of {reportsRes.meta.totalItems} Work Items
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest border-none bg-background shadow-sm hover:shadow-md transition-all px-4"
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={!reportsRes.meta.hasPreviousPage}
+                                    >
+                                        PreV
+                                    </Button>
+                                    <div className="text-[11px] font-black px-4 h-8 flex items-center bg-indigo-600 text-white rounded-lg shadow-inner">
+                                        P. {reportsRes.meta.page} / {reportsRes.meta.totalPages}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-lg text-[10px] font-black uppercase tracking-widest border-none bg-background shadow-sm hover:shadow-md transition-all px-4"
+                                        onClick={() => setPage(p => Math.min(reportsRes.meta.totalPages, p + 1))}
+                                        disabled={!reportsRes.meta.hasNextPage}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </Card>
                 </PermissionGuard>
 
@@ -439,6 +529,15 @@ export default function DiagnosticReportsPage() {
                     report={selectedReport}
                     onSuccess={refetch}
                 />
+
+                {urlPatientId && (
+                    <ConsolidatedReportDialog
+                        open={consolidatedOpen}
+                        onOpenChange={setConsolidatedOpen}
+                        patientId={urlPatientId}
+                        branchId={activeStoreId || ''}
+                    />
+                )}
             </div>
         </PermissionGuard>
     )

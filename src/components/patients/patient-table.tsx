@@ -25,7 +25,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { Patient } from "@/types/pharmacy"
 import { useQueryClient } from "@tanstack/react-query"
-import { Edit, Eye, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
+import { Edit, Eye, FileText, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
 import { PatientDialog } from "./patient-dialog"
@@ -162,7 +162,12 @@ export function PatientTable() {
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/sales?patientId=${patient.id}`}>
-                                                        <Eye className="mr-2 h-4 w-4" /> View Details
+                                                        <Eye className="mr-2 h-4 w-4" /> View Sales
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/diagnostic/reports?patientId=${patient.id}`}>
+                                                        <FileText className="mr-2 h-4 w-4" /> Diagnostic Reports
                                                     </Link>
                                                 </DropdownMenuItem>
                                                 {hasPermission('patient:update') && (

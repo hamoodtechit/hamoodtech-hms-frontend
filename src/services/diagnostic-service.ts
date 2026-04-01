@@ -8,6 +8,8 @@ import {
   DiagnosticTest,
   DiagnosticTestParams,
   DiagnosticTestPayload,
+  DiagnosticTestGroup,
+  DiagnosticTestGroupPayload,
   ReportTemplate,
   ReportTemplatePayload,
   RequisitionPayload,
@@ -15,6 +17,26 @@ import {
 } from "@/types/diagnostic";
 
 export const diagnosticService = {
+  // Test Group APIs
+  getTestGroups: async (params?: any): Promise<DiagnosticPaginatedResponse<DiagnosticTestGroup>> => {
+    const response = await api.get<DiagnosticPaginatedResponse<DiagnosticTestGroup>>("/diagnostic/test-groups", { params });
+    return response.data;
+  },
+
+  createTestGroup: async (data: DiagnosticTestGroupPayload): Promise<DiagnosticTestGroup> => {
+    const response = await api.post("/diagnostic/test-groups", data);
+    return response.data;
+  },
+
+  updateTestGroup: async (id: string, data: Partial<DiagnosticTestGroupPayload>): Promise<DiagnosticTestGroup> => {
+    const response = await api.patch(`/diagnostic/test-groups/${id}`, data);
+    return response.data;
+  },
+
+  deleteTestGroup: async (id: string): Promise<void> => {
+    await api.delete(`/diagnostic/test-groups/${id}`);
+  },
+
   // Diagnostic Test APIs
   getDiagnosticTests: async (params?: DiagnosticTestParams): Promise<DiagnosticPaginatedResponse<DiagnosticTest>> => {
     const response = await api.get<DiagnosticPaginatedResponse<DiagnosticTest>>("/diagnostic/tests", { params });

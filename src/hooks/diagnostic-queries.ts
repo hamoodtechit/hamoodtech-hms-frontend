@@ -1,15 +1,63 @@
 import { diagnosticService } from "@/services/diagnostic-service";
-import { DiagnosticReportParams, DiagnosticTestParams, DiagnosticTestPayload, ReportTemplate, ReportTemplatePayload } from "@/types/diagnostic";
+import { 
+  DiagnosticReportParams, 
+  DiagnosticTestGroup, 
+  DiagnosticTestGroupPayload, 
+  DiagnosticTestParams, 
+  DiagnosticTestPayload, 
+  ReportTemplate, 
+  ReportTemplatePayload 
+} from "@/types/diagnostic";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const DIAGNOSTIC_KEYS = {
   all: ["diagnostic"] as const,
   tests: (params?: DiagnosticTestParams) => [...DIAGNOSTIC_KEYS.all, "tests", params] as const,
   test: (id: string) => [...DIAGNOSTIC_KEYS.all, "test", id] as const,
+  testGroups: (params?: any) => [...DIAGNOSTIC_KEYS.all, "test-groups", params] as const,
   reports: (params?: DiagnosticReportParams) => [...DIAGNOSTIC_KEYS.all, "reports", params] as const,
   report: (id: string) => [...DIAGNOSTIC_KEYS.all, "report", id] as const,
   templates: (params?: any) => [...DIAGNOSTIC_KEYS.all, "templates", params] as const,
 };
+
+// Test Group Hooks
+export function useTestGroups(params?: any) {
+  return useQuery({
+    queryKey: DIAGNOSTIC_KEYS.testGroups(params),
+    queryFn: () => diagnosticService.getTestGroups(params),
+  });
+}
+
+export function useCreateTestGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: DiagnosticTestGroupPayload) => diagnosticService.createTestGroup(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.testGroups() });
+    },
+  });
+}
+
+export function useUpdateTestGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<DiagnosticTestGroupPayload> }) => 
+      diagnosticService.updateTestGroup(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.testGroups() });
+    },
+  });
+}
+
+export function useDeleteTestGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => diagnosticService.deleteTestGroup(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.testGroups() });
+    },
+  });
+}
 
 export function useDiagnosticTests(params?: DiagnosticTestParams, options: { enabled?: boolean } = {}) {
   return useQuery({

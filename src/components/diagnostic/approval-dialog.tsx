@@ -3,14 +3,14 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useApproveReport } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { cn } from "@/lib/utils"
-import { DiagnosticReport } from "@/types/diagnostic"
-import { CheckCircle2, FileText, Info, Loader2, User } from "lucide-react"
-import { useState } from "react"
+import { useAuthStore } from "@/store/use-auth-store"
+import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport } from "@/types/diagnostic"
+import { CheckCircle2, FileText, Info, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 interface ApprovalDialogProps {
@@ -20,11 +20,25 @@ interface ApprovalDialogProps {
     onSuccess?: () => void
 }
 
+const DEFAULT_COLUMNS: DiagnosticColumnDef[] = [
+    { id: '1', label: 'Parameter', key: 'parameter', isVisible: true, width: '1.5fr' },
+    { id: '2', label: 'Result', key: 'value', isVisible: true, width: '1fr' },
+    { id: '3', label: 'Unit', key: 'unit', isVisible: true, width: '0.8fr' },
+    { id: '4', label: 'Ref Range', key: 'referenceRange', isVisible: true, width: '1.2fr' }
+]
+
 export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: ApprovalDialogProps) {
+    const { user } = useAuthStore()
     const [approvedById, setApprovedById] = useState("")
 
     const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 })
     const employees = employeesRes?.data || []
+
+    useEffect(() => {
+        if (open && user?.id) {
+            setApprovedById(user.id)
+        }
+    }, [open, user?.id])
     
     // In a real system, we'd filter for specialists/pathologists
     const approveReport = useApproveReport()
@@ -95,10 +109,114 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                             )}
                         </div>
                         
-                        <div className="border rounded-xl overflow-hidden bg-card/50">
+                        <div className="border rounded-2xl overflow-hidden bg-card/50 shadow-inner">
                             {!report?.result ? (
                                 <div className="p-8 text-center text-xs text-muted-foreground italic">
                                     No findings recorded.
+                                </div>
+                            ) : (report.result as any).blocks ? (
+                                <div className="p-4 space-y-4">
+                                    {(() => {
+                                        const blocks = (report.result as any).blocks as DiagnosticBlock[];
+                                        const renderedElements: React.ReactNode[] = [];
+                                        let currentGroup: DiagnosticBlock[] = [];
+
+                                        const renderGroup = (group: DiagnosticBlock[]) => {
+                                            if (group.length === 0) return null;
+                                            const firstBlock = group[0];
+                                            return (
+                                                <div key={`group-${group[0].id}`} className="overflow-x-auto rounded-xl border border-primary/10 bg-background/50 shadow-sm mb-4">
+                                                    <table className="w-full text-sm">
+                                                        <thead className="bg-primary/5 border-b border-primary/10">
+                                                            <tr className="text-[10px] font-black uppercase tracking-wider text-primary/70">
+                                                                {(firstBlock.columnDefs || DEFAULT_COLUMNS).filter(c => c.isVisible).map(col => (
+                                                                    <th key={col.key} className="px-4 py-3 text-left font-black" style={{ width: col.width }}>
+                                                                        {col.label}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border/30">
+                                                            {group.map((block) => (
+                                                                <tr key={block.id} className={cn(
+                                                                    "transition-colors",
+                                                                    block.isHeader ? "bg-primary/5" : "hover:bg-muted/10",
+                                                                    block.isAbnormal && "bg-red-50/50"
+                                                                )}>
+                                                                    {(block.columnDefs || DEFAULT_COLUMNS).filter(c => c.isVisible).map(col => {
+                                                                        const val = (block as any)[col.key] || block.extraValues?.[col.key] || "";
+                                                                        const isResult = col.key === 'value';
+                                                                        const isParameter = col.key === 'parameter';
+
+                                                                        return (
+                                                                            <td key={col.key} className={cn(
+                                                                                "px-4 py-2.5",
+                                                                                isParameter && block.isHeader ? "font-black text-primary uppercase text-xs" : (isParameter ? "font-medium" : ""),
+                                                                                block.isBold && "font-bold",
+                                                                                isResult ? (block.isAbnormal ? "text-red-600 font-extrabold" : "font-bold") : ""
+                                                                            )}>
+                                                                                {block.isHeader && !isParameter ? "" : val}
+                                                                                {isResult && block.isAbnormal && <span className="ml-1 text-[10px] text-red-500 font-black tracking-tighter">(ABNORMAL)</span>}
+                                                                            </td>
+                                                                        )
+                                                                    })}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            );
+                                        };
+
+                                        blocks.forEach((block, idx) => {
+                                            if (block.type === 'parameter') {
+                                                currentGroup.push(block);
+                                            } else {
+                                                if (currentGroup.length > 0) {
+                                                    renderedElements.push(renderGroup(currentGroup));
+                                                    currentGroup = [];
+                                                }
+
+                                                if (block.type === 'header') {
+                                                    renderedElements.push(
+                                                        <div key={block.id} className="py-2 mb-2 border-b-2 border-primary/10">
+                                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary/80 flex items-center gap-2">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                                {block.content}
+                                                            </h3>
+                                                        </div>
+                                                    );
+                                                } else if (block.type === 'narrative' || block.type === 'impression') {
+                                                    renderedElements.push(
+                                                        <div key={block.id} className={cn(
+                                                            "p-5 rounded-2xl border transition-all mb-4",
+                                                            block.type === 'impression' ? "bg-amber-50/50 border-amber-200/50 shadow-sm" : "bg-muted/10 border-border/40"
+                                                        )}>
+                                                            <Label className={cn(
+                                                                "text-[10px] font-black uppercase mb-3 block tracking-widest",
+                                                                block.type === 'impression' ? "text-amber-700" : "text-muted-foreground/80"
+                                                            )}>
+                                                                {block.type === 'impression' ? '⚡ Clinical Conclusion (Impression)' : '📄 Detailed Findings'}
+                                                            </Label>
+                                                            <div 
+                                                                className={cn(
+                                                                    "text-sm leading-relaxed",
+                                                                    block.type === 'impression' ? "font-bold text-amber-900 not-italic" : "font-medium text-foreground/80"
+                                                                )}
+                                                                dangerouslySetInnerHTML={{ __html: block.content || "" }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                }
+                                            }
+                                        });
+
+                                        if (currentGroup.length > 0) {
+                                            renderedElements.push(renderGroup(currentGroup));
+                                        }
+
+                                        return renderedElements;
+                                    })()}
                                 </div>
                             ) : (report.result as any).mode === 'narrative' ? (
                                 <div className="p-4 space-y-4">
@@ -170,29 +288,6 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                     )}
 
                     <Separator />
-
-                    {/* Approval Action */}
-                    <div className="space-y-3 pt-2">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <User className="w-3 h-3" /> Approving Pathologist
-                        </Label>
-                        <Select value={approvedById} onValueChange={setApprovedById}>
-                            <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-none font-bold">
-                                <SelectValue placeholder="Select specialist..." />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl shadow-2xl border-emerald-100">
-                                {loadingEmployees ? (
-                                    <div className="p-4 flex items-center justify-center">
-                                        <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                                    </div>
-                                ) : employees.map(emp => (
-                                    <SelectItem key={emp.id} value={emp.id} className="rounded-lg m-1">
-                                        {emp.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
 
                 <DialogFooter className="p-6 bg-muted/20 border-t">

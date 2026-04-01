@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
-import { useCreateDiagnosticTest, useUpdateDiagnosticTest } from "@/hooks/diagnostic-queries"
+import { useCreateDiagnosticTest, useTestGroups, useUpdateDiagnosticTest } from "@/hooks/diagnostic-queries"
 import { useDepartments } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest, DiagnosticTestPayload } from "@/types/diagnostic"
@@ -33,6 +33,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     const { activeStoreId } = useStoreContext()
 
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
+    const { data: testGroupsRes } = useTestGroups({ limit: 100 })
 
 
     const createMutation = useCreateDiagnosticTest()
@@ -46,6 +47,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         nameBangla: "",
         description: "",
         departmentId: "",
+        testGroupId: "",
         price: 0,
         reportDays: 0,
     })
@@ -59,6 +61,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     nameBangla: test.nameBangla || "",
                     description: test.description || "",
                     departmentId: test.departmentId,
+                    testGroupId: test.testGroupId || "",
                     price: test.price,
                     reportDays: test.reportDays || 0,
                 })
@@ -69,6 +72,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     nameBangla: "",
                     description: "",
                     departmentId: "",
+                    testGroupId: "",
                     price: 0,
                     reportDays: 0,
                 })
@@ -77,8 +81,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     }, [open, test, activeStoreId])
 
     const handleSave = async () => {
-        if (!formData.name || !formData.departmentId || formData.price === undefined) {
-            toast.error("Please fill in required fields (Name, Department, Price)")
+        if (!formData.name || !formData.departmentId || !formData.testGroupId || formData.price === undefined) {
+            toast.error("Please fill in required fields (Name, Department, Test Group, Price)")
             return
         }
 
@@ -87,12 +91,12 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
             if (isEdit && test) {
                 await updateMutation.mutateAsync({
                     id: test.id,
-                    data: formData
+                    data: { ...formData, price: Number(formData.price) }
                 })
                 toast.success("Diagnostic test updated successfully")
             } else {
                 const { branchId, ...createPayload } = formData
-                await createMutation.mutateAsync(createPayload)
+                await createMutation.mutateAsync({ ...createPayload, price: Number(formData.price) })
                 toast.success("Diagnostic test created successfully")
             }
             onSuccess?.()
@@ -143,6 +147,18 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                             onChange={(val) => setFormData(prev => ({ ...prev, departmentId: val }))}
                             options={departmentsRes?.data?.map(d => ({ id: d.id, name: d.name })) || []}
                             placeholder="Select Department"
+                            showAll={false}
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Test Group *</Label>
+                        <SearchableSelect 
+                            value={formData.testGroupId || ""}
+                            onChange={(val) => setFormData(prev => ({ ...prev, testGroupId: val }))}
+                            options={testGroupsRes?.data?.map(g => ({ id: g.id, name: g.name })) || []}
+                            placeholder="Select Test Group"
+                            showAll={false}
                         />
                     </div>
 

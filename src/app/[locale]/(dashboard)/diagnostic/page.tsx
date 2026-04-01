@@ -1,6 +1,7 @@
 "use client"
 
 import { DiagnosticTestDialog } from "@/components/diagnostic/diagnostic-test-dialog"
+import { TestGroupManagerDialog } from "@/components/diagnostic/test-group-manager-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -17,7 +18,7 @@ import { useDeleteDiagnosticTest, useDiagnosticTests } from "@/hooks/diagnostic-
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest } from "@/types/diagnostic"
-import { Edit, Loader2, Microscope, Plus, Search, Trash2 } from "lucide-react"
+import { Edit, Layers, Loader2, Microscope, Plus, Search, Trash2 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -28,6 +29,7 @@ export default function DiagnosticTestsPage() {
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [testDialogOpen, setTestDialogOpen] = useState(false)
+    const [groupManagerOpen, setGroupManagerOpen] = useState(false)
     const [selectedTest, setSelectedTest] = useState<DiagnosticTest | null>(null)
     
     const { activeStoreId } = useStoreContext()
@@ -64,15 +66,24 @@ export default function DiagnosticTestsPage() {
                         <p className="text-muted-foreground text-sm font-medium">Manage clinical tests, pricing, and availability.</p>
                     </div>
                     {hasPermission('diagnostic-test:create') && (
-                        <Button 
-                            onClick={() => {
-                                setSelectedTest(null)
-                                setTestDialogOpen(true)
-                            }}
-                            className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                        >
-                            <Plus className="h-4 w-4" /> Add New Test
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            <Button 
+                                variant="outline"
+                                onClick={() => setGroupManagerOpen(true)}
+                                className="rounded-xl shadow-sm gap-2 border-primary/20 hover:bg-primary/5"
+                            >
+                                <Layers className="h-4 w-4" /> Manage Groups
+                            </Button>
+                            <Button 
+                                onClick={() => {
+                                    setSelectedTest(null)
+                                    setTestDialogOpen(true)
+                                }}
+                                className="rounded-xl shadow-lg shadow-primary/20 gap-2"
+                            >
+                                <Plus className="h-4 w-4" /> Add New Test
+                            </Button>
+                        </div>
                     )}
                 </div>
 
@@ -184,6 +195,36 @@ export default function DiagnosticTestsPage() {
                             </TableBody>
                         </Table>
                     </CardContent>
+                    {data?.meta && data.meta.totalPages > 1 && (
+                        <div className="flex items-center justify-between p-4 border-t bg-muted/20">
+                            <p className="text-xs text-muted-foreground font-medium">
+                                Showing {(data.meta.page - 1) * data.meta.pageSize + 1} to {Math.min(data.meta.page * data.meta.pageSize, data.meta.totalItems)} of {data.meta.totalItems} tests
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-lg text-xs font-bold"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={!data.meta.hasPreviousPage}
+                                >
+                                    Previous
+                                </Button>
+                                <div className="text-xs font-bold px-4 h-8 flex items-center bg-card rounded-lg border">
+                                    Page {data.meta.page} of {data.meta.totalPages}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-lg text-xs font-bold"
+                                    onClick={() => setPage(p => Math.min(data.meta.totalPages, p + 1))}
+                                    disabled={!data.meta.hasNextPage}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </Card>
 
                 <DiagnosticTestDialog 
@@ -191,6 +232,11 @@ export default function DiagnosticTestsPage() {
                     onOpenChange={setTestDialogOpen}
                     test={selectedTest}
                     onSuccess={refetch}
+                />
+
+                <TestGroupManagerDialog 
+                    open={groupManagerOpen}
+                    onOpenChange={setGroupManagerOpen}
                 />
             </div>
         </PermissionGuard>

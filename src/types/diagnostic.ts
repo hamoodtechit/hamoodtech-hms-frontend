@@ -5,7 +5,7 @@ export interface DiagnosticTest {
   nameBangla?: string;
   description?: string;
   departmentId: string;
-  price: number | string;
+  price: number;
   createdAt: string;
   updatedAt: string;
   department?: {
@@ -14,6 +14,11 @@ export interface DiagnosticTest {
     nameBangla?: string;
   };
   reportDays?: number;
+  testGroupId?: string;
+  testGroup?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface DiagnosticTestPayload {
@@ -22,8 +27,22 @@ export interface DiagnosticTestPayload {
   nameBangla?: string;
   description?: string;
   departmentId: string;
-  price: number | string;
+  price: number;
   reportDays?: number;
+  testGroupId?: string;
+}
+
+export interface DiagnosticTestGroup {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiagnosticTestGroupPayload {
+  name: string;
+  description?: string;
 }
 
 export type ReportStatus =
@@ -49,21 +68,54 @@ export interface ResultTableRow {
   isBold?: boolean;
 }
 
-export interface DiagnosticResult {
-  mode: ResultMode;
-  reportHeader?: string; // e.g., "BIOCHEMISTRY REPORT"
-  machineInfo?: string;  // e.g., "Tests are carried out by Rayto RT-9200..."
-  // Table fields
-  rows?: ResultTableRow[];
-  // Narrative fields
-  content?: string;      // Findings
-  interpretation?: string; // Comment/Impression
-  preparedBy?: string;   // Name of technical person
-  consultantName?: string; // Referred by doctor name
-  consultantDesignation?: string;
-  doctorDegrees?: string;  // Approving pathologist degrees
-  doctorDesignation?: string;
+export type DiagnosticBlockType = 'header' | 'parameter' | 'narrative' | 'impression' | 'note';
+
+export interface DiagnosticColumnDef {
+  id: string;
+  label: string;
+  key: string;
+  width?: string;
+  isVisible: boolean;
 }
+
+export interface DiagnosticBlock {
+  id: string;
+  type: DiagnosticBlockType;
+  // Configuration
+  columnDefs?: DiagnosticColumnDef[];
+  // Header fields
+  headerText?: string;
+  // Parameter fields
+  parameter?: string;
+  value?: string;
+  unit?: string;
+  referenceRange?: string;
+  isAbnormal?: boolean;
+  isBold?: boolean;
+  isHeader?: boolean; // For sub-headers within parameters
+  // Narrative / Impression / Note fields
+  content?: string;
+  // For dynamic values in custom columns
+  extraValues?: Record<string, string>;
+}
+
+
+export interface DiagnosticResult {
+  mode: ResultMode; // Legacy mode (for backwards compatibility)
+  blocks?: DiagnosticBlock[]; // New flexible blocks
+  reportHeader?: string;
+  machineInfo?: string;
+  consultantName?: string;
+  consultantDesignation?: string;
+  doctorDegrees?: string;
+  doctorDesignation?: string;
+  // Legacy fields (kept for compatibility)
+  rows?: ResultTableRow[];
+  content?: string;
+  interpretation?: string;
+  preparedBy?: string;
+}
+
 
 export interface DiagnosticReport {
   id: string;
@@ -86,6 +138,11 @@ export interface DiagnosticReport {
   approvedById?: string | null;
   approvedAt?: string | null;
   digitalSignature?: string | null;
+  testGroupId?: string | null;
+  testGroup?: {
+    id: string;
+    name: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
   patient?: {
@@ -94,14 +151,29 @@ export interface DiagnosticReport {
     phone?: string;
     patientNumber?: string;
     uhid?: string;
+    age?: number | string;
+    gender?: string;
+    bloodGroup?: string;
+    address?: string;
   };
-  saleItem?: any | null;
+  saleItem?: {
+    id: string;
+    invoiceNumber?: string;
+    deliveryDate?: string;
+    price?: string | number;
+    itemName?: string;
+  } | null;
   collectedBy?: any | null;
   technician?: any | null;
   approvedBy?: any | null;
   diagnosticTest?: {
     id: string;
     name: string;
+    testGroupId?: string;
+    testGroup?: {
+      id: string;
+      name: string;
+    };
   };
 }
 
@@ -151,6 +223,8 @@ export interface DiagnosticReportParams {
   barcode?: string;
   branchId?: string;
   patientId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 export interface DiagnosticTestParams {
   page?: number;
@@ -181,4 +255,7 @@ export interface ReportTemplatePayload {
   result: DiagnosticResult | Record<string, any>;
   diagnosticTestId?: string;
   branchId: string;
+  isGlobal?: boolean;
+  departmentId?: string;
 }
+

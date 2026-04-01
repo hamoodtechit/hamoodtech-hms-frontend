@@ -6,9 +6,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useCollectSample } from "@/hooks/diagnostic-queries"
-import { useEmployees } from "@/hooks/hr-queries"
 import { DiagnosticReport } from "@/types/diagnostic"
-import { Beaker, Loader2, Printer, User } from "lucide-react"
+import { Beaker, Loader2, Printer } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { toast } from "sonner"
@@ -32,10 +31,6 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
     const { user } = useAuthStore()
 
 
-    const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 }, { enabled: open })
-
-    const employees = employeesRes?.data || []
-
     // Auto-select current user as collector
     useEffect(() => {
         if (open && user && !collectedById) {
@@ -50,7 +45,7 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
 
     const handleConfirm = async () => {
         if (!report) return
-        if (!collectedById) return toast.error("Please select who collected the sample")
+        // if (!collectedById) return toast.error("Please select who collected the sample")
         if (!sampleDetails) return toast.error("Please enter sample details")
 
         try {
@@ -94,27 +89,6 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
                         <span className="font-bold text-sm">{report?.diagnosticTest?.name}</span>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <User className="w-3 h-3" /> Collected By
-                        </Label>
-                        <Select value={collectedById} onValueChange={setCollectedById}>
-                            <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-none">
-                                <SelectValue placeholder="Select technician..." />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl shadow-2xl border-indigo-100">
-                                {loadingEmployees ? (
-                                    <div className="p-4 flex items-center justify-center">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    </div>
-                                ) : employees.map(emp => (
-                                    <SelectItem key={emp.id} value={emp.id} className="rounded-lg m-1">
-                                        {emp.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
 
                     <div className="space-y-2">
                         <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sample Details</Label>
@@ -155,7 +129,7 @@ export function SampleCollectionDialog({ open, onOpenChange, report, onSuccess }
                     ) : (
                         <Button 
                             onClick={handleConfirm}
-                            disabled={!collectedById || !sampleDetails || collectSample.isPending}
+                            disabled={!sampleDetails || collectSample.isPending}
                             className="rounded-xl px-8 font-black shadow-lg shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-700"
                         >
                             {collectSample.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
