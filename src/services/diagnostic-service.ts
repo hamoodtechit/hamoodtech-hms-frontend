@@ -13,7 +13,8 @@ import {
   ReportTemplate,
   ReportTemplatePayload,
   RequisitionPayload,
-  ResultEntryPayload
+  ResultEntryPayload,
+  UpdateDeliveryStatusPayload
 } from "@/types/diagnostic";
 
 export const diagnosticService = {
@@ -94,6 +95,12 @@ export const diagnosticService = {
 
   approveReport: async (id: string, data: ApprovalPayload): Promise<{ data: DiagnosticReport }> => {
     const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/approve`, data);
+    
+    return response.data;
+  },
+
+  updateDeliveryStatus: async (id: string, data: UpdateDeliveryStatusPayload): Promise<{ data: DiagnosticReport }> => {
+    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/delivery-status`, data);
     
     return response.data;
   },

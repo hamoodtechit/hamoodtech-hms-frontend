@@ -6,7 +6,8 @@ import {
   DiagnosticTestParams, 
   DiagnosticTestPayload, 
   ReportTemplate, 
-  ReportTemplatePayload 
+  ReportTemplatePayload,
+  UpdateDeliveryStatusPayload
 } from "@/types/diagnostic";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -156,6 +157,18 @@ export function useApproveReport() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => 
       diagnosticService.approveReport(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
+    },
+  });
+}
+
+export function useUpdateDeliveryStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateDeliveryStatusPayload }) => 
+      diagnosticService.updateDeliveryStatus(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });

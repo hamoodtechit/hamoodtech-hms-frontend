@@ -24,7 +24,7 @@ import {
     TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDiagnosticReports } from "@/hooks/diagnostic-queries"
+import { useDiagnosticReports, useUpdateDeliveryStatus } from "@/hooks/diagnostic-queries"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
@@ -44,6 +44,7 @@ import {
     Loader2,
     Printer,
     Search,
+    Truck,
     X
 } from "lucide-react"
 import { useState } from "react"
@@ -70,6 +71,8 @@ export default function DiagnosticReportsPage() {
     const [detailOpen, setDetailOpen] = useState(false)
     const [selectedReport, setSelectedReport] = useState<DiagnosticReport | null>(null)
     const [consolidatedOpen, setConsolidatedOpen] = useState(false)
+
+    const { mutate: updateDeliveryStatus, isPending: isUpdatingDelivery } = useUpdateDeliveryStatus()
 
     const searchParams = useSearchParams()
     const urlPatientId = searchParams.get('patientId')
@@ -120,6 +123,13 @@ export default function DiagnosticReportsPage() {
             default:
                 break
         }
+    }
+
+    const handleDeliver = (report: DiagnosticReport) => {
+        updateDeliveryStatus({ 
+            id: report.id, 
+            data: { deliveryStatus: 'delivered' } 
+        })
     }
 
     const statusConfig: Record<string, { label: string, color: string, icon: any }> = {
@@ -339,6 +349,7 @@ export default function DiagnosticReportsPage() {
                                         <TableHead>Test</TableHead>
                                         <TableHead>Report Status</TableHead>
                                         <TableHead>Sample Status</TableHead>
+                                        <TableHead>Delivery</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead className="text-right pr-6">Action</TableHead>
                                     </TableRow>
@@ -346,7 +357,7 @@ export default function DiagnosticReportsPage() {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="h-64 text-center">
+                                            <TableCell colSpan={8} className="h-64 text-center">
                                                 <div className="flex flex-col items-center gap-2 opacity-50">
                                                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                                                     <p className="text-sm font-bold">Fetching worklist...</p>
@@ -355,7 +366,7 @@ export default function DiagnosticReportsPage() {
                                         </TableRow>
                                     ) : reports.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="h-96 text-center">
+                                            <TableCell colSpan={8} className="h-96 text-center">
                                                 <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-50">
                                                     <div className="p-6 bg-secondary/50 rounded-full mb-4">
                                                         <ClipboardList className="h-12 w-12" />
@@ -402,6 +413,14 @@ export default function DiagnosticReportsPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
+                                                    <Badge variant="outline" className={cn(
+                                                        "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
+                                                        report.deliveryStatus === 'delivered' ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-slate-500/20 text-slate-500"
+                                                    )}>
+                                                        {report.deliveryStatus || 'pending'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
                                                     <div className="flex flex-col text-xs font-bold text-muted-foreground">
                                                         <span>{format(new Date(report.createdAt), 'dd MMM yyyy')}</span>
                                                         <span className="text-[10px] opacity-70">{format(new Date(report.createdAt), 'hh:mm a')}</span>
@@ -409,6 +428,20 @@ export default function DiagnosticReportsPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
                                                     <div className="flex items-center justify-end gap-1.5">
+                                                        {/* Mark as Delivered quick action */}
+                                                        {report.reportStatus === 'completed' && report.deliveryStatus === 'pending' && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleDeliver(report)}
+                                                                disabled={isUpdatingDelivery}
+                                                                className="rounded-lg h-8 text-[11px] font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white border-none px-3 gap-1.5"
+                                                                title="Mark as Delivered"
+                                                            >
+                                                                <Truck className="h-3.5 w-3.5" />
+                                                                Deliver
+                                                            </Button>
+                                                        )}
                                                         {/* View Details button — always visible */}
                                                         <Button
                                                             variant="ghost"

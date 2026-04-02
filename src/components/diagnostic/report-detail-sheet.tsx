@@ -10,7 +10,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet"
-import { useDiagnosticReport } from "@/hooks/diagnostic-queries"
+import { useDiagnosticReport, useUpdateDeliveryStatus } from "@/hooks/diagnostic-queries"
 import { cn } from "@/lib/utils"
 import { DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
@@ -25,7 +25,9 @@ import {
     Printer,
     QrCode,
     User,
-    ClipboardList
+    ClipboardList,
+    Truck,
+    XCircle
 } from "lucide-react"
 
 interface ReportDetailSheetProps {
@@ -98,7 +100,14 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
     const { data: detailRes, isLoading } = useDiagnosticReport(report?.id ?? "")
     const detail = detailRes?.data ?? report
     
+    const { mutate: updateDelivery, isPending: isUpdating } = useUpdateDeliveryStatus()
+
     const result = detail?.result as DiagnosticResult | null
+
+    const handleUpdateDelivery = (status: 'pending' | 'delivered' | 'cancelled') => {
+        if (!detail?.id) return
+        updateDelivery({ id: detail.id, data: { deliveryStatus: status } })
+    }
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -122,6 +131,14 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                 detail.sampleStatus === 'pending' && "border-amber-500/30 text-amber-600 bg-amber-500/10",
                             )}>
                                 Sample: {detail.sampleStatus}
+                            </Badge>
+                            <Badge variant="outline" className={cn(
+                                "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
+                                detail.deliveryStatus === 'delivered' && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
+                                detail.deliveryStatus === 'pending' && "border-amber-500/30 text-amber-600 bg-amber-500/10",
+                                detail.deliveryStatus === 'cancelled' && "border-rose-500/30 text-rose-600 bg-rose-500/10",
+                            )}>
+                                Delivery: {detail.deliveryStatus || 'pending'}
                             </Badge>
                         </div>
                     )}
@@ -247,6 +264,48 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                 <InfoRow label="Requested" value={format(new Date(detail.createdAt), 'dd MMM, hh:mm a')} />
                                 <InfoRow label="Updated" value={format(new Date(detail.updatedAt), 'dd MMM, hh:mm a')} />
                             </Section>
+                        </div>
+
+                        {/* Handover & Delivery Management */}
+                        <div className="space-y-3 bg-indigo-500/5 p-5 rounded-2xl border border-indigo-500/10">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Truck className="w-4 h-4 text-indigo-600" />
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-indigo-900">Handover & Delivery</h3>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    disabled={isUpdating || detail.deliveryStatus === 'delivered'}
+                                    onClick={() => handleUpdateDelivery('delivered')}
+                                    className="flex-1 rounded-lg h-9 text-[10px] font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white border-none gap-2"
+                                >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    Mark Delivered
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    disabled={isUpdating || detail.deliveryStatus === 'cancelled'}
+                                    onClick={() => handleUpdateDelivery('cancelled')}
+                                    className="flex-1 rounded-lg h-9 text-[10px] font-black uppercase bg-rose-600 hover:bg-rose-700 text-white border-none gap-2"
+                                >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    Cancel Delivery
+                                </Button>
+                                {detail.deliveryStatus !== 'pending' && (
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        disabled={isUpdating}
+                                        onClick={() => handleUpdateDelivery('pending')}
+                                        className="h-9 px-3 rounded-lg text-[10px] font-black uppercase border-dashed"
+                                    >
+                                        Reset
+                                    </Button>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-medium italic">Handover status tracking for patient relations and billing reconciliation.</p>
                         </div>
 
                         {/* Signature (if approved) */}

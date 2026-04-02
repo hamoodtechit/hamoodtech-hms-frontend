@@ -127,6 +127,7 @@ export interface DiagnosticReport {
   // API uses reportStatus (not status)
   reportStatus: ReportStatus;
   sampleStatus: SampleStatus;
+  deliveryStatus: DeliveryStatus;
   barcode?: string | null;
   qrCode?: string | null;
   collectedById?: string | null;
@@ -259,3 +260,8 @@ export interface ReportTemplatePayload {
   departmentId?: string;
 }
 
+export type DeliveryStatus = 'pending' | 'delivered' | 'cancelled';
+
+export interface UpdateDeliveryStatusPayload {
+  deliveryStatus: DeliveryStatus;
+}
