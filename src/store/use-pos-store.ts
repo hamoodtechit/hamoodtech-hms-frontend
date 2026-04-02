@@ -72,15 +72,18 @@ export const usePosStore = create<PosState>()(
                     item.id === product.id && item.batchNumber === product.batchNumber
                 )
                 
+                // Calculate total stock across all batches to allow overflow
+                const totalStock = product.stocks?.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0) || product.stock || 0
+                
                 if (existing) {
-                    // Check stock limit
-                    if (existing.quantity >= (product.stock || 0)) {
+                    // Check total stock limit instead of single batch limit
+                    if (existing.quantity >= totalStock) {
                         return { cart: state.cart } // No change, caller should handle toast
                     }
                     return {
                         cart: state.cart.map((item) =>
                             (item.id === product.id && item.batchNumber === product.batchNumber) 
-                                ? { ...item, quantity: item.quantity + 1 } 
+                                ? { ...item, quantity: item.quantity + 1, stocks: product.stocks || item.stocks } 
                                 : item
                         )
                     }
@@ -93,11 +96,11 @@ export const usePosStore = create<PosState>()(
             updateQuantity: (id: string, delta: number, batchNumber?: string) => set((state) => ({
                 cart: state.cart.map((item) => {
                     if (item.id === id && item.batchNumber === batchNumber) {
-                        const availableStock = item.stock || 0
+                        const totalStock = item.stocks?.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0) || item.stock || 0
                         const newQuantity = Math.max(1, item.quantity + delta)
                         
-                        // Limit to stock
-                        if (delta > 0 && newQuantity > availableStock) {
+                        // Limit to total stock
+                        if (delta > 0 && newQuantity > totalStock) {
                             return item
                         }
                         
@@ -109,8 +112,8 @@ export const usePosStore = create<PosState>()(
             setQuantity: (id: string, quantity: number, batchNumber?: string) => set((state) => ({
                 cart: state.cart.map((item) => {
                     if (item.id === id && item.batchNumber === batchNumber) {
-                        const availableStock = item.stock || 0
-                        const validatedQuantity = Math.min(Math.max(1, quantity), availableStock)
+                        const totalStock = item.stocks?.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0) || item.stock || 0
+                        const validatedQuantity = Math.min(Math.max(1, quantity), totalStock)
                         return { ...item, quantity: validatedQuantity }
                     }
                     return item
@@ -147,6 +150,7 @@ export const usePosStore = create<PosState>()(
                 }
 
                 // Otherwise just update the specific item
+                const totalStock = itemToSwitch.stocks?.reduce((acc: number, s: any) => acc + (Number(s.quantity) || 0), 0) || itemToSwitch.stock || 0
                 return {
                     cart: state.cart.map((item) => 
                         (item.id === id && item.batchNumber === oldBatchNumber)
@@ -155,8 +159,8 @@ export const usePosStore = create<PosState>()(
                                 batchNumber: newBatch.batchNumber,
                                 expiryDate: newBatch.expiryDate,
                                 price: Number(newBatch.unitPrice),
-                                stock: Number(newBatch.quantity),
-                                quantity: Math.min(item.quantity, Number(newBatch.quantity))
+                                stock: totalStock, // Preserve total stock
+                                quantity: Math.min(item.quantity, totalStock)
                               }
                             : item
                     )

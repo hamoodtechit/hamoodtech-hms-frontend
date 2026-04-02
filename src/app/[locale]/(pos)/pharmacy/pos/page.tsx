@@ -73,6 +73,35 @@ const getStock = (medicine: Medicine) => {
     return 0
 }
 
+const allocateBatches = (requestedQty: number, stocks: any[]) => {
+    let remaining = requestedQty;
+    const allocated = [];
+    
+    // Sort stocks by expiry date (FEFO - First Expiring, First Out)
+    const sortedStocks = [...(stocks || [])].sort((a, b) => {
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+    });
+
+    for (const stock of sortedStocks) {
+        if (remaining <= 0) break;
+        const available = Number(stock.quantity) || 0;
+        if (available <= 0) continue;
+
+        const take = Math.min(remaining, available);
+        allocated.push({
+            batchNumber: stock.batchNumber,
+            expiryDate: stock.expiryDate,
+            quantity: take,
+            price: Number(stock.unitPrice) || 0
+        });
+        remaining -= take;
+    }
+
+    return allocated;
+};
+
 export default function POSPage() {
   const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister, setActiveBranch } = usePosStore()
   
@@ -294,19 +323,19 @@ export default function POSPage() {
 
   // Helpers
   const handleAddToCart = (medicine: Medicine) => {
-    const activeBatch = medicine.stocks?.find(s => s.quantity > 0)
-    const availableStock = getStock(medicine)
+    const totalStock = getStock(medicine)
+    const activeBatch = medicine.stocks?.find(s => Number(s.quantity) > 0)
     
-    if (!activeBatch && availableStock <= 0) {
+    if (totalStock <= 0) {
         toast.error("Item is out of stock")
         return
     }
 
-    const itemStock = activeBatch?.quantity || availableStock
-    const existingInCart = cart.find(item => item.id === medicine.id && item.batchNumber === activeBatch?.batchNumber)
+    const existingInCart = cart.filter(item => item.id === medicine.id)
+    const currentQtyInCart = existingInCart.reduce((sum, item) => sum + item.quantity, 0)
     
-    if (existingInCart && existingInCart.quantity >= itemStock) {
-        toast.error(`Only ${itemStock} items available in stock`)
+    if (currentQtyInCart >= totalStock) {
+        toast.error(`Only ${totalStock} items available in stock`)
         return
     }
 
@@ -315,7 +344,7 @@ export default function POSPage() {
       name: medicine.name,
       price: activeBatch?.unitPrice ? Number(activeBatch.unitPrice) : Number(medicine.salePrice),
       quantity: 1,
-      stock: itemStock,
+      stock: totalStock, // Use total stock instead of just active batch
       batchNumber: activeBatch?.batchNumber,
       expiryDate: activeBatch?.expiryDate,
       medicineId: medicine.id,
@@ -387,19 +416,41 @@ export default function POSPage() {
               taxPercentage: vatPercentage,
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
-              saleItems: cart.map(item => ({
-                  medicineId: item.id,
-                  itemName: item.name,
-                  unit: "pcs",
-                  price: item.price,
-                  mrp: item.price,
-                  quantity: item.quantity,
-                  discountPercentage: item.discountPercentage,
-                  discountAmount: item.discountAmount,
-                  batchNumber: item.batchNumber || "BATCH-N/A",
-                  expiryDate: item.expiryDate || new Date().toISOString(),
-                  dosageForm: item.dosageForm
-              })),
+              saleItems: cart.flatMap(item => {
+                  // If item has quantity within its assigned batch, keep it simple
+                  // BUT for safety, we implement auto-allocation for all multi-batch items
+                  if (item.stocks && item.stocks.length > 0) {
+                      const allocations = allocateBatches(item.quantity, item.stocks);
+                      return allocations.map(alloc => ({
+                          medicineId: item.id,
+                          itemName: item.name,
+                          unit: "pcs",
+                          price: alloc.price || item.price,
+                          mrp: alloc.price || item.price,
+                          quantity: alloc.quantity,
+                          discountPercentage: item.discountPercentage,
+                          discountAmount: (Number(item.discountAmount || 0) / item.quantity) * alloc.quantity,
+                          batchNumber: alloc.batchNumber || "BATCH-N/A",
+                          expiryDate: alloc.expiryDate || new Date().toISOString(),
+                          dosageForm: item.dosageForm
+                      }));
+                  }
+                  
+                  // Fallback for items with no stock info
+                  return [{
+                      medicineId: item.id,
+                      itemName: item.name,
+                      unit: "pcs",
+                      price: item.price,
+                      mrp: item.price,
+                      quantity: item.quantity,
+                      discountPercentage: item.discountPercentage,
+                      discountAmount: item.discountAmount,
+                      batchNumber: item.batchNumber || "BATCH-N/A",
+                      expiryDate: item.expiryDate || new Date().toISOString(),
+                      dosageForm: item.dosageForm
+                  }];
+              }),
               payments: [{
                   accountId: selectedAccountId || pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
                   amount: actuallyPaid,
@@ -916,7 +967,7 @@ export default function POSPage() {
                                                 {formatCurrency(salePrice)}
                                             </span>
                                             <span className={`text-[8px] sm:text-[9px] shrink-0 ${isOutOfStock ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                                                {isOutOfStock ? 'OUT OF STOCK' : `${getStock(product)} left`}
+                                                {isOutOfStock ? 'OUT OF STOCK' : `${getStock(product)} overall`}
                                             </span>
                                         </div>
                                     </CardContent>
@@ -955,7 +1006,7 @@ export default function POSPage() {
                                     <div className="text-right shrink-0 flex flex-col items-end">
                                         <div className={`font-bold text-xs leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{formatCurrency(salePrice)}</div>
                                         <div className={`text-[8px] mt-0.5 ${isOutOfStock ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                                            {isOutOfStock ? '0 remaining' : `${getStock(product)} in stock`}
+                                            {isOutOfStock ? '0 remaining' : `${getStock(product)} total stock`}
                                         </div>
                                     </div>
 

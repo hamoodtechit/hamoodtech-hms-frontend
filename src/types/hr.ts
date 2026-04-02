@@ -139,3 +139,85 @@ export interface CommissionAgentPayload {
   address: string;
   commissionPercentage: number;
 }
+
+export interface Attendance {
+  id: string;
+  slNo?: string;
+  employeeId?: string;
+  employeeNumber?: string;
+  employeeName: string;
+  autoAssign?: string;
+  date?: string;
+  isoDate?: string | Date;
+  shift?: string;
+  onDuty?: string;
+  offDuty?: string;
+  clockIn?: string;
+  clockOut?: string;
+  normal?: string;
+  realTime?: string;
+  late?: string;
+  early?: string;
+  absent?: string;
+  otTime?: string;
+  workTime?: string;
+  exception?: string;
+  mustClockIn?: string;
+  mustClockOut?: string;
+  department?: string;
+  nDays?: string;
+  weekEnd?: string;
+  holiday?: string;
+  attTime?: string;
+  nDaysOt?: string;
+  weekEndOt?: string;
+  holidayOt?: string;
+  branchId: string;
+  createdAt: string;
+  updatedAt: string;
+  employee?: {
+    id: string;
+    branchId: string;
+    employeeNumber: string;
+    employeeType: string;
+    name: string;
+    nameBangla?: string;
+    photoUrl?: string;
+    age: number;
+    gender: string;
+    phone: string;
+    email?: string;
+    dob?: string;
+    bloodGroup?: string;
+    address: string;
+    designationId?: string;
+    departmentId?: string;
+    grossSalary?: string | number;
+    joiningDate?: string;
+    leavingDate?: string | null;
+    chamberOrRoomNumber?: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    department?: {
+      name: string;
+    };
+    designation?: {
+      name: string;
+    };
+  };
+}
+
+export type AttendancePayload = Omit<Attendance, 'id' | 'createdAt' | 'updatedAt'>;
+
+export interface AttendanceFilters {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  employeeId?: string;
+  branchId?: string;
+  department?: string;
+  shift?: string;
+  startDate?: string;
+  endDate?: string;
+}

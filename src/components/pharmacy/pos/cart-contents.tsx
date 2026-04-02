@@ -225,7 +225,7 @@ export function CartContents({
                                                     onChange={(val: number | undefined) => {
                                                         const q = val || 1
                                                         if (q > (item.stock || 0)) {
-                                                            toast.error(`Only ${item.stock} items available in stock`)
+                                                            toast.error(`Quantity exceeds total available stock (${item.stock})`)
                                                         }
                                                         const { setQuantity } = usePosStore.getState()
                                                         setQuantity(item.id, q, item.batchNumber)
@@ -238,7 +238,7 @@ export function CartContents({
                                                     className="h-6 w-6 rounded-sm hover:bg-background"
                                                     onClick={() => {
                                                         if (item.quantity >= (item.stock || 0)) {
-                                                            toast.error(`Only ${item.stock} items available in stock`)
+                                                            toast.error(`Total stock limit reached (${item.stock})`)
                                                             return
                                                         }
                                                         updateQuantity(item.id, 1, item.batchNumber)

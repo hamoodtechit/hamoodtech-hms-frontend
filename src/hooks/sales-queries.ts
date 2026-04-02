@@ -39,7 +39,7 @@ export function useCreateSale() {
     mutationFn: salesService.createSale,
     onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
-      queryClient.invalidateQueries({ queryKey: ["pharmacy", "cash-register"] });
+      queryClient.invalidateQueries({ queryKey: ["pharmacy"] });
       // Invalidate diagnostic reports - use prefix match
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
       if (variables && (variables as any).id) {

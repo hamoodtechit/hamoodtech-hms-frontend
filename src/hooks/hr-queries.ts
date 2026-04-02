@@ -1,5 +1,5 @@
 import { hrService } from "@/services/hr-service";
-import { DepartmentPayload, DesignationPayload, EmployeePayload } from "@/types/hr";
+import { DepartmentPayload, DesignationPayload, EmployeePayload, AttendancePayload, AttendanceFilters } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
 
@@ -12,6 +12,7 @@ export const HR_KEYS = {
   employee: (id: string) => [...HR_KEYS.all, "employee", id] as const,
   commissionAgents: (params?: any) => [...HR_KEYS.all, "commissionAgents", params] as const,
   commissionAgent: (id: string) => [...HR_KEYS.all, "commissionAgent", id] as const,
+  attendance: (params?: AttendanceFilters) => [...HR_KEYS.all, "attendance", params] as const,
 };
 
 // Commission Agent Hooks
@@ -187,6 +188,65 @@ export function useDeleteEmployee() {
     mutationFn: (id: string) => hrService.deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.employees() });
+    },
+  });
+}
+
+// Attendance Hooks
+export function useAttendance(params?: AttendanceFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.attendance(params),
+    queryFn: () => hrService.getAttendance(params),
+  });
+}
+
+export function useCreateAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AttendancePayload) => hrService.createAttendance(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.attendance() });
+    },
+  });
+}
+
+export function useAttendanceById(id: string) {
+  return useQuery({
+    queryKey: [...HR_KEYS.all, "attendance", id],
+    queryFn: () => hrService.getAttendanceById(id),
+    enabled: !!id,
+  });
+}
+
+export function useUpdateAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<AttendancePayload> }) => 
+      hrService.updateAttendance(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.attendance() });
+      queryClient.invalidateQueries({ queryKey: [...HR_KEYS.all, "attendance", variables.id] });
+    },
+  });
+}
+
+export function useDeleteAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteAttendance(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.attendance() });
+    },
+  });
+}
+
+export function useImportAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ branchId, file }: { branchId: string; file: File }) => 
+      hrService.importAttendance(branchId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.attendance() });
     },
   });
 }

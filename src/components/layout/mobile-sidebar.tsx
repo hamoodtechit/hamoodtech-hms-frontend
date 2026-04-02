@@ -247,6 +247,12 @@ function SidebarBase() {
                 permission: "user:read",
           },
           {
+                label: "Attendance",
+                href: "/hr/attendance",
+                module: "hr",
+                permission: "user:read",
+          },
+          {
                 label: "Departments",
                 href: "/hr/departments",
                 module: "hr",
