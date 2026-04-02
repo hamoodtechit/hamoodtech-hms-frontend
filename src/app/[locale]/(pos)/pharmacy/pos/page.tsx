@@ -445,7 +445,7 @@ export default function POSPage() {
                       mrp: item.price,
                       quantity: item.quantity,
                       discountPercentage: item.discountPercentage,
-                      discountAmount: item.discountAmount,
+                      discountAmount: item.discountAmount || 0,
                       batchNumber: item.batchNumber || "BATCH-N/A",
                       expiryDate: item.expiryDate || new Date().toISOString(),
                       dosageForm: item.dosageForm
