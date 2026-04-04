@@ -94,8 +94,8 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
     const [showPayment, setShowPayment] = useState(false)
 
     // Data Fetching
-    const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
-    const { data: doctorsRes } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
+    const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
     const { data: patientsRes } = usePatients({ limit: 100 })
 
     useEffect(() => {

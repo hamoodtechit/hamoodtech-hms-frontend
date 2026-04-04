@@ -11,11 +11,47 @@ import {
     CommissionAgentPayload,
     Attendance,
     AttendancePayload,
-    AttendanceFilters
+    AttendanceFilters,
+    Holiday,
+    HolidayPayload,
+    HolidayFilters,
+    LeaveType,
+    LeaveTypePayload,
+    LeaveTypeFilters,
+    Leave,
+    LeavePayload,
+    LeaveFilters,
+    ApproveLeavePayload
 } from "@/types/hr";
 
 export const hrService = {
-  // Department APIs
+    // Holiday APIs
+    getHolidays: async (params?: HolidayFilters): Promise<HRPaginatedResponse<Holiday>> => {
+        const response = await api.get<HRPaginatedResponse<Holiday>>("/hr/holidays", { params });
+        return response.data;
+    },
+
+    createHoliday: async (data: HolidayPayload): Promise<{ success: boolean; data: Holiday }> => {
+        const response = await api.post<{ success: boolean; data: Holiday }>("/hr/holidays", data);
+        return response.data;
+    },
+
+    getHolidayById: async (id: string): Promise<{ success: boolean; data: Holiday }> => {
+        const response = await api.get<{ success: boolean; data: Holiday }>(`/hr/holidays/${id}`);
+        return response.data;
+    },
+
+    updateHoliday: async (id: string, data: Partial<HolidayPayload>): Promise<{ success: boolean; data: Holiday }> => {
+        const response = await api.patch<{ success: boolean; data: Holiday }>(`/hr/holidays/${id}`, data);
+        return response.data;
+    },
+
+    deleteHoliday: async (id: string): Promise<{ success: boolean; message: string }> => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/hr/holidays/${id}`);
+        return response.data;
+    },
+
+    // Department APIs
   getDepartments: async (params?: { 
     page?: number; 
     limit?: number; 
@@ -164,6 +200,80 @@ export const hrService = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+  },
+
+  // Leave Types APIs
+  getLeaveTypes: async (params?: LeaveTypeFilters): Promise<HRPaginatedResponse<LeaveType>> => {
+    // Note: The API spec suggests this might be paginated or not. 
+    // We'll use HRPaginatedResponse as standard and handle the structure in the UI.
+    const response = await api.get<any>("/hr/leave-types", { params });
+    
+    // Auto-wrap unpaginated responses to match our HRPaginatedResponse expected type 
+    // in case the backend doesn't paginate this specific endpoint but returns a simple data array
+    if (response.data && response.data.data && Array.isArray(response.data.data) && !response.data.meta) {
+        return {
+            success: response.data.success,
+            message: response.data.message,
+            data: response.data.data,
+            meta: { page: 1, pageSize: 100, totalPages: 1, totalItems: response.data.data.length, hasNextPage: false, hasPreviousPage: false }
+        } as HRPaginatedResponse<LeaveType>;
+    }
+    
+    return response.data;
+  },
+
+  createLeaveType: async (data: LeaveTypePayload): Promise<{ success: boolean; data: LeaveType }> => {
+    const response = await api.post<{ success: boolean; data: LeaveType }>("/hr/leave-types", data);
+    return response.data;
+  },
+
+  getLeaveTypeById: async (id: string): Promise<{ success: boolean; data: LeaveType }> => {
+    const response = await api.get<{ success: boolean; data: LeaveType }>(`/hr/leave-types/${id}`);
+    return response.data;
+  },
+
+  updateLeaveType: async (id: string, data: Partial<LeaveTypePayload>): Promise<{ success: boolean; data: LeaveType }> => {
+    const response = await api.patch<{ success: boolean; data: LeaveType }>(`/hr/leave-types/${id}`, data);
+    return response.data;
+  },
+
+  deleteLeaveType: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/leave-types/${id}`);
+    return response.data;
+  },
+
+  // Leaves APIs
+  getLeaves: async (params?: LeaveFilters): Promise<HRPaginatedResponse<Leave>> => {
+    const response = await api.get<any>("/hr/leaves", { params });
+    if (response.data && response.data.data && Array.isArray(response.data.data) && !response.data.meta) {
+        return {
+            success: response.data.success,
+            message: response.data.message,
+            data: response.data.data,
+            meta: { page: 1, pageSize: 100, totalPages: 1, totalItems: response.data.data.length, hasNextPage: false, hasPreviousPage: false }
+        } as HRPaginatedResponse<Leave>;
+    }
+    return response.data;
+  },
+
+  createLeave: async (data: LeavePayload): Promise<{ success: boolean; data: Leave }> => {
+    const response = await api.post<{ success: boolean; data: Leave }>("/hr/leaves", data);
+    return response.data;
+  },
+
+  getLeaveById: async (id: string): Promise<{ success: boolean; data: Leave }> => {
+    const response = await api.get<{ success: boolean; data: Leave }>(`/hr/leaves/${id}`);
+    return response.data;
+  },
+
+  deleteLeave: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/leaves/${id}`);
+    return response.data;
+  },
+
+  approveLeave: async (id: string, data: ApproveLeavePayload): Promise<{ success: boolean; data: Leave }> => {
+    const response = await api.patch<{ success: boolean; data: Leave }>(`/hr/leaves/${id}/approve`, data);
     return response.data;
   },
 };

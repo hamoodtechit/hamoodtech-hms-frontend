@@ -49,8 +49,8 @@ export default function AppointmentsPage() {
         ...filters
     })
 
-    const { data: deptsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
-    const { data: docsRes } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
+    const { data: deptsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: docsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
     const { data: patsRes } = usePatients({ limit: 100 })
 
     const deleteMutation = useDeleteAppointment()

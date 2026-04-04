@@ -125,8 +125,8 @@ export default function SalesHistoryPage() {
     type: saleType !== "all" ? saleType : undefined
   })
 
-  const { data: doctorsRes } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
-  const { data: staffsRes } = useEmployees({ branchId: activeStoreId, limit: 100 }) // generic list for staff names
+  const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
+  const { data: staffsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 }) // generic list for staff names
 
   const sales = salesRes?.data?.sales || []
   const doctors = doctorsRes?.data || []

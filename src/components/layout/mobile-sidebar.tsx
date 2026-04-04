@@ -10,7 +10,6 @@ import { useSettingsStore } from "@/store/use-settings-store"
 import {
   Activity,
   Building2,
-  CalendarDays,
   LayoutDashboard,
   Menu,
   Pill,
@@ -247,8 +246,8 @@ function SidebarBase() {
                 permission: "user:read",
           },
           {
-                label: "Attendance",
-                href: "/hr/attendance",
+                label: "Attendance & Leaves",
+                href: "/hr/attendance-and-leaves",
                 module: "hr",
                 permission: "user:read",
           },

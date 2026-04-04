@@ -251,3 +251,124 @@ export function AttendanceFilters({
         </div>
     )
 }
+
+import { CalendarIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+
+// --- Holiday Filters ---
+export interface HolidayFilterValues {
+    branchId?: string
+    year?: string
+    month?: string
+}
+
+interface HolidayFiltersProps {
+    values: HolidayFilterValues
+    onChange: (values: HolidayFilterValues) => void
+    branches: { id: string; name: string }[]
+}
+
+export function HolidayFilters({
+    values,
+    onChange,
+    branches
+}: HolidayFiltersProps) {
+    const currentYear = new Date().getFullYear()
+    const years = Array.from({ length: 12 }, (_, i) => (currentYear - 6 + i).toString())
+
+    const months = [
+        { id: "1", name: "Jan" },
+        { id: "2", name: "Feb" },
+        { id: "3", name: "Mar" },
+        { id: "4", name: "Apr" },
+        { id: "5", name: "May" },
+        { id: "6", name: "Jun" },
+        { id: "7", name: "Jul" },
+        { id: "8", name: "Aug" },
+        { id: "9", name: "Sep" },
+        { id: "10", name: "Oct" },
+        { id: "11", name: "Nov" },
+        { id: "12", name: "Dec" },
+    ]
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Branch</Label>
+                <SearchableSelect
+                    value={values.branchId}
+                    onChange={(val) => onChange({ ...values, branchId: val })}
+                    options={branches.map(b => ({ id: b.id, name: b.name }))}
+                    placeholder="All Branches"
+                    allLabel="All Branches"
+                />
+            </div>
+            
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Year / Calender</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button 
+                            variant="outline" 
+                            className={cn(
+                                "w-full h-9 text-xs justify-start font-normal px-2",
+                                !values.year && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                            {values.year || "All Years"}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56 p-2 shadow-xl" align="start">
+                        <div className="grid grid-cols-3 gap-1">
+                            <Button 
+                                variant={!values.year ? "secondary" : "ghost"} 
+                                onClick={() => onChange({ ...values, year: "" })}
+                                className="h-8 text-xs font-medium"
+                            >
+                                All
+                            </Button>
+                            {years.map(y => (
+                                <Button 
+                                    key={y}
+                                    variant={values.year === y ? "default" : "ghost"}
+                                    onClick={() => onChange({ ...values, year: y })}
+                                    className="h-8 text-xs font-medium"
+                                >
+                                    {y}
+                                </Button>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Month</Label>
+                <div className="flex flex-wrap gap-1 border p-1 rounded-md bg-muted/30">
+                    <Button 
+                        variant={!values.month ? "secondary" : "ghost"} 
+                        size="sm"
+                        onClick={() => onChange({ ...values, month: "" })}
+                        className="h-7 text-[10px] px-1.5 font-bold"
+                    >
+                        ALL
+                    </Button>
+                    {months.map(m => (
+                        <Button 
+                            key={m.id}
+                            variant={values.month === m.id ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => onChange({ ...values, month: m.id })}
+                            className="h-7 text-[10px] px-1.5 font-bold"
+                        >
+                            {m.name}
+                        </Button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}

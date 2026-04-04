@@ -80,8 +80,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
 
     // Data Fetching
     const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
-    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "doctor", limit: 1000 })
-    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, employeeType: "staff", limit: 1000 })
+    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
+    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
 
     // Modal Filters & Pagination

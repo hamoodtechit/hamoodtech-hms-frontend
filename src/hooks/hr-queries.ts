@@ -1,22 +1,88 @@
 import { hrService } from "@/services/hr-service";
-import { DepartmentPayload, DesignationPayload, EmployeePayload, AttendancePayload, AttendanceFilters } from "@/types/hr";
+import { 
+  DepartmentPayload, 
+  DesignationPayload, 
+  EmployeePayload, 
+  AttendancePayload, 
+  AttendanceFilters, 
+  HolidayPayload, 
+  HolidayFilters,
+  LeaveTypePayload,
+  LeaveTypeFilters,
+  LeavePayload,
+  LeaveFilters,
+  ApproveLeavePayload
+} from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
 
 
 export const HR_KEYS = {
   all: ["hr"] as const,
-  departments: (params?: any) => [...HR_KEYS.all, "departments", params] as const,
-  designations: (params?: any) => [...HR_KEYS.all, "designations", params] as const,
-  employees: (params?: any) => [...HR_KEYS.all, "employees", params] as const,
+  departments: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "departments", params] as const : [...HR_KEYS.all, "departments"] as const,
+  designations: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "designations", params] as const : [...HR_KEYS.all, "designations"] as const,
+  employees: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "employees", params] as const : [...HR_KEYS.all, "employees"] as const,
   employee: (id: string) => [...HR_KEYS.all, "employee", id] as const,
-  commissionAgents: (params?: any) => [...HR_KEYS.all, "commissionAgents", params] as const,
+  commissionAgents: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "commissionAgents", params] as const : [...HR_KEYS.all, "commissionAgents"] as const,
   commissionAgent: (id: string) => [...HR_KEYS.all, "commissionAgent", id] as const,
-  attendance: (params?: AttendanceFilters) => [...HR_KEYS.all, "attendance", params] as const,
+  attendance: (params?: AttendanceFilters) => params ? [...HR_KEYS.all, "attendance", params] as const : [...HR_KEYS.all, "attendance"] as const,
+  holidays: (params?: HolidayFilters) => params ? [...HR_KEYS.all, "holidays", params] as const : [...HR_KEYS.all, "holidays"] as const,
+  holiday: (id: string) => [...HR_KEYS.all, "holiday", id] as const,
+  leaveTypes: (params?: LeaveTypeFilters) => params ? [...HR_KEYS.all, "leaveTypes", params] as const : [...HR_KEYS.all, "leaveTypes"] as const,
+  leaveType: (id: string) => [...HR_KEYS.all, "leaveType", id] as const,
+  leaves: (params?: LeaveFilters) => params ? [...HR_KEYS.all, "leaves", params] as const : [...HR_KEYS.all, "leaves"] as const,
+  leave: (id: string) => [...HR_KEYS.all, "leave", id] as const,
 };
 
+// Holiday Hooks
+export function useHolidays(params?: HolidayFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.holidays(params),
+    queryFn: () => hrService.getHolidays(params),
+  });
+}
+
+export function useHoliday(id?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.holiday(id!),
+    queryFn: () => hrService.getHolidayById(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: HolidayPayload) => hrService.createHoliday(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+    },
+  });
+}
+
+export function useUpdateHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<HolidayPayload> }) => 
+      hrService.updateHoliday(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+    },
+  });
+}
+
+export function useDeleteHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteHoliday(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+    },
+  });
+}
+
 // Commission Agent Hooks
-export function useCommissionAgents(params?: any) {
+export function useCommissionAgents(params?: { page?: number; limit?: number; search?: string; branchId?: string }) {
   return useQuery({
     queryKey: HR_KEYS.commissionAgents(params),
     queryFn: () => hrService.getCommissionAgents(params),
@@ -63,7 +129,7 @@ export function useDeleteCommissionAgent() {
 }
 
 // Department Hooks
-export function useDepartments(params?: any) {
+export function useDepartments(params?: { page?: number; limit?: number; search?: string; branchId?: string }) {
   return useQuery({
     queryKey: HR_KEYS.departments(params),
     queryFn: () => hrService.getDepartments(params),
@@ -102,7 +168,7 @@ export function useDeleteDepartment() {
 }
 
 // Designation Hooks
-export function useDesignations(params?: any) {
+export function useDesignations(params?: { page?: number; limit?: number; search?: string; branchId?: string; departmentId?: string }) {
   return useQuery({
     queryKey: HR_KEYS.designations(params),
     queryFn: () => hrService.getDesignations(params),
@@ -141,7 +207,7 @@ export function useDeleteDesignation() {
 }
 
 // Employee Hooks
-export function useEmployees(params?: any, options: { enabled?: boolean } = {}) {
+export function useEmployees(params?: { page?: number; limit?: number; search?: string; branchId?: string }, options: { enabled?: boolean } = {}) {
   const { hasPermission } = usePermissions();
   return useQuery({
     queryKey: HR_KEYS.employees(params),
@@ -247,6 +313,101 @@ export function useImportAttendance() {
       hrService.importAttendance(branchId, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.attendance() });
+    },
+  });
+}
+
+// Leave Types Hooks
+export function useLeaveTypes(params?: LeaveTypeFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.leaveTypes(params),
+    queryFn: () => hrService.getLeaveTypes(params),
+  });
+}
+
+export function useLeaveType(id?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.leaveType(id!),
+    queryFn: () => hrService.getLeaveTypeById(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: LeaveTypePayload) => hrService.createLeaveType(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveTypes() });
+    },
+  });
+}
+
+export function useUpdateLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<LeaveTypePayload> }) => 
+      hrService.updateLeaveType(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveTypes() });
+    },
+  });
+}
+
+export function useDeleteLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteLeaveType(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveTypes() });
+    },
+  });
+}
+
+// Leaves Hooks
+export function useLeaves(params?: LeaveFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.leaves(params),
+    queryFn: () => hrService.getLeaves(params),
+  });
+}
+
+export function useLeave(id?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.leave(id!),
+    queryFn: () => hrService.getLeaveById(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateLeave() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: LeavePayload) => hrService.createLeave(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
+    },
+  });
+}
+
+export function useDeleteLeave() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteLeave(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
+    },
+  });
+}
+
+export function useApproveLeave() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ApproveLeavePayload }) => 
+      hrService.approveLeave(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leave(variables.id) });
     },
   });
 }

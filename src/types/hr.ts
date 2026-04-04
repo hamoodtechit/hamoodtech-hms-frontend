@@ -221,3 +221,116 @@ export interface AttendanceFilters {
   startDate?: string;
   endDate?: string;
 }
+
+export interface Holiday {
+  id: string;
+  branchId: string;
+  name: string;
+  nameBangla?: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  branch?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface HolidayPayload {
+  branchId: string;
+  name: string;
+  nameBangla?: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface HolidayFilters {
+  page?: number | string;
+  limit?: number | string;
+  searchTerm?: string;
+  branchId?: string;
+  year?: string;
+  month?: string;
+}
+
+export interface LeaveType {
+  id: string;
+  branchId: string;
+  name: string;
+  nameBangla?: string;
+  description?: string;
+  maxDaysPerYear: number;
+  isPaid: boolean;
+  createdAt: string;
+  updatedAt: string;
+  branch?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface LeaveTypePayload {
+  branchId: string;
+  name: string;
+  nameBangla?: string;
+  description?: string;
+  maxDaysPerYear: number;
+  isPaid: boolean;
+}
+
+export interface LeaveTypeFilters {
+  page?: number | string;
+  limit?: number | string;
+  searchTerm?: string;
+  branchId?: string;
+}
+
+export interface Leave {
+  id: string;
+  branchId: string;
+  employeeId: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  note?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  employee?: {
+    id: string;
+    name: string;
+    designation?: { name: string };
+  };
+  leaveType?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface LeavePayload {
+  branchId: string;
+  employeeId: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  note?: string;
+}
+
+export interface ApproveLeavePayload {
+  status: 'approved' | 'rejected' | 'pending';
+  note?: string;
+}
+
+export interface LeaveFilters {
+  page?: number | string;
+  limit?: number | string;
+  searchTerm?: string;
+  branchId?: string;
+  employeeId?: string;
+  status?: string;
+}

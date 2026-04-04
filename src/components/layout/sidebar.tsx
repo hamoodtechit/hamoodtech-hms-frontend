@@ -218,8 +218,8 @@ export function Sidebar() {
                 permission: "user:read",
           },
           {
-                label: "Attendance",
-                href: "/hr/attendance",
+                label: "Attendance & Leaves",
+                href: "/hr/attendance-and-leaves",
                 module: "hr",
                 permission: "user:read",
           },

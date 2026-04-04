@@ -47,9 +47,9 @@ export function AppointmentBillingForm() {
     const canCreateSale = hasPermission('sale:create')
 
     // Data Fetching
-    const { data: departmentsRes } = useDepartments({ branchId: activeStoreId, limit: 100 })
-    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId, employeeType: "doctor", limit: 100 })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, limit: 100, isActive: true })
+    const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 100, isActive: true })
     
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")

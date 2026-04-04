@@ -58,7 +58,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 
-export default function AttendancePage() {
+export function AttendanceView() {
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
     
