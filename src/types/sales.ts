@@ -44,7 +44,7 @@ export interface Sale {
   taxAmount: number | string;
   cashRegisterSessionId?: string;
   saleItems: SaleItemDetails[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
   commissionAgentId?: string;
@@ -83,7 +83,7 @@ export interface SalePayload {
   taxAmount: number | string;
   payments?: SalePayment[];
   saleItems: SaleItem[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
   commissionAgentId?: string;
@@ -107,7 +107,7 @@ export interface UpdateSalePayload extends Partial<SalePayload> {
     name: string;
   };
   saleItems?: SaleItem[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology';
+  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
 }
 
 export interface SaleReturnItem {

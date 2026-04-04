@@ -218,6 +218,12 @@ function SidebarBase() {
               href: "/billing/radiology",
               module: "sales",
               permission: "radiology:create",
+          },
+          {
+              label: "Extra Charges",
+              href: "/billing/extra-charge",
+              module: "sales",
+              permission: "radiology:create",
           }
       ]
     },

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDischargeInitiate, useCompleteDischarge } from "@/hooks/patient-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
+import { useCreateSale } from "@/hooks/sales-queries"
 import { format } from "date-fns"
 import { 
     AlertCircle,
@@ -21,6 +22,7 @@ import {
     FileText, 
     Loader2, 
     Pill, 
+    Plus,
     Receipt, 
     User,
     Wallet
@@ -28,7 +30,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { Admission, PaymentMethod } from "@/types/patient"
-import { useEffect, useState } from "react"
+import { SalePayload } from "@/types/sales"
+import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -47,9 +50,15 @@ interface DischargeDialogProps {
 
 export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: DischargeDialogProps) {
     const { activeStoreId } = useStoreContext()
-    const { data: res, isLoading, isError } = useDischargeInitiate(admission?.patientId || "")
+    const { data: res, isLoading, isError, refetch: refetchDischarge } = useDischargeInitiate(admission?.patientId || "")
     const { mutate: completeDischarge, isPending: isCompleting } = useCompleteDischarge()
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const { mutateAsync: createSale, isPending: isCreatingExtra } = useCreateSale()
+    
+    // Extra Charge State
+    const [extraChargeOpen, setExtraChargeOpen] = useState(false)
+    const [extraItemName, setExtraItemName] = useState("")
+    const [extraItemPrice, setExtraItemPrice] = useState<number>(0)
     
     // Form State
     const [note, setNote] = useState("")
@@ -58,23 +67,24 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const [selectedAccountId, setSelectedAccountId] = useState("")
 
     const data = res?.data
-    const hospitalBills = data?.hospital?.bills || []
-    const pharmacyTotals = data?.pharmacy?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }
+    const hospitalBills = useMemo(() => data?.hospital?.bills || [], [data?.hospital?.bills])
+    const pharmacyTotals = useMemo(() => data?.pharmacy?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.pharmacy?.totals])
 
     // Calculate Hospital Totals
-    const hospitalTotals = hospitalBills.reduce((acc: any, sale: any) => {
+    const hospitalTotals = useMemo(() => hospitalBills.reduce((acc: any, sale: any) => {
         acc.totalBill += Number(sale.netPrice) || 0
         acc.totalPaid += Number(sale.paidAmount) || 0
         acc.totalDue += Number(sale.dueAmount) || 0
         return acc
-    }, { totalBill: 0, totalPaid: 0, totalDue: 0 })
+    }, { totalBill: 0, totalPaid: 0, totalDue: 0 }), [hospitalBills])
 
     const grandTotalBill = hospitalTotals.totalBill + (Number(pharmacyTotals.totalBill) || 0)
     const grandTotalPaid = hospitalTotals.totalPaid + (Number(pharmacyTotals.totalPaid) || 0)
     const grandTotalDue = hospitalTotals.totalDue + (Number(pharmacyTotals.totalDue) || 0)
 
+    // Initialize paid amount when data is loaded
     useEffect(() => {
-        if (open && grandTotalDue > 0) {
+        if (open && grandTotalDue > 0 && paidAmount === 0) {
             setPaidAmount(grandTotalDue)
         }
     }, [open, grandTotalDue])
@@ -109,7 +119,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[900px] p-0 overflow-hidden bg-card/95 backdrop-blur-xl border-none shadow-2xl">
+            <DialogContent className="sm:max-w-225 max-h-[95vh] overflow-hidden p-0 border-none shadow-2xl rounded-3xl">
                 <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
                     <div className="flex items-center justify-between">
                         <DialogTitle className="text-2xl font-black tracking-tight text-primary flex items-center gap-3">
@@ -181,12 +191,23 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {/* Hospital Charges */}
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-2 text-primary">
-                                        <Receipt className="h-4 w-4" />
-                                        <h3 className="text-xs font-black uppercase tracking-widest">Hospital Charges Summary</h3>
+                                    <div className="flex items-center justify-between text-primary">
+                                        <div className="flex items-center gap-2">
+                                            <Receipt className="h-4 w-4" />
+                                            <h3 className="text-xs font-black uppercase tracking-widest">Hospital Charges Summary</h3>
+                                        </div>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="h-7 px-2.5 text-[9px] font-black uppercase tracking-widest gap-1.5 border-primary/20 hover:bg-primary/10 hover:text-primary transition-all"
+                                            onClick={() => setExtraChargeOpen(true)}
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Add Bill
+                                        </Button>
                                     </div>
                                     <div className="bg-card border border-white/5 rounded-2xl shadow-sm overflow-hidden">
-                                        <ScrollArea className={`${hospitalBills.length > 5 ? 'h-[280px]' : ''} w-full`}>
+                                        <ScrollArea className={`${hospitalBills.length > 5 ? 'h-70' : ''} w-full`}>
                                             <div className="p-4 space-y-2">
                                                 {hospitalBills.length > 0 ? (
                                                     hospitalBills.map((bill: any) => (
@@ -286,9 +307,9 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                             <span className="font-bold text-muted-foreground/60 uppercase text-[10px]">Total Hospital Charges</span>
                                             <span className="font-black tabular-nums">{formatCurrency(hospitalTotals.totalBill)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="font-bold text-muted-foreground/60 uppercase text-[10px]">Total Pharmacy Charges</span>
-                                            <span className="font-black tabular-nums">{formatCurrency(pharmacyTotals.totalBill)}</span>
+                                        <div className="flex justify-between items-center text-xs px-1">
+                                            <span className="text-muted-foreground font-medium uppercase min-w-12.5">To be Due</span>
+                                            <span className="font-bold text-rose-500">{formatCurrency(Math.max(0, grandTotalDue - paidAmount))}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm py-2 border-y border-dashed border-primary/10">
                                             <span className="font-bold text-muted-foreground/80 uppercase text-[11px]">Gross Total Bill</span>
@@ -378,6 +399,92 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                     </Button>
                 </DialogFooter>
             </DialogContent>
+
+            {/* Extra Charge Dialog */}
+            <Dialog open={extraChargeOpen} onOpenChange={setExtraChargeOpen}>
+                <DialogContent className="sm:max-w-100 border-none shadow-2xl p-0 overflow-hidden rounded-3xl">
+                    <DialogHeader className="p-6 pb-2 bg-primary/5 border-b border-primary/10">
+                        <DialogTitle className="text-lg font-black tracking-tight text-primary flex items-center gap-2">
+                            <Plus className="h-5 w-5" />
+                            Add Extra Charge
+                        </DialogTitle>
+                        <DialogDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">
+                            Create a one-off charge for this patient admission.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="p-6 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Charge Name / Item Name</Label>
+                            <Input 
+                                placeholder="e.g. Oxygen Cylinder service" 
+                                className="h-10 text-sm font-bold bg-muted/20 border-white/5 focus-visible:ring-primary/20"
+                                value={extraItemName}
+                                onChange={(e) => setExtraItemName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Amount (Tk)</Label>
+                            <SmartNumberInput 
+                                placeholder="0.00" 
+                                className="h-10 text-lg font-black bg-muted/20 border-white/5 focus-visible:ring-primary/20"
+                                value={extraItemPrice}
+                                onChange={(val) => setExtraItemPrice(val || 0)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="p-6 bg-muted/30 pt-4 flex flex-col gap-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="font-black uppercase text-[10px] tracking-widest"
+                            onClick={() => setExtraChargeOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            className="font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20"
+                            disabled={isCreatingExtra || !extraItemName || extraItemPrice <= 0}
+                            onClick={async () => {
+                                if (!admission?.patientId) return
+                                const payload: SalePayload = {
+                                    branchId: activeStoreId || "",
+                                    patientId: admission.patientId,
+                                    type: 'others',
+                                    status: 'pending',
+                                    paymentMethod: 'cash',
+                                    paidAmount: 0,
+                                    dueAmount: extraItemPrice,
+                                    discountPercentage: 0,
+                                    discountAmount: 0,
+                                    taxPercentage: 0,
+                                    taxAmount: 0,
+                                    saleItems: [{
+                                        itemName: extraItemName,
+                                        unit: 'service',
+                                        price: extraItemPrice,
+                                        mrp: extraItemPrice,
+                                        quantity: 1,
+                                    }]
+                                }
+                                try {
+                                    await createSale(payload)
+                                    toast.success("Extra charge added to bill")
+                                    setExtraItemName("")
+                                    setExtraItemPrice(0)
+                                    setExtraChargeOpen(false)
+                                    refetchDischarge() // Refresh the discharge summary
+                                } catch {
+                                    toast.error("Failed to add extra charge")
+                                }
+                            }}
+                        >
+                            {isCreatingExtra ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                            Add to Bill
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     )
 }
