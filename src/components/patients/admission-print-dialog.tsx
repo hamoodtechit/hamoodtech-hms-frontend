@@ -165,185 +165,6 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
         }, 500)
     }
 
-    const FormContent = () => {
-        const branchLogo = branch?.logoUrl || "/Logo.png"
-
-        return (
-            <div className="text-black bg-white antialiased font-sans">
-                {/* Header Section */}
-                <div className="text-center mb-6 space-y-2">
-                    <div className="flex justify-center mb-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={branchLogo} alt="Logo" className="h-16 w-auto object-contain" />
-                    </div>
-                    
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-950">
-                        {branch?.name || general?.hospitalName || 'HamoodTech Hospital'}
-                    </h1>
-                    
-                    <p className="text-xs font-bold leading-tight max-w-[300px] mx-auto text-black">
-                        {branch?.address || 'Branch Address, City, Bangladesh'}
-                    </p>
-                    
-                    <div className="flex justify-center gap-4 text-[10px] font-black border-t border-black/10 mt-3 pt-2 uppercase tracking-tight">
-                        {branch?.phone && (
-                            <span className="flex items-center gap-1">
-                                PH: {branch.phone}
-                            </span>
-                        )}
-                        {branch?.email && (
-                            <span className="flex items-center gap-1">
-                                {branch?.phone && <span className="mr-4">|</span>}
-                                EMAIL: {branch.email}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-            <div className="text-center mb-6 pb-2 border-b-2 border-double border-black">
-                <span className="text-xl font-black underline uppercase tracking-widest bg-gray-100 px-8 py-1 rounded-full border border-black">
-                    Patient Admission Form
-                </span>
-            </div>
-
-            {/* Structured Info Box - Using the professional dashed style */}
-            <div className="border border-black border-dashed mb-6 overflow-hidden">
-                {/* Row 1 */}
-                <div className="grid grid-cols-2 border-b border-black border-dashed">
-                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Reg. ID:</span>
-                        <span className="font-bold text-sm tracking-tight">{patient?.uhid || patient?.patientNumber || 'N/A'}</span>
-                    </div>
-                    <div className="p-2 px-3 flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Admission ID:</span>
-                        <span className="font-bold text-sm italic">A{admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
-                    </div>
-                </div>
-
-                {/* Row 2 */}
-                <div className="grid grid-cols-2 border-b border-black border-dashed">
-                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Patient Name:</span>
-                        <span className="font-black text-sm uppercase">{patient?.name || 'N/A'}</span>
-                    </div>
-                    <div className="p-2 px-3 flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Phone No:</span>
-                        <span className="font-bold text-sm">{patient?.phone || 'N/A'}</span>
-                    </div>
-                </div>
-
-                {/* Row 3 */}
-                <div className="grid grid-cols-2 border-b border-black border-dashed">
-                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center gap-4">
-                        <div className="flex items-center">
-                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Age / Sex:</span>
-                            <span className="font-bold text-sm">{patient?.age} Y / {patient?.gender?.charAt(0).toUpperCase()}</span>
-                        </div>
-                    </div>
-                    <div className="p-2 px-3 flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Guardian:</span>
-                        <span className="font-bold text-sm">{admission?.guardianName} ({admission?.guardianRelation})</span>
-                    </div>
-                </div>
-
-                {/* Row 4 */}
-                <div className="grid grid-cols-2 border-b border-black border-dashed">
-                    <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Ward / Bed:</span>
-                        <span className="font-black text-sm text-blue-700">{bed?.section?.name || 'N/A'} - {bed?.bedNumber || 'N/A'}</span>
-                    </div>
-                    <div className="p-2 px-3 flex items-center">
-                        <span className="w-24 text-[10px] font-black uppercase opacity-60">Adm. Date:</span>
-                        <span className="font-bold text-sm">
-                            {admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase() : 'N/A'}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Full Width Rows - Financial Details */}
-                <div className="border-b border-black border-dashed grid grid-cols-3">
-                    <div className="p-2 px-3 border-r border-black border-dashed flex flex-col justify-center">
-                        <span className="text-[9px] font-black uppercase opacity-60">Total Fees:</span>
-                        <span className="font-black text-sm">{formatCurrency(sale?.totalPrice || admission?.fees || 0)}</span>
-                    </div>
-                    <div className="p-2 px-3 border-r border-black border-dashed flex flex-col justify-center">
-                        <span className="text-[9px] font-black uppercase opacity-60">Total Paid:</span>
-                        <span className="font-black text-sm text-emerald-600">{formatCurrency(totalPaid)}</span>
-                    </div>
-                    <div className="p-2 px-3 flex flex-col justify-center">
-                        <span className="text-[9px] font-black uppercase opacity-60">Total Due:</span>
-                        <span className="font-black text-sm text-rose-600">{formatCurrency(totalDue)}</span>
-                    </div>
-                </div>
-
-                <div className="border-b border-black border-dashed flex items-start">
-                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
-                    <span className="p-2 px-3 font-bold text-sm">{admission?.reason || 'Routine Admission'}</span>
-                </div>
-
-                <div className="flex items-start">
-                    <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Address:</span>
-                    <span className="p-2 px-3 font-bold text-xs opacity-80">{patient?.address || 'N/A'}</span>
-                </div>
-            </div>
-
-            {/* Hologram Overlay (Visible in Print & Preview) */}
-            {sale && (
-                <div className="hologram-container no-print">
-                    {isPaid ? (
-                        <div className="hologram-text hologram-paid">PAID</div>
-                    ) : (
-                        <div className="hologram-text hologram-due">DUE</div>
-                    )}
-                </div>
-            )}
-
-            {/* This is the same hologram but injected for the Iframe specifically */}
-            <div id="hologram-overlay" className="hidden">
-                 <div className="hologram-container">
-                    {isPaid ? (
-                        <div className="hologram-text hologram-paid">PAID</div>
-                    ) : (
-                        <div className="hologram-text hologram-due">DUE</div>
-                    )}
-                </div>
-            </div>
-
-            {/* Consent Section - Professional Bangla Typography */}
-            <div className="mt-8 text-center px-4">
-                <h2 className="text-2xl font-black mb-4 font-serif border-b border-black w-fit mx-auto px-4 pb-1">অনুমতি পত্র</h2>
-                <p className="text-justify leading-relaxed text-[15px] font-serif tracking-tight text-gray-900 border border-black/5 p-4 rounded bg-gray-50/50">
-                    আমি প্রতিজ্ঞাপূর্বক ক্লিনিক এর সংশ্লিষ্ট চিকিৎসক দ্বারা আমার রোগীর প্রয়োজনীয় প্রাথমিক চিকিৎসা/ অজ্ঞান করা ইয়া অস্ত্র প্রয়োগ করিতে দিতেছি। ইহাতে রোগীর যদি কোন প্রকার ভালো বা মন্দ হয় তার জন্যে ক্লিনিক কর্তৃপক্ষ অথবা কতব্যরত চিকিৎসক দায়ী থাকিবে না এবং আমি বা রোগীর কোন আত্মীয় ফোন প্রকার দাবি করিতে পারিবোনা।
-                    <br/><br/>
-                    আমি স্ব-জ্ঞানে এবং নিম্ন উল্লেখিত সাক্ষীর উপস্থিতিতে অত্র অঙ্গীকার পত্রে দস্তখত করিলাম।
-                </p>
-            </div>
-
-            {/* Signature Blocks */}
-            <div className="mt-24 flex justify-between px-10">
-                <div className="text-center space-y-1">
-                    <div className="border-t border-black w-48 mx-auto"></div>
-                    <span className="text-[11px] font-black uppercase">Witness Signature</span>
-                    <p className="text-[11px] font-bold text-black italic">সাক্ষীর স্বাক্ষর</p>
-                </div>
-                <div className="text-center space-y-1">
-                    <div className="border-t border-black w-64 mx-auto"></div>
-                    <span className="text-[11px] font-black uppercase">Guardian Signature</span>
-                    <p className="text-[11px] font-bold text-black italic">অভিভাবকের স্বাক্ষর / Responsible Person</p>
-                </div>
-            </div>
-
-            {/* Footer Institutional Brading */}
-            <div className="mt-20 pt-8 border-t border-black/5 text-[10px] text-black font-black flex justify-between uppercase tracking-widest">
-                <span>
-                    System Generated Admission Form 
-                </span>
-                <span>Printed on: {new Date().toLocaleString()}</span>
-            </div>
-        </div>
-        )
-    }
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-white border-none shadow-2xl light">
@@ -371,7 +192,177 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                 <span className="text-sm font-black uppercase tracking-widest text-muted-foreground animate-pulse">Preparing Professional Copy</span>
                             </div>
                         ) : (
-                            <FormContent />
+                            <div className="text-black bg-white antialiased font-sans">
+                                {/* Header Section */}
+                                <div className="text-center mb-6 space-y-2">
+                                    <div className="flex justify-center mb-2">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" className="h-16 w-auto object-contain" />
+                                    </div>
+                                    
+                                    <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-950">
+                                        {branch?.name || general?.hospitalName || 'HamoodTech Hospital'}
+                                    </h1>
+                                    
+                                    <p className="text-xs font-bold leading-tight max-w-75 mx-auto text-black">
+                                        {branch?.address || 'Branch Address, City, Bangladesh'}
+                                    </p>
+                                    
+                                    <div className="flex justify-center gap-4 text-[10px] font-black border-t border-black/10 mt-3 pt-2 uppercase tracking-tight">
+                                        {branch?.phone && (
+                                            <span className="flex items-center gap-1">
+                                                PH: {branch.phone}
+                                            </span>
+                                        )}
+                                        {branch?.email && (
+                                            <span className="flex items-center gap-1">
+                                                {branch?.phone && <span className="mr-4">|</span>}
+                                                EMAIL: {branch.email}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="text-center mb-6 pb-2 border-b-2 border-double border-black">
+                                    <span className="text-xl font-black underline uppercase tracking-widest bg-gray-100 px-8 py-1 rounded-full border border-black">
+                                        Patient Admission Form
+                                    </span>
+                                </div>
+
+                                {/* Structured Info Box */}
+                                <div className="border border-black border-dashed mb-6 overflow-hidden">
+                                    {/* Row 1: Reg & Admission ID */}
+                                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                                        <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Reg. ID:</span>
+                                            <span className="font-bold text-sm tracking-tight">{patient?.uhid || patient?.patientNumber || 'N/A'}</span>
+                                        </div>
+                                        <div className="p-2 px-3 flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Admission ID:</span>
+                                            <span className="font-bold text-sm italic">A{admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Main Info Grid */}
+                                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                                        {/* Left Column: Patient & Guardian Info */}
+                                        <div className="border-r border-black border-dashed flex flex-col">
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Patient Name:</span>
+                                                <span className="font-black text-sm uppercase">{patient?.name || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Age / Sex:</span>
+                                                <span className="font-bold text-sm">{patient?.age} Y / {patient?.gender?.charAt(0).toUpperCase()}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Guardian:</span>
+                                                <span className="font-bold text-sm">{admission?.guardianName} ({admission?.guardianRelation})</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Religion:</span>
+                                                <span className="font-bold text-sm">{patient?.religion || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Marital Status:</span>
+                                                <span className="font-bold text-sm capitalize">{patient?.maritalStatus || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Occupation:</span>
+                                                <span className="font-bold text-sm">{patient?.occupation || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Nationality:</span>
+                                                <span className="font-bold text-sm">{patient?.nationality || 'N/A'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Column: Address & Phone Info */}
+                                        <div className="flex flex-col">
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Phone No:</span>
+                                                <span className="font-bold text-sm">{patient?.phone || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Village:</span>
+                                                <span className="font-bold text-sm">{patient?.village || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Union:</span>
+                                                <span className="font-bold text-sm">{patient?.union || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Post Office:</span>
+                                                <span className="font-bold text-sm">{patient?.postOffice || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">Police Station:</span>
+                                                <span className="font-bold text-sm">{patient?.thana || 'N/A'}</span>
+                                            </div>
+                                            <div className="p-2 px-3 flex items-center">
+                                                <span className="w-24 text-[10px] font-black uppercase opacity-60">District:</span>
+                                                <span className="font-bold text-sm">{patient?.district || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Admission Details */}
+                                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                                        <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Ward / Bed:</span>
+                                            <span className="font-black text-sm text-blue-700">{bed?.section?.name || 'N/A'} - {bed?.bedNumber || 'N/A'}</span>
+                                        </div>
+                                        <div className="p-2 px-3 flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Adm. Date:</span>
+                                            <span className="font-bold text-sm">
+                                                {admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase() : 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="border-b border-black border-dashed flex items-start">
+                                        <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
+                                        <span className="p-2 px-3 font-bold text-sm">{admission?.reason || 'Routine Admission'}</span>
+                                    </div>
+
+                                    <div className="flex items-start">
+                                        <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Full Address:</span>
+                                        <span className="p-2 px-3 font-bold text-xs opacity-80">{patient?.address || 'N/A'}</span>
+                                    </div>
+                                </div>
+
+
+
+                                {/* Consent Section */}
+                                <div className="mt-8 text-center px-4">
+                                    <h2 className="text-2xl font-black mb-4 font-serif border-b border-black w-fit mx-auto px-4 pb-1">অনুমতি পত্র</h2>
+                                    <p className="text-justify leading-relaxed text-[15px] font-serif tracking-tight text-gray-900 border border-black/5 p-4 rounded bg-gray-50/50">
+                                        আমি প্রতিজ্ঞাপূর্বক ক্লিনিক এর সংশ্লিষ্ট চিকিৎসক দ্বারা আমার রোগীর প্রয়োজনীয় প্রাথমিক চিকিৎসা/ অজ্ঞান করা ইয়া অস্ত্র প্রয়োগ করিতে দিতেছি। ইহাতে রোগীর যদি কোন প্রকার ভালো বা মন্দ হয় তার জন্যে ক্লিনিক কর্তৃপক্ষ অথবা কতব্যরত চিকিৎসক দায়ী থাকিবে না এবং আমি বা রোগীর কোন আত্মীয় কোন প্রকার দাবি করিতে পারিবোনা।
+                                        <br/><br/>
+                                        আমি স্ব-জ্ঞানে এবং নিম্ন উল্লেখিত সাক্ষীর উপস্থিতিতে অত্র অঙ্গীকার পত্রে দস্তখত করিলাম।
+                                    </p>
+                                </div>
+
+                                {/* Signature Blocks */}
+                                <div className="mt-24 flex justify-between px-10">
+                                    <div className="text-center space-y-1">
+                                        <div className="border-t border-black w-48 mx-auto"></div>
+                                        <span className="text-[11px] font-black uppercase">Witness Signature</span>
+                                        <p className="text-[11px] font-bold text-black italic">সাক্ষীর স্বাক্ষর</p>
+                                    </div>
+                                    <div className="text-center space-y-1">
+                                        <div className="border-t border-black w-64 mx-auto"></div>
+                                        <span className="text-[11px] font-black uppercase">Guardian Signature</span>
+                                        <p className="text-[11px] font-bold text-black italic">অভিভাবকের স্বাক্ষর / Responsible Person</p>
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="mt-20 pt-8 border-t border-black/5 text-[10px] text-zinc-400 font-black flex justify-between uppercase tracking-widest">
+                                    <span>System Generated Admission Form</span>
+                                    <span>Printed on: {new Date().toLocaleString()}</span>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </ScrollArea>
