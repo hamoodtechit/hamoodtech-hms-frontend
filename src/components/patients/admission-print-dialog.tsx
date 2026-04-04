@@ -110,7 +110,8 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                         .mb-4 { margin-bottom: 16px !important; }
                         .mt-4 { margin-top: 16px !important; }
                         .mt-8 { margin-top: 32px !important; }
-                        .mt-24 { margin-top: 96px !important; }
+                        .mt-12 { margin-top: 48px !important; }
+                        .mt-16 { margin-top: 64px !important; }
                         
                         /* Image Handling */
                         img { max-height: 100px; width: auto !important; object-fit: contain !important; }
@@ -344,7 +345,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                 </div>
 
                                 {/* Signature Blocks */}
-                                <div className="mt-24 flex justify-between px-10">
+                                <div className="mt-16 flex justify-between px-10">
                                     <div className="text-center space-y-1">
                                         <div className="border-t border-black w-48 mx-auto"></div>
                                         <span className="text-[11px] font-black uppercase">Witness Signature</span>
@@ -358,7 +359,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                 </div>
 
                                 {/* Footer */}
-                                <div className="mt-20 pt-8 border-t border-black/5 text-[10px] text-zinc-400 font-black flex justify-between uppercase tracking-widest">
+                                <div className="mt-8 pt-4 border-t border-black/5 text-[10px] text-zinc-400 font-black flex justify-between uppercase tracking-widest">
                                     <span>System Generated Admission Form</span>
                                     <span>Printed on: {new Date().toLocaleString()}</span>
                                 </div>
