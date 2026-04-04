@@ -26,7 +26,7 @@ import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useBeds } from "@/hooks/facility-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useCreateAdmission, useUpdateAdmission } from "@/hooks/patient-queries"
+import { useCreateAdmission, useUpdateAdmission, useUpdatePatient } from "@/hooks/patient-queries"
 import { useAddSalePayment } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -56,6 +56,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
     const createMutation = useCreateAdmission()
     const updateMutation = useUpdateAdmission()
+    const updatePatientMutation = useUpdatePatient()
 
     // Form State
     const [formData, setFormData] = useState({
@@ -71,6 +72,18 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         guardianRelation: "",
         fees: 0,
         commissionAgentId: ""
+    })
+
+    const [patientExtData, setPatientExtData] = useState({
+        village: "",
+        union: "",
+        postOffice: "",
+        thana: "",
+        district: "",
+        religion: "",
+        occupation: "",
+        maritalStatus: "" as any,
+        nationality: ""
     })
 
     // Payment State
@@ -149,6 +162,29 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     useEffect(() => {
         if (selectedPatient) {
             setFormData(prev => ({ ...prev, patientId: selectedPatient.id }))
+            setPatientExtData({
+                village: selectedPatient.village || "",
+                union: selectedPatient.union || "",
+                postOffice: selectedPatient.postOffice || "",
+                thana: selectedPatient.thana || "",
+                district: selectedPatient.district || "",
+                religion: selectedPatient.religion || "",
+                occupation: selectedPatient.occupation || "",
+                maritalStatus: selectedPatient.maritalStatus || "",
+                nationality: selectedPatient.nationality || "Bangladeshi"
+            })
+        } else {
+            setPatientExtData({
+                village: "",
+                union: "",
+                postOffice: "",
+                thana: "",
+                district: "",
+                religion: "",
+                occupation: "",
+                maritalStatus: "",
+                nationality: "Bangladeshi"
+            })
         }
     }, [selectedPatient])
 
@@ -182,6 +218,36 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
         setLoading(true)
         try {
+            // 1. Check if patient data needs updating
+            const hasPatientChanges = selectedPatient && (
+                patientExtData.village !== (selectedPatient.village || "") ||
+                patientExtData.union !== (selectedPatient.union || "") ||
+                patientExtData.postOffice !== (selectedPatient.postOffice || "") ||
+                patientExtData.thana !== (selectedPatient.thana || "") ||
+                patientExtData.district !== (selectedPatient.district || "") ||
+                patientExtData.religion !== (selectedPatient.religion || "") ||
+                patientExtData.occupation !== (selectedPatient.occupation || "") ||
+                patientExtData.maritalStatus !== (selectedPatient.maritalStatus || "") ||
+                patientExtData.nationality !== (selectedPatient.nationality || "")
+            );
+
+            if (hasPatientChanges && selectedPatient) {
+                try {
+                    await updatePatientMutation.mutateAsync({
+                        id: selectedPatient.id,
+                        data: {
+                            ...selectedPatient, // Keep existing fields (name, age, etc.)
+                            ...patientExtData,  // Overlay new ones
+                            age: Number(selectedPatient.age) // Ensure numeric age
+                        } as any
+                    });
+                } catch (pe) {
+                    console.error("Failed to update patient demographics:", pe);
+                    // We continue anyway, but warn the user
+                    toast.warning("Admission will proceed, but patient demographic update failed.");
+                }
+            }
+
             let resAdmission: any;
             if (admission?.id) {
                 // Update
@@ -304,6 +370,130 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     />
                                 </div>
                             </div>
+
+                            {selectedPatient && (
+                                <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                        Patient Demographics & address
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">District</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.district} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, district: e.target.value }))}
+                                                placeholder="e.g. Dhaka"
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Thana</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.thana} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, thana: e.target.value }))}
+                                                placeholder="e.g. Uttara"
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Post Office</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.postOffice} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, postOffice: e.target.value }))}
+                                                placeholder="e.g. Sector 4"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Union/Ward</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.union} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, union: e.target.value }))}
+                                                placeholder="e.g. Ward 1"
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Village/Area</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.village} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, village: e.target.value }))}
+                                                placeholder="e.g. Uttara Sector 4"
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Nationality</Label>
+                                            <Select 
+                                                value={patientExtData.nationality} 
+                                                onValueChange={(val) => setPatientExtData(p => ({ ...p, nationality: val }))}
+                                            >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Bangladeshi">Bangladeshi</SelectItem>
+                                                    <SelectItem value="Indian">Indian</SelectItem>
+                                                    <SelectItem value="Pakistani">Pakistani</SelectItem>
+                                                    <SelectItem value="Other">Other</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Religion</Label>
+                                            <Select 
+                                                value={patientExtData.religion} 
+                                                onValueChange={(val) => setPatientExtData(p => ({ ...p, religion: val }))}
+                                            >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Islam">Islam</SelectItem>
+                                                    <SelectItem value="Hinduism">Hinduism</SelectItem>
+                                                    <SelectItem value="Christianity">Christianity</SelectItem>
+                                                    <SelectItem value="Buddhism">Buddhism</SelectItem>
+                                                    <SelectItem value="Sikhism">Sikhism</SelectItem>
+                                                    <SelectItem value="Other">Other</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Occupation</Label>
+                                            <Input 
+                                                className="h-8 text-xs" 
+                                                value={patientExtData.occupation} 
+                                                onChange={(e) => setPatientExtData(p => ({ ...p, occupation: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Marital Status</Label>
+                                            <Select 
+                                                value={patientExtData.maritalStatus} 
+                                                onValueChange={(val) => setPatientExtData(p => ({ ...p, maritalStatus: val }))}
+                                            >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="single">Single</SelectItem>
+                                                    <SelectItem value="married">Married</SelectItem>
+                                                    <SelectItem value="divorced">Divorced</SelectItem>
+                                                    <SelectItem value="widowed">Widowed</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">

@@ -83,6 +83,18 @@ export interface Patient {
   address: string;
   visitType?: 'ipd' | 'opd' | 'emergency';
   balance?: string | number;
+
+  // Additional Fields
+  village?: string;
+  union?: string;
+  postOffice?: string;
+  thana?: string;
+  district?: string;
+  religion?: string;
+  occupation?: string;
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  nationality?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -97,6 +109,17 @@ export interface PatientPayload {
   bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
   address: string;
   visitType?: 'ipd' | 'opd' | 'emergency';
+
+  // Additional Fields
+  village?: string;
+  union?: string;
+  postOffice?: string;
+  thana?: string;
+  district?: string;
+  religion?: string;
+  occupation?: string;
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  nationality?: string;
 }
 
 export interface PatientQueryParams {
