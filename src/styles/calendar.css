@@ -1,0 +1,87 @@
+/* Premium Calendar Overrides */
+
+.calendar-container .rbc-calendar {
+  min-height: 500px !important;
+  font-family: inherit !important;
+}
+
+.calendar-container .rbc-month-view {
+  border-radius: 12px !important;
+  border: 1px solid hsl(var(--border) / 0.6) !important;
+  background: hsl(var(--background) / 0.4) !important;
+  overflow: hidden !important;
+}
+
+.calendar-container .rbc-header {
+  padding: 12px 6px !important;
+  font-weight: 700 !important;
+  font-size: 0.7rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: hsl(var(--muted-foreground)) !important;
+  border-bottom: 1px solid hsl(var(--border) / 0.6) !important;
+}
+
+.calendar-container .rbc-day-bg {
+  border-left: 1px solid hsl(var(--border) / 0.5) !important;
+}
+
+.calendar-container .rbc-month-row {
+  border-top: 1px solid hsl(var(--border) / 0.5) !important;
+}
+
+.calendar-container .rbc-today {
+  background: hsl(var(--primary) / 0.05) !important;
+}
+
+.calendar-container .rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.1) !important;
+}
+
+/* Event Styles */
+.calendar-container .rbc-event-custom {
+  background-color: #2563eb; /* Default primary blue, can be overridden */
+  color: white !important;
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 2px 8px !important;
+  min-height: 20px !important;
+  display: block !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+  transition: transform 0.1s, filter 0.1s !important;
+}
+
+.calendar-container .rbc-event-custom:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.calendar-container .rbc-event-content {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: white !important;
+}
+
+.calendar-container .rbc-toolbar-label {
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+
+.calendar-container .rbc-toolbar button {
+  border-radius: 8px !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.calendar-container .rbc-toolbar button:hover {
+  background: hsl(var(--muted) / 0.5) !important;
+}
+
+.calendar-container .rbc-toolbar button.rbc-active {
+  background: hsl(var(--primary)) !important;
+  color: white !important;
+  border-color: hsl(var(--primary)) !important;
+}

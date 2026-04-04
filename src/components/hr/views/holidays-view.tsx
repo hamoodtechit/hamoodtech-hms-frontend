@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Pencil, Trash2, Calendar, Search, Loader2, ArrowLeft, ArrowRight, MoreHorizontal } from "lucide-react"
+import { Plus, Pencil, Trash2, Calendar, Search, Loader2, ArrowLeft, ArrowRight, MoreHorizontal, LayoutGrid, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -37,9 +37,31 @@ import { HolidayDialog } from "@/components/hr/holiday-dialog"
 import { HolidayFilters, HolidayFilterValues } from "@/components/hr/hr-filters"
 import { HolidayDetailsDialog } from "@/components/hr/holiday-details-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
+import { HolidayCalendar } from "@/components/hr/holiday-calendar"
 import { Holiday } from "@/types/hr"
 import { format } from "date-fns"
 import { PermissionGuard } from "@/components/shared/permission-guard"
+
+const getHolidayColor = (title: string) => {
+  const colors = [
+    "#059669", // Emerald 600
+    "#2563eb", // Blue 600
+    "#7c3aed", // Violet 600
+    "#d97706", // Amber 600
+    "#dc2626", // Rose 600
+    "#4f46e5", // Indigo 600
+    "#0891b2", // Cyan 600
+    "#9333ea", // Purple 600
+    "#ea580c", // Orange 600
+    "#0d9488", // Teal 600
+  ];
+  if (!title) return colors[0];
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
 
 export function HolidaysView() {
   const { activeStoreId } = useStoreContext()
@@ -50,12 +72,14 @@ export function HolidaysView() {
       branchId: activeStoreId || undefined
   })
   const [page, setPage] = useState(1)
+  const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [selectedHolidayId, setSelectedHolidayId] = useState<string | null>(null)
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [selectedRange, setSelectedRange] = useState<{ start: string; end: string } | null>(null)
 
   // Data
   const { data: holidaysRes, isLoading } = useHolidays({
@@ -109,7 +133,7 @@ export function HolidaysView() {
 
   return (
     <PermissionGuard permission="user:read">
-      <div className="space-y-6 max-w-400 mx-auto p-4 md:p-6">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Public Holidays</h1>
@@ -121,8 +145,8 @@ export function HolidaysView() {
           </Button>
         </div>
 
-        <Card className="border-none shadow-premium bg-card/50 backdrop-blur-sm overflow-hidden">
-          <CardHeader className="pb-3 border-b bg-muted/20">
+        <Card>
+          <CardHeader className="pb-3">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -159,17 +183,51 @@ export function HolidaysView() {
                         branches={branches} 
                       />
                   </FilterPopover>
+
+                  <div className="flex border rounded-lg p-1 bg-muted/30 ml-2">
+                    <Button
+                      variant={viewMode === "calendar" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-7 px-2 gap-1.5"
+                      onClick={() => setViewMode("calendar")}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "table" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-7 px-2 gap-1.5"
+                      onClick={() => setViewMode("table")}
+                    >
+                      <List className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="rounded-xl border overflow-hidden bg-background/30 transition-all shadow-sm">
-              <Table>
+          <CardContent>
+            {viewMode === "calendar" ? (
+              <HolidayCalendar 
+                holidays={holidays}
+                onSelectEvent={(h) => handleViewDetails(h.id)}
+                onSelectSlot={(slot) => {
+                  setSelectedHoliday(null)
+                  setSelectedRange({
+                    start: format(slot.start, "yyyy-MM-dd"),
+                    end: format(slot.end, "yyyy-MM-dd")
+                  })
+                  setIsDialogOpen(true)
+                }}
+              />
+            ) : (
+              <>
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Holiday Name</TableHead>
-                    <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground text-center">Duration / Date Range</TableHead>
-                    <TableHead className="text-right font-bold text-xs uppercase tracking-wider text-muted-foreground w-25">Actions</TableHead>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Holiday Name</TableHead>
+                    <TableHead className="text-center">Duration / Date Range</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -190,7 +248,11 @@ export function HolidaysView() {
                     </TableRow>
                   ) : (
                     holidays.map((holiday) => (
-                      <TableRow key={holiday.id} className="group hover:bg-muted/30 transition-colors border-b last:border-0">
+                      <TableRow 
+                        key={holiday.id} 
+                        className="group hover:bg-muted/30 transition-colors border-l-4"
+                        style={{ borderLeftColor: getHolidayColor(holiday.name) }}
+                      >
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-sm leading-tight text-foreground/90 group-hover:text-primary transition-colors">
@@ -276,9 +338,11 @@ export function HolidaysView() {
                         </Button>
                     </div>
                 </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
         <HolidayDetailsDialog
           id={selectedHolidayId}
@@ -289,9 +353,14 @@ export function HolidaysView() {
 
         <HolidayDialog
           open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) setSelectedRange(null)
+          } }
           holiday={selectedHoliday}
           branches={branches}
+          initialStartDate={selectedRange?.start}
+          initialEndDate={selectedRange?.end}
         />
 
         <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>

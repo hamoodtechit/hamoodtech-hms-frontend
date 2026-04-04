@@ -104,7 +104,7 @@ export function LeaveTypesView() {
 
   return (
     <PermissionGuard permission="employee:read">
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 w-full max-w-[1200px] mx-auto">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
           <div>
             <h2 className="text-3xl font-bold tracking-tight bg-linear-to-r from-primary/90 to-primary/60 bg-clip-text text-transparent">Leave Types</h2>
@@ -125,7 +125,7 @@ export function LeaveTypesView() {
           </div>
         </div>
 
-        <Card className="border-border/50 shadow-sm border-t-4 border-t-primary/20">
+        <Card>
           <CardHeader className="pb-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex flex-col space-y-1.5">
@@ -145,15 +145,15 @@ export function LeaveTypesView() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="rounded-xl border overflow-hidden bg-background/30 transition-all shadow-sm">
+          <CardContent>
+            <div className="rounded-md border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Type Name</TableHead>
-                    <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground text-center">Max Days/Year</TableHead>
-                    <TableHead className="font-bold text-xs uppercase tracking-wider text-muted-foreground text-center">Payment Status</TableHead>
-                    <TableHead className="text-right font-bold text-xs uppercase tracking-wider text-muted-foreground w-25">Actions</TableHead>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Type Name</TableHead>
+                    <TableHead className="text-center">Max Days/Year</TableHead>
+                    <TableHead className="text-center">Payment Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -174,7 +174,7 @@ export function LeaveTypesView() {
                     </TableRow>
                   ) : (
                     leaveTypes.map((leaveType) => (
-                      <TableRow key={leaveType.id} className="group hover:bg-muted/30 transition-colors border-b last:border-0">
+                      <TableRow key={leaveType.id} className="group hover:bg-muted/30 transition-colors">
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-sm leading-tight text-foreground/90 group-hover:text-primary transition-colors">

@@ -48,6 +48,8 @@ interface HolidayDialogProps {
     onOpenChange: (open: boolean) => void
     holiday?: Holiday | null
     branches: { id: string; name: string }[]
+    initialStartDate?: string
+    initialEndDate?: string
 }
 
 export function HolidayDialog({
@@ -55,6 +57,8 @@ export function HolidayDialog({
     onOpenChange,
     holiday,
     branches,
+    initialStartDate,
+    initialEndDate,
 }: HolidayDialogProps) {
     const createMutation = useCreateHoliday()
     const updateMutation = useUpdateHoliday()
@@ -86,12 +90,12 @@ export function HolidayDialog({
                 name: "",
                 nameBangla: "",
                 description: "",
-                startDate: "",
-                endDate: "",
+                startDate: initialStartDate || "",
+                endDate: initialEndDate || "",
                 branchId: "",
             })
         }
-    }, [holiday, form, open])
+    }, [holiday, form, open, initialStartDate, initialEndDate])
 
     const onSubmit = async (data: HolidayPayload) => {
         // Convert to ISO string with time for backend compatibility
