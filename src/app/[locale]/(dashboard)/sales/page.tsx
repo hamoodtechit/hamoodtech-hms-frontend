@@ -178,6 +178,7 @@ export default function SalesHistoryPage() {
                         <SelectItem value="radiology">Radiology</SelectItem>
                         <SelectItem value="admission">Patient Admission (IPD)</SelectItem>
                         <SelectItem value="general-sale">General Sale</SelectItem>
+                        <SelectItem value="others">Extra Charges</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -412,6 +413,7 @@ export default function SalesHistoryPage() {
                                 sale.type === 'pathology' ? "bg-purple-50 text-purple-600 border-purple-200" :
                                 sale.type === 'radiology' ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
                                 sale.type === 'admission' ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                                sale.type === 'others' ? "bg-rose-50 text-rose-600 border-rose-200" :
                                 "bg-gray-50 text-gray-600 border-gray-200"
                               )}
                             >
