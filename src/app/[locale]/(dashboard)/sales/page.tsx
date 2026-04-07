@@ -34,7 +34,6 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/hr-queries"
-import { useStoreContext } from "@/store/use-store-context"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X } from "lucide-react"
@@ -48,7 +47,6 @@ export default function SalesHistoryPage() {
   const searchParams = useSearchParams()
   const urlPatientId = searchParams.get('patientId')
   
-  const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
@@ -68,7 +66,9 @@ export default function SalesHistoryPage() {
   // Sync with URL type if it changes
   useEffect(() => {
     if (urlType) {
-        setSaleType(urlType === 'pharmacy' ? 'pos' : urlType)
+        const type = urlType === 'pharmacy' ? 'pos' : urlType
+        // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+        setSaleType(type)
     }
   }, [urlType])
 
@@ -120,13 +120,12 @@ export default function SalesHistoryPage() {
     startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
     endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     search: debouncedSearch || undefined,
-    branchId: activeStoreId || undefined,
     patientId: patientIdFilter || undefined,
     type: saleType !== "all" ? saleType : undefined
   })
 
-  const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
-  const { data: staffsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 }) // generic list for staff names
+  const { data: doctorsRes } = useEmployees({ limit: 100 })
+  const { data: staffsRes } = useEmployees({ limit: 100 }) // generic list for staff names
 
   const sales = salesRes?.data?.sales || []
   const doctors = doctorsRes?.data || []
@@ -398,7 +397,15 @@ export default function SalesHistoryPage() {
                       </TableRow>
                     ) : (
                       sales.map((sale) => (
-                        <TableRow key={sale.id} className="group hover:bg-primary/5 transition-colors">
+                        <TableRow 
+                          key={sale.id} 
+                          className={cn(
+                            "group transition-colors font-medium",
+                            (sale.paymentStatus === 'due' || (Number(sale.dueAmount) > 0 && sale.paymentStatus !== 'paid'))
+                              ? "bg-rose-50/90 text-rose-950 font-bold hover:bg-rose-100/90" 
+                              : "hover:bg-primary/5"
+                          )}
+                        >
                           <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                           <TableCell>
                             {format(new Date(sale.createdAt), "MMM dd, yyyy HH:mm")}
@@ -567,7 +574,7 @@ export default function SalesHistoryPage() {
                     paidAmount: Number(selectedSale.paidAmount || 0),
                     dueAmount: Number(selectedSale.dueAmount || 0),
                     date: selectedSale.createdAt,
-                    status: selectedSale.status === 'completed' ? 'Completed' : 'Refunded', // match type
+                    status: selectedSale.status === 'completed' ? 'Completed' : 'Refunded',
                     paymentMethod: (selectedSale.paymentMethod as any) || 'cash',
                     invoiceNumber: selectedSale.invoiceNumber
                 } as any : null}

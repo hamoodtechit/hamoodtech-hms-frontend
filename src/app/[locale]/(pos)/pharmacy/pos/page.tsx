@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils"
 import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { ChevronLeft, ChevronRight, Filter, Info, Keyboard, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { ChevronLeft, ChevronRight, Filter, Info, Keyboard, Layers, LayoutGrid, List, Loader2, LogOut, Pill, Search, ShoppingCart } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { StoreSwitcher } from "@/components/layout/store-switcher"
@@ -34,7 +34,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useActiveCashRegister, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { useCreateSale } from "@/hooks/sales-queries"
 import { patientService } from "@/services/patient-service"
-import { Medicine, Patient } from "@/types/pharmacy"
 import { SalePayload } from "@/types/sales"
 
 const getGenericColor = (name: string) => {
@@ -73,7 +72,9 @@ const getStock = (medicine: Medicine) => {
     return 0
 }
 
-const allocateBatches = (requestedQty: number, stocks: any[]) => {
+import { Medicine, Patient, Stock, PaymentMethod, Branch } from "@/types/pharmacy"
+
+const allocateBatches = (requestedQty: number, stocks: Stock[]) => {
     let remaining = requestedQty;
     const allocated = [];
     
@@ -103,7 +104,7 @@ const allocateBatches = (requestedQty: number, stocks: any[]) => {
 };
 
 export default function POSPage() {
-  const { cart, addToCart, clearCart, addTransaction, activeRegister: storeActiveRegister, setActiveRegister, setActiveBranch } = usePosStore()
+  const { cart, addToCart, clearCart, addTransaction, setActiveRegister, setActiveBranch } = usePosStore()
   
   // State
   const [isMounted, setIsMounted] = useState(false)
@@ -127,6 +128,11 @@ export default function POSPage() {
   const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
   const [closeRegisterOpen, setCloseRegisterOpen] = useState(false)
   const { fetchSettings, pharmacy, finance } = useSettingsStore()
+  
+  const handleFetchSettings = useCallback(() => {
+    fetchSettings()
+  }, [fetchSettings])
+
   const pharmacyFinance = finance // Alias for clarity if needed, or just use finance directly
 
   // Customer State
@@ -154,7 +160,7 @@ export default function POSPage() {
   const [currentInteractions, setCurrentInteractions] = useState<any[]>([])
 
   // Payment State
-  const [paymentMethod, setPaymentMethod] = useState<any>('cash')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [selectedAccountId, setSelectedAccountId] = useState<string>("")
   const [paidAmount, setPaidAmount] = useState(0)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
@@ -176,7 +182,7 @@ export default function POSPage() {
     }
   }, [paymentMethod, pharmacyFinance])
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
       if (cart.length === 0) return
 
       const drugNames = cart.map(c => c.name.split(' ')[0])
@@ -189,7 +195,7 @@ export default function POSPage() {
       }
 
       setIsCheckoutOpen(true)
-  }
+  }, [cart, checkInteractions])
 
   const finalizeCheckout = () => {
     processTransaction()
@@ -199,7 +205,7 @@ export default function POSPage() {
   const { data: categoriesRes } = usePharmacyEntities('categories', { limit: 100 })
   const categories = ["All", ...(categoriesRes?.data?.map(c => c.name) || [])]
 
-  const { data: sessionRes, isLoading: loadingSession } = useActiveCashRegister(activeStoreId)
+  const { data: sessionRes } = useActiveCashRegister(activeStoreId)
   const activeRegister = sessionRes?.data || null
 
   // Determine active category ID
@@ -232,7 +238,7 @@ export default function POSPage() {
   // Effects
   useEffect(() => {
     setIsMounted(true)
-    fetchSettings()
+    handleFetchSettings()
 
     // Global shortcut listener
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
@@ -265,7 +271,7 @@ export default function POSPage() {
 
     window.addEventListener('keydown', handleGlobalShortcuts)
     return () => window.removeEventListener('keydown', handleGlobalShortcuts)
-  }, [total, cart])
+  }, [handleCheckout, handleFetchSettings])
 
   useEffect(() => {
     // Reset selection when search query changes
@@ -282,7 +288,7 @@ export default function POSPage() {
                 if (defaultPatientRes.success && defaultPatientRes.data) {
                     patientData = defaultPatientRes.data
                 }
-            } catch (e) {
+            } catch {
                 // Ignore if ID fetch fails
             }
 
@@ -315,10 +321,10 @@ export default function POSPage() {
     if (sessionRes?.data) {
         setActiveRegister(sessionRes.data)
         if (sessionRes.data.branch) {
-            setActiveBranch(sessionRes.data.branch as any)
+            setActiveBranch(sessionRes.data.branch as Branch)
         }
     }
-  }, [sessionRes])
+  }, [sessionRes, setActiveBranch, setActiveRegister])
 
 
   // Helpers
@@ -350,6 +356,7 @@ export default function POSPage() {
       medicineId: medicine.id,
       category: medicine.category?.name || 'Uncategorized',
       dosageForm: medicine.dosageForm,
+      genericName: medicine.genericName,
       stocks: medicine.stocks
     } as any)
 
@@ -513,7 +520,7 @@ export default function POSPage() {
     }
   }
   
-  const handleLinkPrescription = (id: string) => {
+  const handleLinkPrescription = (_id: string) => {
       // In a real app, you'd fetch prescription details here
       
   }
@@ -916,7 +923,7 @@ export default function POSPage() {
                             key={product.id} 
                             className={cn(
                                 "cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col relative py-0 gap-0 p-0",
-                                viewMode === 'grid' ? "h-[110px] sm:h-[120px]" : "h-auto mb-1",
+                                viewMode === 'grid' ? "h-[110px] sm:h-32" : "h-16 mb-1.5",
                                 quantity > 0 ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.02]' : 
                                 isOutOfStock ? 'bg-muted/50 border-destructive/30 border-dashed opacity-80' :
                                 index === selectedIndex && searchQuery.trim() !== "" ? 'border-primary ring-2 ring-primary/50' : colorClass
@@ -934,14 +941,15 @@ export default function POSPage() {
                                                     {product.category.name}
                                                 </Badge>
                                                 {product.stocks && product.stocks.filter(s => Number(s.quantity) > 0).length > 1 && (
-                                                    <Badge variant="outline" className="text-[7px] font-bold px-1 h-3 border-primary/30 bg-primary/10 text-primary uppercase tracking-tighter shadow-sm">
-                                                        Multi-Batch
+                                                    <Badge variant="outline" className="text-[7.5px] font-bold px-1 h-3.5 border-primary/40 bg-primary/20 text-primary uppercase tracking-tighter shadow-sm gap-0.5">
+                                                        <Layers className="h-2 w-2" />
+                                                        {product.stocks.filter(s => Number(s.quantity) > 0).length} Batches
                                                     </Badge>
                                                 )}
                                             </div>
                                         ) : <div />}
                                         {quantity > 0 && (
-                                            <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[9px] shadow-sm animate-in zoom-in px-1 h-3.5 ml-auto">
+                                            <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[9px] shadow-lg border-2 border-background animate-in zoom-in px-1.5 h-4.5 -mt-0.5 -mr-0.5 flex items-center justify-center min-w-4.5">
                                                 {quantity}
                                             </Badge>
                                         )}
@@ -953,7 +961,7 @@ export default function POSPage() {
                                                 {product.name}
                                             </h3>
                                             <div className="flex items-center text-[9px] sm:text-[10px] text-muted-foreground line-clamp-1">
-                                                <span className="truncate">{product.genericName}</span>
+                                                <span className="truncate font-bold">{product.genericName}</span>
                                                 <span className="mx-0.5">•</span>
                                                 <span className="font-bold text-primary shrink-0 uppercase">
                                                     {product.dosageForm && <span className="mr-1">{product.dosageForm}</span>}
@@ -974,12 +982,12 @@ export default function POSPage() {
                                 </>
                             ) : (
                                 // LIST VIEW RENDER
-                                <div className={`p-1 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
+                                <div className={`p-1.5 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors h-full ${
                                     quantity > 0 ? 'bg-primary/5' : 
                                     isOutOfStock ? 'bg-destructive/[0.08] dark:bg-destructive/[0.12]' : ''
                                 }`}>
-                                    <div className={`h-6 w-6 rounded flex items-center justify-center shrink-0 border shadow-xs ${colorClass}`}>
-                                        <Pill className="h-3 w-3 text-muted-foreground/70" />
+                                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border shadow-sm ${colorClass}`}>
+                                        <Pill className="h-5 w-5 text-muted-foreground/70" />
                                     </div>
                                     
                                     <div className="flex-1 min-w-0">
@@ -990,23 +998,26 @@ export default function POSPage() {
                                                 <span>{product.strength}</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center text-[9px] text-muted-foreground mt-0.5">
-                                            <span className="truncate max-w-[150px]">{product.genericName}</span>
+                                        <div className="flex items-center text-[10px] text-muted-foreground mt-1 gap-2">
+                                            <span className="truncate max-w-50 font-bold">{product.genericName}</span>
                                             {product.stocks && product.stocks.filter(s => Number(s.quantity) > 0).length > 1 && (
-                                                <Badge variant="outline" className="ml-1 text-[7px] px-0.5 h-3 border-primary/20 bg-primary/5 text-primary uppercase font-bold leading-none">MB</Badge>
+                                                <Badge variant="outline" className="text-[8px] px-1 h-4 border-primary/30 bg-primary/10 text-primary uppercase font-bold leading-none gap-0.5">
+                                                    <Layers className="h-2 w-2" />
+                                                    {product.stocks.filter(s => Number(s.quantity) > 0).length} Batches
+                                                </Badge>
                                             )}
                                             {isOutOfStock ? (
-                                                <span className="ml-1.5 text-destructive font-bold uppercase text-[8px]">Out of Stock</span>
+                                                <span className="ml-1.5 text-destructive font-black uppercase text-[8px]">Out of Stock</span>
                                             ) : getStock(product) <= 10 && (
                                                 <span className="ml-1.5 text-amber-600 font-bold uppercase text-[8px]">{getStock(product)} left</span>
                                             )}
                                         </div>
                                     </div>
     
-                                    <div className="text-right shrink-0 flex flex-col items-end">
-                                        <div className={`font-bold text-xs leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{formatCurrency(salePrice)}</div>
-                                        <div className={`text-[8px] mt-0.5 ${isOutOfStock ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                                            {isOutOfStock ? '0 remaining' : `${getStock(product)} total stock`}
+                                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                                        <div className={`font-bold text-sm leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{formatCurrency(salePrice)}</div>
+                                        <div className={`text-[10px] ${isOutOfStock ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                                            {isOutOfStock ? '0 remaining' : <><span className="font-bold">{getStock(product)}</span> overall</>}
                                         </div>
                                     </div>
 

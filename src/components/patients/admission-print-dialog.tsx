@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAdmission } from "@/hooks/patient-queries"
 import { formatCurrency } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
-
+import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Printer, X } from "lucide-react"
 import { useRef } from "react"
 
@@ -22,6 +22,7 @@ interface AdmissionPrintDialogProps {
 
 export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: AdmissionPrintDialogProps) {
     const { general } = useSettingsStore()
+    const { user } = useAuthStore()
     const printRef = useRef<HTMLDivElement>(null)
 
     const { data: res, isLoading } = useAdmission(admissionId || "")
@@ -61,16 +62,27 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                 <head>
                     <title>Admission Form - ${patient?.name}</title>
                     <style>
-                        @page { size: A4; margin: 10mm; }
+                        @page { size: A4; margin: 5mm; }
                         body { 
                             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                             color: #000; 
-                            line-height: 1.4; 
+                            line-height: 1; 
                             padding: 0; 
                             margin: 0; 
                             background: white;
                         }
-                        .print-container { width: 210mm; margin: 0 auto; background: white; padding: 10mm; box-sizing: border-box; }
+                        .print-container { width: 210mm; margin: 0 auto; background: white; padding: 5mm; box-sizing: border-box; position: relative; }
+                        .vertical-metadata {
+                            position: absolute;
+                            left: -5mm;
+                            top: 50%;
+                            transform: translateY(-50%) rotate(-90deg);
+                            font-size: 8px;
+                            color: rgba(0,0,0,0.4);
+                            white-space: nowrap;
+                            font-weight: bold;
+                            letter-spacing: 1px;
+                        }
                         
                         /* Layout Utilities */
                         .flex { display: flex !important; }
@@ -84,6 +96,16 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                         .grid { display: grid !important; }
                         .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
                         .w-full { width: 100% !important; }
+                        .m-0 { margin: 0 !important; }
+                        .p-0 { padding: 0 !important; }
+                        .mb-0 { margin-bottom: 0 !important; }
+                        .mb-1 { margin-bottom: 4px !important; }
+                        .mb-2 { margin-bottom: 8px !important; }
+                        .mt-0 { margin-top: 0 !important; }
+                        .mt-4 { margin-top: 16px !important; }
+                        .leading-none { line-height: 1 !important; }
+                        .leading-tight { line-height: 1.1 !important; }
+                        .gap-0 { gap: 0 !important; }
                         
                         /* Borders */
                         .border { border: 1px solid black !important; }
@@ -195,43 +217,27 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                         ) : (
                             <div className="text-black bg-white antialiased font-sans">
                                 {/* Header Section */}
-                                <div className="text-center mb-6 space-y-2">
-                                    <div className="flex justify-center mb-2">
+                                <div className="flex flex-col items-center text-center mb-0 gap-0">
+                                    <div className="flex justify-center mb-0.5">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" className="h-16 w-auto object-contain" />
+                                        <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '70px', width: 'auto', objectFit: 'contain' }} />
                                     </div>
                                     
-                                    <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-950">
-                                        {branch?.name || general?.hospitalName || 'HamoodTech Hospital'}
+                                    <h1 className="text-2xl font-black uppercase tracking-tight text-slate-950 m-0 p-0 leading-none">
+                                        {general?.hospitalName || branch?.name || 'HamoodTech Hospital'}
                                     </h1>
                                     
-                                    <p className="text-xs font-bold leading-tight max-w-75 mx-auto text-black">
-                                        {branch?.address || 'Branch Address, City, Bangladesh'}
+                                    <p className="text-[14px] font-bold m-0 p-0 leading-none text-black">
+                                        {(general?.address || branch?.address || 'Hospital Address').split(',').map(s => s.trim()).join(', ')}
                                     </p>
                                     
-                                    <div className="flex justify-center gap-4 text-[10px] font-black border-t border-black/10 mt-3 pt-2 uppercase tracking-tight">
-                                        {branch?.phone && (
-                                            <span className="flex items-center gap-1">
-                                                PH: {branch.phone}
-                                            </span>
-                                        )}
-                                        {branch?.email && (
-                                            <span className="flex items-center gap-1">
-                                                {branch?.phone && <span className="mr-4">|</span>}
-                                                EMAIL: {branch.email}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="text-center mb-6 pb-2 border-b-2 border-double border-black">
-                                    <span className="text-xl font-black underline uppercase tracking-widest bg-gray-100 px-8 py-1 rounded-full border border-black">
-                                        Patient Admission Form
-                                    </span>
+                                    <p className="text-[14px] font-bold m-0 p-0 leading-none text-black">
+                                        Ph: {general?.phone || branch?.phone || "Hospital Phone"}
+                                    </p>
                                 </div>
 
                                 {/* Structured Info Box */}
-                                <div className="border border-black border-dashed mb-6 overflow-hidden">
+                                <div className="border border-black border-dashed mb-2 mt-4 overflow-hidden">
                                     {/* Row 1: Reg & Admission ID */}
                                     <div className="grid grid-cols-2 border-b border-black border-dashed">
                                         <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
@@ -282,7 +288,9 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         <div className="flex flex-col">
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Phone No:</span>
-                                                <span className="font-bold text-sm">{patient?.phone || 'N/A'}</span>
+                                                <span className="font-bold text-sm">
+                                                    {patient?.phone ? (patient.phone.startsWith('1') ? `0${patient.phone}` : patient.phone) : 'N/A'}
+                                                </span>
                                             </div>
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Village:</span>
@@ -302,7 +310,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                             </div>
                                             <div className="p-2 px-3 flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">District:</span>
-                                                <span className="font-bold text-sm">{patient?.district || 'N/A'}</span>
+                                                <span className="font-bold text-sm underline">{patient?.district || 'N/A'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -361,7 +369,12 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                 {/* Footer */}
                                 <div className="mt-8 pt-4 border-t border-black/5 text-[10px] text-zinc-400 font-black flex justify-between uppercase tracking-widest">
                                     <span>System Generated Admission Form</span>
-                                    <span>Printed on: {new Date().toLocaleString()}</span>
+                                    <span>Printed By: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}</span>
+                                </div>
+
+                                {/* Vertical Side Label */}
+                                <div className="vertical-metadata hidden print:block">
+                                    PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
                                 </div>
                             </div>
                         )}

@@ -12,6 +12,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
+import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Printer } from "lucide-react"
 
 // Simple number to words converter for BDT/Taka (Indian numbering system format)
@@ -118,12 +119,14 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   const isFullPaid = dueAmount <= 0;
 
-  const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
+  const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => {
+    const { user } = useAuthStore()
+    return (
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
         <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
         {/* Side Watermark / Vertical Text */}
-        <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] text-gray-400 tracking-wider whitespace-nowrap hidden print:block">
-            Powered by Hamood Tech
+        <div className="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] text-gray-500 tracking-wider whitespace-nowrap hidden print:block font-bold">
+            PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()} | Powered by Hamood Tech
         </div>
 
         {/* PAID Hologram */}
@@ -136,10 +139,14 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
         )}
 
         {/* Header */}
-        <div className="text-center mb-4 relative z-10">
-            <h1 className="text-2xl font-bold uppercase tracking-wider">{data.branch?.name || general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
-            <p className="text-[13px] mt-1">{data.branch?.address || general?.address || "Bonpara Bazar, Boraigram, Natore-6430"}</p>
-            <p className="text-[13px]">{data.branch?.phone || general?.phone || "01711862547"}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
+             <div className="flex justify-center" style={{ marginBottom: '2px' }}>
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                 <img src={data.branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
+             </div>
+            <h1 style={{ margin: '0', padding: '0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || data.branch?.name || "PATWARY GENERAL HOSPITAL"}</h1>
+            <p style={{ margin: '0', padding: '0', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || data.branch?.address || "Hospital Address"}</p>
+            <p style={{ margin: '0', padding: '0', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || data.branch?.phone || "Hospital Phone"}</p>
             
             <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
                 {(data.branch?.licenseNumber || activeStore?.licenseNumber) && <span>License No: {data.branch?.licenseNumber || activeStore?.licenseNumber}</span>}
@@ -275,9 +282,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
             </div>
         </div>
     </div>
-  </div>
+    </div>
   )
-
+}
+    
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none">
@@ -392,8 +400,17 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .w-12 { width: 3rem !important; }
                                   .w-24 { width: 6rem !important; }
                                   .w-48 { width: 12rem !important; }
-                                  .w-\\[250px\\] { width: 250px !important; }
-                                  .w-full { width: 100% !important; }
+                                  .w-\\[250px\\]                                   .w-full { width: 100% !important; }
+                                  .m-0 { margin: 0 !important; }
+                                  .p-0 { padding: 0 !important; }
+                                  .mb-0 { margin-bottom: 0 !important; }
+                                  .mb-1 { margin-bottom: 4px !important; }
+                                  .mb-2 { margin-bottom: 8px !important; }
+                                  .mt-0 { margin-top: 0 !important; }
+                                  .mt-4 { margin-top: 16px !important; }
+                                  .leading-none { line-height: 1 !important; }
+                                  .leading-tight { line-height: 1.1 !important; }
+                                  .gap-0 { gap: 0 !important; }
                                   .min-h-\\[30px\\] { min-height: 30px !important; }
                                   .min-h-\\[40px\\] { min-height: 40px !important; }
                                   .min-h-\\[500px\\] { min-height: 500px !important; }
@@ -436,7 +453,11 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .-translate-y-1\\/2 { transform: translateY(-50%) rotate(-90deg) !important; }
                                   .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
                                   .whitespace-nowrap { white-space: nowrap !important; }
-                              </style>
+                                  .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+                                  body { margin: 0 !important; padding: 0 !important; }
+                                  @page { margin: 5mm !important; }
+                                </style>
+                    </style>
                           </head>
                           <body>
                               <div class="print-container">

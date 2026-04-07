@@ -412,7 +412,19 @@ export function TransactionHistory() {
                             </TableRow>
                         ) : (
                             transactions.map((tx) => (
-                                <TableRow key={`${tx.type}-${tx.id}`}>
+                                <TableRow 
+                                    key={`${tx.type}-${tx.id}`}
+                                    className={cn(
+                                        "group transition-colors",
+                                        tx.type === 'sale' && (
+                                            tx.status === 'due' || 
+                                            tx.original?.paymentStatus === 'due' ||
+                                            Number(tx.original?.dueAmount) > 0
+                                        )
+                                            ? "bg-rose-500/15 text-rose-500 font-bold hover:bg-rose-500/20" 
+                                            : "hover:bg-muted/50"
+                                    )}
+                                >
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-2">
                                             {tx.type === 'sale' && <ShoppingCart className="h-3 w-3 text-emerald-500" />}

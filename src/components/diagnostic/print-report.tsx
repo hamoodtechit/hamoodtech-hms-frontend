@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { useAuthStore } from "@/store/use-auth-store"
 
 interface PrintReportProps {
     report: DiagnosticReport
@@ -20,6 +21,7 @@ const DEFAULT_COLUMNS: DiagnosticColumnDef[] = [
 export function PrintReport({ report }: PrintReportProps) {
     // Fetch full details (has full patient object with patientNumber etc.)
     const { data: detailRes, isLoading } = useDiagnosticReport(report.id)
+    const { user } = useAuthStore()
     const detail = detailRes?.data ?? report
 
     const patient = (detail?.patient) as any
@@ -43,6 +45,11 @@ export function PrintReport({ report }: PrintReportProps) {
             className="bg-white text-black font-['Times_New_Roman',serif] text-[10.5pt] leading-tight mx-auto relative overflow-hidden"
             style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
         >
+            {/* Vertical Metadata */}
+            <div className="absolute -left-16 top-1/2 -translate-y-1/2 -rotate-90 text-[8pt] text-black/30 tracking-widest whitespace-nowrap hidden print:block font-bold font-sans">
+                PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
+            </div>
+
             {/* Main Content Area - Added top margin for Pad compatibility */}
             <div className="px-10 py-6 pt-[20mm] relative z-10 min-h-[290mm] flex flex-col">
                 {/* Header */}

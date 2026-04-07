@@ -14,6 +14,7 @@ import { useSale } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Transaction, usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
+import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Printer } from "lucide-react"
 
 interface ReceiptDialogProps {
@@ -69,20 +70,26 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const date = (data as any)?.date || (data as any)?.createdAt || new Date().toISOString()
   
   const ReceiptContent = ({ copyTitle }: { copyTitle?: string }) => {
+    const { user } = useAuthStore()
     const branch = (data as any)?.branch || activeBranch
     const branchLogo = branch?.logoUrl || activeBranch?.logoUrl || "/Logo.png"
     return (
-    <div className="p-2 space-y-3 border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0">
-        <div className="text-center space-y-0.5">
-             <div className="flex justify-center mb-1">
-                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                 <img src={branchLogo} alt="Logo" className="h-10 w-auto object-contain font-bold italic" />
+    <div className="p-2 space-y-3 border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0 relative">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
+             {/* Vertical Metadata - Moved to not affect flow */}
+             <div className="absolute -left-10 top-1/2 -translate-y-1/2 -rotate-90 text-[7px] text-black/40 tracking-wider whitespace-nowrap hidden print:block font-bold">
+                 PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
              </div>
-             {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1">{copyTitle}</div>}
-            <h2 className="text-sm font-bold uppercase tracking-tight leading-tight">{branch?.name || general?.hospitalName || "Hospital Name"}</h2>
-            <div className="text-[10px] leading-tight text-black space-y-0.5">
-                <p className="font-bold">{branch?.address || general?.address || "Hospital Address"}</p>
-                <p className="font-semibold">Ph: {branch?.phone || general?.phone || "Phone"}</p>
+
+             <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                 <img src={branchLogo} alt="Logo" style={{ height: '55px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+             </div>
+             {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1 leading-none">{copyTitle}</div>}
+            <h2 style={{ margin: '0', padding: '0', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || branch?.name || "Hospital Name"}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
+                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: '10px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: '10px', lineHeight: '1.2' }}>Ph: {general?.phone || branch?.phone || "Phone"}</p>
             </div>
         </div>
 
@@ -97,7 +104,6 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div className="text-right space-y-0.5 font-bold">
                 <p>Invoice #: {invoiceNumber}</p>
                 <p>Date: {new Date(date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
-                <p className="uppercase">Mode: {(data as any)?.paymentMethod}</p>
             </div>
         </div>
 
@@ -119,8 +125,8 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         <div className="col-span-6 pr-1">
                             <span className="block font-bold">
                                 {item.name}
-                                {item.dosageForm && <span className="text-[10px] font-bold ml-1 uppercase">({item.dosageForm})</span>}
-                                {item.batchNumber && <span className="block text-[8px] font-normal text-muted-foreground italic">B: {item.batchNumber}</span>}
+                                {item.dosageForm && <span className="text-[9px] font-bold ml-1 uppercase opacity-70">({item.dosageForm})</span>}
+                                {item.genericName && <span className="block text-[8px] font-medium text-muted-foreground italic leading-tight">{item.genericName}</span>}
                             </span>
                         </div>
                         <div className="col-span-1 text-center">{item.quantity}</div>
@@ -192,7 +198,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none">
+      <DialogContent className="max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none print:max-w-none print:w-[80mm] print:mx-auto">
         <DialogHeader className="sr-only">
           <DialogTitle>Receipt</DialogTitle>
         </DialogHeader>
@@ -244,8 +250,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                       display: flex;
                                       flex-direction: column;
                                       align-items: center;
-                                      width: 72mm;
+                                      width: 80mm;
                                       background: white;
+                                      text-align: center;
                                   }
                                   #receipt-print {
                                       width: 100%;
@@ -261,7 +268,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                   .text-right { text-align: right !important; }
                                   .font-bold { font-weight: 700 !important; }
                                   .flex { display: flex !important; }
+                                  .flex-col { flex-direction: column !important; }
                                   .justify-between { justify-content: space-between !important; }
+                                  .justify-center { justify-content: center !important; }
+                                  .items-center { align-items: center !important; }
                                   .uppercase { text-transform: uppercase !important; }
                                   .grid { display: grid !important; }
                                   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
@@ -270,10 +280,20 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                   .col-span-1 { grid-column: span 1 / span 1 !important; }
                                   .col-span-2 { grid-column: span 2 / span 2 !important; }
                                   .col-span-3 { grid-column: span 3 / span 3 !important; }
-                                  .space-y-0\\.5 > * + * { margin-top: 0.125rem !important; }
-                                  .space-y-1 > * + * { margin-top: 0.25rem !important; }
+                                  .m-0 { margin: 0 !important; }
+                                  .p-0 { padding: 0 !important; }
+                                  .mb-0 { margin-bottom: 0 !important; }
+                                  .mb-1 { margin-bottom: 4px !important; }
+                                  .mt-0 { margin-top: 0 !important; }
+                                  .leading-none { line-height: 1 !important; }
+                                  .leading-tight { line-height: 1.1 !important; }
+                                  .gap-0 { gap: 0 !important; }
+                                  .p-2 { padding: 8px !important; }
+                                  .px-2 { padding-left: 8px !important; padding-right: 8px !important; }
+                                  .py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
+                                  .space-y-0\\.5 > * + * { margin-top: 2px !important; }
+                                  .space-y-1 > * + * { margin-top: 4px !important; }
                                   .space-y-3 > * + * { margin-top: 0.75rem !important; }
-                                  .mb-1 { margin-bottom: 0.25rem !important; }
                                   .pb-6 { padding-bottom: 1.5rem !important; }
                                   .w-full { width: 100% !important; }
                               </style>
