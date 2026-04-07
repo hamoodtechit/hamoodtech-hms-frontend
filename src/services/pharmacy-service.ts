@@ -94,6 +94,7 @@ export const pharmacyService = {
     strength?: string;
     groupId?: string;
     medicineManufacturerId?: string;
+    branchId?: string | null;
     isActive?: boolean;
   }): Promise<PharmacyResponse<Medicine>> => {
     const response = await api.get<PharmacyResponse<Medicine>>('/pharmacy/medicines', { params });
