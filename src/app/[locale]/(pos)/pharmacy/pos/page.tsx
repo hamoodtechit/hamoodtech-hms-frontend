@@ -31,7 +31,7 @@ import { StoreSwitcher } from "@/components/layout/store-switcher"
 import { CloseRegisterDialog } from "@/components/pharmacy/pos/close-register-dialog"
 import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useActiveCashRegister, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
+import { useActiveCashRegister, useAllMedicines, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
 import { useCreateSale } from "@/hooks/sales-queries"
 import { patientService } from "@/services/patient-service"
 import { SalePayload } from "@/types/sales"
@@ -109,7 +109,7 @@ export default function POSPage() {
   // State
   const [isMounted, setIsMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [debouncedSearch] = useDebounce(searchQuery, 500)
+  const [debouncedSearch] = useDebounce(searchQuery, 200)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
   
@@ -228,6 +228,10 @@ export default function POSPage() {
     name: filters.name || undefined,
     genericName: filters.genericName || undefined,
   })
+
+  // Local search index for instant results
+  const { data: allMedicinesRes } = useAllMedicines(activeStoreId)
+  const allMedicines = allMedicinesRes?.data || []
 
   const medicines = productsRes?.pages.flatMap(page => page.data) || []
   const uniqueMedicines = medicines.filter((medicine, index, self) =>
@@ -371,6 +375,17 @@ export default function POSPage() {
   }
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    // Instant Barcode Match (bypassing debounce)
+    if (e.key === 'Enter' && searchQuery.trim() !== "") {
+        const barcodeMatch = allMedicines.find(m => m.barcode === searchQuery.trim())
+        if (barcodeMatch) {
+            handleAddToCart(barcodeMatch)
+            setSearchQuery("")
+            setSelectedIndex(0)
+            return
+        }
+    }
+
     if (filteredProducts.length === 0) return
 
     if (e.key === 'ArrowDown') {
@@ -390,8 +405,27 @@ export default function POSPage() {
     }
   }
 
-  // Filtered products are now handled by the backend query
-  const filteredProducts = uniqueMedicines
+  // Hybrid search logic: Local filtering for small queries, API for everything else
+  const filteredProducts = (() => {
+    if (!searchQuery.trim() && !activeFilterCount && activeCategory === "All") {
+        return uniqueMedicines
+    }
+
+    // If typing, prioritize local fast filtering from 'allMedicines'
+    if (searchQuery.trim().length > 0 && allMedicines.length > 0) {
+        const query = searchQuery.toLowerCase()
+        const localResults = allMedicines.filter(m => 
+            m.name.toLowerCase().includes(query) || 
+            m.genericName?.toLowerCase().includes(query) ||
+            m.barcode?.includes(query)
+        )
+        // If we found local results, show them immediately
+        if (localResults.length > 0) return localResults
+    }
+
+    // Fallback to API results (which are handled by productsRes)
+    return uniqueMedicines
+  })()
 
   const processTransaction = async () => {
       if (!activeStoreId) {

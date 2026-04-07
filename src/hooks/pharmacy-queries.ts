@@ -107,6 +107,20 @@ export function useMedicines(params: any = {}) {
   });
 }
 
+/**
+ * Custom hook for fast POS searching. 
+ * Fetches a larger page size (1,000) once to act as a local search index.
+ */
+export function useAllMedicines(branchId?: string | null) {
+  return useQuery({
+    queryKey: ['pharmacy', 'medicines', 'all-for-pos', branchId],
+    queryFn: () => pharmacyService.getMedicines({ branchId, limit: 1000, page: 1 }),
+    enabled: !!branchId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: keepPreviousData,
+  });
+}
+
 export function useInfiniteMedicines(params: any = {}) {
   return useInfiniteQuery<PharmacyResponse<Medicine>>({
     queryKey: ['pharmacy', 'medicines', 'infinite', params],
