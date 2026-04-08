@@ -95,7 +95,7 @@ interface CartItem {
     isDiagnosticTest: boolean
 }
 
-export function DiagnosticBillingForm({ type }: Omit<DiagnosticBillingFormProps, 'title' | 'description'>) {
+export function DiagnosticBillingForm({ type, title, description }: DiagnosticBillingFormProps) {
     const router = useRouter()
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
@@ -370,9 +370,9 @@ export function DiagnosticBillingForm({ type }: Omit<DiagnosticBillingFormProps,
                         {type === 'pathology' ? <Microscope className="h-6 w-6 text-white" /> : <Radiation className="h-6 w-6 text-white" />}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground capitalize">{type} Terminal</h1>
-                        <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                           <LayoutGrid className="w-3 h-3" /> Diagnostic Billing Suite
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">{title}</h1>
+                        <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                           <LayoutGrid className="w-3 h-3 text-primary" /> {description}
                         </p>
                     </div>
                 </div>

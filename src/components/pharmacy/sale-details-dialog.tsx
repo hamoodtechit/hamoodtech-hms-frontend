@@ -62,7 +62,7 @@ export function SaleDetailsDialog({
   const [loading, setLoading] = useState(false)
 
   // Edit form state
-  const [status, setStatus] = useState<'pending' | 'completed' | 'rejected'>('pending')
+  const [status, setStatus] = useState<'pending' | 'completed' | 'rejected' | 'returned'>('pending')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [discountPercentage, setDiscountPercentage] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
