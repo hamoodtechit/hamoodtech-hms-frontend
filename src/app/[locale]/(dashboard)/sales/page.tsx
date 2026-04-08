@@ -171,13 +171,8 @@ export default function SalesHistoryPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Sale Type: All</SelectItem>
-                        <SelectItem value="pos">POS</SelectItem>
-                        <SelectItem value="appointment">Appointment</SelectItem>
-                        <SelectItem value="pathology">Pathology</SelectItem>
-                        <SelectItem value="radiology">Radiology</SelectItem>
-                        <SelectItem value="admission">Patient Admission (IPD)</SelectItem>
-                        <SelectItem value="general-sale">General Sale</SelectItem>
-                        <SelectItem value="others">Extra Charges</SelectItem>
+                        <SelectItem value="pos">Pharmacy (POS)</SelectItem>
+                        <SelectItem value="hospital">Hospital Sales</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -402,7 +397,7 @@ export default function SalesHistoryPage() {
                           className={cn(
                             "group transition-colors font-medium",
                             (sale.paymentStatus === 'due' || (Number(sale.dueAmount) > 0 && sale.paymentStatus !== 'paid'))
-                              ? "bg-rose-50/90 text-rose-950 font-bold hover:bg-rose-100/90" 
+                              ? "text-rose-500 font-bold hover:bg-rose-500/5" 
                               : "hover:bg-primary/5"
                           )}
                         >
@@ -416,6 +411,7 @@ export default function SalesHistoryPage() {
                               className={cn(
                                 "capitalize text-[10px] font-bold",
                                 sale.type === 'pos' ? "bg-blue-50 text-blue-600 border-blue-200" :
+                                sale.type === 'hospital' ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
                                 sale.type === 'appointment' ? "bg-orange-50 text-orange-600 border-orange-200" :
                                 sale.type === 'pathology' ? "bg-purple-50 text-purple-600 border-purple-200" :
                                 sale.type === 'radiology' ? "bg-indigo-50 text-indigo-600 border-indigo-200" :

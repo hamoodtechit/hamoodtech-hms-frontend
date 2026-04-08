@@ -144,12 +144,21 @@ export function AppointmentBillingForm() {
     const [timeSlot, setTimeSlot] = useState<string>("")
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     
+    // Modal & History State
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [receiptOpen, setReceiptOpen] = useState(false)
+    const [lastSale, setLastSale] = useState<Sale | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState(false)
+    const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
+    const [initialAddPayment, setInitialAddPayment] = useState(false)
+
     // Cart State
     const [cart, setCart] = useState<{
         serviceId: string
         name: string
         price: number
         quantity: number
+        unit: string
         isDiagnosticTest?: boolean
     }[]>([])
     const [selectedServiceId, setSelectedServiceId] = useState<string>("")
@@ -160,16 +169,6 @@ export function AppointmentBillingForm() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
-
-    // Receipt/History State
-    const [receiptOpen, setReceiptOpen] = useState(false)
-    const [historyOpen, setHistoryOpen] = useState(false)
-    const [lastSale, setLastSale] = useState<any | null>(null)
-
-    // Details/Collect State
-    const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
-    const [detailsOpen, setDetailsOpen] = useState(false)
-    const [initialAddPayment, setInitialAddPayment] = useState(false)
     
     // Auto-fill room based on user
     useEffect(() => {
@@ -193,6 +192,7 @@ export function AppointmentBillingForm() {
                 name: service.name, 
                 price: Number(service.price), 
                 quantity: 1,
+                unit: service.unit || 'visit',
                 isDiagnosticTest: !!service.isDiagnosticTest
             }])
         }
@@ -226,14 +226,18 @@ export function AppointmentBillingForm() {
                 doctorId: selectedDoctorId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
-                fees: subtotal,
-                chamberOrRoomNumber: chamberOrRoomNumber,
-                status: 'confirmed',
-                items: cart.map(item => ({
+                serviceItems: cart.map(item => ({
                     serviceId: item.serviceId,
+                    itemName: item.name,
+                    unit: item.unit,
+                    price: item.price,
+                    mrp: item.price,
                     quantity: item.quantity,
-                    unitPrice: item.price,
-                    isDiagnosticTest: item.isDiagnosticTest
+                    totalPrice: item.price * item.quantity,
+                    isDiagnosticTest: item.isDiagnosticTest,
+                    discountPercentage: discount || 0,
+                    discountAmount: (item.price * item.quantity * (discount || 0)) / 100,
+                    deliveryDate: format(new Date(new Date(appointmentDate).getTime() + 86400000), 'yyyy-MM-dd')
                 }))
             })
 
@@ -722,6 +726,14 @@ export function AppointmentBillingForm() {
                 transaction={lastSale}
             />
 
+            <SaleDetailsDialog 
+                sale={selectedSaleForDetails}
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                onSuccess={() => refetchSales()}
+                initialAddPayment={initialAddPayment}
+            />
+
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                 <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
                     <DialogHeader className="p-8 border-b bg-muted/30">
@@ -738,7 +750,264 @@ export function AppointmentBillingForm() {
                             </Button>
                         </div>
                     </DialogHeader>
-                    {/* ... History Table and logic remains similar but with updated styling ... */}
+                    <div className="flex-1 overflow-hidden flex flex-col p-8 pt-0 gap-6">
+                        {/* Advanced Filters Bar */}
+                        <div className="flex items-center justify-between gap-4 p-4 bg-muted/10 rounded-3xl border border-border/30">
+                            <div className="relative flex-1 min-w-60">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input 
+                                    placeholder="Search by invoice or patient..." 
+                                    className="pl-10 h-11 bg-background rounded-2xl border-none shadow-sm"
+                                    value={modalSearch}
+                                    onChange={(e) => setModalSearch(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button 
+                                            variant="outline" 
+                                            className={cn(
+                                                "h-11 rounded-2xl gap-2 px-5 border-border/50",
+                                                activeFilterCount > 0 && "bg-primary/5 border-primary text-primary"
+                                            )}
+                                        >
+                                            <Filter className="h-4 w-4" />
+                                            Filters
+                                            {activeFilterCount > 0 && (
+                                                <Badge variant="default" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                                                    {activeFilterCount}
+                                                </Badge>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-5 rounded-[2rem] shadow-2xl border-none" align="end">
+                                        <div className="space-y-5">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-black text-sm uppercase tracking-widest text-muted-foreground">Advanced Filters</h4>
+                                                {activeFilterCount > 0 && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        onClick={() => {
+                                                            setModalStatus("all")
+                                                            setModalPaymentStatus("all")
+                                                            setModalDateRange(undefined)
+                                                            setModalSearch("")
+                                                        }}
+                                                        className="h-8 px-2 text-[10px] font-black uppercase text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                                    >
+                                                        Reset
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="space-y-4">
+                                                <div className="grid gap-2">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Date Range</Label>
+                                                    <DatePickerWithRange 
+                                                        date={modalDateRange} 
+                                                        setDate={setModalDateRange}
+                                                        className="w-full"
+                                                    />
+                                                </div>
+
+                                                <div className="grid gap-2">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Sale Status</Label>
+                                                    <Select value={modalStatus} onValueChange={setModalStatus}>
+                                                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none">
+                                                            <SelectValue placeholder="All Status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                            <SelectItem value="all">All Status</SelectItem>
+                                                            <SelectItem value="pending">Pending</SelectItem>
+                                                            <SelectItem value="completed">Completed</SelectItem>
+                                                            <SelectItem value="returned">Returned</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="grid gap-2">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Payment Status</Label>
+                                                    <Select value={modalPaymentStatus} onValueChange={setModalPaymentStatus}>
+                                                        <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none">
+                                                            <SelectValue placeholder="All Payments" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                                                            <SelectItem value="all">All Payments</SelectItem>
+                                                            <SelectItem value="paid">Fully Paid</SelectItem>
+                                                            <SelectItem value="due">Unpaid (Due)</SelectItem>
+                                                            <SelectItem value="partial">Partial</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+
+                        {/* Recent Activity Table */}
+                        <div className="flex-1 border border-border/50 rounded-[2.5rem] overflow-hidden bg-background shadow-xl shadow-muted/20">
+                            <Table>
+                                <TableHeader className="bg-muted/30">
+                                    <TableRow className="hover:bg-transparent border-b-border/30">
+                                        <TableHead className="w-44 h-14 text-[10px] font-black uppercase tracking-widest pl-8">Invoice & Date</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Patient Details</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Financial Summary</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                                        <TableHead className="text-right text-[10px] font-black uppercase tracking-widest pr-8">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {loadingHistory ? (
+                                        Array.from({ length: 5 }).map((_, i) => (
+                                            <TableRow key={i} className="border-b-border/10">
+                                                <TableCell className="pl-8 py-6">
+                                                    <div className="h-4 w-24 bg-muted animate-pulse rounded-full" />
+                                                    <div className="h-3 w-16 bg-muted animate-pulse rounded-full mt-2" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="h-4 w-32 bg-muted animate-pulse rounded-full" />
+                                                    <div className="h-3 w-20 bg-muted animate-pulse rounded-full mt-2" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="h-4 w-28 bg-muted animate-pulse rounded-full" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="h-6 w-20 bg-muted animate-pulse rounded-full" />
+                                                </TableCell>
+                                                <TableCell className="pr-8">
+                                                    <div className="flex justify-end gap-2">
+                                                        <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : recentSales.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-64 text-center">
+                                                <div className="flex flex-col items-center gap-3 opacity-20">
+                                                    <History className="h-12 w-12" />
+                                                    <p className="font-black uppercase tracking-[0.3em] text-[10px]">No History Records Found</p>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        recentSales.map((sale) => {
+                                            const isDue = sale.paymentStatus === 'due' || Number(sale.dueAmount) > 0;
+                                            return (
+                                                <TableRow key={sale.id} className={cn(
+                                                    "border-b-border/10 transition-all group",
+                                                    isDue ? "text-rose-500 font-bold hover:bg-rose-500/5" : "hover:bg-muted/20"
+                                                )}>
+                                                    <TableCell className="pl-8 py-5">
+                                                        <div className="text-xs font-black tracking-tight">{sale.invoiceNumber}</div>
+                                                        <div className="text-[10px] font-bold text-muted-foreground/60 uppercase mt-1">
+                                                            {format(new Date(sale.createdAt), "MMM dd, yyyy • hh:mm a")}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-9 w-9 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0 group-hover:bg-background transition-colors">
+                                                                <User className="h-4 w-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-xs font-black">{sale.patient?.name || "Walk-in Patient"}</div>
+                                                                <div className="text-[10px] font-bold text-muted-foreground/60">{sale.patient?.phone || "N/A"}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-baseline gap-2">
+                                                            <span className="text-xs font-black">{formatCurrency(sale.netPrice)}</span>
+                                                            {Number(sale.discountAmount) > 0 && (
+                                                                <span className="text-[9px] font-bold text-emerald-600">-{formatCurrency(sale.discountAmount)} Off</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-3 mt-1.5 font-bold uppercase text-[8px]">
+                                                            <span className="text-emerald-600/60">Paid: {formatCurrency(sale.paidAmount)}</span>
+                                                            <span className={cn(isDue ? "text-rose-600" : "text-muted-foreground/40")}>
+                                                                Due: {formatCurrency(sale.dueAmount)}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={sale.status === 'completed' ? 'default' : 'secondary'} className={cn(
+                                                            "rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border-none shadow-sm",
+                                                            sale.status === 'completed' ? "bg-emerald-500 text-white" : "bg-muted/50"
+                                                        )}>
+                                                            {sale.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="pr-8">
+                                                        <div className="flex justify-end items-center gap-2">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => {
+                                                                    setLastSale(sale)
+                                                                    setReceiptOpen(true)
+                                                                }}
+                                                                className="h-10 w-10 rounded-2xl bg-muted/30 hover:bg-primary hover:text-white transition-all group-hover:bg-primary/10 group-hover:text-primary"
+                                                            >
+                                                                <Receipt className="h-4 w-4" />
+                                                            </Button>
+                                                            {isDue && (
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    onClick={() => {
+                                                                        setSelectedSaleForDetails(sale)
+                                                                        setInitialAddPayment(true)
+                                                                        setDetailsOpen(true)
+                                                                    }}
+                                                                    className="h-10 w-10 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                                >
+                                                                    <DollarSign className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        {/* Pagination footer */}
+                        {historyPagination && historyPagination.totalPages > 1 && (
+                            <div className="flex items-center justify-between px-4 pb-4">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                    Displaying {recentSales.length} records • Page {modalPage} of {historyPagination.totalPages}
+                                </p>
+                                <div className="flex gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        disabled={modalPage === 1 || loadingHistory}
+                                        onClick={() => setModalPage(p => p - 1)}
+                                        className="rounded-xl h-9 px-4 border-border/50 font-black uppercase text-[10px]"
+                                    >
+                                        <ChevronLeft className="h-4 w-4 mr-2" /> Prev
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        disabled={modalPage === historyPagination.totalPages || loadingHistory}
+                                        onClick={() => setModalPage(p => p + 1)}
+                                        className="rounded-xl h-9 px-4 border-border/50 font-black uppercase text-[10px]"
+                                    >
+                                        Next <ChevronRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

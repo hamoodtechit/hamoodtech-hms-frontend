@@ -10,6 +10,7 @@ export interface DiagnosticTest {
   isDiagnosticTest: boolean;
   testResultTemplate?: any;
   testGroupId?: string;
+  unit?: string;
   templateType: 'table' | 'narrative';
   templateDescription?: string;
   type: string;
@@ -42,6 +43,7 @@ export interface DiagnosticTestPayload {
   templateType?: 'table' | 'narrative';
   templateDescription?: string;
   type?: string;
+  unit?: string;
   branchId?: string;
 }
 

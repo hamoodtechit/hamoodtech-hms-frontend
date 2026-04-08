@@ -421,7 +421,7 @@ export function TransactionHistory() {
                                             tx.original?.paymentStatus === 'due' ||
                                             Number(tx.original?.dueAmount) > 0
                                         )
-                                            ? "bg-rose-500/15 text-rose-500 font-bold hover:bg-rose-500/20" 
+                                            ? "text-rose-500 font-bold hover:bg-rose-500/5" 
                                             : "hover:bg-muted/50"
                                     )}
                                 >
