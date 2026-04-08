@@ -137,12 +137,6 @@ export function Sidebar() {
       color: "text-blue-400",
       children: [
           {
-              label: "Appointments",
-              href: "/appointments",
-              module: "appointment",
-              permission: "appointment:read",
-          },
-          {
               label: t("patients"),
               href: "/patients",
               module: "patients",

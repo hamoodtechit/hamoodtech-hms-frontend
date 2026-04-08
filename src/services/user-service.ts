@@ -6,6 +6,8 @@ export const userService = {
     page?: number; 
     limit?: number; 
     search?: string; 
+    roleId?: string;
+    branchId?: string;
   }): Promise<UserListResponse> => {
     const response = await api.get<UserListResponse>('/users', { params });
     return response.data;

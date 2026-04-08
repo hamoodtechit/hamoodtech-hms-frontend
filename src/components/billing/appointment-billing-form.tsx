@@ -19,6 +19,7 @@ import { useCreateAppointment } from "@/hooks/appointment-queries"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useDepartments, useEmployees } from "@/hooks/hr-queries"
+import { useUsers } from "@/hooks/user-queries"
 import { useAddSalePayment, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -70,7 +71,10 @@ export function AppointmentBillingForm() {
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
+        branchId: activeStoreId || undefined,
+        limit: 1000 
+    })
     const { data: testsRes } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 100, isActive: true })
     
@@ -107,7 +111,7 @@ export function AppointmentBillingForm() {
     })
 
     const departments = departmentsRes?.data || []
-    const doctors = useMemo(() => doctorsRes?.data || [], [doctorsRes])
+    const users = useMemo(() => usersRes?.data || [], [usersRes])
     const allTests = testsRes?.data || []
     const accounts = accountsRes?.data || []
     const recentSales = recentSalesRes?.data?.sales || []
@@ -167,15 +171,16 @@ export function AppointmentBillingForm() {
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [initialAddPayment, setInitialAddPayment] = useState(false)
     
-    // Auto-fill room based on doctor
+    // Auto-fill room based on user
     useEffect(() => {
         if (selectedDoctorId) {
-            const doctor: any = doctors.find((d: any) => d.id === selectedDoctorId)
-            if (doctor?.chamberOrRoomNumber) {
-                setChamberOrRoomNumber(doctor.chamberOrRoomNumber)
+            const user: any = users.find((u: any) => u.id === selectedDoctorId)
+            // Some users might have employee details attached
+            if (user?.employee?.chamberOrRoomNumber) {
+                setChamberOrRoomNumber(user.employee.chamberOrRoomNumber)
             }
         }
-    }, [selectedDoctorId, doctors])
+    }, [selectedDoctorId, users])
 
     // Cart Helpers
     const addToCart = (service: any) => {
@@ -363,7 +368,6 @@ export function AppointmentBillingForm() {
                                         value={selectedDepartmentId}
                                         onChange={(val) => {
                                             setSelectedDepartmentId(val)
-                                            setSelectedDoctorId("")
                                         }}
                                         options={departments.map(d => ({ id: d.id, name: d.name }))}
                                         placeholder="Choose Department..."
@@ -378,10 +382,12 @@ export function AppointmentBillingForm() {
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={doctors.filter((d: any) => !selectedDepartmentId || d.departmentId === selectedDepartmentId).map((d: any) => ({ id: d.id, name: d.name }))}
-                                        placeholder="Assign Doctor..."
-                                        loading={loadingDoctors}
-                                        disabled={!selectedDepartmentId && departments.length > 0}
+                                        options={users.map((u: any) => ({ 
+                                            id: u.id, 
+                                            name: u.fullName || u.username 
+                                        }))}
+                                        placeholder="Assign Consultant..."
+                                        loading={loadingUsers}
                                         showAll={false}
                                     />
                                 </div>
@@ -528,7 +534,7 @@ export function AppointmentBillingForm() {
                                     </Table>
                                 </div>
                             ) : (
-                                <div className="py-20 text-center border-2 border-dashed rounded-[3rem] bg-indigo-500/[0.02] flex flex-col items-center gap-4 group hover:bg-indigo-500/[0.05] transition-all">
+                                <div className="py-20 text-center border-2 border-dashed rounded-[3rem] bg-indigo-500/2 flex flex-col items-center gap-4 group hover:bg-indigo-500/5 transition-all">
                                     <div className="h-16 w-16 rounded-[2rem] bg-indigo-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <Plus className="h-8 w-8 text-indigo-400" />
                                     </div>
@@ -585,7 +591,7 @@ export function AppointmentBillingForm() {
                                 </div>
                             </div>
 
-                            <div className="space-y-3 p-6 bg-gradient-to-br from-primary/[0.03] to-indigo-500/[0.03] rounded-[2rem] border border-primary/10 shadow-inner">
+                            <div className="space-y-3 p-6 bg-linear-to-br from-primary/3 to-indigo-500/3 rounded-[2rem] border border-primary/10 shadow-inner">
                                 <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
                                     <span>Base Charges</span>
                                     <span className="tabular-nums">{formatCurrency(subtotal)}</span>
@@ -615,9 +621,9 @@ export function AppointmentBillingForm() {
                                         value={paidAmount}
                                         onFocus={(e: any) => e.target.select()} 
                                         onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                        className="h-16 text-3xl font-black border-2 border-primary/20 text-primary bg-primary/[0.02] rounded-[1.25rem] px-6 tabular-nums tracking-tighter focus:ring-4 focus:ring-primary/10 transition-all"
+                                        className="h-16 text-3xl font-black border-2 border-primary/20 text-primary bg-primary/2 rounded-4xl px-6 tabular-nums tracking-tighter focus:ring-4 focus:ring-primary/10 transition-all"
                                     />
-                                    <div className="flex justify-between items-center bg-rose-500/[0.03] p-3 rounded-xl border border-rose-500/10">
+                                    <div className="flex justify-between items-center bg-rose-500/3 p-3 rounded-xl border border-rose-500/10">
                                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Pending Due</span>
                                         <span className="font-black text-rose-600 tracking-tight">{formatCurrency(Math.max(0, total - paidAmount))}</span>
                                     </div>
@@ -669,7 +675,7 @@ export function AppointmentBillingForm() {
                                             {createAppointmentMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <CreditCard className="w-6 h-6" />}
                                             {createAppointmentMutation.isPending ? "Executing..." : "Confirm & Schedule"}
                                         </div>
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000" />
+                                        <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1500" />
                                     </Button>
 
                                     {/* Action Checker List */}
@@ -713,7 +719,7 @@ export function AppointmentBillingForm() {
             <DiagnosticReceiptDialog
                 open={receiptOpen}
                 onOpenChange={setReceiptOpen}
-                sale={lastSale}
+                transaction={lastSale}
             />
 
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
