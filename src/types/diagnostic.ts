@@ -2,10 +2,17 @@ export interface DiagnosticTest {
   id: string;
   branchId?: string;
   name: string;
-  nameBangla?: string;
-  description?: string;
+  nameBangla: string;
+  description: string;
   departmentId: string;
   price: number;
+  reportDays: number;
+  isDiagnosticTest: boolean;
+  testResultTemplate?: any;
+  testGroupId?: string;
+  templateType: 'table' | 'narrative';
+  templateDescription?: string;
+  type: string;
   createdAt: string;
   updatedAt: string;
   department?: {
@@ -13,23 +20,29 @@ export interface DiagnosticTest {
     name: string;
     nameBangla?: string;
   };
-  reportDays?: number;
-  testGroupId?: string;
   testGroup?: {
     id: string;
     name: string;
   };
 }
 
+// Alias for backwards compatibility
+export type HospitalService = DiagnosticTest;
+
 export interface DiagnosticTestPayload {
-  branchId?: string;
   name: string;
   nameBangla?: string;
   description?: string;
-  departmentId: string;
+  departmentId?: string;
   price: number;
   reportDays?: number;
+  isDiagnosticTest?: boolean;
+  testResultTemplate?: any;
   testGroupId?: string;
+  templateType?: 'table' | 'narrative';
+  templateDescription?: string;
+  type?: string;
+  branchId?: string;
 }
 
 export interface DiagnosticTestGroup {
@@ -97,6 +110,8 @@ export interface DiagnosticBlock {
   content?: string;
   // For dynamic values in custom columns
   extraValues?: Record<string, string>;
+  fieldType?: 'text' | 'dropdown';
+  options?: string[];
 }
 
 
@@ -175,6 +190,9 @@ export interface DiagnosticReport {
       id: string;
       name: string;
     };
+    testResultTemplate?: any;
+    templateType?: string;
+    templateDescription?: string;
   };
 }
 
@@ -232,6 +250,9 @@ export interface DiagnosticTestParams {
   limit?: number;
   search?: string;
   departmentId?: string;
+  testGroupId?: string;
+  type?: string;
+  isDiagnosticTest?: boolean;
   branchId?: string;
   isActive?: boolean;
 }

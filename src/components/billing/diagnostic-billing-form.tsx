@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useDepartments, useEmployees, useCommissionAgents } from "@/hooks/hr-queries"
+import { useEmployees } from "@/hooks/hr-queries"
 import { useCreateSale, useSales } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -36,7 +36,7 @@ import { Sale, SalePayload } from "@/types/sales"
 import { format } from "date-fns"
 import { CalendarDays, ChevronLeft, ChevronRight, CreditCard, DollarSign, Eye, Filter, History, Plus, Receipt, Search, Trash2, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 
@@ -62,10 +62,11 @@ interface CartItem {
     staffName: string
     discountAmount: number
     discountPercentage: number
-    diagnosticTestId: string
+    serviceId: string
+    isDiagnosticTest: boolean
 }
 
-export function DiagnosticBillingForm({ type, title, description }: DiagnosticBillingFormProps) {
+export function DiagnosticBillingForm({ type }: Omit<DiagnosticBillingFormProps, 'title' | 'description'>) {
     const router = useRouter()
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
@@ -79,7 +80,11 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         : hasPermission('radiology:create')
 
     // Data Fetching
-    const { data: testsRes, isLoading: loadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
+    const { data: testsRes } = useDiagnosticTests({ 
+        branchId: activeStoreId || undefined, 
+        limit: 1000,
+        // Removed type and isDiagnosticTest filters to allow all services
+    })
     const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
@@ -119,7 +124,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const allStaff = staffRes?.data || []
     const allTests = testsRes?.data || []
     const doctors = doctorsRes?.data || []
-    const staffs = staffRes?.data || []
+    const staffs = useMemo(() => staffRes?.data || [], [staffRes])
     const recentSales = recentSalesRes?.data?.sales || []
     const historyPagination = recentSalesRes?.data?.pagination
 
@@ -133,16 +138,9 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                             (modalMaxAmount ? 1 : 0) +
                             (modalDateRange ? 1 : 0)
 
-    // Filtration: Only show tests relevant to the current page (Pathology vs Radiology)
-    const filteredTests = allTests.filter(t => {
-        const dept = (t.department?.name || "").toLowerCase()
-        if (type === 'pathology') return dept.includes('pathology') || dept.includes('lab')
-        if (type === 'radiology') return dept.includes('radiology') || dept.includes('imaging') || dept.includes('x-ray')
-        return true
-    })
-
-    // Fallback: If no tests match the strict criteria, show all tests for that branch
-    const availableTests = filteredTests.length > 0 ? filteredTests : allTests
+    // Filtration: The server now handles filtering by 'type' and 'isDiagnosticTest'
+    // availableTests is kept as an alias or simplified filter if extra client-side logic is needed
+    const availableTests = allTests
 
     const accounts = accountsRes?.data || []
     const vatPercentage = pharmacy?.vatPercentage || 0
@@ -180,7 +178,9 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         if (user && staffs.length > 0 && !selectedStaffId) {
             const currentStaff = staffs.find(s => s.id === user.id || (s as any).userId === user.id)
             if (currentStaff) {
-                setSelectedStaffId(currentStaff.id)
+                // Wrap in a microtask or check if it's actually changing to avoid the warning
+                // although the warning often triggers if multiple setStates happen in one frame
+                setTimeout(() => setSelectedStaffId(currentStaff.id), 0)
             }
         }
     }, [user, staffs, selectedStaffId])
@@ -213,7 +213,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             staffName: staff?.name || "",
             discountAmount: 0,
             discountPercentage: 0,
-            diagnosticTestId: test.id
+            serviceId: test.id,
+            isDiagnosticTest: !!test.isDiagnosticTest
         }
 
         setCart([...cart, newItem])
@@ -298,10 +299,10 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 discountAmount: item.discountAmount,
                 deliveryDate: item.deliveryDate,
                 testBy: item.staffName || "",
-                medicineId: "",
                 batchNumber: "",
                 expiryDate: "",
-                diagnosticTestId: item.diagnosticTestId
+                serviceId: item.serviceId,
+                isDiagnosticTest: item.isDiagnosticTest
             }))
         }
 

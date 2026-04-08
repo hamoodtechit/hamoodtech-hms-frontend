@@ -38,27 +38,27 @@ export const diagnosticService = {
     await api.delete(`/diagnostic/test-groups/${id}`);
   },
 
-  // Diagnostic Test APIs
+  // Diagnostic Test APIs (Now using /services)
   getDiagnosticTests: async (params?: DiagnosticTestParams): Promise<DiagnosticPaginatedResponse<DiagnosticTest>> => {
-    const response = await api.get<DiagnosticPaginatedResponse<DiagnosticTest>>("/diagnostic/tests", { params });
+    const response = await api.get<DiagnosticPaginatedResponse<DiagnosticTest>>("/services", { params });
     
     return response.data;
   },
 
   createDiagnosticTest: async (data: DiagnosticTestPayload): Promise<DiagnosticTest> => {
-    const response = await api.post("/diagnostic/tests", data);
+    const response = await api.post("/services", data);
     
     return response.data;
   },
 
   updateDiagnosticTest: async (id: string, data: Partial<DiagnosticTestPayload>): Promise<DiagnosticTest> => {
-    const response = await api.patch(`/diagnostic/tests/${id}`, data);
+    const response = await api.patch(`/services/${id}`, data);
     
     return response.data;
   },
 
   deleteDiagnosticTest: async (id: string): Promise<void> => {
-    await api.delete(`/diagnostic/tests/${id}`);
+    await api.delete(`/services/${id}`);
     
   },
 

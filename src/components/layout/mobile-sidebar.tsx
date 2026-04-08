@@ -183,12 +183,6 @@ function SidebarBase() {
               permission: "patient:read",
           },
           {
-              label: "Diagnostic Tests",
-              href: "/diagnostic",
-              module: "diagnostic",
-              permission: "diagnostic-test:create",
-          },
-          {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
               module: "diagnostic",
@@ -216,12 +210,6 @@ function SidebarBase() {
           {
               label: "Radiology Billing",
               href: "/billing/radiology",
-              module: "sales",
-              permission: "radiology:create",
-          },
-          {
-              label: "Extra Charges",
-              href: "/billing/extra-charge",
               module: "sales",
               permission: "radiology:create",
           }
@@ -282,6 +270,12 @@ function SidebarBase() {
       icon: Settings,
       color: "text-zinc-500",
       children: [
+          {
+              label: "Hospital Services",
+              href: "/diagnostic",
+              module: "diagnostic",
+              permission: "diagnostic-test:create",
+          },
           {
               label: "Branches",
               href: "/branches",

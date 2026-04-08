@@ -54,10 +54,10 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
                 </Button>
             </div>
             <div 
-                className="p-6 min-h-[300px] outline-none font-medium leading-[1.8] text-sm overflow-y-auto"
+                className="p-6 min-h-[400px] outline-none font-medium leading-[1.8] text-base overflow-y-auto bg-card"
                 contentEditable
                 dangerouslySetInnerHTML={{ __html: value }}
-                onInput={(e) => onChange(e.currentTarget.innerHTML)}
+                onBlur={(e) => onChange(e.currentTarget.innerHTML)}
                 data-placeholder={placeholder}
             />
             <style jsx>{`
@@ -113,6 +113,13 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const deleteTemplate = useDeleteReportTemplate()
 
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none")
+
+    const DEFAULT_COLUMNS: DiagnosticColumnDef[] = [
+        { id: '1', label: 'Parameter', key: 'parameter', isVisible: true, width: '1.5fr' },
+        { id: '2', label: 'Result', key: 'value', isVisible: true, width: '1fr' },
+        { id: '3', label: 'Unit', key: 'unit', isVisible: true, width: '0.8fr' },
+        { id: '4', label: 'Ref Range', key: 'referenceRange', isVisible: true, width: '1.5fr' }
+    ]
 
     // Initialize/Reset
     useEffect(() => {
@@ -184,24 +191,58 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 setDoctorDesignation(res.doctorDesignation || "");
                 setTechnicianId(report.technicianId || user?.id || "");
             } else {
-                // Initial empty state
+                // Initial empty state - check for service-level template
                 setTechnicianId(user?.id || "");
-                setBlocks([{ id: uuidv4(), type: 'parameter', parameter: "", value: "", unit: "", referenceRange: "" }]);
+                
+                const serviceTemplate = report.diagnosticTest?.testResultTemplate;
+                
+                if (Array.isArray(serviceTemplate) && serviceTemplate.length > 0) {
+                    const templateBlocks: DiagnosticBlock[] = serviceTemplate.map((p: any) => ({
+                        id: uuidv4(),
+                        type: 'parameter',
+                        parameter: p.name || "",
+                        value: p.result || "",
+                        unit: p.unit || "",
+                        referenceRange: p.refRange || "",
+                        fieldType: p.fieldType || 'text',
+                        options: p.options || [],
+                        columnDefs: DEFAULT_COLUMNS.map(col => {
+                            if (col.key === 'unit' && p.unitEnabled === false) return { ...col, isVisible: false }
+                            if (col.key === 'referenceRange' && p.refRangeEnabled === false) return { ...col, isVisible: false }
+                            return col
+                        })
+                    }));
+
+                    // If it's a narrative test, add a narrative block at the top
+                    if (report.diagnosticTest?.templateType === 'narrative') {
+                        templateBlocks.unshift({
+                            id: uuidv4(),
+                            type: 'narrative',
+                            content: report.diagnosticTest?.templateDescription || ""
+                        });
+                        setMode('narrative');
+                    }
+
+                    setBlocks(templateBlocks);
+                } else {
+                    const initialBlocks: DiagnosticBlock[] = [];
+                    if (report.diagnosticTest?.templateType === 'narrative') {
+                        initialBlocks.push({ id: uuidv4(), type: 'narrative', content: "" });
+                        setMode('narrative');
+                    } else {
+                        initialBlocks.push({ id: uuidv4(), type: 'parameter', parameter: "", value: "", unit: "", referenceRange: "", columnDefs: DEFAULT_COLUMNS });
+                    }
+                    setBlocks(initialBlocks);
+                }
+
                 // Pre-fill consultant from sale
                 const saleDoc = (report.saleItem as any)?.sale?.doctor;
                 if (saleDoc?.name) setConsultantName(saleDoc.name);
                 if (saleDoc?.designation?.name) setConsultantDesignation(saleDoc.designation.name);
             }
         }
-    }, [open, report?.id, user?.id])
+    }, [open, report?.id, user?.id, DEFAULT_COLUMNS])
 
-
-    const DEFAULT_COLUMNS: DiagnosticColumnDef[] = [
-        { id: '1', label: 'Parameter', key: 'parameter', isVisible: true, width: '1.5fr' },
-        { id: '2', label: 'Result', key: 'value', isVisible: true, width: '1fr' },
-        { id: '3', label: 'Unit', key: 'unit', isVisible: true, width: '0.8fr' },
-        { id: '4', label: 'Ref Range', key: 'referenceRange', isVisible: true, width: '1.5fr' }
-    ]
 
     const addBlock = (type: DiagnosticBlockType, index?: number) => {
         const newBlock: DiagnosticBlock = {
@@ -418,7 +459,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[95vw] sm:max-w-[95vw] h-[92vh] p-0 gap-0 border-none bg-background shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-                <DialogHeader className="p-6 pb-2 shrink-0 border-b bg-muted/5">
+                <DialogHeader className="p-6 pb-2 shrink-0 border-b bg-card">
                     <div className="flex items-center justify-between">
                         <div>
                             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2 text-blue-600">
@@ -467,8 +508,28 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 </DialogHeader>                <div className="flex-1 overflow-hidden">
                     <div className="h-full flex flex-col">
                         <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b bg-muted/5">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">Add Block:</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">Block View:</span>
+                                <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
+                                    <Button 
+                                        variant={mode === 'table' ? 'default' : 'ghost'} 
+                                        size="sm" 
+                                        onClick={() => setMode('table')}
+                                        className={cn("h-8 rounded-lg gap-2 font-bold transition-all px-4", mode === 'table' ? "bg-blue-600 shadow-md text-white border-none" : "text-muted-foreground")}
+                                    >
+                                        <Columns className="w-3.5 h-3.5" /> Table
+                                    </Button>
+                                    <Button 
+                                        variant={mode === 'narrative' ? 'default' : 'ghost'} 
+                                        size="sm" 
+                                        onClick={() => setMode('narrative')}
+                                        className={cn("h-8 rounded-lg gap-2 font-bold transition-all px-4", mode === 'narrative' ? "bg-indigo-600 shadow-md text-white border-none" : "text-muted-foreground")}
+                                    >
+                                        <FileText className="w-3.5 h-3.5" /> Narrative
+                                    </Button>
+                                </div>
+                                <div className="w-px h-6 bg-border/50 mx-2" />
+                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">Insert:</span>
                                 <Button variant="outline" size="sm" onClick={() => addBlock('header')} className="h-9 rounded-lg gap-2 font-bold bg-blue-500/5 text-blue-600 border-blue-500/20">
                                     <Type className="w-3.5 h-3.5" /> Header
                                 </Button>
@@ -531,7 +592,19 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                         </DropdownMenu>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                                <Activity className="w-3 h-3" /> Main Result / Summary
+                                            </Label>
+                                            <Input 
+                                                value={reportNotes || ""} 
+                                                onChange={e => setReportNotes(e.target.value)} 
+                                                placeholder="e.g. Normal, Reactive, etc."
+                                                className="h-12 rounded-xl bg-primary/5 border-primary/20 text-sm font-black text-primary shadow-sm"
+                                            />
+                                        </div>
+
                                         {visibleFields.has('machineInfo') && (
                                             <div className="space-y-1 group relative">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -541,11 +614,14 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                     value={machineInfo} 
                                                     onChange={e => setMachineInfo(e.target.value)} 
                                                     placeholder="e.g. Sysmex XN-1000 Automated Analyzer"
-                                                    className="h-10 rounded-xl bg-background border-none text-xs shadow-sm pr-10"
+                                                    className="h-10 rounded-xl bg-muted/40 border-none text-xs shadow-sm pr-10"
                                                 />
                                                 <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('machineInfo')} className="h-6 w-6 absolute right-2 top-6 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></Button>
                                             </div>
                                         )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
                                         {visibleFields.has('consultantName') && (
                                             <div className="space-y-1 group relative">
                                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -562,7 +638,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                     if (!openDoctorSelect) setOpenDoctorSelect(true)
                                                                 }} 
                                                                 placeholder="Search or type doctor name..."
-                                                                className="h-10 rounded-xl bg-background border-none text-xs shadow-sm pr-10"
+                                                                className="h-10 rounded-xl bg-muted/40 border-none text-xs shadow-sm pr-10"
                                                             />
                                                             <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('consultantName')} className="h-6 w-6 absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <Trash2 className="w-3 h-3" />
@@ -671,7 +747,16 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                     <Droppable droppableId="blocks">
                                         {(provided) => (
                                             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                                                {blocks.map((block, index) => (
+                                                {blocks
+                                                    .filter(block => {
+                                                        if (mode === 'narrative') {
+                                                            // In narrative mode, hide technical parameter rows unless they are headers
+                                                            return block.type !== 'parameter' || block.isHeader;
+                                                        }
+                                                        // In table mode, show everything
+                                                        return true;
+                                                    })
+                                                    .map((block, index) => (
                                                     <Draggable key={block.id} draggableId={block.id} index={index}>
                                                         {(provided, snapshot) => (
                                                             <div
@@ -775,8 +860,28 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                 const isCore = ['parameter', 'value', 'unit', 'referenceRange'].includes(col.key);
                                                                                 const val = isCore ? (block as any)[col.key] : (block.extraValues?.[col.key] || "");
                                                                                 
+                                                                                // Render logic for Result column
+                                                                                if (col.key === 'value' && block.fieldType === 'dropdown') {
+                                                                                    return (
+                                                                                        <Select 
+                                                                                            key={col.key}
+                                                                                            value={val}
+                                                                                            onValueChange={(newVal) => updateBlock(block.id, 'value', newVal)}
+                                                                                        >
+                                                                                            <SelectTrigger className="h-10 rounded-xl bg-background border border-border/50 shadow-sm font-black text-center focus:ring-0">
+                                                                                                <SelectValue placeholder="Select..." />
+                                                                                            </SelectTrigger>
+                                                                                            <SelectContent className="rounded-xl">
+                                                                                                {Array.isArray(block.options) && block.options.map((opt: string) => (
+                                                                                                    <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>
+                                                                                                ))}
+                                                                                            </SelectContent>
+                                                                                        </Select>
+                                                                                    )
+                                                                                }
+
                                                                                 return (
-                                                                                    <Input 
+                                                                                    <Textarea 
                                                                                         key={col.key}
                                                                                         value={val} 
                                                                                         onChange={e => {
@@ -786,15 +891,26 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                                 updateBlock(block.id, 'extraValues', nextExtra)
                                                                                             }
                                                                                         }}
+                                                                                        onKeyDown={(e) => {
+                                                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                                                e.preventDefault();
+                                                                                                // Focus next logic could go here
+                                                                                            }
+                                                                                        }}
                                                                                         placeholder={col.label}
                                                                                         className={cn(
-                                                                                            "h-10 border-none bg-muted/20 rounded-xl px-4",
+                                                                                            "min-h-[40px] h-auto border-none bg-muted/20 rounded-xl px-4 py-2 resize-none overflow-hidden focus-visible:ring-0",
                                                                                             col.key === 'parameter' && "font-bold",
                                                                                             col.key === 'parameter' && block.isHeader && "text-blue-700 uppercase",
                                                                                             col.key === 'value' && "text-center font-black bg-background border border-border/50 shadow-sm",
                                                                                             col.key === 'value' && block.isAbnormal && "bg-red-50 text-red-600 border-red-200 shadow-none",
                                                                                             !isCore && "italic text-indigo-600 bg-indigo-50/30"
                                                                                         )}
+                                                                                        rows={1}
+                                                                                        onInput={(e: any) => {
+                                                                                            e.target.style.height = 'auto';
+                                                                                            e.target.style.height = e.target.scrollHeight + 'px';
+                                                                                        }}
                                                                                     />
                                                                                 )
                                                                             })}

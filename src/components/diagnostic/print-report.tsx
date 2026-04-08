@@ -90,6 +90,10 @@ export function PrintReport({ report }: PrintReportProps) {
                                 <td className="py-1">: {patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</td>
                             </tr>
                             <tr>
+                                <td className="pr-1 py-1 font-bold">Address</td>
+                                <td className="pr-4 py-1" colSpan={3}>: {patient?.address || "—"}</td>
+                            </tr>
+                            <tr>
                                 <td className="pr-1 py-1 font-bold">Consultant</td>
                                 <td className="pr-4 py-1 text-[10pt]">
                                     : <span className="font-bold">{result?.consultantName || (detail as any)?.sale?.doctor?.name || "—"}</span>
@@ -164,7 +168,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                                     key={cIdx} 
                                                                     style={{ width: col.width }} 
                                                                     className={cn(
-                                                                        "py-2 px-1",
+                                                                        "py-2 px-1 text-[10pt] leading-snug break-words whitespace-pre-wrap",
                                                                         col.key !== 'parameter' && "text-center",
                                                                         isParameter && (block.isBold || block.isHeader) ? (block.isHeader ? "font-black text-blue-900 uppercase text-[10.5pt] underline" : "font-bold italic text-blue-900") : "",
                                                                         isResult && "font-black"

@@ -2,6 +2,7 @@ import { Branch, Patient, PaymentMethod } from "./pharmacy";
 
 export interface SaleItem {
   medicineId?: string;
+  serviceId?: string; // Prisma model uses serviceId
   itemName: string;
   itemDescription?: string;
   unit: string;
@@ -9,12 +10,14 @@ export interface SaleItem {
   mrp: number | string;
   discountPercentage?: number | string;
   discountAmount?: number | string;
+  totalPrice?: number | string;
   quantity: number | string;
   batchNumber?: string;
   expiryDate?: string;
   dosageForm?: string;
   deliveryDate?: string;
   testBy?: string;
+  isDiagnosticTest?: boolean;
 }
 
 export interface SalePayment {
@@ -33,7 +36,7 @@ export interface Sale {
   invoiceNumber: string;
   totalPrice: number | string;
   netPrice: number | string;
-  status: 'pending' | 'completed' | 'rejected';
+  status: 'pending' | 'completed' | 'rejected' | 'returned';
   paymentStatus: 'paid' | 'due' | 'partial';
   paymentMethod: PaymentMethod;
   paidAmount: number | string;
@@ -42,9 +45,13 @@ export interface Sale {
   discountAmount: number | string;
   taxPercentage: number | string;
   taxAmount: number | string;
+  isIndoorSale: boolean;
+  note?: string;
+  appointmentId?: string;
+  patientAdmissionId?: string;
   cashRegisterSessionId?: string;
   saleItems: SaleItemDetails[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
   commissionAgentId?: string;
@@ -72,7 +79,7 @@ export interface SalePaymentPayload {
 export interface SalePayload {
   branchId?: string;
   patientId?: string;
-  status: 'pending' | 'completed' | 'rejected';
+  status: 'pending' | 'completed' | 'rejected' | 'returned';
   paymentMethod: PaymentMethod;
   paymentStatus?: 'paid' | 'due' | 'partial';
   paidAmount: number | string;
@@ -81,9 +88,13 @@ export interface SalePayload {
   discountAmount: number | string;
   taxPercentage: number | string;
   taxAmount: number | string;
+  isIndoorSale?: boolean;
+  note?: string;
+  appointmentId?: string;
+  patientAdmissionId?: string;
   payments?: SalePayment[];
   saleItems: SaleItem[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
   commissionAgentId?: string;
@@ -91,9 +102,8 @@ export interface SalePayload {
 }
 
 export interface UpdateSalePayload extends Partial<SalePayload> {
-  // Matches the user provided schema
   patientId?: string;
-  status?: 'pending' | 'completed' | 'rejected';
+  status?: 'pending' | 'completed' | 'rejected' | 'returned';
   paymentMethod?: PaymentMethod;
   discountPercentage?: number | string;
   discountAmount?: number | string;
@@ -107,11 +117,12 @@ export interface UpdateSalePayload extends Partial<SalePayload> {
     name: string;
   };
   saleItems?: SaleItem[];
-  type?: 'general-sale' | 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
 }
 
 export interface SaleReturnItem {
   medicineId?: string;
+  serviceId?: string;
   itemName: string;
   itemDescription?: string;
   unit: string;

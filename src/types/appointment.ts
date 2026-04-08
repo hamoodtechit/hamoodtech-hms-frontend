@@ -59,6 +59,12 @@ export interface AppointmentPayload {
   status?: AppointmentStatus;
   commissionAgentId?: string;
   chamberOrRoomNumber?: string;
+  items?: {
+    serviceId: string;
+    quantity: number;
+    unitPrice: number;
+    isDiagnosticTest?: boolean;
+  }[];
 }
 
 export interface AppointmentPaginatedResponse {
