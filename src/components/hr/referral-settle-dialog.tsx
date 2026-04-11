@@ -76,7 +76,7 @@ export function ReferralQuickSettleDialog({
     }
 
     const selectedCommissions = commissions.filter(c => selectedIds.includes(c.id))
-    const totalSelectedAmount = selectedCommissions.reduce((sum, c) => sum + (Number(c.commissionAmount) || 0), 0)
+    const totalSelectedAmount = selectedCommissions.reduce((sum, c) => sum + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0)
 
     return (
         <>
@@ -134,7 +134,7 @@ export function ReferralQuickSettleDialog({
                                     <div className="text-right">
                                         <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest leading-none mb-1">Total Outstanding</p>
                                         <p className="text-lg font-black text-primary leading-none tracking-tighter">
-                                            {formatCurrency(commissions.reduce((acc, c) => acc + (Number(c.commissionAmount) || 0), 0))}
+                                            {formatCurrency(commissions.reduce((acc, c) => acc + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))}
                                         </p>
                                     </div>
                                 </div>
@@ -163,15 +163,15 @@ export function ReferralQuickSettleDialog({
                                                                 {format(new Date(c.createdAt), "dd MMM yyyy")}
                                                             </span>
                                                             <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                                                            <span className="text-[9px] font-black text-primary/60 uppercase">
-                                                                {c.commissionPercentage}% Rate
+                                                             <span className="text-[9px] font-black text-primary/60 uppercase">
+                                                                {(c as any).commissionPercentage ? `${(c as any).commissionPercentage}% Rate` : (c.commissionType === "percentage" ? "Percentage" : "Fixed") + " Type"}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-sm font-black text-foreground tracking-tighter">
-                                                        {formatCurrency(c.commissionAmount)}
+                                                        {formatCurrency(c.commissionValue || (c as any).commissionAmount)}
                                                     </p>
                                                     <p className="text-[9px] font-bold text-muted-foreground/40 italic">Service Earn</p>
                                                 </div>

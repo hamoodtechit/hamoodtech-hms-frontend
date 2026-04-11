@@ -341,21 +341,28 @@ export interface LeaveFilters {
 
 export interface Commission {
   id: string;
+  branchId: string;
   referralId: string;
-  patientId: string;
+  saleId: string;
   serviceId: string;
   serviceName: string;
-  patientName: string;
-  patientNumber?: string;
-  saleId: string;
-  invoiceNumber: string;
-  commissionAmount: number;
-  commissionPercentage: number;
+  patientName?: string;
+  invoiceNumber?: string;
+  commissionType: string;
+  commissionValue: string | number;
   isPaid: boolean;
-  paymentId?: string;
   createdAt: string;
   updatedAt: string;
-  referral?: ReferralPerson;
+  referral?: {
+    id: string;
+    name: string;
+    phone: string;
+  };
+  sale?: {
+    id: string;
+    invoiceNumber: string;
+    netPrice: string | number;
+  };
 }
 
 export interface CommissionFilters {

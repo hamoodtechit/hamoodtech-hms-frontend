@@ -74,9 +74,12 @@ export default function ReferralDetailPage() {
 
     useEffect(() => {
         if (commissionsRes) {
-            console.log("Commissions API Response:", commissionsRes);
+            console.log("--- [DEBUG] Commissions API Response (Detail Page) ---", commissionsRes);
         }
-    }, [commissionsRes]);
+        if (referralRes) {
+            console.log("--- [DEBUG] Referral API Response (Detail Page) ---", referralRes);
+        }
+    }, [commissionsRes, referralRes]);
 
     const commissions = commissionsRes?.data || []
 
@@ -162,7 +165,7 @@ export default function ReferralDetailPage() {
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
                                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Earnings</p>
-                                <p className="text-xl font-black text-primary">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
+                                <p className="text-xl font-black text-primary">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || (referral.yearlyStats as any)?.totalCommissionValue || 0)}</p>
                             </div>
                             <Separator orientation="vertical" className="h-10 mx-2 hidden sm:block" />
                             <Badge className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20">
@@ -299,7 +302,7 @@ export default function ReferralDetailPage() {
                                 </TabsList>
 
                                 <TabsContent value="performance" className="space-y-6 m-0">
-                                    <div className="grid gap-4 sm:grid-cols-3">
+                                    <div className="grid gap-4 sm:grid-cols-2">
                                         <Card className="bg-primary/5 border-primary/10 shadow-sm">
                                             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                                                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Referred Orders</CardTitle>
@@ -321,16 +324,6 @@ export default function ReferralDetailPage() {
                                             <CardContent>
                                                 <div className="text-3xl font-black text-emerald-700">{formatCurrency(referral.yearlyStats?.totalSalesAmount || 0)}</div>
                                                 <p className="text-[10px] mt-1 text-emerald-600/70 font-bold uppercase">Total Patient Billing</p>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="bg-amber-500/5 border-amber-500/10 shadow-sm">
-                                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Net Payouts</CardTitle>
-                                                <Wallet className="h-4 w-4 text-amber-600" />
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-3xl font-black text-amber-600">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</div>
-                                                <p className="text-[10px] mt-1 text-amber-600/70 font-bold uppercase">Commission Settled</p>
                                             </CardContent>
                                         </Card>
                                     </div>
@@ -364,14 +357,6 @@ export default function ReferralDetailPage() {
                                                     <div className="space-y-1">
                                                         <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Cases Closed</p>
                                                         <p className="text-2xl font-black text-foreground">{referral.yearlyStats?.totalSalesCount || 0}</p>
-                                                    </div>
-                                                    <div className="space-y-1 border-t pt-3 border-muted">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Total Sales</p>
-                                                        <p className="text-2xl font-black text-foreground">{formatCurrency(referral.yearlyStats?.totalSalesAmount || 0)}</p>
-                                                    </div>
-                                                    <div className="space-y-1 border-t pt-3 border-muted">
-                                                        <p className="text-[10px] text-emerald-600 uppercase font-black tracking-widest">Total Commission</p>
-                                                        <p className="text-2xl font-black text-emerald-600">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -415,10 +400,10 @@ export default function ReferralDetailPage() {
                                             {selectedIds.length > 0 && (
                                                 <Button 
                                                     onClick={() => setPayoutOpen(true)}
-                                                    className="bg-primary text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20"
+                                                    className="h-10 px-6 rounded-xl bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
                                                 >
                                                     <Wallet className="w-4 h-4 mr-2" />
-                                                    Process Payout ({formatCurrency(selectedCommissions.reduce((s, c) => s + c.commissionAmount, 0))})
+                                                    Process Payout ({formatCurrency(selectedCommissions.reduce((s, c) => s + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))})
                                                 </Button>
                                             )}
                                         </div>
@@ -483,8 +468,8 @@ export default function ReferralDetailPage() {
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell className="text-center">
-                                                                <p className="text-sm font-black text-foreground">{formatCurrency(comm.commissionAmount)}</p>
-                                                                <p className="text-[9px] text-muted-foreground font-medium">{comm.commissionPercentage}% Rate</p>
+                                                                <p className="text-sm font-black text-foreground">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</p>
+                                                                <p className="text-[9px] text-muted-foreground font-medium">{(comm as any).commissionPercentage || comm.commissionType === "percentage" ? "Percentage" : "Fixed"} Rate</p>
                                                             </TableCell>
                                                             <TableCell className="text-center">
                                                                 {comm.isPaid ? (

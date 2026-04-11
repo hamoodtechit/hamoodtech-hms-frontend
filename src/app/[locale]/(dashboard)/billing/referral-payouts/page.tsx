@@ -144,17 +144,15 @@ export default function ReferralPayoutsPage() {
                             <Table>
                                 <TableHeader className="bg-muted/30">
                                     <TableRow className="hover:bg-transparent border-muted/50">
-                                        <TableHead className="w-[300px] pl-8 text-[10px] font-black uppercase tracking-widest h-14">Partner Info</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center h-14">Structure</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center h-14 text-primary">Cumulative Earn</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center h-14">Status</TableHead>
-                                        <TableHead className="text-right pr-8 h-14">Actions</TableHead>
+                                        <TableHead className="pl-8 text-[10px] font-black uppercase tracking-widest h-14 w-1/2">Partner Info</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center h-14 w-1/4">Structure</TableHead>
+                                        <TableHead className="text-right pr-8 h-14 w-1/4">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-96 text-center">
+                                            <TableCell colSpan={3} className="h-96 text-center">
                                                 <div className="flex flex-col items-center gap-4">
                                                     <Loader2 className="w-12 h-12 animate-spin text-primary/30" />
                                                     <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40 italic">Syncing Partners...</p>
@@ -163,7 +161,7 @@ export default function ReferralPayoutsPage() {
                                         </TableRow>
                                     ) : referrals.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-96 text-center">
+                                            <TableCell colSpan={3} className="h-96 text-center">
                                                 <div className="flex flex-col items-center gap-4">
                                                     <div className="h-20 w-20 rounded-full bg-muted/30 flex items-center justify-center">
                                                         <Activity className="w-10 h-10 text-muted-foreground/30" />
@@ -199,23 +197,6 @@ export default function ReferralPayoutsPage() {
                                                     ) : (
                                                         <Badge variant="outline" className="px-3 py-1 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20 font-bold text-[10px] uppercase tracking-tighter rounded-lg">
                                                             External
-                                                        </Badge>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <p className="font-black text-base text-primary/80 tracking-tighter">
-                                                        {formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}
-                                                    </p>
-                                                    <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Cumulative</p>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    {referral.isActive ? (
-                                                        <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-black text-[9px] uppercase px-3 py-1 rounded-full border border-emerald-500/10 shadow-sm shadow-emerald-500/5">
-                                                            Active Partner
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge className="bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-white transition-all font-black text-[9px] uppercase px-3 py-1 rounded-full border border-rose-500/10 shadow-sm shadow-rose-500/5">
-                                                            Inactive
                                                         </Badge>
                                                     )}
                                                 </TableCell>
