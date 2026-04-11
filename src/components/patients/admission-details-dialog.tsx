@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 import {
     Dialog,
     DialogContent,
@@ -22,11 +24,14 @@ import {
     UserCheck,
     MapPin,
     Hash,
-    Receipt
+    Receipt,
+    Plus
 } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { AdmissionStatus } from "@/types/patient"
+import { AddAdmissionServiceDialog } from "./add-service-dialog"
+import { Button } from "@/components/ui/button"
 
 interface AdmissionDetailsDialogProps {
     open: boolean
@@ -35,7 +40,8 @@ interface AdmissionDetailsDialogProps {
 }
 
 export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: AdmissionDetailsDialogProps) {
-    const { data: res, isLoading } = useAdmission(admissionId || "")
+    const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
+    const [addServiceOpen, setAddServiceOpen] = useState(false)
     
     const admission = res?.data?.patientAdmission
     const sale = res?.data?.sale
@@ -208,12 +214,25 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                             </div>
 
                             {/* Financial Details / Sale Information */}
-                            {sale && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-blue-500">
                                         <Receipt className="h-4 w-4" />
                                         <h3 className="text-xs font-black uppercase tracking-widest font-black tracking-tight">Financial Record (Indoor Sale)</h3>
                                     </div>
+                                    {admission?.status === 'admitted' && (
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            className="h-8 px-3 rounded-xl border-blue-500/20 text-blue-600 hover:bg-blue-500/5 gap-2 text-[10px] font-black uppercase tracking-widest"
+                                            onClick={() => setAddServiceOpen(true)}
+                                        >
+                                            <Plus className="h-3.5 w-3.5" />
+                                            Add Service
+                                        </Button>
+                                    )}
+                                </div>
+                                {sale ? (
                                     <div className="bg-blue-500/5 p-6 rounded-3xl border border-blue-500/10 overflow-hidden relative group">
                                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 group-hover:rotate-12 transition-transform">
                                             <Receipt className="h-24 w-24" />
@@ -260,8 +279,28 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="bg-muted/10 border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3">
+                                        <div className="h-12 w-12 rounded-2xl bg-muted/20 flex items-center justify-center text-muted-foreground/30">
+                                            <Receipt className="h-6 w-6" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">No service charges recorded yet</p>
+                                            <p className="text-[9px] font-bold text-muted-foreground/40 italic">Add bed charges or diagnostic tests to manage IPD bill</p>
+                                        </div>
+                                        {admission?.status === 'admitted' && (
+                                            <Button 
+                                                size="sm" 
+                                                variant="secondary" 
+                                                className="mt-2 h-9 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest gap-2"
+                                                onClick={() => setAddServiceOpen(true)}
+                                            >
+                                                <Plus className="h-4 w-4" /> Add First Service
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Institutional Notes */}
                             <div className="space-y-4 pb-4">
@@ -280,6 +319,13 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                         </div>
                     )}
                 </ScrollArea>
+
+                <AddAdmissionServiceDialog 
+                    open={addServiceOpen}
+                    onOpenChange={setAddServiceOpen}
+                    admission={admission || null}
+                    onSuccess={() => refetch()}
+                />
             </DialogContent>
         </Dialog>
     )

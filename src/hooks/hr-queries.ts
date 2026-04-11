@@ -11,7 +11,8 @@ import {
   LeaveTypeFilters,
   LeavePayload,
   LeaveFilters,
-  ApproveLeavePayload
+  ApproveLeavePayload,
+  ReferralPersonPayload
 } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
@@ -23,8 +24,8 @@ export const HR_KEYS = {
   designations: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "designations", params] as const : [...HR_KEYS.all, "designations"] as const,
   employees: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "employees", params] as const : [...HR_KEYS.all, "employees"] as const,
   employee: (id: string) => [...HR_KEYS.all, "employee", id] as const,
-  commissionAgents: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "commissionAgents", params] as const : [...HR_KEYS.all, "commissionAgents"] as const,
-  commissionAgent: (id: string) => [...HR_KEYS.all, "commissionAgent", id] as const,
+  referrals: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "referrals", params] as const : [...HR_KEYS.all, "referrals"] as const,
+  referral: (id: string) => [...HR_KEYS.all, "referral", id] as const,
   attendance: (params?: AttendanceFilters) => params ? [...HR_KEYS.all, "attendance", params] as const : [...HR_KEYS.all, "attendance"] as const,
   holidays: (params?: HolidayFilters) => params ? [...HR_KEYS.all, "holidays", params] as const : [...HR_KEYS.all, "holidays"] as const,
   holiday: (id: string) => [...HR_KEYS.all, "holiday", id] as const,
@@ -81,49 +82,50 @@ export function useDeleteHoliday() {
   });
 }
 
-// Commission Agent Hooks
-export function useCommissionAgents(params?: { page?: number; limit?: number; search?: string; branchId?: string }) {
+// Referral Person Hooks
+export function useReferrals(params?: { page?: number; limit?: number; search?: string; branchId?: string }) {
   return useQuery({
-    queryKey: HR_KEYS.commissionAgents(params),
-    queryFn: () => hrService.getCommissionAgents(params),
+    queryKey: HR_KEYS.referrals(params),
+    queryFn: () => hrService.getReferrals(params),
   });
 }
 
-export function useCommissionAgent(id: string) {
+export function useReferral(id: string) {
   return useQuery({
-    queryKey: HR_KEYS.commissionAgent(id),
-    queryFn: () => hrService.getCommissionAgent(id),
+    queryKey: HR_KEYS.referral(id),
+    queryFn: () => hrService.getReferral(id),
     enabled: !!id,
   });
 }
 
-export function useCreateCommissionAgent() {
+export function useCreateReferral() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => hrService.createCommissionAgent(data),
+    mutationFn: (data: ReferralPersonPayload) => hrService.createReferral(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.commissionAgents() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.referrals() });
     },
   });
 }
 
-export function useUpdateCommissionAgent() {
+export function useUpdateReferral() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => 
-      hrService.updateCommissionAgent(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<ReferralPersonPayload> }) => 
+      hrService.updateReferral(id, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.referrals() });
       queryClient.invalidateQueries({ queryKey: HR_KEYS.all });
     },
   });
 }
 
-export function useDeleteCommissionAgent() {
+export function useDeleteReferral() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => hrService.deleteCommissionAgent(id),
+    mutationFn: (id: string) => hrService.deleteReferral(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.commissionAgents() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.referrals() });
     },
   });
 }

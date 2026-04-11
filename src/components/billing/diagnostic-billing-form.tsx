@@ -69,7 +69,7 @@ import { toast } from "sonner"
 
 import { PatientSearch } from "@/components/pharmacy/pos/patient-search"
 import { SearchableSelect } from "@/components/shared/searchable-select"
-import { CommissionAgentSearch } from "@/components/hr/agent-search"
+import { ReferralSearch } from "@/components/hr/referral-search"
 import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 interface DiagnosticBillingFormProps {
@@ -181,7 +181,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     // Form State
     const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
-    const [selectedCommissionAgentId, setSelectedCommissionAgentId] = useState<string>("")
+    const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>("")
     const [selectedTestId, setSelectedTestId] = useState<string>("")
     const [selectedStaffId, setSelectedStaffId] = useState<string>("") 
     const [roomNumber, setRoomNumber] = useState<string>("")
@@ -283,7 +283,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             staffId: cart.find(c => c.staffId)?.staffId,
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,
-            commissionAgentId: selectedCommissionAgentId || undefined,
+            referralPersonId: selectedReferralPersonId || undefined,
             chamberOrRoomNumber: roomNumber || undefined,
             paymentStatus: paidAmount >= total ? 'paid' : paidAmount > 0 ? 'partial' : 'due',
             paidAmount: paidAmount,
@@ -326,7 +326,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             setSelectedCustomer(null)
             setSelectedDoctorId("")
             setPaidAmount(0)
-            setSelectedCommissionAgentId("")
+            setSelectedReferralPersonId("")
             setDiscount(0)
             setDiscountFixedAmount(0)
             setRoomNumber("")
@@ -439,9 +439,9 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
 
                                 <div className="space-y-3">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Facilitator / Agent</Label>
-                                    <CommissionAgentSearch 
-                                        selectedAgentId={selectedCommissionAgentId}
-                                        onSelect={(agent) => setSelectedCommissionAgentId(agent?.id || "")}
+                                    <ReferralSearch 
+                                        selectedReferralId={selectedReferralPersonId}
+                                        onSelect={(referral) => setSelectedReferralPersonId(referral?.id || "")}
                                     />
                                 </div>
 

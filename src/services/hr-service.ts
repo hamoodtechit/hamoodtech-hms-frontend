@@ -7,8 +7,8 @@ import {
     Employee,
     EmployeePayload,
     HRPaginatedResponse,
-    CommissionAgent,
-    CommissionAgentPayload,
+    ReferralPerson,
+    ReferralPersonPayload,
     Attendance,
     AttendancePayload,
     AttendanceFilters,
@@ -136,34 +136,34 @@ export const hrService = {
     await api.delete(`/hr/employees/${id}`);
   },
 
-  // Commission Agent APIs
-  getCommissionAgents: async (params?: { 
+  // Referral Person APIs
+  getReferrals: async (params?: { 
     page?: number | string; 
     limit?: number | string; 
     search?: string; 
     branchId?: string;
-  }): Promise<HRPaginatedResponse<CommissionAgent>> => {
-    const response = await api.get<HRPaginatedResponse<CommissionAgent>>("/commission-agents", { params });
+  }): Promise<HRPaginatedResponse<ReferralPerson>> => {
+    const response = await api.get<HRPaginatedResponse<ReferralPerson>>("/referrals", { params });
     return response.data;
   },
 
-  getCommissionAgent: async (id: string): Promise<{ success: boolean; data: CommissionAgent }> => {
-    const response = await api.get<{ success: boolean; data: CommissionAgent }>(`/commission-agents/${id}`);
+  getReferral: async (id: string): Promise<{ success: boolean; data: ReferralPerson }> => {
+    const response = await api.get<{ success: boolean; data: ReferralPerson }>(`/referrals/${id}`);
     return response.data;
   },
 
-  createCommissionAgent: async (data: CommissionAgentPayload): Promise<CommissionAgent> => {
-    const response = await api.post("/commission-agents", data);
+  createReferral: async (data: ReferralPersonPayload): Promise<ReferralPerson> => {
+    const response = await api.post("/referrals", data);
     return response.data;
   },
 
-  updateCommissionAgent: async (id: string, data: Partial<CommissionAgentPayload>): Promise<CommissionAgent> => {
-    const response = await api.put(`/commission-agents/${id}`, data);
+  updateReferral: async (id: string, data: Partial<ReferralPersonPayload>): Promise<ReferralPerson> => {
+    const response = await api.patch(`/referrals/${id}`, data);
     return response.data;
   },
 
-  deleteCommissionAgent: async (id: string): Promise<void> => {
-    await api.delete(`/commission-agents/${id}`);
+  deleteReferral: async (id: string): Promise<void> => {
+    await api.delete(`/referrals/${id}`);
   },
 
   // Attendance APIs

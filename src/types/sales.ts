@@ -54,7 +54,8 @@ export interface Sale {
   type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
-  commissionAgentId?: string;
+  referralPersonId?: string;
+  referralPerson?: any;
   chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
@@ -97,7 +98,7 @@ export interface SalePayload {
   type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
   doctorId?: string;
   staffId?: string;
-  commissionAgentId?: string;
+  referralPersonId?: string;
   chamberOrRoomNumber?: string;
 }
 

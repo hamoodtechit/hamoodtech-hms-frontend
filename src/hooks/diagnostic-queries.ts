@@ -99,6 +99,14 @@ export function useDeleteDiagnosticTest() {
   });
 }
 
+export function useDiagnosticTest(id: string, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: DIAGNOSTIC_KEYS.test(id),
+    queryFn: () => diagnosticService.getDiagnosticTestById(id),
+    enabled: !!id && (options.enabled ?? true),
+  });
+}
+
 // Diagnostic Report Workflow Hooks
 
 export function useDiagnosticReports(params?: DiagnosticReportParams, options: { enabled?: boolean } = {}) {
@@ -123,7 +131,7 @@ export function useCreateRequisition() {
   return useMutation({
     mutationFn: (data: any) => diagnosticService.createRequisition(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
+      queryClient.invalidateQueries({ queryKey: ["diagnostic", "reports"] });
     },
   });
 }
@@ -134,7 +142,7 @@ export function useCollectSample() {
     mutationFn: ({ id, data }: { id: string; data: any }) => 
       diagnosticService.collectSample(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
+      queryClient.invalidateQueries({ queryKey: ["diagnostic", "reports"] });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
     },
   });
@@ -146,7 +154,7 @@ export function useEnterResult() {
     mutationFn: ({ id, data }: { id: string; data: any }) => 
       diagnosticService.enterResult(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
+      queryClient.invalidateQueries({ queryKey: ["diagnostic", "reports"] });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
     },
   });
@@ -158,7 +166,19 @@ export function useApproveReport() {
     mutationFn: ({ id, data }: { id: string; data: any }) => 
       diagnosticService.approveReport(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
+      queryClient.invalidateQueries({ queryKey: ["diagnostic", "reports"] });
+      queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
+    },
+  });
+}
+
+export function useUpdateReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<any> }) => 
+      diagnosticService.updateReport(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostic", "reports"] });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });
     },
   });
@@ -167,8 +187,8 @@ export function useApproveReport() {
 export function useUpdateDeliveryStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateDeliveryStatusPayload }) => 
-      diagnosticService.updateDeliveryStatus(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<any> }) => 
+      diagnosticService.updateReport(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.reports() });
       queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.report(variables.id) });

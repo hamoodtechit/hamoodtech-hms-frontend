@@ -135,8 +135,12 @@ export function ServiceDetailSheet({ open, onOpenChange, service }: ServiceDetai
                                 <div className="bg-card border rounded-3xl p-6 shadow-sm space-y-3">
                                     <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">Default Findings Narrative</p>
                                     <div 
-                                        className="text-sm font-medium leading-relaxed prose prose-sm max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: service.templateDescription || "" }}
+                                        className="text-sm font-medium leading-[1.8] prose prose-sm max-w-none text-foreground dark:prose-invert"
+                                        dangerouslySetInnerHTML={{ 
+                                            __html: service.templateDescription?.includes('&lt;') 
+                                                ? service.templateDescription.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+                                                : service.templateDescription || "" 
+                                        }}
                                     />
                                     {!service.templateDescription && <p className="text-xs text-muted-foreground italic">No default narrative defined.</p>}
                                 </div>

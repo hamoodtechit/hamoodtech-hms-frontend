@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { useEffect, useState, useMemo } from "react"
+import { toast } from "sonner"
 import { useAuthStore } from "@/store/use-auth-store"
 
 interface PrintReportProps {
@@ -25,315 +27,417 @@ export function PrintReport({ report }: PrintReportProps) {
     const detail = detailRes?.data ?? report
 
     const patient = (detail?.patient) as any
-    const technician = (detail as any)?.technician
-    const approvedBy = (detail as any)?.approvedBy
-
+    const doctor = (detail?.doctor) as any
     const result = detail?.result as DiagnosticResult | null
     const barcode = detail?.barcode ?? report.barcode ?? report.id
 
-    if (isLoading) {
+    // --- LOGIC: Group blocks by their Test Group (Header) ---
+    const groupReports = useMemo(() => {
+        if (!result?.blocks || !Array.isArray(result.blocks)) return [];
+        
+        const groups: { title: string; blocks: DiagnosticBlock[]; tests?: any[] }[] = [];
+        let currentGroup: { title: string; blocks: DiagnosticBlock[]; tests?: any[] } | null = null;
+
+        // Extract potential test name from the result data linkage
+        const testItems = (detail as any)?.testItems || (detail as any)?.sale?.saleItems || [];
+
+        result.blocks.forEach((block) => {
+            if (block.type === 'header') {
+                let title = (block.content || block.headerText || block.parameter || "Diagnostic Report").toUpperCase();
+                
+                // If it's a generic "OTHER TESTS" or "LABORATORY REPORT", try to find a specific test name
+                if (title === "OTHER TESTS" || title === "LABORATORY REPORT" || title === "DIAGNOSTIC REPORT") {
+                    const firstTestName = testItems[0]?.itemName || testItems[0]?.service?.name;
+                    if (firstTestName) {
+                        title = firstTestName.toUpperCase();
+                    }
+                }
+
+                // Start a new group
+                currentGroup = {
+                    title,
+                    blocks: [],
+                    tests: testItems // Link all tests for metadata access
+                };
+                groups.push(currentGroup);
+            } else if (currentGroup) {
+                // Add to current group
+                currentGroup.blocks.push(block);
+            } else {
+                // Fallback for blocks before any header
+                const title = (testItems[0]?.itemName || testItems[0]?.service?.name || "LABORATORY REPORT").toUpperCase();
+                currentGroup = { 
+                    title, 
+                    blocks: [block],
+                    tests: testItems
+                };
+                groups.push(currentGroup);
+            }
+        });
+        
+        return groups;
+    }, [result?.blocks, detail]);
+
+    const renderTable = (groupBlocks: DiagnosticBlock[]) => {
+        const parameterBlocks = groupBlocks.filter(b => b.type === 'parameter');
+        if (parameterBlocks.length === 0) return null;
+
+        const firstBlock = parameterBlocks[0];
+        const columns = (firstBlock.columnDefs && firstBlock.columnDefs.length > 0) 
+            ? firstBlock.columnDefs.filter(c => c.isVisible) 
+            : DEFAULT_COLUMNS;
+
         return (
-            <div className="flex items-center justify-center h-40">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-        )
-    }
-
-    return (
-        <div
-            id="print-report"
-            className="bg-white text-black font-['Times_New_Roman',serif] text-[10.5pt] leading-tight mx-auto relative overflow-hidden"
-            style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
-        >
-            {/* Vertical Metadata */}
-            <div className="absolute -left-16 top-1/2 -translate-y-1/2 -rotate-90 text-[8pt] text-black/30 tracking-widest whitespace-nowrap hidden print:block font-bold font-sans">
-                PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
-            </div>
-
-            {/* Main Content Area - Added top margin for Pad compatibility */}
-            <div className="px-10 py-6 pt-[20mm] relative z-10 min-h-[290mm] flex flex-col">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-2">
-                    <div className="text-[12pt] font-black tracking-tight text-primary uppercase">
-                        Lab Report
-                    </div>
-                    <div className="font-mono text-[9pt] bg-black text-white px-2 py-0.5 rounded-sm">
-                        ID: {barcode.toUpperCase()}
-                    </div>
-                </div>
-
-                {/* Custom Report Header */}
-                <div className="text-center font-bold text-[15pt] uppercase tracking-wider mb-2 underline decoration-1 underline-offset-4">
-                    {result?.reportHeader || (detail?.diagnosticTest?.name ? `${detail.diagnosticTest.name} Report` : "Diagnostic Report")}
-                </div>
-
-                {/* Patient info table */}
-                <div className="border border-black p-3 rounded-md mb-4 bg-muted/5">
-                    <table className="w-full border-collapse text-[10.5pt]">
-                        <tbody>
-                            <tr>
-                                <td className="pr-1 py-1 w-[15%] font-bold">Lab ID</td>
-                                <td className="pr-4 py-1 w-[35%]">: <span className="font-mono">{barcode.toUpperCase()}</span></td>
-                                <td className="pr-1 py-1 w-[20%] font-bold">Delivery Date</td>
-                                <td className="py-1 w-[30%]">: {detail?.approvedAt ? format(new Date(detail.approvedAt), "dd-MM-yyyy hh:mm a") : format(new Date(), "dd-MM-yyyy hh:mm a")}</td>
-                            </tr>
-                            <tr>
-                                <td className="pr-1 py-1 font-bold">UHID</td>
-                                <td className="pr-4 py-1">: {patient?.patientNumber ?? patient?.uhid ?? patient?.id?.substring(0, 8)}</td>
-                                <td className="pr-1 py-1 font-bold">Received Date</td>
-                                <td className="py-1">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd-MM-yyyy hh:mm a") : "—"}</td>
-                            </tr>
-                            <tr>
-                                <td className="pr-1 py-1 font-bold">Patient Name</td>
-                                <td className="pr-4 py-1">: <span className="font-black uppercase text-[11pt]">{patient?.name}</span></td>
-                                <td className="pr-1 py-1 font-bold">Age / Sex</td>
-                                <td className="py-1">: {patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</td>
-                            </tr>
-                            <tr>
-                                <td className="pr-1 py-1 font-bold">Address</td>
-                                <td className="pr-4 py-1" colSpan={3}>: {patient?.address || "—"}</td>
-                            </tr>
-                            <tr>
-                                <td className="pr-1 py-1 font-bold">Consultant</td>
-                                <td className="pr-4 py-1 text-[10pt]">
-                                    : <span className="font-bold">{result?.consultantName || (detail as any)?.sale?.doctor?.name || "—"}</span>
-                                    {result?.consultantDesignation && <span className="text-[8.5pt] ml-1 opacity-70">({result.consultantDesignation})</span>}
-                                </td>
-                                <td className="pr-1 py-1 font-bold">Specimen</td>
-                                <td className="py-1">: <span className="font-bold">{detail?.sampleDetails || "—"}</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Machine/Method Info */}
-                {result?.machineInfo && (
-                    <div className="text-center italic text-[9.5pt] mb-4 font-semibold text-gray-700">
-                        ({result.machineInfo})
-                    </div>
-                )}
-
-                {/* DYNAMIC BLOCK RENDERING */}
-                <div className="space-y-4">
-                    {result?.blocks && Array.isArray(result.blocks) && result.blocks.length > 0 ? (
-                        <div className="flex flex-col">
-                            {(() => {
-                                const blocks = result.blocks as DiagnosticBlock[];
-                                const renderedElements: React.ReactNode[] = [];
-                                let currentGroup: DiagnosticBlock[] = [];
-
-                                const renderGroup = (group: DiagnosticBlock[]) => {
-                                    if (group.length === 0) return null;
-                                    const firstBlock = group[0];
-                                    const columns = (firstBlock.columnDefs && firstBlock.columnDefs.length > 0) 
-                                        ? firstBlock.columnDefs.filter(c => c.isVisible) 
-                                        : DEFAULT_COLUMNS;
+            <table className="w-full border-collapse mb-6 text-[10.5pt]">
+                <thead>
+                    <tr className="border-y border-gray-300 bg-gray-50/20">
+                        {columns.map((col, i) => (
+                            <th 
+                                key={i} 
+                                style={{ width: col.width }} 
+                                className={cn(
+                                    "py-2 px-1 font-black uppercase text-[9pt] tracking-widest",
+                                    col.key !== 'parameter' && "text-center",
+                                    col.key === 'parameter' && "text-left pl-2"
+                                )}
+                            >
+                                {col.label}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {groupBlocks.map((block, bIdx) => {
+                        if (block.type !== 'parameter') return null;
+                        const isParamHeader = block.isHeader;
+                        return (
+                            <tr key={bIdx} className={cn("border-b border-gray-100", isParamHeader && "bg-blue-50/10")}>
+                                {columns.map((col, cIdx) => {
+                                    const isCore = ['parameter', 'value', 'unit', 'referenceRange'].includes(col.key);
+                                    const val = isCore ? (block as any)[col.key] : (block.extraValues?.[col.key] || "");
+                                    const isResult = col.key === 'value';
+                                    const isParameter = col.key === 'parameter';
 
                                     return (
-                                        <table key={`group-${group[0].id || Math.random()}`} className="w-full border-collapse mb-6 text-[10.5pt]">
-                                            <thead>
-                                                <tr className="border-y-2 border-black bg-gray-50/50">
-                                                    {columns.map((col, i) => (
-                                                        <th 
-                                                            key={i} 
-                                                            style={{ width: col.width }} 
-                                                            className={cn(
-                                                                "py-2 px-1 font-black uppercase text-[9pt] tracking-widest",
-                                                                col.key !== 'parameter' && "text-center",
-                                                                col.key === 'parameter' && "text-left pl-2"
-                                                            )}
-                                                        >
-                                                            {col.label}
-                                                        </th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {group.map((block, bIdx) => (
-                                                    <tr 
-                                                        key={bIdx} 
-                                                        className={cn(
-                                                            "border-b border-gray-200 transition-colors",
-                                                            block.isHeader && "bg-blue-50/10"
-                                                        )}
-                                                    >
-                                                        {columns.map((col, cIdx) => {
-                                                            const isCore = ['parameter', 'value', 'unit', 'referenceRange'].includes(col.key);
-                                                            const val = isCore ? (block as any)[col.key] : (block.extraValues?.[col.key] || "");
-                                                            const isResult = col.key === 'value';
-                                                            const isParameter = col.key === 'parameter';
+                                        <td 
+                                            key={cIdx} 
+                                            style={{ width: col.width }} 
+                                            className={cn(
+                                                "py-1.5 px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
+                                                col.key !== 'parameter' && "text-center",
+                                                isParameter && (block.isBold || block.isHeader) ? (isParamHeader ? "font-black text-black uppercase text-[11pt] tracking-tight pt-3 pb-1" : "font-bold italic text-black") : "",
+                                                isResult && "font-black"
+                                            )}
+                                        >
+                                            {isResult ? (
+                                                <div className={cn(block.isAbnormal && "text-red-600 underline decoration-1 italic")}>
+                                                    {isParamHeader && !isParameter ? "" : val}
+                                                    {block.isAbnormal && (
+                                                        <span className={cn(
+                                                            "ml-1 text-[8.5pt] font-black",
+                                                            (block as any).flag === 'H' ? "text-red-600" : "text-amber-600"
+                                                        )}>
+                                                            ({(block as any).flag || 'AB'})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : (isParamHeader && !isParameter ? "" : val)}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        );
+    };
 
-                                                            return (
-                                                                <td 
-                                                                    key={cIdx} 
-                                                                    style={{ width: col.width }} 
-                                                                    className={cn(
-                                                                        "py-2 px-1 text-[10pt] leading-snug break-words whitespace-pre-wrap",
-                                                                        col.key !== 'parameter' && "text-center",
-                                                                        isParameter && (block.isBold || block.isHeader) ? (block.isHeader ? "font-black text-blue-900 uppercase text-[10.5pt] underline" : "font-bold italic text-blue-900") : "",
-                                                                        isResult && "font-black"
-                                                                    )}
-                                                                >
-                                                                    {isResult ? (
-                                                                        <div className={cn(block.isAbnormal && "text-red-700 underline decoration-1")}>
-                                                                            {block.isHeader && !isParameter ? "" : val}
-                                                                            {block.isAbnormal && <span className="ml-1 text-[8pt] text-red-600 font-black"> (H)</span>}
-                                                                        </div>
-                                                                    ) : (block.isHeader && !isParameter ? "" : val)}
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                ))}
+    return (
+        <div id="print-report" className="bg-white text-black font-['Times_New_Roman',serif]">
+            {groupReports.map((group, gIdx) => (
+                <div 
+                    key={gIdx} 
+                    className={cn(
+                        "mx-auto relative overflow-hidden bg-white",
+                        gIdx > 0 && "print:break-before-page pt-[35mm]" // Page break for subsequent groups
+                    )}
+                    style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
+                >
+
+                    <div className="px-10 py-6 pt-[35mm] relative z-10 min-h-[290mm] flex flex-col">
+                        {/* 
+                         * HOSPITAL HEADER REMOVED 
+                         * As per User Request: Utilizing pre-printed letterheads (pads).
+                         * We only print patient info and results.
+                         */}
+                        
+                        {(() => {
+                            const isNarrativeGroup = (group as any).tests?.some((t: any) => {
+                                const s = t.service || t;
+                                return s?.templateType === 'narrative';
+                            }) || group.blocks.some(b => b.type === 'narrative');
+                            
+                            const displayTitle = isNarrativeGroup 
+                                ? (group as any).tests?.[0]?.itemName || group.title 
+                                : group.title;
+
+                            if (isNarrativeGroup) {
+                                return (
+                                    <>
+                                        {/* Narrative Style: Simplified Patient Info (Patwary Sample) */}
+                                        <div className="flex justify-between items-start mb-8 text-[11.5pt] font-serif leading-relaxed text-black">
+                                            <div className="space-y-1">
+                                                <p><span className="font-bold inline-block w-24">Patient ID</span>: <span className="font-black">{barcode.toUpperCase()}</span></p>
+                                                <p><span className="font-bold inline-block w-24">PtsName</span>: <span className="font-black uppercase">{patient?.name}</span></p>
+                                                <p><span className="font-bold inline-block w-24">Refd. By</span>: <span className="font-black uppercase">{result?.consultantName || doctor?.fullName || 'SELF'}</span></p>
+                                                <p className="pl-24 text-[9.5pt] font-bold italic opacity-80 leading-tight">
+                                                    {result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name}
+                                                </p>
+                                            </div>
+                                            <div className="text-right space-y-1">
+                                                <p><span className="font-bold inline-block w-16 text-left">Date</span>: {detail?.createdAt ? format(new Date(detail.createdAt), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")}</p>
+                                                <p><span className="font-bold inline-block w-16 text-left">Age</span>: {patient?.age ? `${patient.age} year` : "—"} <span className="ml-2 font-bold">Sex</span>: <span className="capitalize">{patient?.gender || "—"}</span></p>
+                                            </div>
+                                        </div>
+
+                                        {/* Narrative Style: Test Title */}
+                                        <div className="mb-10 text-center">
+                                            <div className="inline-flex items-baseline gap-4">
+                                                <span className="font-bold text-[13pt] italic">Test of:</span>
+                                                <h2 className="font-black text-[15pt] uppercase tracking-wide inline-block">
+                                                    {displayTitle}
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            }
+
+                            return (
+                                <>
+                                    {/* Standard Style: Prominent Title */}
+                                    <div className="text-center mb-10 pb-2">
+                                        <h2 className="font-black text-[22pt] uppercase tracking-[0.2em] text-black">
+                                            {displayTitle} REPORT
+                                        </h2>
+                                    </div>
+
+                                    {/* Standard Style: Boxed Patient Info */}
+                                    <div className="border-y-2 border-black py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                        <table className="w-full border-collapse text-[11pt]">
+                                            <tbody>
+                                                <tr className="border-b border-black/10">
+                                                    <td className="pr-1 py-1.5 w-[15%] font-bold">Lab ID</td>
+                                                    <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{barcode.toUpperCase()}</span></td>
+                                                    <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
+                                                    <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
+                                                </tr>
+                                                <tr className="border-b border-black/10">
+                                                    <td className="pr-1 py-1.5 font-bold">Patient Name</td>
+                                                    <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
+                                                    <td className="pr-1 py-1.5 font-bold">Report Date</td>
+                                                    <td className="py-1.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="pr-1 py-1.5 font-bold">Age / Gender</td>
+                                                    <td className="pr-4 py-1.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                    <td className="pr-1 py-1.5 font-bold">Consultant</td>
+                                                    <td className="py-1.5">: <span className="font-medium text-black uppercase">
+                                                        {result?.consultantName || doctor?.fullName || 'SELF'}
+                                                        {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
+                                                            <span className="ml-1 text-[9pt] font-medium text-black/60 lowercase italic">
+                                                                ({result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name})
+                                                            </span>
+                                                        )}
+                                                    </span></td>
+                                                </tr>
                                             </tbody>
                                         </table>
-                                    );
-                                };
+                                    </div>
+                                </>
+                            );
+                        })()}
 
-                                blocks.forEach((block, idx) => {
-                                    if (block.type === 'parameter') {
-                                        currentGroup.push(block);
-                                    } else {
-                                        if (currentGroup.length > 0) {
-                                            renderedElements.push(renderGroup(currentGroup));
-                                            currentGroup = [];
-                                        }
+                        {/* Machine / Equipment Info (Context-aware extraction) */}
+                        {(() => {
+                            const machines = new Set<string>();
+                            
+                            // 1. Get all test names in this specific group
+                            const groupTestNames = new Set(
+                                group.blocks
+                                    .filter(b => b.type === 'parameter' && b.parameter)
+                                    .map(b => b.parameter?.toLowerCase().trim())
+                            );
 
-                                        if (block.type === 'header') {
-                                            renderedElements.push(
-                                                <div key={`header-${idx}`} className="py-2 border-b-2 border-black mt-4 first:mt-0 mb-4">
-                                                    <h3 className="font-black text-[13pt] uppercase tracking-tight text-blue-900 leading-none">
-                                                        {block.content || block.headerText || block.parameter}
-                                                    </h3>
-                                                </div>
-                                            );
-                                        } else if (block.type === 'narrative' || block.type === 'impression') {
-                                            renderedElements.push(
-                                                <div key={`text-${idx}`} className={cn("py-4 mb-4", block.type === 'impression' && "mt-4 pt-6 border-t-2 border-dashed border-gray-300")}>
-                                                    {block.type === 'impression' && (
-                                                        <span className="font-black underline text-[11pt] mr-3 uppercase">IMPRESSION / CONCLUSION:</span>
-                                                    )}
-                                                    <div 
-                                                        className={cn(
-                                                            "leading-relaxed text-[11.5pt]",
-                                                            block.type === 'impression' ? "font-bold inline" : "font-medium"
-                                                        )}
-                                                        style={{ textAlign: 'justify' }}
-                                                        dangerouslySetInnerHTML={{ __html: block.content || "" }}
-                                                    />
-                                                </div>
-                                            );
+                            // 2. Filter sale items that match the tests in this group
+                            const saleItems = (detail as any)?.sale?.saleItems || [];
+                            saleItems.forEach((item: any) => {
+                                const itemNameLower = item.itemName?.toLowerCase().trim();
+                                // Check if this item is part of the current group
+                                if (itemNameLower && groupTestNames.has(itemNameLower)) {
+                                    const svc = item.service;
+                                    if (svc?.machineName) {
+                                        machines.add(`${svc.machineName}${svc.machineDescription ? ` ${svc.machineDescription}` : ''}`);
+                                    }
+                                }
+                            });
+
+                            // 3. Robust fallback: Also check direct diagnosticTests if saleItems didn't work
+                            if (machines.size === 0) {
+                                const diagTests = detail?.diagnosticTests || (detail as any)?.testItems || [];
+                                diagTests.forEach((item: any) => {
+                                    const itemNameLower = (item.itemName || item.service?.name)?.toLowerCase().trim();
+                                    if (itemNameLower && groupTestNames.has(itemNameLower)) {
+                                        const source = item.service || item.test || item;
+                                        if (source?.machineName) {
+                                            machines.add(`${source.machineName}${source.machineDescription ? ` ${source.machineDescription}` : ''}`);
                                         }
                                     }
                                 });
+                            }
+                            
+                            if (machines.size === 0) return null;
+                            
+                            return (
+                                <div className="text-center mb-6 italic text-[11.5pt] text-black font-serif leading-tight">
+                                    {Array.from(machines).map((m, idx) => (
+                                        <div key={idx} className="mb-0.5">
+                                            (Tests are carried out by {m})
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
 
-                                if (currentGroup.length > 0) {
-                                    renderedElements.push(renderGroup(currentGroup));
+                        {/* Results Area */}
+                        <div className="flex-1">
+                            {renderTable(group.blocks)}
+                            
+                            {/* Narrative/Impression blocks in the same group */}
+                            {group.blocks.map((block, bIdx) => {
+                                if (block.type === 'narrative' || block.type === 'impression') {
+                                    const unescapedContent = (block.content || "")
+                                        .replace(/&lt;/g, '<')
+                                        .replace(/&gt;/g, '>')
+                                        .replace(/&quot;/g, '"')
+                                        .replace(/&amp;/g, '&');
+                                        
+                                    return (
+                                        <div key={bIdx} className={cn("py-4 mb-4", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
+                                            {block.type === 'impression' && (
+                                                <span className="font-black underline text-[12pt] mr-3 uppercase text-black italic">INTERPRETATION / CONCLUSION:</span>
+                                            )}
+                                            <div 
+                                                className={cn(
+                                                    "leading-[1.8] text-[12pt] text-black",
+                                                     block.type === 'impression' ? "font-bold inline" : "font-medium"
+                                                )}
+                                                style={{ textAlign: 'justify', wordBreak: 'break-word' }}
+                                                dangerouslySetInnerHTML={{ __html: unescapedContent }}
+                                            />
+                                        </div>
+                                    );
                                 }
-
-                                return renderedElements;
-                            })()}
+                                return null;
+                            })}
                         </div>
-                    ) : (
-                        /* BACKWARD COMPATIBILITY RENDERING */
-                        <>
-                            {/* Table Mode */}
-                            {result?.mode === 'table' && result.rows && (
-                                <table className="w-full border-collapse text-[11pt] mb-8">
-                                    <thead>
-                                        <tr className="border-y-2 border-black bg-gray-100/50">
-                                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[40%]">Test / Parameter</th>
-                                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[18%] text-center">Result</th>
-                                            <th className="text-left py-2 pr-4 font-black uppercase text-[9.5pt] w-[12%] text-center">Unit</th>
-                                            <th className="text-left py-2 font-black uppercase text-[9.5pt] w-[30%]">Reference Range</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(result.rows || []).map((row, i) => (
-                                            row.isHeader ? (
-                                                <tr key={i}>
-                                                    <td colSpan={4} className="py-2.5 pt-5 font-black text-blue-900 uppercase text-[10pt] border-b border-gray-200">
-                                                        {row.parameter}
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                <tr key={i} className="border-b border-gray-100">
-                                                    <td className={cn("py-2 pr-4", row.isBold && "font-bold")}>{row.parameter}</td>
-                                                    <td className={cn("py-2 pr-4 font-black text-center", row.isAbnormal && "text-red-700 underline")}>
-                                                        {row.value}
-                                                        {row.isAbnormal && <span className="ml-1 text-[8pt] text-red-600 font-black"> (H)</span>}
-                                                    </td>
-                                                    <td className="py-2 pr-4 text-[10pt] text-center">{row.unit}</td>
-                                                    <td className="py-2 text-[10pt] whitespace-pre-line leading-tight italic text-gray-600">{row.referenceRange}</td>
-                                                </tr>
-                                            )
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
 
-                            {/* Narrative Mode */}
-                            {result?.mode === 'narrative' && (
-                                <div className="space-y-10 py-6 border-b border-gray-100 mb-8">
-                                    <div 
-                                        className="whitespace-pre-wrap leading-[1.8] text-[11.5pt] font-medium" 
-                                        style={{ textAlign: 'justify' }}
-                                        dangerouslySetInnerHTML={{ __html: result.content || "" }}
-                                    />
-                                    {result.interpretation && (
-                                        <div className="pt-10 mt-10 border-t border-dashed border-gray-300">
-                                            <div className="flex items-start gap-4">
-                                                <span className="font-black underline text-[11pt] shrink-0">IMPRESSION:</span>
-                                                <span className="font-bold text-[11.5pt] leading-snug">{result.interpretation}</span>
+                        {/* Footer Section */}
+                        <div className="mt-auto pt-16">
+                            {(() => {
+                                const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
+                                
+                                if (isNarrativeGroup) {
+                                    return (
+                                        <div className="flex justify-between items-end font-serif px-2">
+                                            {/* Left Side: Prepared By (Manual Style) */}
+                                            <div className="text-left w-[40%]">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="font-bold text-[11pt] border-b border-black pb-0.5">Prepared By</span>
+                                                    <span className="font-black text-black text-[12pt] border-b border-black/40 pb-0.5 min-w-[120px]">
+                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Right Side: Doctor Signature (Patwary Style) */}
+                                            <div className="text-right w-[50%]">
+                                                <div className="ml-auto mb-1 w-64 h-[2.5px] bg-black" />
+                                                <p className="font-black text-black text-[16pt] leading-tight uppercase tracking-tight">
+                                                    Dr. {doctor?.fullName || "Manik Rana."}
+                                                </p>
+                                                <p className="text-[11pt] font-bold text-black italic mt-1 border-t border-black/20 pt-1 inline-block">
+                                                    {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name || "MBBS, CMU(Ultra)."}
+                                                </p>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                                    );
+                                }
 
-                {/* Notes */}
-                {detail?.reportNotes && (
-                    <div className="p-3 bg-amber-50/30 rounded-lg border border-amber-100 mb-8">
-                        <p className="text-[9pt] italic text-amber-800"><span className="font-bold not-italic">Note:</span> {detail.reportNotes}</p>
-                    </div>
-                )}
+                                return (
+                                    <div className="flex justify-between items-end font-serif">
+                                        {/* Left Side: Technologist */}
+                                        <div className="text-left w-[40%]">
+                                            <div className="mb-1 w-48 h-[1px] bg-black" />
+                                            <p className="font-bold text-[11pt] uppercase tracking-wider text-black">Medical Technologist</p>
+                                            <p className="mt-1 font-black text-black text-[12pt] leading-tight">
+                                                {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                            </p>
+                                            <p className="text-[10pt] font-bold text-black italic">
+                                                {(detail as any)?.medicalTechnologist?.designation || "—"}
+                                            </p>
+                                        </div>
 
-                {/* Signature Section - Rock-solid Table Layout for Print */}
-                <table className="w-full mt-auto pt-16 border-none font-serif">
-                    <tbody>
-                        <tr>
-                            {/* Left: Prepared By */}
-                            <td className="text-left align-bottom w-1/3 text-[10.5pt]">
-                                <span className="font-bold border-b-2 border-black pb-0.5">Prepared By</span>
-                                <span className="font-bold whitespace-nowrap">&nbsp; {result?.preparedBy || (technician?.name) || "—"}</span>
-                            </td>
-
-                            {/* Center: Checked By */}
-                            <td className="text-center align-bottom w-1/3 text-[10.5pt]">
-                                <span className="font-bold border-b-2 border-black pb-0.5 whitespace-nowrap">Checked By</span>
-                            </td>
+                                        {/* Right Side: Authorized Doctor (Digital Signature Style) */}
+                                        <div className="text-right w-[50%] relative">
+                                            <div className="absolute -top-12 right-0 opacity-10">
+                                                <div className="border-2 border-black text-black px-2 py-1 rotate-12 rounded text-[10pt] font-black uppercase">
+                                                    Digitally Signed
+                                                </div>
+                                            </div>
+                                            <div className="ml-auto mb-1 w-64 h-[2px] bg-black" />
+                                            <p className="font-['Dancing_Script',cursive] text-[20pt] text-black px-2 leading-none mb-1">
+                                                {doctor?.fullName || "Doctor Ibrahim"}
+                                            </p>
+                                            <div className="mt-1 flex flex-col items-end leading-tight gap-0.5">
+                                                <p className="text-[10pt] font-black italic text-black">
+                                                    {result?.doctorDegrees || "MBBS(RMC),CMU(ULTRA),CCD(BIRDEM)"}
+                                                </p>
+                                                {(result?.doctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && 
+                                                 (result?.doctorDesignation !== result?.doctorDegrees) && (
+                                                    <p className="text-[9.5pt] font-black text-black uppercase tracking-tight">
+                                                        {result?.doctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name || "Senior Consultant Pathologist"}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             
-                            {/* Right: Doctor / Verified */}
-                            <td className="text-right align-bottom w-1/3">
-                                <p className="font-black border-b-2 border-black pb-0.5 uppercase tracking-tight text-[11pt] whitespace-nowrap inline-block">
-                                    {approvedBy?.name || "—"}
-                                </p>
-                                <div className="mt-1 flex flex-col items-end">
-                                    <p className="text-[9.5pt] font-black italic leading-tight">
-                                        {result?.doctorDegrees && result.doctorDegrees !== "—" ? result.doctorDegrees : "—"}
-                                    </p>
-                                    <p className="text-[8.5pt] font-bold text-gray-700 italic leading-tight uppercase tracking-tight">
-                                        {result?.doctorDesignation || approvedBy?.designation?.name || "—"}
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                            <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2">
+                                <p>REPORT ID: {barcode.toUpperCase()}</p>
+                                <p className="uppercase">Page {gIdx + 1} of {groupReports.length}</p>
+                                <p className="italic">Printed by HamoodTech HMS</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            <style jsx global>{`
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                    body {
+                        margin: 0;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
+            `}</style>
         </div>
     )
 }

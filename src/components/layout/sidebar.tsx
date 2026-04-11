@@ -224,8 +224,8 @@ export function Sidebar() {
                 permission: "designation:read",
           },
           {
-                label: "Commission Agents",
-                href: "/hr/commission-agents",
+                label: "Referral Persons",
+                href: "/hr/referrals",
                 module: "hr",
                 permission: "user:read",
           }

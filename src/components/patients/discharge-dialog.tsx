@@ -40,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useStoreContext } from "@/store/use-store-context"
+import { AddAdmissionServiceDialog } from "./add-service-dialog"
 
 interface DischargeDialogProps {
     open: boolean
@@ -57,8 +58,6 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     
     // Extra Charge State
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
-    const [extraItemName, setExtraItemName] = useState("")
-    const [extraItemPrice, setExtraItemPrice] = useState<number>(0)
     
     // Form State
     const [note, setNote] = useState("")
@@ -400,91 +399,12 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                 </DialogFooter>
             </DialogContent>
 
-            {/* Extra Charge Dialog */}
-            <Dialog open={extraChargeOpen} onOpenChange={setExtraChargeOpen}>
-                <DialogContent className="sm:max-w-100 border-none shadow-2xl p-0 overflow-hidden rounded-3xl">
-                    <DialogHeader className="p-6 pb-2 bg-primary/5 border-b border-primary/10">
-                        <DialogTitle className="text-lg font-black tracking-tight text-primary flex items-center gap-2">
-                            <Plus className="h-5 w-5" />
-                            Add Extra Charge
-                        </DialogTitle>
-                        <DialogDescription className="text-[10px] font-medium uppercase tracking-widest opacity-60">
-                            Create a one-off charge for this patient admission.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="p-6 space-y-4">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Charge Name / Item Name</Label>
-                            <Input 
-                                placeholder="e.g. Oxygen Cylinder service" 
-                                className="h-10 text-sm font-bold bg-muted/20 border-white/5 focus-visible:ring-primary/20"
-                                value={extraItemName}
-                                onChange={(e) => setExtraItemName(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-60">Amount (Tk)</Label>
-                            <SmartNumberInput 
-                                placeholder="0.00" 
-                                className="h-10 text-lg font-black bg-muted/20 border-white/5 focus-visible:ring-primary/20"
-                                value={extraItemPrice}
-                                onChange={(val) => setExtraItemPrice(val || 0)}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter className="p-6 bg-muted/30 pt-4 flex flex-col gap-2">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="font-black uppercase text-[10px] tracking-widest"
-                            onClick={() => setExtraChargeOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            className="font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20"
-                            disabled={isCreatingExtra || !extraItemName || extraItemPrice <= 0}
-                            onClick={async () => {
-                                if (!admission?.patientId) return
-                                const payload: SalePayload = {
-                                    branchId: activeStoreId || "",
-                                    patientId: admission.patientId,
-                                    type: 'others',
-                                    status: 'pending',
-                                    paymentMethod: 'cash',
-                                    paidAmount: 0,
-                                    dueAmount: extraItemPrice,
-                                    discountPercentage: 0,
-                                    discountAmount: 0,
-                                    taxPercentage: 0,
-                                    taxAmount: 0,
-                                    saleItems: [{
-                                        itemName: extraItemName,
-                                        unit: 'service',
-                                        price: extraItemPrice,
-                                        mrp: extraItemPrice,
-                                        quantity: 1,
-                                    }]
-                                }
-                                try {
-                                    await createSale(payload)
-                                    toast.success("Extra charge added to bill")
-                                    setExtraItemName("")
-                                    setExtraItemPrice(0)
-                                    setExtraChargeOpen(false)
-                                    refetchDischarge() // Refresh the discharge summary
-                                } catch {
-                                    toast.error("Failed to add extra charge")
-                                }
-                            }}
-                        >
-                            {isCreatingExtra ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-                            Add to Bill
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <AddAdmissionServiceDialog 
+                open={extraChargeOpen}
+                onOpenChange={setExtraChargeOpen}
+                admission={admission}
+                onSuccess={() => refetchDischarge()}
+            />
         </Dialog>
     )
 }

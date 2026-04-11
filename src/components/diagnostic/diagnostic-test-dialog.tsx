@@ -20,7 +20,7 @@ import { useDepartments } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest, DiagnosticTestPayload } from "@/types/diagnostic"
 import { Loader2, Plus, Trash2, Microscope, Search, Eye, EyeOff } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 import { cn } from "@/lib/utils"
@@ -33,30 +33,68 @@ interface DiagnosticTestDialogProps {
 }
 
 function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
-    const handleCommand = (cmd: string) => {
-        document.execCommand(cmd, false);
+    const [isSource, setIsSource] = useState(false);
+    const editorRef = useRef<HTMLDivElement>(null);
+
+    // Sync only when value changes EXTERNALLY (e.g., test data loaded)
+    useEffect(() => {
+        if (editorRef.current && editorRef.current.innerHTML !== value) {
+            editorRef.current.innerHTML = value;
+        }
+    }, [value]);
+
+    const handleCommand = (cmd: string, val?: string) => {
+        document.execCommand(cmd, false, val);
+        if (editorRef.current) onChange(editorRef.current.innerHTML);
+    };
+
+    const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+        onChange(e.currentTarget.innerHTML);
     };
 
     return (
         <div className="flex flex-col rounded-2xl bg-muted/20 border border-border shadow-inner overflow-hidden">
-            <div className="flex items-center gap-1 p-2 bg-card border-b border-border shrink-0">
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('bold')} className="h-8 w-8 p-0 rounded-md">
-                    <strong>B</strong>
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('italic')} className="h-8 w-8 p-0 rounded-md">
-                    <em>I</em>
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('underline')} className="h-8 w-8 p-0 rounded-md">
-                    <u>U</u>
+            <div className="flex items-center justify-between p-2 bg-card border-b border-border shrink-0">
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('bold')} className="h-8 w-8 p-0 rounded-md">
+                        <strong>B</strong>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('italic')} className="h-8 w-8 p-0 rounded-md">
+                        <em>I</em>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('underline')} className="h-8 w-8 p-0 rounded-md">
+                        <u>U</u>
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border mx-1" />
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-8 w-8 p-0 rounded-md">
+                        ul
+                    </Button>
+                </div>
+                <Button 
+                    variant={isSource ? "default" : "ghost"} 
+                    size="sm" 
+                    onClick={() => setIsSource(!isSource)}
+                    className="h-8 px-2 text-[10px] font-black uppercase tracking-widest"
+                >
+                    {isSource ? "View Design" : "View Source"}
                 </Button>
             </div>
-            <div 
-                className="p-6 min-h-60 outline-none font-medium leading-[1.8] text-sm overflow-y-auto bg-background"
-                contentEditable
-                dangerouslySetInnerHTML={{ __html: value }}
-                onBlur={(e) => onChange(e.currentTarget.innerHTML)}
-                data-placeholder={placeholder}
-            />
+            
+            {isSource ? (
+                <Textarea 
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="min-h-60 rounded-none border-none bg-zinc-950 text-zinc-50 font-mono text-xs focus-visible:ring-0 p-6 leading-relaxed"
+                />
+            ) : (
+                <div 
+                    ref={editorRef}
+                    className="p-6 min-h-60 outline-none font-medium leading-[1.8] text-sm overflow-y-auto bg-background prose prose-sm max-w-none"
+                    contentEditable
+                    onInput={handleInput}
+                    data-placeholder={placeholder}
+                />
+            )}
             <style jsx>{`
                 [contentEditable]:empty:before {
                     content: attr(data-placeholder);
@@ -95,7 +133,9 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         testResultTemplate: [], // For parameters
         templateType: 'table',
         type: 'pathology',
-        templateDescription: ""
+        templateDescription: "",
+        machineName: "",
+        machineDescription: ""
     })
 
     useEffect(() => {
@@ -114,7 +154,9 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     testResultTemplate: Array.isArray(test.testResultTemplate) ? test.testResultTemplate : [],
                     templateType: test.templateType || 'table',
                     type: test.type || 'pathology',
-                    templateDescription: test.templateDescription || ""
+                    templateDescription: test.templateDescription || "",
+                    machineName: test.machineName || "",
+                    machineDescription: test.machineDescription || ""
                 })
             } else {
                 setFormData({
@@ -130,7 +172,9 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     testResultTemplate: [],
                     templateType: 'table',
                     type: 'pathology',
-                    templateDescription: ""
+                    templateDescription: "",
+                    machineName: "",
+                    machineDescription: ""
                 })
             }
         }
@@ -149,14 +193,22 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
             const rawPayload: any = {
                 ...formData,
                 price: Number(formData.price),
-                testResultTemplate: formData.isDiagnosticTest ? formData.testResultTemplate : null
+                testResultTemplate: formData.isDiagnosticTest && Array.isArray(formData.testResultTemplate) 
+                    ? formData.testResultTemplate.map((p: any) => ({
+                        ...p,
+                        options: typeof p.options === 'string' 
+                            ? p.options.split(",").map((s: string) => s.trim()).filter(Boolean) 
+                            : Array.isArray(p.options) ? p.options : []
+                    }))
+                    : null
             }
 
             const cleanPayload: any = {}
             Object.keys(rawPayload).forEach(key => {
                 const val = rawPayload[key]
-                // Send if it's the mandatory name/price, or if it has a non-empty value
-                if (key === 'name' || key === 'price' || (val !== "" && val !== null && val !== undefined)) {
+                // Mandatory fields OR non-empty/null/undefined values
+                // Explicitly include branchId even if empty (though it should be the activeStoreId)
+                if (key === 'name' || key === 'price' || key === 'branchId' || (val !== "" && val !== null && val !== undefined)) {
                     cleanPayload[key] = val
                 }
             })
@@ -261,6 +313,41 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                             </div>
                         </div>
 
+                        {/* Section 2: Equipment & Technology */}
+                        <div className="space-y-4 pt-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Equipment & Technology</h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-500/5 dark:bg-blue-500/10 p-6 rounded-2xl border border-blue-500/10 dark:border-blue-500/20">
+                                <div className="space-y-2">
+                                    <Label htmlFor="machineName" className="text-sm font-bold text-blue-700 dark:text-blue-300 flex items-center justify-between">
+                                        Machine / Analyzer Name
+                                        <span className="text-[10px] text-blue-500/60 font-normal italic">(For report automation)</span>
+                                    </Label>
+                                    <Input 
+                                        id="machineName" 
+                                        value={formData.machineName} 
+                                        onChange={(e) => setFormData(prev => ({ ...prev, machineName: e.target.value }))}
+                                        placeholder="e.g. Siemens Advia 2120i"
+                                        className="h-11 rounded-xl border-border bg-background shadow-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="machineDescription" className="text-sm font-bold text-blue-700 dark:text-blue-300">Equipment Specifications</Label>
+                                    <Input 
+                                        id="machineDescription" 
+                                        value={formData.machineDescription} 
+                                        onChange={(e) => setFormData(prev => ({ ...prev, machineDescription: e.target.value }))}
+                                        placeholder="e.g. Automated Hematology System"
+                                        className="h-11 rounded-xl border-border bg-background shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Section 2: Pricing & Logistics */}
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 mb-2">
@@ -343,7 +430,19 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                     size="sm" 
                                                     onClick={() => {
                                                         const next = Array.isArray(formData.testResultTemplate) ? [...formData.testResultTemplate] : []
-                                                        next.push({ id: uuidv4(), name: "", result: "", unit: "", refRange: "", unitEnabled: true, refRangeEnabled: true, fieldType: 'text', options: [] })
+                                                        next.push({ 
+                                                            id: uuidv4(), 
+                                                            name: "", 
+                                                            result: "", 
+                                                            unit: "", 
+                                                            refRange: "", 
+                                                            minRef: "", 
+                                                            maxRef: "", 
+                                                            unitEnabled: true, 
+                                                            refRangeEnabled: true, 
+                                                            fieldType: 'text', 
+                                                            options: [] 
+                                                        })
                                                         setFormData(prev => ({ ...prev, testResultTemplate: next }))
                                                     }}
                                                     className="h-9 rounded-xl px-4 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 transition-all active:scale-95"
@@ -394,7 +493,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                                     value={Array.isArray(param.options) ? param.options.join(", ") : param.options || ""}
                                                                     onChange={(e) => {
                                                                         const next = [...(formData.testResultTemplate as any[])]
-                                                                        next[idx] = { ...next[idx], options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }
+                                                                        // Store as raw string while typing to avoid cursor jumps/eating commas
+                                                                        next[idx] = { ...next[idx], options: e.target.value }
                                                                         setFormData(prev => ({ ...prev, testResultTemplate: next }))
                                                                     }}
                                                                     placeholder="A+, B+, O+..."
@@ -442,7 +542,40 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                                     className={`h-10 rounded-xl bg-muted/30 border-none focus-visible:ring-primary font-medium ${!param.unitEnabled ? 'opacity-50 grayscale' : ''}`}
                                                                 />
                                                             </div>
-                                                            <div className="col-span-6 md:col-span-2 space-y-1.5">
+                                                            <div className="col-span-12 md:col-span-2 space-y-3">
+                                                                <div className="flex items-center justify-between border-b border-border/50 pb-1">
+                                                                    <Label className="text-[9px] font-black uppercase tracking-widest text-primary/70">Ref Boundaries</Label>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    <div className="space-y-1">
+                                                                        <Label className="text-[8px] font-bold text-muted-foreground uppercase">Min</Label>
+                                                                        <Input 
+                                                                            value={param.minRef || ""}
+                                                                            onChange={(e) => {
+                                                                                const next = [...(formData.testResultTemplate as any[])]
+                                                                                next[idx] = { ...next[idx], minRef: e.target.value }
+                                                                                setFormData(prev => ({ ...prev, testResultTemplate: next }))
+                                                                            }}
+                                                                            placeholder="0.0"
+                                                                            className="h-8 rounded-lg bg-orange-500/5 border-orange-500/10 text-[10px] text-orange-600 font-bold"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <Label className="text-[8px] font-bold text-muted-foreground uppercase">Max</Label>
+                                                                        <Input 
+                                                                            value={param.maxRef || ""}
+                                                                            onChange={(e) => {
+                                                                                const next = [...(formData.testResultTemplate as any[])]
+                                                                                next[idx] = { ...next[idx], maxRef: e.target.value }
+                                                                                setFormData(prev => ({ ...prev, testResultTemplate: next }))
+                                                                            }}
+                                                                            placeholder="10.0"
+                                                                            className="h-8 rounded-lg bg-rose-500/5 border-rose-500/10 text-[10px] text-rose-600 font-bold"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-span-12 md:col-span-2 space-y-1.5">
                                                                 <div className="flex items-center justify-between">
                                                                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Reference Range</Label>
                                                                     <Button 
@@ -468,7 +601,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                                     }}
                                                                     placeholder={param.refRangeEnabled ? "Standard range..." : "Hidden"}
                                                                     rows={1}
-                                                                    className={`min-h-10 rounded-xl bg-muted/30 border-none focus-visible:ring-primary leading-tight py-2.5 ${!param.refRangeEnabled ? 'opacity-50 grayscale' : ''}`}
+                                                                    className={`min-h-11 rounded-xl bg-muted/30 border-none focus-visible:ring-primary leading-tight py-2.5 ${!param.refRangeEnabled ? 'opacity-50 grayscale' : ''}`}
                                                                 />
                                                             </div>
                                                         </div>

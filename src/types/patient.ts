@@ -19,7 +19,8 @@ export interface Admission {
   guardianPhone: string;
   guardianRelation: string;
   fees: number | string;
-  commissionAgentId?: string;
+  referralPersonId?: string;
+  referralPerson?: any;
   createdAt: string;
   updatedAt: string;
   patient?: Patient;
@@ -39,7 +40,8 @@ export interface AdmissionPayload {
   guardianPhone?: string;
   guardianRelation?: string;
   fees?: number | string;
-  commissionAgentId?: string;
+  referralPersonId?: string;
+  referralPerson?: any;
 }
 
 export interface AdmissionQueryParams {

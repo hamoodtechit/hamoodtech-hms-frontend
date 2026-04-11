@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { useApproveReport } from "@/hooks/diagnostic-queries"
+import { useUpdateReport } from "@/hooks/diagnostic-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/use-auth-store"
-import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport } from "@/types/diagnostic"
+import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { CheckCircle2, FileText, Info, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -41,22 +41,20 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
     }, [open, user?.id])
     
     // In a real system, we'd filter for specialists/pathologists
-    const approveReport = useApproveReport()
+    const { mutateAsync: updateReport, isPending } = useUpdateReport()
 
     const handleConfirm = async () => {
         if (!report) return
         if (!approvedById) return toast.error("Please select an approving pathologist")
 
         try {
-            const payload = {
-                approvedById,
-                digitalSignature: "verified-digital-signature"
-            }
-            
-            
-            const res = await approveReport.mutateAsync({
+            await updateReport({
                 id: report.id,
-                data: payload
+                data: {
+                    doctorId: approvedById,
+                    status: 'completed',
+                    digitalSignature: "verified-digital-signature"
+                }
             })
             
             
@@ -91,8 +89,8 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                             <p className="font-bold text-sm">{report?.patient?.phone || '—'}</p>
                         </div>
                         <div className="p-3 rounded-xl bg-muted/30 border">
-                            <Label className="text-[10px] font-black uppercase text-muted-foreground opacity-70">Test Name</Label>
-                            <p className="font-bold text-sm">{report?.diagnosticTest?.name}</p>
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground opacity-70">Tests</Label>
+                            <p className="font-bold text-sm">{report?.diagnosticTests?.map(t => t.itemName).join(', ') || '—'}</p>
                         </div>
                     </div>
 
@@ -300,10 +298,10 @@ export function ApprovalDialog({ open, onOpenChange, report, onSuccess }: Approv
                     </Button>
                     <Button 
                         onClick={handleConfirm}
-                        disabled={!approvedById || approveReport.isPending}
+                        disabled={!approvedById || isPending}
                         className="rounded-xl px-10 font-black shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700"
                     >
-                        {approveReport.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Final Sign-off
                     </Button>
                 </DialogFooter>

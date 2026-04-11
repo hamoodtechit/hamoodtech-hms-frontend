@@ -161,7 +161,7 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[700px] p-0">
+            <DialogContent className="sm:max-w-[1000px] p-0">
                 <DialogHeader className="p-6 pb-0">
                     <DialogTitle>{isEdit ? "Edit Employee" : "Add New Employee"}</DialogTitle>
                     <DialogDescription>

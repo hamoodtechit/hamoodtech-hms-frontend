@@ -1,65 +1,130 @@
 "use client"
 
+import { useEnterResult, useDiagnosticTest } from "@/hooks/diagnostic-queries"
+import { cn } from "@/lib/utils"
+import { DiagnosticBlock, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
+import { format } from "date-fns"
+import { 
+    Activity, 
+    Beaker, 
+    Calendar, 
+    CheckCircle2, 
+    ClipboardList, 
+    Clock, 
+    FileText, 
+    FlaskConical, 
+    History, 
+    Info, 
+    Loader2, 
+    Save, 
+    User, 
+    UserCog,
+    ChevronRight,
+    Search,
+    Microscope,
+    Hash,
+    Edit3
+} from "lucide-react"
+import React, { useEffect, useState, useMemo, useRef } from "react"
+import { toast } from "sonner"
+import { v4 as uuidv4 } from 'uuid'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-
-import { useCreateReportTemplate, useDeleteReportTemplate, useEnterResult, useReportTemplates, useUpdateReportTemplate } from "@/hooks/diagnostic-queries"
-import { useEmployees } from "@/hooks/hr-queries"
-import { usePermissions } from "@/hooks/use-permissions"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { cn } from "@/lib/utils"
-import { useStoreContext } from "@/store/use-store-context"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { groupTestsByGroup } from "@/lib/diagnostic-grouping"
+import { useQueries } from "@tanstack/react-query"
+import { diagnosticService } from "@/services/diagnostic-service"
 import { useAuthStore } from "@/store/use-auth-store"
-import { DiagnosticBlock, DiagnosticBlockType, DiagnosticReport, DiagnosticResult, ResultMode, ResultTableRow, DiagnosticColumnDef } from "@/types/diagnostic"
-import { Activity, Beaker, Bold, ClipboardList, Columns, FileText, GripVertical, Italic, List, Loader2, Plus, Save, Settings2, Trash2, Type, Underline, User, Zap } from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd"
-import { v4 as uuidv4 } from "uuid"
-
-
-interface ResultEntryDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    report: DiagnosticReport | null
-    onSuccess?: () => void
-}
+import { Textarea as UITextarea } from "@/components/ui/textarea"
 
 function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
-    const handleCommand = (cmd: string) => {
-        document.execCommand(cmd, false);
+    const [isSource, setIsSource] = useState(false);
+    const editorRef = useRef<HTMLDivElement>(null);
+
+    // Sync only when value changes EXTERNALLY (e.g., template load)
+    useEffect(() => {
+        if (editorRef.current && editorRef.current.innerHTML !== value) {
+            editorRef.current.innerHTML = value;
+        }
+    }, [value]);
+
+    const handleCommand = (cmd: string, val?: string) => {
+        document.execCommand(cmd, false, val);
+        if (editorRef.current) onChange(editorRef.current.innerHTML);
+    };
+
+    const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+        onChange(e.currentTarget.innerHTML);
     };
 
     return (
-        <div className="flex flex-col rounded-2xl bg-background border border-border/50 shadow-inner overflow-hidden">
-            <div className="flex items-center gap-1 p-2 bg-muted/30 border-b border-border/30 shrink-0">
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('bold')} className="h-8 w-8 p-0 rounded-md">
-                    <Bold className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('italic')} className="h-8 w-8 p-0 rounded-md">
-                    <Italic className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('underline')} className="h-8 w-8 p-0 rounded-md">
-                    <Underline className="h-3.5 w-3.5" />
-                </Button>
-                <div className="w-px h-4 bg-border/50 mx-1" />
-                <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-8 w-8 p-0 rounded-md">
-                    <List className="h-3.5 w-3.5" />
+        <div className="flex flex-col rounded-3xl bg-muted/20 border border-border/50 shadow-inner overflow-hidden">
+            <div className="flex items-center justify-between p-3 bg-card border-b border-border/50 shrink-0">
+                <div className="flex items-center gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('bold')} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                        <strong className="text-sm">B</strong>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('italic')} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                        <em className="text-sm">I</em>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('underline')} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                        <u className="text-sm">U</u>
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border/60 mx-1.5" />
+                    <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                        <ClipboardList className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+                <Button 
+                    variant={isSource ? "default" : "ghost"} 
+                    size="sm" 
+                    onClick={() => setIsSource(!isSource)}
+                    className="h-8 px-3 text-[9px] font-black uppercase tracking-widest rounded-full"
+                >
+                    {isSource ? "View Design" : "View Source"}
                 </Button>
             </div>
-            <div 
-                className="p-6 min-h-[400px] outline-none font-medium leading-[1.8] text-base overflow-y-auto bg-card"
-                contentEditable
-                dangerouslySetInnerHTML={{ __html: value }}
-                onBlur={(e) => onChange(e.currentTarget.innerHTML)}
-                data-placeholder={placeholder}
-            />
+            
+            {isSource ? (
+                <UITextarea 
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="min-h-[400px] rounded-none border-none bg-zinc-950 text-emerald-400 font-mono text-[11px] focus-visible:ring-0 p-8 leading-relaxed selection:bg-emerald-500/30"
+                />
+            ) : (
+                <div 
+                    ref={editorRef}
+                    className="p-12 min-h-[500px] outline-none font-medium leading-[2.2] text-[16px] overflow-y-auto bg-background prose prose-indigo max-w-none dark:prose-invert selection:bg-primary/20"
+                    contentEditable
+                    onInput={handleInput}
+                    data-placeholder={placeholder}
+                />
+            )}
             <style jsx>{`
                 [contentEditable]:empty:before {
                     content: attr(data-placeholder);
@@ -72,939 +137,576 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
     );
 }
 
+interface ResultEntryDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    report: DiagnosticReport | null
+    onSuccess?: () => void
+}
+
+// Result structure to handle overrides
+interface ParamResult {
+    result: string
+    unit: string
+    refRange: string
+}
+
 export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: ResultEntryDialogProps) {
-    const { hasPermission } = usePermissions()
     const { user } = useAuthStore()
-    const { activeStoreId } = useStoreContext()
-    // Block-based state
-    const [blocks, setBlocks] = useState<DiagnosticBlock[]>([])
-    
-    // Legacy states (kept for backward sync if needed, but primary is blocks)
-    const [mode, setMode] = useState<ResultMode>("table")
-    const [reportHeader, setReportHeader] = useState("")
-    const [machineInfo, setMachineInfo] = useState("")
-    const [reportNotes, setReportNotes] = useState("")
-    const [consultantName, setConsultantName] = useState("")
-    const [consultantDesignation, setConsultantDesignation] = useState("")
-    const [doctorDegrees, setDoctorDegrees] = useState("")
-    const [doctorDesignation, setDoctorDesignation] = useState("")
-    const [technicianId, setTechnicianId] = useState("")
-
-
-    const { data: employeesRes, isLoading: loadingEmployees } = useEmployees({ limit: 100 })
-    const employees = employeesRes?.data || []
-    const doctors = employees.filter(emp => emp.employeeType?.toLowerCase() === 'doctor')
-    
-    const [doctorSearch, setDoctorSearch] = useState("")
-    const [openDoctorSelect, setOpenDoctorSelect] = useState(false)
-
     const enterResult = useEnterResult()
     
-    // Template Hooks
-    const { data: templatesRes, isLoading: loadingTemplates, refetch: refetchTemplates } = useReportTemplates({ 
-        diagnosticTestId: report?.diagnosticTestId || undefined,
-        name: report?.diagnosticTest?.name || undefined,
-        limit: 100 
-    })
-    const templates = templatesRes?.data || []
-    
-    const createTemplate = useCreateReportTemplate()
-    const updateTemplate = useUpdateReportTemplate()
-    const deleteTemplate = useDeleteReportTemplate()
+    // Form State (New Structure)
+    const [resultsState, setResultsState] = useState<Record<string, Record<string, ParamResult>>>({})
+    const [reportHeader, setReportHeader] = useState("DIAGNOSTIC REPORT")
+    const [reportNotes, setReportNotes] = useState("")
+    const [machineInfo, setMachineInfo] = useState("")
+    const [lastLoadedId, setLastLoadedId] = useState<string | null>(null)
 
-    const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none")
+    // Parallel fetch service details for full templates
+    const testIds = useMemo(() => report?.diagnosticTests?.map(t => t.serviceId) || [], [report]);
+    const templateQueries = useQueries({
+        queries: testIds.map(id => ({
+            queryKey: ['diagnostic-test', id],
+            queryFn: () => diagnosticService.getDiagnosticTestById(id),
+            enabled: open && !!id
+        }))
+    });
 
-    const DEFAULT_COLUMNS: DiagnosticColumnDef[] = [
-        { id: '1', label: 'Parameter', key: 'parameter', isVisible: true, width: '1.5fr' },
-        { id: '2', label: 'Result', key: 'value', isVisible: true, width: '1fr' },
-        { id: '3', label: 'Unit', key: 'unit', isVisible: true, width: '0.8fr' },
-        { id: '4', label: 'Ref Range', key: 'referenceRange', isVisible: true, width: '1.5fr' }
-    ]
+    const isLoadingTemplates = templateQueries.some(q => q.isLoading);
+    const templatesMap = useMemo(() => {
+        const map: Record<string, any> = {};
+        
+        // 1. Populate from API queries
+        templateQueries.forEach(q => {
+            if (q.data?.data) {
+                map[q.data.data.id] = q.data.data;
+            }
+        });
 
-    // Initialize/Reset
+        // 2. Fallback: Populate from saleItems already in report (Instant loading from JSON)
+        const saleItems = (report as any)?.sale?.saleItems || [];
+        saleItems.forEach((item: any) => {
+            if (item.serviceId && item.service) {
+                if (!map[item.serviceId]) map[item.serviceId] = item.service;
+            }
+        });
+
+        return map;
+    }, [templateQueries, report]);
+
     useEffect(() => {
         if (open && report) {
-            const testName = report.diagnosticTest?.name;
-            const defaultHeader = (testName || "DIAGNOSTIC").toUpperCase() + " REPORT";
-            setReportHeader(prev => prev || defaultHeader)
-
-            // 1. Check for blocks (new version)
-            const res = report.result as DiagnosticResult | null;
+            // Reset only if report ID changed
+            if (report.id !== lastLoadedId) {
+                setLastLoadedId(report.id)
+                const result = report.result as DiagnosticResult | null
+                if (result?.testResults) {
+                    const rawResults = result.testResults as any;
+                    const convertedResults: Record<string, Record<string, ParamResult>> = {};
+                    Object.keys(rawResults).forEach(testId => {
+                        convertedResults[testId] = {};
+                        Object.keys(rawResults[testId]).forEach(paramKey => {
+                            const val = rawResults[testId][paramKey];
+                            convertedResults[testId][paramKey] = typeof val === 'string' 
+                                ? { result: val, unit: "", refRange: "" } 
+                                : val;
+                        });
+                    });
+                    setResultsState(convertedResults)
+                    setReportHeader(result.reportHeader || "DIAGNOSTIC REPORT")
+                    setReportNotes(report.note || "")
+                    setMachineInfo(result.machineInfo || "")
+                    return; // Don't proceed to defaults if we have saved results
+                }
+            }
             
-            if (res?.blocks && Array.isArray(res.blocks) && res.blocks.length > 0) {
-                setBlocks(res.blocks);
-                setMode(res.mode || 'table');
-                setReportHeader(res.reportHeader || defaultHeader);
-                setMachineInfo(res.machineInfo || "");
-                setConsultantName(res.consultantName || "");
-                setConsultantDesignation(res.consultantDesignation || "");
-                setDoctorDegrees(res.doctorDegrees || "");
-                setDoctorDesignation(res.doctorDesignation || "");
-                setTechnicianId(report.technicianId || user?.id || "");
-            } 
-            // 2. Legacy Loader (convert old data to blocks)
-            else if (res) {
-                const legacyBlocks: DiagnosticBlock[] = [];
-                setTechnicianId(report.technicianId || user?.id || "");
-                
-                // Convert rows to blocks
-                if (res.rows && res.rows.length > 0) {
-                    res.rows.forEach(row => {
-                        legacyBlocks.push({
-                            id: uuidv4(),
-                            type: 'parameter',
-                            parameter: row.parameter,
-                            value: row.value,
-                            unit: row.unit,
-                            referenceRange: row.referenceRange,
-                            isAbnormal: row.isAbnormal,
-                            isBold: row.isBold,
-                            isHeader: row.isHeader
-                        });
-                    });
-                }
-                
-                // Convert content to blocks
-                if (res.content) {
-                    legacyBlocks.push({
-                        id: uuidv4(),
-                        type: 'narrative',
-                        content: res.content
-                    });
-                }
+            // This part runs every time open/report/templatesMap changes
+            setResultsState(prev => {
+                const newState = { ...prev };
+                let modified = false;
 
-                if (res.interpretation) {
-                    legacyBlocks.push({
-                        id: uuidv4(),
-                        type: 'impression',
-                        content: res.interpretation
-                    });
-                }
-
-                setBlocks(legacyBlocks);
-                setMode(res.mode || 'table');
-                setReportHeader(res.reportHeader || defaultHeader);
-                setMachineInfo(res.machineInfo || "");
-                setConsultantName(res.consultantName || "");
-                setConsultantDesignation(res.consultantDesignation || "");
-                setDoctorDegrees(res.doctorDegrees || "");
-                setDoctorDesignation(res.doctorDesignation || "");
-                setTechnicianId(report.technicianId || user?.id || "");
-            } else {
-                // Initial empty state - check for service-level template
-                setTechnicianId(user?.id || "");
-                
-                const serviceTemplate = report.diagnosticTest?.testResultTemplate;
-                
-                if (Array.isArray(serviceTemplate) && serviceTemplate.length > 0) {
-                    const templateBlocks: DiagnosticBlock[] = serviceTemplate.map((p: any) => ({
-                        id: uuidv4(),
-                        type: 'parameter',
-                        parameter: p.name || "",
-                        value: p.result || "",
-                        unit: p.unit || "",
-                        referenceRange: p.refRange || "",
-                        fieldType: p.fieldType || 'text',
-                        options: p.options || [],
-                        columnDefs: DEFAULT_COLUMNS.map(col => {
-                            if (col.key === 'unit' && p.unitEnabled === false) return { ...col, isVisible: false }
-                            if (col.key === 'referenceRange' && p.refRangeEnabled === false) return { ...col, isVisible: false }
-                            return col
-                        })
-                    }));
-
-                    // If it's a narrative test, add a narrative block at the top
-                    if (report.diagnosticTest?.templateType === 'narrative') {
-                        templateBlocks.unshift({
-                            id: uuidv4(),
-                            type: 'narrative',
-                            content: report.diagnosticTest?.templateDescription || ""
-                        });
-                        setMode('narrative');
+                report.diagnosticTests?.forEach((test, tIdx) => {
+                    const testKey = `${test.id}_${tIdx}`;
+                    if (!newState[testKey]) {
+                        newState[testKey] = {};
+                        modified = true;
                     }
+                    
+                    const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service
+                    const templateType = serviceData?.templateType || (test as any).templateType || 'table'
+                    const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || ""
+                    
+                    // Decode HTML entities (e.g., &lt; to <) for the Rich Text Editor
+                    const templateDescription = rawTemplateDescription
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&nbsp;/g, ' ');
 
-                    setBlocks(templateBlocks);
-                } else {
-                    const initialBlocks: DiagnosticBlock[] = [];
-                    if (report.diagnosticTest?.templateType === 'narrative') {
-                        initialBlocks.push({ id: uuidv4(), type: 'narrative', content: "" });
-                        setMode('narrative');
-                    } else {
-                        initialBlocks.push({ id: uuidv4(), type: 'parameter', parameter: "", value: "", unit: "", referenceRange: "", columnDefs: DEFAULT_COLUMNS });
+                    if (templateType === 'narrative') {
+                        // Crucial: Only set if current result is empty or placeholder
+                        if (!newState[testKey]['__narrative'] || newState[testKey]['__narrative'].result === "" || newState[testKey]['__narrative'].result === undefined) {
+                            if (templateDescription) {
+                                newState[testKey]['__narrative'] = {
+                                    result: templateDescription,
+                                    unit: "",
+                                    refRange: ""
+                                };
+                                modified = true;
+                            }
+                        }
+                    } else if (Array.isArray(serviceData?.testResultTemplate)) {
+                        serviceData.testResultTemplate.forEach((field: any, fIdx: number) => {
+                            const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
+                            if (!newState[testKey][paramKey]) {
+                                newState[testKey][paramKey] = {
+                                    result: field.result || "",
+                                    unit: field.unit || "",
+                                    refRange: field.refRange || field.normalRange || ""
+                                };
+                                modified = true;
+                            }
+                        });
                     }
-                    setBlocks(initialBlocks);
+                });
+                return modified ? newState : prev;
+            });
+        }
+    }, [open, report, lastLoadedId, templatesMap])
+
+    const getClinicalIndicator = (val: string, min?: string | number, max?: string | number) => {
+        if (!val || (!min && !max)) return null;
+        
+        const numVal = parseFloat(val);
+        if (isNaN(numVal)) return null;
+
+        const numMin = min ? parseFloat(min.toString()) : -Infinity;
+        const numMax = max ? parseFloat(max.toString()) : Infinity;
+
+        if (numVal < numMin) return { label: 'LOW', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+        if (numVal > numMax) return { label: 'HIGH', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+        
+        return { label: 'NORMAL', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+    }
+
+    const updateParam = (testKey: string, paramKey: string, field: keyof ParamResult, val: string, defaults?: Partial<ParamResult>) => {
+        setResultsState(prev => ({
+            ...prev,
+            [testKey]: {
+                ...(prev[testKey] || {}),
+                [paramKey]: {
+                    // Start with passed defaults if the state doesn't exist yet
+                    ...(prev[testKey]?.[paramKey] || { 
+                        result: "", 
+                        unit: defaults?.unit || "", 
+                        refRange: defaults?.refRange || "" 
+                    }),
+                    [field]: val
                 }
-
-                // Pre-fill consultant from sale
-                const saleDoc = (report.saleItem as any)?.sale?.doctor;
-                if (saleDoc?.name) setConsultantName(saleDoc.name);
-                if (saleDoc?.designation?.name) setConsultantDesignation(saleDoc.designation.name);
-            }
-        }
-    }, [open, report?.id, user?.id, DEFAULT_COLUMNS])
-
-
-    const addBlock = (type: DiagnosticBlockType, index?: number) => {
-        const newBlock: DiagnosticBlock = {
-            id: uuidv4(),
-            type,
-            parameter: "",
-            value: "",
-            unit: "",
-            referenceRange: "",
-            content: "",
-            columnDefs: type === 'parameter' ? DEFAULT_COLUMNS : undefined,
-            extraValues: {}
-        }
-        
-        if (typeof index === 'number') {
-            const next = [...blocks]
-            next.splice(index + 1, 0, newBlock)
-            setBlocks(next)
-        } else {
-            setBlocks([...blocks, newBlock])
-        }
-    }
-
-    const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set())
-
-    useEffect(() => {
-        if (!report?.result) return
-        const fields = new Set<string>()
-        if (report.result.machineInfo) fields.add('machineInfo')
-        if (report.result.consultantName) fields.add('consultantName')
-        if (report.result.consultantDesignation) fields.add('consultantDesignation')
-        if (report.result.doctorDegrees) fields.add('doctorDegrees')
-        if (report.result.doctorDesignation) fields.add('doctorDesignation')
-        setVisibleFields(fields)
-    }, [report])
-
-    const toggleHeaderField = (field: string) => {
-        const next = new Set(visibleFields)
-        if (next.has(field)) next.delete(field)
-        else next.add(field)
-        setVisibleFields(next)
-    }
-
-
-    const removeBlock = (id: string) => {
-        setBlocks(blocks.filter(b => b.id !== id))
-    }
-
-    const updateBlock = (id: string, field: keyof DiagnosticBlock, val: any) => {
-        setBlocks(blocks.map(b => b.id === id ? { ...b, [field]: val } : b))
-    }
-
-    const onDragEnd = (result: any) => {
-        if (!result.destination) return
-        const items = Array.from(blocks)
-        const [reorderedItem] = items.splice(result.source.index, 1)
-        items.splice(result.destination.index, 0, reorderedItem)
-        setBlocks(items)
-    }
-
-    const toggleColumn = (blockId: string, colKey: string) => {
-        setBlocks(blocks.map(b => {
-            if (b.id !== blockId || !b.columnDefs) return b
-            return {
-                ...b,
-                columnDefs: b.columnDefs.map(c => c.key === colKey ? { ...c, isVisible: !c.isVisible } : c)
             }
         }))
-    }
-
-    const removeColumn = (blockId: string, colKey: string) => {
-        setBlocks(blocks.map(b => {
-            if (b.id !== blockId || !b.columnDefs) return b
-            return {
-                ...b,
-                columnDefs: b.columnDefs.filter(c => c.key !== colKey)
-            }
-        }))
-    }
-
-    const addCustomColumn = (blockId: string) => {
-        const label = prompt("Enter column name:")
-        if (!label) return
-        const key = `custom_${uuidv4().substring(0, 4)}`
-        
-        setBlocks(blocks.map(b => {
-            if (b.id !== blockId) return b
-            const currentCols = b.columnDefs || DEFAULT_COLUMNS
-            return {
-                ...b,
-                columnDefs: [...currentCols, { id: uuidv4(), label, key, isVisible: true, width: '1fr' }]
-            }
-        }))
-    }
-
-
-
-    // Template Logic
-    const handleSaveTemplate = async () => {
-        if (!report?.diagnosticTestId) return
-        
-        const name = prompt("Enter a name for this template:", report.diagnosticTest?.name || "New Template")
-        if (!name) return
-
-        const templateData = { 
-            mode, 
-            reportHeader, 
-            machineInfo, 
-            blocks,
-            consultantName, 
-            consultantDesignation,
-            doctorDegrees,
-            doctorDesignation
-        }
-
-
-        try {
-            await createTemplate.mutateAsync({
-                name,
-                type: mode,
-                description: `Template for ${report.diagnosticTest?.name}`,
-                result: templateData,
-                diagnosticTestId: report.diagnosticTestId,
-                branchId: activeStoreId || ""
-            })
-            toast.success("Template saved successfully")
-            refetchTemplates()
-        } catch {
-            toast.error("Failed to save template")
-        }
-    }
-
-    const handleLoadTemplate = (templateId: string) => {
-        if (templateId === "none") return
-        const template = templates.find(t => t.id === templateId)
-        if (!template) return
-        
-        try {
-            const data = template.result as any
-            if (data.blocks) setBlocks(data.blocks)
-            else if (data.rows) {
-                // Convert legacy rows to blocks
-                setBlocks(data.rows.map((r: any) => ({
-                    id: uuidv4(),
-                    type: 'parameter',
-                    ...r
-                })))
-            }
-            if (data.reportHeader) setReportHeader(data.reportHeader)
-            if (data.machineInfo) setMachineInfo(data.machineInfo)
-            if (data.consultantName) setConsultantName(data.consultantName)
-            if (data.consultantDesignation) setConsultantDesignation(data.consultantDesignation)
-            if (data.doctorDegrees) setDoctorDegrees(data.doctorDegrees)
-            if (data.doctorDesignation) setDoctorDesignation(data.doctorDesignation)
-
-            setSelectedTemplateId(templateId)
-            toast.success(`Template "${template.name}" loaded`)
-        } catch {
-            toast.error("Failed to load template data")
-        }
-    }
-
-    const handleDeleteTemplate = async (templateId: string, e: React.MouseEvent) => {
-        e.stopPropagation()
-        if (window.confirm("Are you sure you want to delete this template?")) {
-            try {
-                await deleteTemplate.mutateAsync(templateId)
-                toast.success("Template deleted")
-                if (selectedTemplateId === templateId) setSelectedTemplateId("none")
-                refetchTemplates()
-            } catch {
-                toast.error("Failed to delete template")
-            }
-        }
     }
 
     const handleConfirm = async () => {
         if (!report) return
-        if (!technicianId) return toast.error("Please select a technician")
+        if (!user) return toast.error("User not found")
 
-        const payload: DiagnosticResult = {
-            mode,
-            reportHeader,
-            machineInfo,
-            consultantName,
-            consultantDesignation,
-            doctorDegrees,
-            doctorDesignation,
-            blocks: blocks.filter(b => (b.parameter?.trim() || b.content?.trim() || b.headerText?.trim()))
+        const blocks: DiagnosticBlock[] = [];
+        const groups = groupTestsByGroup(report);
+
+        groups.forEach(group => {
+            blocks.push({ id: uuidv4(), type: 'header', headerText: group.groupName.toUpperCase() });
+
+            group.tests.forEach((test, tIdx) => {
+                const testKey = `${test.id}_${tIdx}`;
+                const templateService = templatesMap[test.serviceId];
+                const templateType = templateService?.templateType || test.service?.templateType || 'table';
+                
+                if (templateType === 'narrative') {
+                    const narrativeContent = resultsState[testKey]?.['__narrative']?.result || "";
+                    blocks.push({ 
+                        id: uuidv4(), 
+                        type: 'narrative', 
+                        content: narrativeContent 
+                    });
+                } else {
+                    const template = templateService?.testResultTemplate || test.service?.testResultTemplate || [];
+                    if (Array.isArray(template)) {
+                        blocks.push({ id: uuidv4(), type: 'parameter', parameter: test.itemName, isBold: true, isHeader: true } as any);
+                        
+                        template.forEach((field: any, fIdx: number) => {
+                            const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
+                            const data = resultsState[testKey]?.[paramKey] || { result: "", unit: "", refRange: "" };
+                            
+                            const indicator = getClinicalIndicator(data.result, field.minRef, field.maxRef);
+                            const isAbnormal = !!indicator && indicator.label !== 'NORMAL';
+                            const flag = indicator?.label === 'HIGH' ? 'H' : indicator?.label === 'LOW' ? 'L' : '';
+
+                            blocks.push({
+                                id: uuidv4(),
+                                type: 'parameter',
+                                parameter: field.name || field.label,
+                                value: data.result,
+                                unit: data.unit || "",
+                                referenceRange: data.refRange || "",
+                                isAbnormal,
+                                flag
+                            } as any);
+                        });
+                    }
+                }
+            });
+        });
+
+        const payload = { 
+            reportHeader, 
+            blocks, 
+            testResults: resultsState, 
+            machineInfo, 
+            preparedBy: user.fullName 
         }
-
-
-        
 
         try {
             await enterResult.mutateAsync({ 
                 id: report.id, 
                 data: {
-                    technicianId,
+                    medicalTechnologistId: user.id,
                     result: payload,
-                    reportNotes,
-                    status: 'pending-verification'
+                    note: reportNotes,
+                    status: 'completed',
+                    isSampleCollected: true
                 } 
             })
-
-            toast.success("Results updated successfully")
+            toast.success("Report results finalized")
             onOpenChange(false)
             onSuccess?.()
         } catch {
-            toast.error("Failed to update results")
+            toast.error("Failed to save report results")
         }
     }
 
+    const groups = groupTestsByGroup(report);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[95vw] sm:max-w-[95vw] h-[92vh] p-0 gap-0 border-none bg-background shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-                <DialogHeader className="p-6 pb-2 shrink-0 border-b bg-card">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2 text-blue-600">
-                                <Activity className="w-6 h-6" />
-                                Patient Result Entry
-                            </DialogTitle>
-                            <DialogDescription>
-                                Finding entry for <strong>{report?.diagnosticTest?.name}</strong> — {report?.patient?.name}
-                            </DialogDescription>
+            <DialogContent className="sm:max-w-[1200px] w-[96vw] h-[92vh] p-0 flex flex-col overflow-hidden border-border/60 shadow-2xl bg-background rounded-[2rem]">
+                {/* Premium Background Accents */}
+                <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10 pointer-events-none" />
+                
+                {/* Header: Patient Info Card (Adapts to Light/Dark) */}
+                <header className="px-10 py-5 border-b border-border/50 bg-card/30 backdrop-blur-2xl flex items-center justify-between shrink-0">
+                    <DialogTitle className="sr-only">Result Entry Manager - {report?.patient?.name}</DialogTitle>
+                    <div className="flex items-center gap-6">
+                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-xl shadow-primary/5">
+                            <FlaskConical className="h-7 w-7 text-primary" />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex flex-col gap-1 min-w-[200px]">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Report Template</Label>
-                                <Select value={selectedTemplateId} onValueChange={handleLoadTemplate}>
-                                    <SelectTrigger className="h-9 rounded-xl border-amber-500/20 bg-amber-500/5 text-amber-700 font-bold text-xs ring-0 focus:ring-0">
-                                        <div className="flex items-center gap-2">
-                                            <Zap className="w-3.5 h-3.5 text-amber-500" />
-                                            <SelectValue placeholder="Select Template" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl shadow-2xl border-amber-500/10">
-                                        <SelectItem value="none" className="text-xs font-medium">None (Standard)</SelectItem>
-                                        {templates.map(t => (
-                                            <SelectItem key={t.id} value={t.id} className="text-xs font-bold group">
-                                                <div className="flex items-center justify-between w-full gap-4">
-                                                    <span>{t.name}</span>
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-5 w-5 rounded-md text-red-500 hover:bg-red-50 ml-auto opacity-0 group-hover:opacity-100"
-                                                        onClick={(e) => handleDeleteTemplate(t.id, e)}
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        <div className="space-y-0.5">
+                            <h3 className="font-black text-xl tracking-tighter uppercase flex items-center gap-3 text-foreground">
+                                {report?.patient?.name || "ANONYMOUS PATIENT"}
+                                <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/10 text-primary px-3 py-1 uppercase tracking-widest font-black rounded-full">PIN: {report?.patient?.pin || "N/A"}</Badge>
+                            </h3>
+                            <div className="flex items-center gap-4 text-muted-foreground font-bold text-[10px] uppercase tracking-tight opacity-80">
+                                <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {report?.patient?.gender}, {report?.patient?.age}</span>
+                                <Separator orientation="vertical" className="h-3 bg-border" />
+                                <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {report?.createdAt ? format(new Date(report.createdAt), 'dd MMM yyyy, hh:mm a') : 'N/A'}</span>
+                                <Separator orientation="vertical" className="h-3 bg-border" />
+                                <span className="text-primary font-black">INV: {report?.barcode || report?.id?.substring(0,8)}</span>
                             </div>
-                            <Button variant="outline" size="sm" onClick={handleSaveTemplate} className="rounded-xl h-10 mt-5 gap-2 font-bold bg-emerald-500/5 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/10">
-                                <Save className="w-3.5 h-3.5" /> Save Current as Template
-                            </Button>
                         </div>
                     </div>
-                </DialogHeader>                <div className="flex-1 overflow-hidden">
-                    <div className="h-full flex flex-col">
-                        <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b bg-muted/5">
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">Block View:</span>
-                                <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
-                                    <Button 
-                                        variant={mode === 'table' ? 'default' : 'ghost'} 
-                                        size="sm" 
-                                        onClick={() => setMode('table')}
-                                        className={cn("h-8 rounded-lg gap-2 font-bold transition-all px-4", mode === 'table' ? "bg-blue-600 shadow-md text-white border-none" : "text-muted-foreground")}
-                                    >
-                                        <Columns className="w-3.5 h-3.5" /> Table
-                                    </Button>
-                                    <Button 
-                                        variant={mode === 'narrative' ? 'default' : 'ghost'} 
-                                        size="sm" 
-                                        onClick={() => setMode('narrative')}
-                                        className={cn("h-8 rounded-lg gap-2 font-bold transition-all px-4", mode === 'narrative' ? "bg-indigo-600 shadow-md text-white border-none" : "text-muted-foreground")}
-                                    >
-                                        <FileText className="w-3.5 h-3.5" /> Narrative
-                                    </Button>
+
+                    <div className="flex items-center gap-8">
+                        <div className="text-right">
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] block mb-1">Technician (Signed)</span>
+                            <div className="flex items-center gap-2.5 justify-end">
+                                <span className="font-black text-sm text-foreground/90">{user?.fullName || "System Admin"}</span>
+                                <div className="h-7 w-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                 </div>
-                                <div className="w-px h-6 bg-border/50 mx-2" />
-                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">Insert:</span>
-                                <Button variant="outline" size="sm" onClick={() => addBlock('header')} className="h-9 rounded-lg gap-2 font-bold bg-blue-500/5 text-blue-600 border-blue-500/20">
-                                    <Type className="w-3.5 h-3.5" /> Header
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => addBlock('parameter')} className="h-9 rounded-lg gap-2 font-bold bg-emerald-500/5 text-emerald-600 border-emerald-500/20">
-                                    <Beaker className="w-3.5 h-3.5" /> Parameter
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => addBlock('narrative')} className="h-9 rounded-lg gap-2 font-bold bg-indigo-500/5 text-indigo-600 border-indigo-500/20">
-                                    <FileText className="w-3.5 h-3.5" /> Narrative
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => addBlock('impression')} className="h-9 rounded-lg gap-2 font-bold bg-amber-500/5 text-amber-600 border-amber-500/20">
-                                    <Zap className="w-3.5 h-3.5" /> Impression
-                                </Button>
                             </div>
                         </div>
+                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-11 w-11 rounded-2xl bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-all">
+                            <span className="text-xl font-bold">×</span>
+                        </Button>
+                    </div>
+                </header>
 
-                        <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
-                            <div className="space-y-8 pb-10">
-                                {/* General Report Settings */}
-                                <div className="space-y-4 p-5 rounded-2xl bg-muted/20 border border-border/50 shadow-inner">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col gap-1 w-full max-w-xl">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Report Header Title</Label>
-                                            <Input 
-                                                value={reportHeader} 
-                                                onChange={e => setReportHeader(e.target.value)} 
-                                                placeholder="e.g. REPORT OF COMPLETE BLOOD COUNT (CBC)"
-                                                className="h-12 rounded-xl bg-background border-none text-sm font-black text-blue-700 shadow-sm"
-                                            />
-                                        </div>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" className="h-10 rounded-xl gap-2 font-bold bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 mt-5">
-                                                    <Plus className="w-3.5 h-3.5" /> Add Metadata Info
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-2xl">
-                                                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Info To Add</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => toggleHeaderField('machineInfo')} className="rounded-lg m-1 cursor-pointer">
-                                                    <div className="flex items-center justify-between w-full">
-                                                        <span>Machine / Tech info</span>
-                                                        {visibleFields.has('machineInfo') && <Zap className="w-3 h-3 text-amber-500" />}
-                                                    </div>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => toggleHeaderField('consultantName')} className="rounded-lg m-1 cursor-pointer">
-                                                    <div className="flex items-center justify-between w-full">
-                                                        <span>Consultant Name</span>
-                                                        {visibleFields.has('consultantName') && <Zap className="w-3 h-3 text-amber-500" />}
-                                                    </div>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => toggleHeaderField('consultantDesignation')} className="rounded-lg m-1 cursor-pointer">
-                                                    <span>Consultant Designation</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => toggleHeaderField('doctorDegrees')} className="rounded-lg m-1 cursor-pointer">
-                                                    <span>Pathologist Degrees</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => toggleHeaderField('doctorDesignation')} className="rounded-lg m-1 cursor-pointer">
-                                                    <span>Pathologist Designation</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                                                <Activity className="w-3 h-3" /> Main Result / Summary
-                                            </Label>
-                                            <Input 
-                                                value={reportNotes || ""} 
-                                                onChange={e => setReportNotes(e.target.value)} 
-                                                placeholder="e.g. Normal, Reactive, etc."
-                                                className="h-12 rounded-xl bg-primary/5 border-primary/20 text-sm font-black text-primary shadow-sm"
-                                            />
-                                        </div>
-
-                                        {visibleFields.has('machineInfo') && (
-                                            <div className="space-y-1 group relative">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                    <Zap className="w-3 h-3 text-amber-500" /> Machine / Technique Info
-                                                </Label>
-                                                <Input 
-                                                    value={machineInfo} 
-                                                    onChange={e => setMachineInfo(e.target.value)} 
-                                                    placeholder="e.g. Sysmex XN-1000 Automated Analyzer"
-                                                    className="h-10 rounded-xl bg-muted/40 border-none text-xs shadow-sm pr-10"
-                                                />
-                                                <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('machineInfo')} className="h-6 w-6 absolute right-2 top-6 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></Button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {visibleFields.has('consultantName') && (
-                                            <div className="space-y-1 group relative">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                    <User className="w-3 h-3 text-blue-500" /> Referred Consultant
-                                                </Label>
-                                                
-                                                <Popover open={openDoctorSelect} onOpenChange={setOpenDoctorSelect}>
-                                                    <PopoverTrigger asChild>
-                                                        <div className="relative">
-                                                            <Input 
-                                                                value={consultantName} 
-                                                                onChange={e => {
-                                                                    setConsultantName(e.target.value)
-                                                                    if (!openDoctorSelect) setOpenDoctorSelect(true)
-                                                                }} 
-                                                                placeholder="Search or type doctor name..."
-                                                                className="h-10 rounded-xl bg-muted/40 border-none text-xs shadow-sm pr-10"
-                                                            />
-                                                            <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('consultantName')} className="h-6 w-6 absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Trash2 className="w-3 h-3" />
-                                                            </Button>
-                                                        </div>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="p-0 w-[400px] rounded-xl shadow-2xl border-blue-100" align="start">
-                                                        <Command className="rounded-xl">
-                                                            <CommandInput 
-                                                                placeholder="Search clinic doctors..." 
-                                                                value={doctorSearch}
-                                                                onValueChange={setDoctorSearch}
-                                                                className="h-10"
-                                                            />
-                                                            <CommandList className="max-h-[250px]">
-                                                                <CommandEmpty className="p-4 text-xs text-muted-foreground flex flex-col items-center gap-2">
-                                                                    No clinic doctor found.
-                                                                    <Button 
-                                                                        variant="outline" 
-                                                                        size="sm" 
-                                                                        className="h-7 text-[10px] rounded-lg"
-                                                                        onClick={() => {
-                                                                            setConsultantName(doctorSearch)
-                                                                            setOpenDoctorSelect(false)
-                                                                        }}
-                                                                    >
-                                                                        Use "{doctorSearch}" as manual entry
-                                                                    </Button>
-                                                                </CommandEmpty>
-                                                                <CommandGroup heading="Clinic Doctors">
-                                                                    {doctors.map(doc => (
-                                                                        <CommandItem
-                                                                            key={doc.id}
-                                                                            value={doc.name}
-                                                                            onSelect={() => {
-                                                                                setConsultantName(doc.name)
-                                                                                if (doc.designation?.name) {
-                                                                                    setConsultantDesignation(doc.designation.name)
-                                                                                    if (!visibleFields.has('consultantDesignation')) {
-                                                                                        toggleHeaderField('consultantDesignation')
-                                                                                    }
-                                                                                }
-                                                                                setOpenDoctorSelect(false)
-                                                                                setDoctorSearch("")
-                                                                            }}
-                                                                            className="flex flex-col items-start gap-1 p-3 cursor-pointer rounded-lg m-1"
-                                                                        >
-                                                                            <span className="font-bold text-xs">{doc.name}</span>
-                                                                            {doc.designation?.name && (
-                                                                                <span className="text-[10px] text-muted-foreground italic">{doc.designation.name}</span>
-                                                                            )}
-                                                                        </CommandItem>
-                                                                    ))}
-                                                                </CommandGroup>
-                                                            </CommandList>
-                                                        </Command>
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                        )}
-                                        {visibleFields.has('consultantDesignation') && (
-                                            <div className="space-y-1 group relative">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Consultant Designation</Label>
-                                                <Input 
-                                                    value={consultantDesignation} 
-                                                    onChange={e => setConsultantDesignation(e.target.value)} 
-                                                    placeholder="e.g. Cardiologist"
-                                                    className="h-10 rounded-xl bg-background border-none text-xs shadow-sm pr-10"
-                                                />
-                                                <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('consultantDesignation')} className="h-6 w-6 absolute right-2 top-6 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></Button>
-                                            </div>
-                                        )}
-                                        {visibleFields.has('doctorDegrees') && (
-                                            <div className="space-y-1 group relative">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                    <ClipboardList className="w-3 h-3 text-indigo-300" /> Pathologist Degrees
-                                                </Label>
-                                                <Input 
-                                                    value={doctorDegrees} 
-                                                    onChange={e => setDoctorDegrees(e.target.value)} 
-                                                    placeholder="e.g. MBBS, BCS"
-                                                    className="h-10 rounded-xl bg-background border-none text-xs shadow-sm pr-10"
-                                                />
-                                                <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('doctorDegrees')} className="h-6 w-6 absolute right-2 top-6 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></Button>
-                                            </div>
-                                        )}
-                                        {visibleFields.has('doctorDesignation') && (
-                                            <div className="space-y-1 group relative">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                                    <ClipboardList className="w-3 h-3 text-indigo-300" /> Pathologist Designation
-                                                </Label>
-                                                <Input 
-                                                    value={doctorDesignation} 
-                                                    onChange={e => setDoctorDesignation(e.target.value)} 
-                                                    placeholder="e.g. Senior Pathologist"
-                                                    className="h-10 rounded-xl bg-background border-none text-xs shadow-sm pr-10"
-                                                />
-                                                <Button size="icon" variant="ghost" onClick={() => toggleHeaderField('doctorDesignation')} className="h-6 w-6 absolute right-2 top-6 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></Button>
-                                            </div>
-                                        )}
-                                    </div>
+                {/* Main Content: High-Density Result Table (Standard Scrollable Container) */}
+                <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-muted/20">
+                    {/* Subtle top shadow on scroll */}
+                    <div className="sticky top-0 left-0 w-full h-4 bg-gradient-to-b from-foreground/5 to-transparent z-10 pointer-events-none" />
+                    
+                    <div className="px-8 py-6 pb-24">                        {groups.map((group, gIdx) => (
+                            <div key={gIdx} className="mb-12 last:mb-0">
+                                {/* Group Header Badge */}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="h-px flex-1 bg-border/50" />
+                                    <Badge className="bg-primary/5 text-primary border-primary/20 text-[10px] font-black uppercase px-6 py-2 rounded-full tracking-widest shadow-sm">{group.groupName}</Badge>
+                                    <div className="h-px flex-1 bg-border/50" />
                                 </div>
 
-                                {/* BLOCK BUILDER AREA */}
-                                <DragDropContext onDragEnd={onDragEnd}>
-                                    <Droppable droppableId="blocks">
-                                        {(provided) => (
-                                            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                                                {blocks
-                                                    .filter(block => {
-                                                        if (mode === 'narrative') {
-                                                            // In narrative mode, hide technical parameter rows unless they are headers
-                                                            return block.type !== 'parameter' || block.isHeader;
-                                                        }
-                                                        // In table mode, show everything
-                                                        return true;
-                                                    })
-                                                    .map((block, index) => (
-                                                    <Draggable key={block.id} draggableId={block.id} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                className={cn(
-                                                                    "group relative bg-background border rounded-2xl transition-all",
-                                                                    snapshot.isDragging ? "shadow-2xl border-primary ring-4 ring-primary/10 z-50 scale-[1.02]" : "border-border/50 hover:border-border",
-                                                                    block.type === 'header' && "bg-blue-500/5 border-blue-500/20",
-                                                                    block.type === 'impression' && "bg-amber-500/5 border-amber-500/20"
-                                                                )}
-                                                            >
-                                                                {/* Drag Handle */}
-                                                                <div 
-                                                                    {...provided.dragHandleProps}
-                                                                    className="absolute -left-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-1 bg-white border rounded-md shadow-sm z-10"
-                                                                >
-                                                                    <GripVertical className="w-4 h-4 text-muted-foreground" />
-                                                                </div>                                                                 {/* Block Actions */}
-                                                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                                    {block.type === 'parameter' && (
-                                                                        <DropdownMenu>
-                                                                            <DropdownMenuTrigger asChild>
-                                                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg bg-white border shadow-sm hover:text-indigo-600">
-                                                                                    <Settings2 className="w-3.5 h-3.5" />
-                                                                                </Button>
-                                                                            </DropdownMenuTrigger>
-                                                                            <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl">
-                                                                                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-1">Visible Columns</DropdownMenuLabel>
-                                                                                {(block.columnDefs || DEFAULT_COLUMNS).map(col => {
-                                                                                    const isCore = ['parameter', 'value', 'unit', 'referenceRange'].includes(col.key);
-                                                                                    return (
-                                                                                        <div key={col.key} className="flex items-center gap-1 group/item">
-                                                                                            <DropdownMenuItem 
-                                                                                                onClick={(e) => { e.preventDefault(); toggleColumn(block.id, col.key); }}
-                                                                                                className="flex-1 flex items-center justify-between rounded-lg cursor-pointer"
-                                                                                            >
-                                                                                                <span className="text-xs font-bold">{col.label}</span>
-                                                                                                <div className={cn("w-2.5 h-2.5 rounded-full", col.isVisible ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted border")} />
-                                                                                            </DropdownMenuItem>
-                                                                                            {!isCore && (
-                                                                                                <Button 
-                                                                                                    variant="ghost" 
-                                                                                                    size="sm" 
-                                                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeColumn(block.id, col.key); }}
-                                                                                                    className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-700 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                                                                                >
-                                                                                                    <Trash2 className="w-3 h-3" />
-                                                                                                </Button>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )
-                                                                                })}
-                                                                                <DropdownMenuSeparator />
-                                                                                <DropdownMenuItem onClick={() => addCustomColumn(block.id)} className="text-xs font-black text-indigo-600 hover:text-indigo-700 bg-indigo-50/50 rounded-lg m-1 justify-center py-2 cursor-pointer">
-                                                                                    <Plus className="w-3 h-3 mr-2" /> Add Custom Field
-                                                                                </DropdownMenuItem>
-                                                                            </DropdownMenuContent>
-                                                                        </DropdownMenu>
-                                                                    )}
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        onClick={() => addBlock(block.type, index)}
-                                                                        className="h-7 w-7 rounded-lg bg-white border shadow-sm hover:text-blue-600"
-                                                                    >
-                                                                        <Plus className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        onClick={() => removeBlock(block.id)}
-                                                                        className="h-7 w-7 rounded-lg bg-white border shadow-sm hover:text-red-600 hover:bg-red-50"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                </div>
-
-
-                                                                <div className="p-4">
-                                                                    {block.type === 'header' && (
+                                <div className="rounded-[2rem] bg-card/40 border border-border/60 overflow-hidden shadow-2xl backdrop-blur-sm">
+                                    <div className="overflow-x-auto custom-scrollbar">
+                                        <Table className="border-collapse min-w-[1050px]">
+                                            <TableHeader className="bg-muted/30">
+                                                {group.tests.some(t => {
+                                                    const s = templatesMap[t.serviceId] || t.service || t;
+                                                    return s.templateType !== 'narrative';
+                                                }) && (
+                                                    <TableRow className="border-none hover:bg-transparent tracking-widest uppercase text-muted-foreground font-black text-[10px] h-14">
+                                                        <TableHead className="w-[60px] text-center px-4"><Hash className="h-4 w-4 mx-auto" /></TableHead>
+                                                        <TableHead className="min-w-[280px] px-8">Clinical Parameter</TableHead>
+                                                        <TableHead className="w-[320px] text-center px-8">Test Result</TableHead>
+                                                        <TableHead className="w-[160px] text-center px-8">Metric (Unit)</TableHead>
+                                                        <TableHead className="w-[280px] text-center px-8">Clinical Reference</TableHead>
+                                                    </TableRow>
+                                                )}
+                                            </TableHeader>
+                                            <TableBody>
+                                                {group.tests.map((test, tIdx) => {
+                                                    const testKey = `${test.id}_${tIdx}`;
+                                                    const templateService = templatesMap[test.serviceId];
+                                                    const template = templateService?.testResultTemplate || test.service?.testResultTemplate || [];
+                                                    
+                                                    return (
+                                                        <React.Fragment key={testKey}>
+                                                            {/* Service Separator Row - Only for Table mode */}
+                                                            {(templateService?.templateType !== 'narrative' && test.service?.templateType !== 'narrative') && (
+                                                                <TableRow className="bg-muted/50 border-y border-border/40 hover:bg-muted/70 transition-colors">
+                                                                    <TableCell colSpan={5} className="py-3 px-8">
                                                                         <div className="flex items-center gap-3">
-                                                                            <Type className="w-4 h-4 text-blue-600 shrink-0" />
-                                                                            <Input 
-                                                                                value={block.headerText || block.parameter} 
-                                                                                onChange={e => updateBlock(block.id, 'headerText', e.target.value)}
-                                                                                placeholder="Section Header (e.g. MICROSCOPY)"
-                                                                                className="border-none bg-transparent h-10 text-lg font-black uppercase tracking-tight text-blue-700 placeholder:text-blue-300 focus-visible:ring-0"
+                                                                            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                                                                <Beaker className="h-4 w-4" />
+                                                                            </div>
+                                                                            <h4 className="font-black text-sm text-foreground uppercase tracking-wider">{test.itemName}</h4>
+                                                                        </div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            )}
+
+                                                            {isLoadingTemplates ? (
+                                                                <TableRow>
+                                                                    <TableCell colSpan={5} className="h-32 text-center border-none">
+                                                                        <div className="flex flex-col items-center gap-2 opacity-30">
+                                                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                                                            <span className="text-[9px] font-black uppercase tracking-widest">Syncing Schema...</span>
+                                                                        </div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ) : (templateService?.templateType === 'narrative' || test.service?.templateType === 'narrative') ? (
+                                                                <TableRow className="border-none hover:bg-transparent">
+                                                                    <TableCell colSpan={5} className="p-0">
+                                                                        <div className="bg-card/30 border-b border-border/50 p-6 flex items-center justify-between">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+                                                                                    <FileText className="h-5 w-5" />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h4 className="font-black text-sm text-foreground uppercase tracking-widest leading-none">{test.itemName}</h4>
+                                                                                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-tighter opacity-60 italic">Narrative Mode enabled for descriptive findings</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="p-10 bg-background/50 backdrop-blur-md">
+                                                                            <RichTextEditor 
+                                                                                value={resultsState[testKey]?.['__narrative']?.result || ""}
+                                                                                onChange={(val) => updateParam(testKey, '__narrative', 'result', val, { unit: '', refRange: '' })}
+                                                                                placeholder="Draft detailed descriptive findings here..."
                                                                             />
                                                                         </div>
-                                                                    )}
-
-                                                                    {block.type === 'parameter' && (
-                                                                        <div 
-                                                                            className="grid gap-3 items-center" 
-                                                                            style={{ 
-                                                                                gridTemplateColumns: `${(block.columnDefs || DEFAULT_COLUMNS).filter(c => c.isVisible).map(c => c.width || '1fr').join(' ')} 80px` 
-                                                                            }}
-                                                                        >
-                                                                            {(block.columnDefs || DEFAULT_COLUMNS).filter(c => c.isVisible).map(col => {
-                                                                                const isCore = ['parameter', 'value', 'unit', 'referenceRange'].includes(col.key);
-                                                                                const val = isCore ? (block as any)[col.key] : (block.extraValues?.[col.key] || "");
-                                                                                
-                                                                                // Render logic for Result column
-                                                                                if (col.key === 'value' && block.fieldType === 'dropdown') {
-                                                                                    return (
-                                                                                        <Select 
-                                                                                            key={col.key}
-                                                                                            value={val}
-                                                                                            onValueChange={(newVal) => updateBlock(block.id, 'value', newVal)}
-                                                                                        >
-                                                                                            <SelectTrigger className="h-10 rounded-xl bg-background border border-border/50 shadow-sm font-black text-center focus:ring-0">
-                                                                                                <SelectValue placeholder="Select..." />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ) : template.length > 0 ? (
+                                                                template.map((field: any, fIdx: number) => {
+                                                                    const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
+                                                                    const defaultData = { 
+                                                                        unit: field.unit || "", 
+                                                                        refRange: field.refRange || field.normalRange || "" 
+                                                                    };
+                                                                    const data = resultsState[testKey]?.[paramKey] || { 
+                                                                        result: "", 
+                                                                        ...defaultData 
+                                                                    };
+                                                                    
+                                                                    return (
+                                                                        <TableRow key={fIdx} className="group border-none hover:bg-primary/5 transition-all duration-200">
+                                                                            <TableCell className="text-center font-black text-muted-foreground/50 group-hover:text-primary transition-colors text-[11px] px-4 py-3">
+                                                                                {fIdx + 1}
+                                                                            </TableCell>
+                                                                            <TableCell className="px-8 py-3">
+                                                                                <span className="font-bold text-foreground/80 group-hover:text-foreground transition-colors text-xs tracking-tight">{field.name || field.label}</span>
+                                                                                {field.fieldType === 'dropdown' && <Badge variant="secondary" className="ml-2 text-[7px] h-3 px-1 rounded-sm opacity-50">LIST</Badge>}
+                                                                            </TableCell>
+                                                                            
+                                                                            <TableCell className="px-8 py-3">
+                                                                                <div className="flex flex-col gap-1.5 items-center">
+                                                                                    {field.fieldType === 'dropdown' ? (
+                                                                                        <Select value={data.result} onValueChange={(v) => updateParam(testKey, paramKey, 'result', v, defaultData)}>
+                                                                                            <SelectTrigger className="h-9 rounded-xl bg-background border-border hover:border-primary/40 text-[13px] font-black text-indigo-500 focus:ring-primary/20 transition-all text-center shadow-sm">
+                                                                                                <SelectValue placeholder="Select" />
                                                                                             </SelectTrigger>
-                                                                                            <SelectContent className="rounded-xl">
-                                                                                                {Array.isArray(block.options) && block.options.map((opt: string) => (
-                                                                                                    <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>
+                                                                                            <SelectContent className="bg-popover border-border text-popover-foreground rounded-2xl shadow-2xl">
+                                                                                                {(field.options || []).map((opt: string) => (
+                                                                                                    <SelectItem key={opt} value={opt} className="focus:bg-primary focus:text-primary-foreground font-black cursor-pointer text-xs">{opt}</SelectItem>
                                                                                                 ))}
                                                                                             </SelectContent>
                                                                                         </Select>
-                                                                                    )
-                                                                                }
+                                                                                    ) : (
+                                                                                        <div className="relative w-full">
+                                                                                            <Input 
+                                                                                                value={data.result}
+                                                                                                onChange={e => updateParam(testKey, paramKey, 'result', e.target.value, defaultData)}
+                                                                                                className={cn(
+                                                                                                    "h-9 rounded-xl bg-background border-border text-[13px] font-black text-center transition-all focus-visible:ring-primary/20 hover:border-primary/30 shadow-sm px-6",
+                                                                                                    data.result ? "text-foreground" : "text-muted-foreground/30 italic"
+                                                                                                )}
+                                                                                                placeholder="Value"
+                                                                                            />
+                                                                                            {/* Clinical Indicator Badge */}
+                                                                                            {(() => {
+                                                                                                const indicator = getClinicalIndicator(data.result, field.minRef, field.maxRef);
+                                                                                                if (!indicator) return null;
+                                                                                                return (
+                                                                                                    <div className={cn(
+                                                                                                        "absolute -right-2 -top-2 px-1.5 py-0.5 rounded-md text-[8px] font-black border tracking-tighter shadow-sm backdrop-blur-md animate-in fade-in zoom-in duration-300",
+                                                                                                        indicator.color
+                                                                                                    )}>
+                                                                                                        {indicator.label}
+                                                                                                    </div>
+                                                                                                );
+                                                                                            })()}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </TableCell>
 
-                                                                                return (
-                                                                                    <Textarea 
-                                                                                        key={col.key}
-                                                                                        value={val} 
-                                                                                        onChange={e => {
-                                                                                            if (isCore) updateBlock(block.id, col.key as keyof DiagnosticBlock, e.target.value)
-                                                                                            else {
-                                                                                                const nextExtra = { ...(block.extraValues || {}), [col.key]: e.target.value }
-                                                                                                updateBlock(block.id, 'extraValues', nextExtra)
-                                                                                            }
-                                                                                        }}
-                                                                                        onKeyDown={(e) => {
-                                                                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                                                                e.preventDefault();
-                                                                                                // Focus next logic could go here
-                                                                                            }
-                                                                                        }}
-                                                                                        placeholder={col.label}
+                                                                            <TableCell className="px-8 py-3">
+                                                                                <div className="relative group/input">
+                                                                                    <Input 
+                                                                                        value={data.unit}
+                                                                                        onChange={e => updateParam(testKey, paramKey, 'unit', e.target.value, defaultData)}
                                                                                         className={cn(
-                                                                                            "min-h-[40px] h-auto border-none bg-muted/20 rounded-xl px-4 py-2 resize-none overflow-hidden focus-visible:ring-0",
-                                                                                            col.key === 'parameter' && "font-bold",
-                                                                                            col.key === 'parameter' && block.isHeader && "text-blue-700 uppercase",
-                                                                                            col.key === 'value' && "text-center font-black bg-background border border-border/50 shadow-sm",
-                                                                                            col.key === 'value' && block.isAbnormal && "bg-red-50 text-red-600 border-red-200 shadow-none",
-                                                                                            !isCore && "italic text-indigo-600 bg-indigo-50/30"
+                                                                                            "h-9 rounded-xl bg-muted/20 border-transparent text-center text-[11px] font-bold text-muted-foreground/80 transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4",
+                                                                                            !data.unit && "opacity-30"
                                                                                         )}
-                                                                                        rows={1}
-                                                                                        onInput={(e: any) => {
-                                                                                            e.target.style.height = 'auto';
-                                                                                            e.target.style.height = e.target.scrollHeight + 'px';
-                                                                                        }}
+                                                                                        placeholder="Unit"
                                                                                     />
-                                                                                )
-                                                                            })}
-                                                                            
-                                                                            <div className="flex justify-end gap-1">
-                                                                                <Button 
-                                                                                    variant="ghost" 
-                                                                                    size="icon" 
-                                                                                    onClick={() => updateBlock(block.id, 'isAbnormal', !block.isAbnormal)}
-                                                                                    className={cn("h-8 w-8 rounded-lg", block.isAbnormal ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "bg-muted/30 text-muted-foreground")}
-                                                                                >
-                                                                                    <Zap className="h-4 w-4" />
-                                                                                </Button>
-                                                                                <Button 
-                                                                                    variant="ghost" 
-                                                                                    size="icon" 
-                                                                                    onClick={() => updateBlock(block.id, 'isBold', !block.isBold)}
-                                                                                    className={cn("h-8 w-8 rounded-lg", block.isBold ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "bg-muted/30 text-muted-foreground")}
-                                                                                >
-                                                                                    <Bold className="h-4 w-4" />
-                                                                                </Button>
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
+                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all" />
+                                                                                </div>
+                                                                            </TableCell>
 
-
-                                                                    {(block.type === 'narrative' || block.type === 'impression') && (
-                                                                        <div className="space-y-3">
-                                                                            <div className="flex items-center gap-2">
-                                                                                {block.type === 'narrative' ? <FileText className="w-4 h-4 text-indigo-600" /> : <Zap className="w-4 h-4 text-amber-500" />}
-                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                                                    {block.type === 'narrative' ? 'Findings / Narrative' : 'Impression / Note'}
-                                                                                </span>
-                                                                            </div>
-                                                                            {block.type === 'narrative' ? (
-                                                                                <RichTextEditor 
-                                                                                    value={block.content || ""} 
-                                                                                    onChange={val => updateBlock(block.id, 'content', val)}
-                                                                                    placeholder="Enter detailed clinical findings..."
-                                                                                />
-                                                                            ) : (
-                                                                                <Textarea 
-                                                                                    value={block.content || ""} 
-                                                                                    onChange={e => updateBlock(block.id, 'content', e.target.value)}
-                                                                                    placeholder="Summary impression..."
-                                                                                    className="min-h-[100px] border-none bg-muted/20 rounded-2xl p-4 font-bold focus-visible:ring-0"
-                                                                                />
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </DragDropContext>
-
-
-                                {/* Technician Selection & Notes */}
-                                <div className="pt-8 border-t border-dashed mt-10 grid grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Internal Audit Notes</Label>
-                                        <Input 
-                                            value={reportNotes} 
-                                            onChange={e => setReportNotes(e.target.value)}
-                                            placeholder="Confidential technician notes..."
-                                            className="h-12 rounded-xl bg-background border border-border/50 shadow-sm"
-                                        />
+                                                                            <TableCell className="px-8 py-3">
+                                                                                <div className="relative group/input">
+                                                                                    <Input 
+                                                                                        value={data.refRange}
+                                                                                        onChange={e => updateParam(testKey, paramKey, 'refRange', e.target.value, defaultData)}
+                                                                                        className={cn(
+                                                                                            "h-9 rounded-xl bg-muted/20 border-transparent text-center text-[10px] font-bold text-muted-foreground/70 italic transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4",
+                                                                                            !data.refRange && "opacity-30"
+                                                                                        )}
+                                                                                        placeholder="Reference"
+                                                                                    />
+                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all" />
+                                                                                </div>
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <TableRow>
+                                                                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground/50 font-bold italic border-none text-[11px]">
+                                                                        No entry parameters defined for this clinical test.
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 </div>
                             </div>
+                        ))}
+
+                    </div>
+                </main>
+
+                {/* Footer: Clinical Documentation & Actions (Fixed at bottom) */}
+                <footer className="shrink-0 bg-card border-t border-border shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] backdrop-blur-3xl">
+                    <div className="px-10 py-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                    <Microscope className="h-3.5 w-3.5" />
+                                    <span>Methodology & Equipment</span>
+                                </div>
+                                <Input 
+                                    value={machineInfo} 
+                                    onChange={e => setMachineInfo(e.target.value)}
+                                    className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus-visible:ring-primary/20 shadow-inner px-5"
+                                    placeholder="e.g. Automated Analyzer..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                    <Activity className="h-3.5 w-3.5" />
+                                    <span>Clinical Interpretation</span>
+                                </div>
+                                <Textarea 
+                                    value={reportNotes} 
+                                    onChange={e => setReportNotes(e.target.value)}
+                                    className="h-11 min-h-[44px] rounded-2xl bg-muted/40 border-border text-xs font-medium resize-none py-3 focus-visible:ring-primary/20 shadow-inner px-5"
+                                    placeholder="Additional observations..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center py-3 border-t border-border/50">
+                            <p className="text-[9px] font-black uppercase text-muted-foreground max-w-[400px] tracking-tight leading-relaxed opacity-70">
+                                * Diagnostic integrity verified. Laboratory parameters validated by technologist.
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => onOpenChange(false)}
+                                    className="h-11 rounded-2xl px-8 font-bold text-xs uppercase tracking-widest border-border hover:bg-muted transition-all active:scale-95"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    onClick={handleConfirm} 
+                                    disabled={enterResult.isPending || isLoadingTemplates}
+                                    className="h-11 rounded-2xl px-12 gap-3 font-black uppercase text-xs tracking-widest bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 active:scale-95 transition-all text-primary-foreground border-none"
+                                >
+                                    {enterResult.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    Finalize Entry
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </footer>
 
-                <DialogFooter className="p-6 bg-muted/20 border-t shrink-0 flex items-center justify-between">
-                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-bold h-12 px-8 hover:bg-red-50 hover:text-red-600 transition-colors">
-                        Close Without Saving
-                    </Button>
-                    <div className="flex gap-3">
-                        <Button 
-                            onClick={handleConfirm}
-                            disabled={!technicianId || enterResult.isPending}
-                            className="rounded-xl h-12 px-12 font-black shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all active:scale-95 disabled:grayscale"
-                        >
-                            {enterResult.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Finalize Report & Submit
-                        </Button>
-                    </div>
-                </DialogFooter>
+                {/* Final Styles Restored/Enhanced */}
+                <style jsx global>{`
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 12px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: hsl(var(--primary) / 0.1);
+                        border-radius: 20px;
+                        border: 4px solid transparent;
+                        background-clip: content-box;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: hsl(var(--primary) / 0.3);
+                        background-clip: content-box;
+                    }
+                `}</style>
             </DialogContent>
         </Dialog>
     )

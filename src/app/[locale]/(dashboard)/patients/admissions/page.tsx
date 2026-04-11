@@ -5,6 +5,7 @@ import { AdmissionDetailsDialog } from "@/components/patients/admission-details-
 import { DischargeDialog } from "@/components/patients/discharge-dialog"
 import { AdmissionFilters } from "@/components/patients/admission-filters"
 import { AdmissionPrintDialog } from "@/components/patients/admission-print-dialog"
+import { AddAdmissionServiceDialog } from "@/components/patients/add-service-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 import { Badge } from "@/components/ui/badge"
@@ -59,6 +60,7 @@ export default function AdmissionsPage() {
     const [admissionDialogOpen, setAdmissionDialogOpen] = useState(false)
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
     const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false)
+    const [addServiceDialogOpen, setAddServiceDialogOpen] = useState(false)
     const [printDialogOpen, setPrintDialogOpen] = useState(false)
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
@@ -293,6 +295,20 @@ export default function AdmissionsPage() {
                                                     <Button 
                                                         variant="ghost" 
                                                         size="icon" 
+                                                        className="h-9 w-9 rounded-xl hover:bg-blue-500/20 hover:text-blue-500 transition-all group/btn bg-blue-500/5 border border-blue-500/10 disabled:opacity-30"
+                                                        disabled={adm.status !== 'admitted'}
+                                                        title="Add Service / Bill"
+                                                        onClick={() => {
+                                                            setSelectedAdmission(adm)
+                                                            setAddServiceDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Plus className="h-4 w-4 transition-all group-hover/btn:scale-110" />
+                                                    </Button>
+
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
                                                         className="h-9 w-9 rounded-xl hover:bg-destructive/20 hover:text-destructive transition-all group/btn bg-destructive/5 border border-destructive/10"
                                                         onClick={() => {
                                                             setDeleteId(adm.id)
@@ -398,6 +414,13 @@ export default function AdmissionsPage() {
                     open={printDialogOpen}
                     onOpenChange={setPrintDialogOpen}
                     admissionId={selectedAdmission?.id || null}
+                />
+
+                <AddAdmissionServiceDialog 
+                    open={addServiceDialogOpen}
+                    onOpenChange={setAddServiceDialogOpen}
+                    admission={selectedAdmission}
+                    onSuccess={() => refetch()}
                 />
 
                 <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

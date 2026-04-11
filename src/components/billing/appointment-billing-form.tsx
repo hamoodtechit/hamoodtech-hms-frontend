@@ -58,6 +58,8 @@ import { useEffect, useState, useMemo } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
+import { ReferralSearch } from "@/components/hr/referral-search"
+import { AppointmentDetailsDialog } from "@/components/appointments/appointment-details-dialog"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -142,6 +144,7 @@ export function AppointmentBillingForm() {
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
     const [appointmentDate, setAppointmentDate] = useState<string>(new Date().toISOString().split('T')[0])
     const [timeSlot, setTimeSlot] = useState<string>("")
+    const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>("")
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     
     // Modal & History State
@@ -150,6 +153,8 @@ export function AppointmentBillingForm() {
     const [lastSale, setLastSale] = useState<Sale | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
+    const [appointmentDetailsOpen, setAppointmentDetailsOpen] = useState(false)
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
     const [initialAddPayment, setInitialAddPayment] = useState(false)
 
     // Cart State
@@ -226,6 +231,7 @@ export function AppointmentBillingForm() {
                 doctorId: selectedDoctorId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
+                referralPersonId: selectedReferralPersonId || undefined,
                 serviceItems: cart.map(item => ({
                     serviceId: item.serviceId,
                     itemName: item.name,
@@ -274,6 +280,7 @@ export function AppointmentBillingForm() {
             setPaidAmount(0)
             setDiscount(0)
             setDiscountFixedAmount(0)
+            setSelectedReferralPersonId("")
             refetchSales()
         } catch (error) {
             toast.error("Failed to process transaction")
@@ -393,6 +400,16 @@ export function AppointmentBillingForm() {
                                         placeholder="Assign Consultant..."
                                         loading={loadingUsers}
                                         showAll={false}
+                                    />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                        Referral Source (Optional)
+                                    </Label>
+                                    <ReferralSearch 
+                                        selectedReferralId={selectedReferralPersonId}
+                                        onSelect={(referral) => setSelectedReferralPersonId(referral?.id || "")}
                                     />
                                 </div>
 
@@ -734,6 +751,12 @@ export function AppointmentBillingForm() {
                 initialAddPayment={initialAddPayment}
             />
 
+            <AppointmentDetailsDialog 
+                open={appointmentDetailsOpen}
+                onOpenChange={setAppointmentDetailsOpen}
+                appointmentId={selectedAppointmentId}
+            />
+
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                 <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
                     <DialogHeader className="p-8 border-b bg-muted/30">
@@ -944,6 +967,24 @@ export function AppointmentBillingForm() {
                                                     </TableCell>
                                                     <TableCell className="pr-8">
                                                         <div className="flex justify-end items-center gap-2">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => {
+                                                                    if (sale.appointmentId) {
+                                                                        setSelectedAppointmentId(sale.appointmentId)
+                                                                        setAppointmentDetailsOpen(true)
+                                                                    } else {
+                                                                        setSelectedSaleForDetails(sale)
+                                                                        setInitialAddPayment(false)
+                                                                        setDetailsOpen(true)
+                                                                    }
+                                                                }}
+                                                                className="h-10 w-10 rounded-2xl bg-muted/30 hover:bg-primary hover:text-white transition-all group-hover:bg-primary/10 group-hover:text-primary"
+                                                                title="View Details"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="icon" 

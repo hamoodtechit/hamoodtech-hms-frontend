@@ -11,6 +11,7 @@ export interface User {
   phone: string | null;
   fullName: string;
   fullNameBangla?: string;
+  designation?: string;
   profilePhotoUrl?: string | null;
   isActive: boolean;
   roleId: string;
@@ -29,6 +30,7 @@ export interface CreateUserPayload {
   fullName: string;
   fullNameBangla?: string;
   phone?: string;
+  designation?: string;
   roleId: string;
   branchId?: string;
   employeeId?: string;

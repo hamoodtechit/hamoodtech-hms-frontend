@@ -48,7 +48,8 @@ export function ConsolidatedReportDialog({ open, onOpenChange, patientId, branch
         const grouped: Record<string, { id: string, name: string, reports: DiagnosticReport[] }> = {}
         
         reports.forEach(report => {
-            const group = report.testGroup || report.diagnosticTest?.testGroup || { id: 'uncategorized', name: 'Other Results' }
+            const firstTest = report.diagnosticTests?.[0];
+            const group = firstTest?.service?.testGroup || { id: 'uncategorized', name: 'Other Results' }
             if (!grouped[group.id]) {
                 grouped[group.id] = { id: group.id, name: group.name, reports: [] }
             }
@@ -86,7 +87,7 @@ export function ConsolidatedReportDialog({ open, onOpenChange, patientId, branch
                             
                             return `
                                 <tr class="test-row-header">
-                                    <td colspan="4" style="font-weight: 900; background: #f9f9f9; padding: 6px 10px;">${report.diagnosticTest?.name}</td>
+                                    <td colspan="4" style="font-weight: 900; background: #f9f9f9; padding: 6px 10px;">${report.diagnosticTests?.map(t => t.itemName).join(', ')}</td>
                                 </tr>
                                 ${blocks.map(block => `
                                     <tr style="${block.isHeader ? 'background: #fafafa; font-weight: bold;' : ''}">
@@ -143,31 +144,30 @@ export function ConsolidatedReportDialog({ open, onOpenChange, patientId, branch
                 <div class="category-header">${group.name} REPORT</div>
                 
                 <div class="patient-box">
-                    <div class="info-row"><span class="label">Bill ID</span> <span class="value">: ${headerReport?.saleItem?.invoiceNumber || headerReport?.saleItemId || 'N/A'}</span></div>
-                    <div class="info-row"><span class="label">Delivery Date</span> <span class="value">: ${headerReport?.saleItem?.deliveryDate ? new Date(headerReport.saleItem.deliveryDate).toLocaleDateString() : 'N/A'}</span></div>
+                    <div class="info-row"><span class="label">Bill ID</span> <span class="value">: ${headerReport?.sale?.invoiceNumber || 'N/A'}</span></div>
+                    <div class="info-row"><span class="label">Delivery Date</span> <span class="value">: ${headerReport?.updatedAt ? new Date(headerReport.updatedAt).toLocaleDateString() : 'N/A'}</span></div>
                     
-                    <div class="info-row"><span class="label">UHID</span> <span class="value">: ${headerReport?.patient?.patientNumber || headerReport?.patient?.uhid || 'N/A'}</span></div>
+                    <div class="info-row"><span class="label">UHID</span> <span class="value">: ${headerReport?.patient?.uhid || 'N/A'}</span></div>
                     <div class="info-row"><span class="label">Received Date</span> <span class="value">: ${new Date(headerReport?.createdAt || '').toLocaleDateString()}</span></div>
                     
                     <div class="info-row"><span class="label">Patient Name</span> <span class="value">: ${headerReport?.patient?.name}</span></div>
                     <div class="info-row"><span class="label">Age / Sex</span> <span class="value">: ${headerReport?.patient?.age || 'N/A'} Y / ${headerReport?.patient?.gender || 'N/A'}</span></div>
                     
-                    <div class="info-row"><span class="label">Consultant</span> <span class="value">: ${resultData?.consultantName || 'SELF'}</span></div>
-                    <div class="info-row"><span class="label">Specimen</span> <span class="value">: ${headerReport?.sampleDetails || 'Blood'}</span></div>
+                    <div class="info-row"><span class="label">Consultant</span> <span class="value">: ${resultData?.consultantName || headerReport?.doctor?.fullName || 'SELF'}</span></div>
+                    <div class="info-row"><span class="label">Specimen</span> <span class="value">: ${headerReport?.note || 'Sample'}</span></div>
                 </div>
 
                 ${reportHtml}
 
                 <div class="report-footer">
                     <div class="foot-left">
-                        <strong>${headerReport?.approvedBy?.fullName || headerReport?.technician?.fullName || 'Verification Pending'}</strong><br/>
-                        Medical Technologist (Lab)<br/>
-                        Verified & Digital Signature Approved
+                        <strong>${headerReport?.medicalTechnologistId || 'Verified & Digital Signature Approved'}</strong><br/>
+                        Medical Technologist (Lab)
                     </div>
                 </div>
                 
                 <div class="print-info">
-                    Printed By: ${headerReport?.technician?.fullName || 'System'} | ${new Date().toLocaleString()}
+                    Printed at: ${new Date().toLocaleString()}
                 </div>
             </body>
             </html>
@@ -245,10 +245,14 @@ export function ConsolidatedReportDialog({ open, onOpenChange, patientId, branch
                                                 return (
                                                     <div key={idx} className="bg-card/40 rounded-2xl border-2 border-border/50 overflow-hidden shadow-xl shadow-black/5 hover:shadow-black/10 transition-all">
                                                         <div className="px-4 py-2 bg-secondary/30 flex items-center justify-between border-b border-border/50">
-                                                            <h4 className="text-[11px] font-black uppercase text-primary tracking-widest">{report.diagnosticTest?.name}</h4>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {report.diagnosticTests?.map((t, i) => (
+                                                                    <Badge key={i} variant="secondary" className="h-5 text-[9px] font-black">{t.service?.name || t.itemName}</Badge>
+                                                                ))}
+                                                            </div>
                                                             <div className="flex items-center gap-2">
                                                                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                                                <span className="text-[10px] font-black text-emerald-500/80">VERIFIED</span>
+                                                                <span className="text-[10px] font-black text-emerald-500/80 uppercase">{report.status}</span>
                                                             </div>
                                                         </div>
                                                         <div className="p-4">

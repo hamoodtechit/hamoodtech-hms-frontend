@@ -85,13 +85,20 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   // Find consultant
   let consultantName = "N/A"
-  if (data.doctor?.name) {
-      consultantName = data.doctor.name
-  } else if (propDoctor?.name) {
-      consultantName = propDoctor.name
-  } else if (data.doctorId) {
+  const doctorObj = data.doctor || propDoctor
+  if (doctorObj) {
+      const name = doctorObj.fullName || doctorObj.name
+      const designation = doctorObj.designation
+      if (name) {
+          consultantName = designation ? `${name} (${designation})` : name
+      }
+  } else if (data.doctorId && doctors.length > 0) {
       const doc = doctors.find(d => d.id === data.doctorId)
-      if (doc) consultantName = doc.name
+      if (doc) {
+          const name = doc.fullName || doc.name
+          const designation = doc.designation
+          consultantName = designation ? `${name} (${designation})` : (name || "N/A")
+      }
   } else if (data.referredByName) {
       consultantName = data.referredByName
   } else if (data.consultantName) {
@@ -107,8 +114,8 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
       assignedStaffName = data.staffId
   }
 
-  // Find Assigned Commission Agent
-  const agentName = data?.commissionAgent?.name || data?.agentName || data?.commissionAgentName || data?.agent?.name || "N/A"
+  // Find Assigned Referral Person
+  const agentName = data?.referralPerson?.name || data?.commissionAgent?.name || data?.agentName || data?.commissionAgentName || data?.agent?.name || "N/A"
 
   const deliveryDateRaw = items[0]?.deliveryDate || date;
   // Format as DD/MM/YYYY
@@ -190,11 +197,19 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
             </div>
             {/* Row 4 */}
-            <div className="grid grid-cols-2 border-b border-black border-dashed">
-                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
-                    Consultant <span className="mx-1">:</span> {consultantName}
+            <div className="grid grid-cols-2 border-b border-black border-dashed font-sans">
+                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[45px] flex items-start gap-1">
+                    <span className="shrink-0">Consultant :</span>
+                    <div className="flex flex-col leading-none pt-0.5">
+                        <span className="uppercase text-[11px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "N/A"}</span>
+                        {(data.doctor?.designation || propDoctor?.designation) && (
+                            <span className="text-[9px] font-medium italic mt-0.5">
+                                ({data.doctor?.designation || propDoctor?.designation})
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
+                <div className="p-2 px-3 font-bold min-h-[45px] flex items-center">
                     Agent : {agentName}
                 </div>
             </div>

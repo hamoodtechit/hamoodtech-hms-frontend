@@ -20,7 +20,8 @@ interface SampleLabelDialogProps {
 export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDialogProps) {
     if (!report) return null
 
-    const patientId = report.patient?.patientNumber || report.patient?.uhid || report.patient?.id?.slice(0, 8).toUpperCase() || "N/A"
+    const patientId = report.patient?.uhid || report.patient?.patientNumber || report.patient?.id?.slice(0, 8).toUpperCase() || "N/A"
+    const testNames = report.diagnosticTests?.map(t => t.itemName).join(', ') || "N/A"
 
     const handlePrint = () => {
         const printContent = document.getElementById('sample-label-content')?.innerHTML
@@ -46,22 +47,27 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                             }
                             body { 
                                 margin: 0;
-                                padding: 2mm;
-                                font-family: 'Courier New', Courier, monospace;
+                                padding: 1mm 2mm;
+                                font-family: 'Arial', sans-serif;
                                 -webkit-print-color-adjust: exact;
                                 width: 50mm;
                                 height: 25mm;
                                 box-sizing: border-box;
                                 overflow: hidden;
+                                background: #fff !important;
+                                color: #000 !important;
                             }
                             .label-container {
                                 display: flex;
                                 gap: 2mm;
                                 height: 100%;
                                 align-items: center;
+                                border: none;
                             }
                             .qr-side {
                                 flex-shrink: 0;
+                                display: flex;
+                                align-items: center;
                             }
                             .info-side {
                                 flex: 1;
@@ -69,31 +75,40 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                                 flex-direction: column;
                                 justify-content: center;
                                 overflow: hidden;
+                                min-width: 0;
                             }
                             .patient-name {
                                 font-size: 8pt;
-                                font-weight: bold;
+                                font-weight: 900;
                                 text-transform: uppercase;
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
+                                line-height: 1.1;
+                                color: #000 !important;
                             }
                             .test-name {
-                                font-size: 7pt;
+                                font-size: 6pt;
+                                font-weight: 700;
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
                                 margin-bottom: 0.5mm;
+                                color: #000 !important;
                             }
                             .id-bits {
                                 font-size: 6pt;
+                                font-weight: 900;
                                 display: flex;
-                                justify-content: space-between;
+                                flex-direction: column;
+                                line-height: 1;
+                                color: #000 !important;
                             }
                             .date {
                                 font-size: 5pt;
                                 margin-top: 0.5mm;
-                                color: #444;
+                                font-weight: 600;
+                                color: #000 !important;
                             }
                         </style>
                     </head>
@@ -104,7 +119,7 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
                             </div>
                             <div class="info-side">
                                 <div class="patient-name">${report.patient?.name}</div>
-                                <div class="test-name">${report.diagnosticTest?.name}</div>
+                                <div class="test-name">${testNames}</div>
                                 <div class="id-bits">
                                     <span>UHID: ${patientId}</span>
                                     <span>LAB: ${report.barcode || report.id.slice(-8).toUpperCase()}</span>
@@ -131,29 +146,30 @@ export function SampleLabelDialog({ open, onOpenChange, report }: SampleLabelDia
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px]">
                 <DialogHeader>
-                    <DialogTitle>Print Sample Label</DialogTitle>
+                    <DialogTitle className="font-black">Print Sample Label</DialogTitle>
                 </DialogHeader>
                 
                 <div className="flex flex-col items-center gap-6 py-4">
                     <div 
                         id="sample-label-content" 
-                        className="border p-4 bg-white rounded shadow-inner flex items-center gap-4 w-[50mm] h-[25mm] box-content"
+                        className="border border-black p-2 bg-white rounded shadow-inner flex items-center gap-4 w-[50mm] h-[25mm] box-content text-black"
                     >
-                        <div id="qr-to-print">
+                        <div id="qr-to-print" className="bg-white p-0.5">
                             <QRCode 
                                 value={report.id} 
-                                size={60}
+                                size={55}
                                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                 viewBox={`0 0 256 256`}
                             />
                         </div>
-                        <div className="flex flex-col justify-center overflow-hidden flex-1 min-w-0">
-                            <p className="text-[10px] font-bold truncate uppercase">{report.patient?.name}</p>
-                            <p className="text-[9px] truncate text-muted-foreground">{report.diagnosticTest?.name}</p>
-                            <div className="flex justify-between items-center mt-1 w-full text-[7px] font-mono leading-none">
+                        <div className="flex flex-col justify-center overflow-hidden flex-1 min-w-0 text-black">
+                            <p className="text-[10px] font-black underline truncate uppercase leading-tight">{report.patient?.name}</p>
+                            <p className="text-[8px] truncate font-bold mt-0.5">{testNames}</p>
+                            <div className="flex flex-col mt-1 w-full text-[7px] font-black leading-tight border-t border-black/10 pt-1">
                                 <span>UHID: {patientId}</span>
+                                <span className="mt-0.5">LAB: {report.barcode || report.id.slice(-8).toUpperCase()}</span>
                             </div>
-                            <p className="text-[7px] font-mono leading-none mt-1">LAB: {report.barcode || report.id.slice(-8).toUpperCase()}</p>
+                            <p className="text-[6px] font-bold mt-1 opacity-70">{new Date().toLocaleString()}</p>
                         </div>
                     </div>
 

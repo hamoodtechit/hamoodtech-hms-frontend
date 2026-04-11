@@ -2,7 +2,7 @@
 
 import { PatientDialog } from "@/components/patients/patient-dialog"
 import { SearchableSelect } from "@/components/shared/searchable-select"
-import { CommissionAgentSearch } from "@/components/hr/agent-search"
+import { ReferralSearch } from "@/components/hr/referral-search"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -84,7 +84,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
         status: "pending" as AppointmentStatus,
         purpose: "consultation",
         chamberOrRoomNumber: "",
-        commissionAgentId: ""
+        referralPersonId: ""
     })
 
     // Payment State
@@ -113,7 +113,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     status: appointment.status,
                     purpose: appointment.purpose || "consultation",
                     chamberOrRoomNumber: appointment.chamberOrRoomNumber || "",
-                    commissionAgentId: appointment.commissionAgentId || ""
+                    referralPersonId: appointment.referralPersonId || ""
                 })
             } else {
                 setFormData({
@@ -128,7 +128,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     status: "pending",
                     purpose: "consultation",
                     chamberOrRoomNumber: "",
-                    commissionAgentId: ""
+                    referralPersonId: ""
                 })
             }
         }
@@ -333,13 +333,11 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                             className="rounded-xl border-primary/10"
                                         />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label>Commission Agent</Label>
-                                        <CommissionAgentSearch 
-                                            selectedAgentId={formData.commissionAgentId}
-                                            onSelect={(agent) => setFormData(prev => ({ ...prev, commissionAgentId: agent?.id || "" }))}
+                                        <Label>Referral Source (Optional)</Label>
+                                        <ReferralSearch 
+                                            selectedReferralId={formData.referralPersonId}
+                                            onSelect={(referral) => setFormData(prev => ({ ...prev, referralPersonId: referral?.id || "" }))}
                                         />
-                                    </div>
                                 </div>
 
                                 <div className="grid gap-2">

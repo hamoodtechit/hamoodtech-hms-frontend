@@ -106,7 +106,7 @@ export interface HRPaginatedResponse<T> {
   };
 }
 
-export interface CommissionAgent {
+export interface ReferralPerson {
   id: string;
   branchId: string;
   name: string;
@@ -114,30 +114,32 @@ export interface CommissionAgent {
   phone: string;
   email: string;
   address: string;
-  commissionPercentage: string | number;
+  commissionStructure: any;
+  employeeId?: string;
   createdAt: string;
   updatedAt: string;
   branch?: {
     id: string;
     name: string;
   };
+  employee?: Employee;
   yearlyStats?: {
     year: number;
     totalSalesCount: number;
     totalSalesAmount: number;
-    commissionPercentage: number;
     totalCommissionEarned: number;
   };
 }
 
-export interface CommissionAgentPayload {
+export interface ReferralPersonPayload {
   branchId: string;
   name: string;
   nameBangla: string;
   phone: string;
   email: string;
   address: string;
-  commissionPercentage: number;
+  commissionStructure: any;
+  employeeId?: string;
 }
 
 export interface Attendance {

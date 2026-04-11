@@ -14,6 +14,8 @@ export interface DiagnosticTest {
   templateType: 'table' | 'narrative';
   templateDescription?: string;
   type: string;
+  machineName?: string;
+  machineDescription?: string;
   createdAt: string;
   updatedAt: string;
   department?: {
@@ -45,6 +47,8 @@ export interface DiagnosticTestPayload {
   type?: string;
   unit?: string;
   branchId?: string;
+  machineName?: string;
+  machineDescription?: string;
 }
 
 export interface DiagnosticTestGroup {
@@ -131,6 +135,7 @@ export interface DiagnosticResult {
   content?: string;
   interpretation?: string;
   preparedBy?: string;
+  testResults?: Record<string, any>;
 }
 
 
@@ -138,64 +143,69 @@ export interface DiagnosticReport {
   id: string;
   patientId: string;
   branchId: string;
-  diagnosticTestId: string;
-  saleItemId?: string | null;
-  employeeId?: string | null;
-  // API uses reportStatus (not status)
-  reportStatus: ReportStatus;
+  doctorId?: string | null;
+  saleId?: string | null;
+  medicalTechnologistId?: string | null;
+  
+  // New simplified arrays
+  testItems?: any[]; 
+  diagnosticTests?: Array<{
+    id: string;
+    itemName: string;
+    price: number;
+    deliveryDate?: string;
+    isDiagnosticTest: boolean;
+    service?: DiagnosticTest;
+    [key: string]: any;
+  }>;
+
+  status: ReportStatus; // Renamed from reportStatus
   sampleStatus: SampleStatus;
-  deliveryStatus: DeliveryStatus;
+  deliveryStatus?: DeliveryStatus;
+  
+  isSampleCollected: boolean;
+  isDelivered: boolean;
+  
+  result?: DiagnosticResult | Record<string, any> | null;
+  note?: string | null;
+  reportNotes?: string | null; // Keep for compatibility
+  digitalSignature?: string | null;
   barcode?: string | null;
   qrCode?: string | null;
-  collectedById?: string | null;
-  sampleCollectedAt?: string | null;
-  sampleDetails?: string | null;
-  technicianId?: string | null;
-  result?: DiagnosticResult | Record<string, any> | null;
-  reportNotes?: string | null;
-  approvedById?: string | null;
-  approvedAt?: string | null;
-  digitalSignature?: string | null;
-  testGroupId?: string | null;
-  testGroup?: {
-    id: string;
-    name: string;
-  } | null;
   createdAt: string;
   updatedAt: string;
+
   patient?: {
     id: string;
     name: string;
     phone?: string;
     patientNumber?: string;
     uhid?: string;
+    pin?: string;
     age?: number | string;
     gender?: string;
     bloodGroup?: string;
     address?: string;
   };
-  saleItem?: {
+  doctor?: {
     id: string;
-    invoiceNumber?: string;
-    deliveryDate?: string;
-    price?: string | number;
-    itemName?: string;
-  } | null;
-  collectedBy?: any | null;
-  technician?: any | null;
-  approvedBy?: any | null;
-  diagnosticTest?: {
-    id: string;
-    name: string;
-    testGroupId?: string;
-    testGroup?: {
-      id: string;
-      name: string;
-    };
-    testResultTemplate?: any;
-    templateType?: string;
-    templateDescription?: string;
+    fullName: string;
+    username?: string;
+    phone?: string;
   };
+  sale?: {
+    id: string;
+    invoiceNumber: string;
+    totalPrice?: string | number;
+    netPrice?: string | number;
+    status?: string;
+    paymentStatus?: string;
+  };
+  
+  // Legacy fields (optionalized)
+  diagnosticTestId?: string;
+  saleItemId?: string | null;
+  testGroupId?: string | null;
 }
 
 export interface RequisitionPayload {
@@ -239,9 +249,11 @@ export interface DiagnosticReportParams {
   page?: number;
   limit?: number;
   search?: string;
-  reportStatus?: string;
+  reportStatus?: string; // Query param uses reportStatus
   sampleStatus?: string;
   barcode?: string;
+  deliveryStatus?: string;
+  testGroupId?: string;
   branchId?: string;
   patientId?: string;
   startDate?: string;

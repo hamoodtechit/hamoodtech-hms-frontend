@@ -24,13 +24,14 @@ import {
     TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDiagnosticReports, useUpdateDeliveryStatus } from "@/hooks/diagnostic-queries"
+import { useDiagnosticReports, useUpdateReport } from "@/hooks/diagnostic-queries"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticReport, ReportStatus, SampleStatus } from "@/types/diagnostic"
 import { format } from "date-fns"
+import { toast } from "sonner"
 import {
     Activity,
     Beaker,
@@ -53,11 +54,12 @@ import { DateRange } from "react-day-picker"
 
 export default function DiagnosticReportsPage() {
     const { hasPermission } = usePermissions()
-    const [reportStatus, setReportStatus] = useState<ReportStatus | 'all'>('all')
+    const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all')
     const [sampleStatus, setSampleStatus] = useState<SampleStatus | 'all'>('all')
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
     const [barcodeFilter, setBarcodeFilter] = useState("")
+    const [testGroupId, setTestGroupId] = useState<string | 'all'>('all')
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [filterOpen, setFilterOpen] = useState(false)
     const [debouncedSearch] = useDebounce(search, 500)
@@ -72,7 +74,8 @@ export default function DiagnosticReportsPage() {
     const [selectedReport, setSelectedReport] = useState<DiagnosticReport | null>(null)
     const [consolidatedOpen, setConsolidatedOpen] = useState(false)
 
-    const { mutate: updateDeliveryStatus, isPending: isUpdatingDelivery } = useUpdateDeliveryStatus()
+    const updateMutation = useUpdateReport()
+    const isUpdating = updateMutation.isPending
 
     const searchParams = useSearchParams()
     const urlPatientId = searchParams.get('patientId')
@@ -86,10 +89,11 @@ export default function DiagnosticReportsPage() {
         page,
         limit: 10,
         branchId: activeStoreId || undefined,
-        reportStatus: reportStatus === 'all' ? undefined : reportStatus,
+        reportStatus: statusFilter === 'all' ? undefined : statusFilter,
         sampleStatus: sampleStatus === 'all' ? undefined : sampleStatus,
         search: debouncedSearch || undefined,
         barcode: debouncedBarcode || undefined,
+        testGroupId: testGroupId === 'all' ? undefined : testGroupId,
         patientId: urlPatientId || undefined,
         startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
         endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
@@ -103,13 +107,17 @@ export default function DiagnosticReportsPage() {
     const activeFilterCount = [
         sampleStatus !== 'all',
         barcodeFilter !== '',
+        testGroupId !== 'all',
         !!dateRange?.from,
         !!dateRange?.to,
     ].filter(Boolean).length
 
     const handleAction = (report: DiagnosticReport) => {
         setSelectedReport(report)
-        switch (report.reportStatus) {
+        switch (report.status) {
+            case 'pending-billing':
+                // Usually handled by billing module, but if needed:
+                break
             case 'pending-sample-collection':
                 setCollectionOpen(true)
                 break
@@ -126,18 +134,32 @@ export default function DiagnosticReportsPage() {
     }
 
     const handleDeliver = (report: DiagnosticReport) => {
-        updateDeliveryStatus({ 
+        updateMutation.mutate({ 
             id: report.id, 
-            data: { deliveryStatus: 'delivered' } 
+            data: { isDelivered: true } 
         })
+    }
+
+    const handleCollectSample = async (report: DiagnosticReport) => {
+        try {
+            await updateMutation.mutateAsync({
+                id: report.id,
+                data: {
+                    isSampleCollected: true
+                }
+            })
+            toast.success("Sample collected successfully")
+        } catch (error) {
+            toast.error("Failed to collect sample")
+        }
     }
 
     const statusConfig: Record<string, { label: string, color: string, icon: any }> = {
         'pending-billing':           { label: 'Pending Billing',      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20',    icon: Clock },
-        'pending-sample-collection': { label: 'Pending Collection',   color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', icon: Beaker },
+        'pending-sample-collection': { label: 'Collect Sample',       color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', icon: Beaker },
         'sample-collected':          { label: 'Sample Collected',     color: 'bg-blue-500/10 text-blue-500 border-blue-500/20',       icon: Activity },
-        'processing':                { label: 'Processing',           color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', icon: FlaskConical },
-        'pending-verification':      { label: 'Pending Verification', color: 'bg-rose-500/10 text-rose-500 border-rose-500/20',       icon: ClipboardList },
+        'processing':                { label: 'Processing Results',   color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', icon: FlaskConical },
+        'pending-verification':      { label: 'Verify Report',        color: 'bg-rose-500/10 text-rose-500 border-rose-500/20',       icon: ClipboardList },
         'completed':                 { label: 'Completed',            color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', icon: CheckCircle2 },
         'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
@@ -180,31 +202,6 @@ export default function DiagnosticReportsPage() {
                     )}
                 </div>
 
-                {/* Hub Stats / Overview — only count from filtered data */}
-                <PermissionGuard permission={["pathology:read", "radiology:read"]} mode="silent">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                        {Object.entries(statusConfig).map(([key, config]) => (
-                            <Card
-                                key={key}
-                                onClick={() => { setReportStatus(key as ReportStatus); setSampleStatus('all'); setPage(1) }}
-                                className={cn(
-                                    "border-none shadow-sm cursor-pointer hover:shadow-md transition-all group overflow-hidden bg-card/50 backdrop-blur-sm",
-                                    reportStatus === key && "ring-2 ring-primary/30"
-                                )}
-                            >
-                                <CardHeader className="p-3 pb-0">
-                                    <config.icon className={cn("w-4 h-4 mb-2", config.color.split(' ')[1])} />
-                                </CardHeader>
-                                <CardContent className="p-3 pt-0">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70 leading-none mb-1 group-hover:text-primary transition-colors">{config.label}</p>
-                                    <p className="text-xl font-black tracking-tighter">
-                                        {reports.filter(r => r.reportStatus === key).length}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </PermissionGuard>
 
                 <PermissionGuard permission={["pathology:read", "radiology:read"]} mode="silent">
                     <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -213,16 +210,10 @@ export default function DiagnosticReportsPage() {
                             <div className="flex flex-col gap-3">
                                 {/* Tabs row */}
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                                    <Tabs value={reportStatus} onValueChange={(v) => { setReportStatus(v as any); setPage(1) }} className="w-full md:w-auto">
-                                        <TabsList className="bg-muted/50 p-1 h-10 rounded-xl">
-                                            <TabsTrigger value="all" className="rounded-lg px-4 text-xs font-bold data-[state=active]:bg-card">All</TabsTrigger>
-                                            <TabsTrigger value="pending-billing" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Billing</TabsTrigger>
-                                            <TabsTrigger value="pending-sample-collection" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Collect</TabsTrigger>
-                                            <TabsTrigger value="sample-collected" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Run</TabsTrigger>
-                                            <TabsTrigger value="pending-verification" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Verify</TabsTrigger>
-                                            <TabsTrigger value="completed" className="rounded-lg px-3 text-xs font-bold data-[state=active]:bg-card">Done</TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
+                                    <div>
+                                        <h2 className="text-lg font-black tracking-tight text-primary">Pending Requirements</h2>
+                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Manage clinical workflow units</p>
+                                    </div>
 
                                     {/* Search + Advanced Filter */}
                                     <div className="flex items-center gap-2 flex-1 md:max-w-sm ml-auto">
@@ -392,32 +383,39 @@ export default function DiagnosticReportsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="font-semibold text-sm">{report.diagnosticTest?.name}</span>
+                                                    <div className="flex flex-col max-w-[250px] overflow-hidden">
+                                                        <span className="text-xs font-black tracking-tight text-blue-900 truncate">
+                                                            {report.diagnosticTests && report.diagnosticTests.length > 0 
+                                                                ? report.diagnosticTests.map(t => t.itemName).join(', ') 
+                                                                : "No tests found"}
+                                                        </span>
+                                                        <span className="text-[9px] uppercase font-bold text-muted-foreground/60 tracking-widest mt-0.5">
+                                                            {report.diagnosticTests?.length || 0} Test items
+                                                        </span>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge className={cn(
                                                         "rounded-lg font-black uppercase text-[10px] tracking-tight py-1 px-3 border",
-                                                        statusConfig[report.reportStatus]?.color || "bg-muted text-muted-foreground"
+                                                        statusConfig[report.status]?.color || "bg-muted text-muted-foreground"
                                                     )}>
-                                                        {statusConfig[report.reportStatus]?.label || report.reportStatus}
+                                                        {statusConfig[report.status]?.label || report.status}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline" className={cn(
                                                         "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
-                                                        report.sampleStatus === 'collected' && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
-                                                        report.sampleStatus === 'pending' && "border-amber-500/30 text-amber-600 bg-amber-500/10",
-                                                        report.sampleStatus === 'not-required' && "border-slate-500/20 text-slate-500",
+                                                        report.isSampleCollected ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-amber-500/30 text-amber-600 bg-amber-500/10",
                                                     )}>
-                                                        {report.sampleStatus}
+                                                        {report.isSampleCollected ? 'Collected' : 'Pending Sample'}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline" className={cn(
                                                         "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
-                                                        report.deliveryStatus === 'delivered' ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-slate-500/20 text-slate-500"
+                                                        report.isDelivered ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-slate-500/20 text-slate-500"
                                                     )}>
-                                                        {report.deliveryStatus || 'pending'}
+                                                        {report.isDelivered ? 'Delivered' : 'Pending'}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
@@ -427,65 +425,81 @@ export default function DiagnosticReportsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
-                                                    <div className="flex items-center justify-end gap-1.5">
-                                                        {/* Mark as Delivered quick action */}
-                                                        {report.reportStatus === 'completed' && report.deliveryStatus === 'pending' && (
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        {/* Sequential Workflow Primary Action */}
+                                                        {!report.isSampleCollected && report.status !== 'cancelled' && (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => handleDeliver(report)}
-                                                                disabled={isUpdatingDelivery}
-                                                                className="rounded-lg h-8 text-[11px] font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white border-none px-3 gap-1.5"
-                                                                title="Mark as Delivered"
+                                                                disabled={isUpdating}
+                                                                onClick={() => handleCollectSample(report)}
+                                                                className="rounded-lg h-9 text-[11px] font-black uppercase border-none px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 gap-2"
                                                             >
-                                                                <Truck className="h-3.5 w-3.5" />
-                                                                Deliver
+                                                                {isUpdating && updateMutation.variables?.id === report.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Beaker className="h-4 w-4" />}
+                                                                Take Sample
                                                             </Button>
                                                         )}
-                                                        {/* View Details button — always visible */}
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => { setSelectedReport(report); setDetailOpen(true) }}
-                                                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-                                                            title="View Details"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        {/* Action button — only for actionable statuses */}
-                                                        {report.reportStatus !== 'completed' && report.reportStatus !== 'pending-billing' && report.reportStatus !== 'cancelled' ? (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleAction(report)}
-                                                                className={cn(
-                                                                    "rounded-lg h-8 text-[11px] font-black uppercase border-none px-4",
-                                                                    report.reportStatus === 'pending-sample-collection' ? "bg-indigo-600 hover:bg-indigo-700 text-white" :
-                                                                    report.reportStatus === 'sample-collected' ? "bg-blue-600 hover:bg-blue-700 text-white" :
-                                                                    report.reportStatus === 'pending-verification' ? "bg-rose-600 hover:bg-rose-700 text-white" :
-                                                                    "bg-primary hover:bg-primary/90 text-primary-foreground"
-                                                                )}
-                                                            >
-                                                                {report.reportStatus === 'pending-sample-collection' ? 'Collect' :
-                                                                 report.reportStatus === 'sample-collected' ? 'Results' :
-                                                                 report.reportStatus === 'pending-verification' ? 'Approve' : 'Action'}
-                                                            </Button>
-                                                        ) : null}
 
-                                                        {report.sampleStatus === 'collected' && (
+                                                        {report.isSampleCollected && report.status !== 'completed' && report.status !== 'cancelled' && (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 w-8 p-0"
-                                                                title="Print Label"
-                                                                onClick={() => {
-                                                                    setSelectedReport(report)
-                                                                    setLabelOpen(true)
-                                                                }}
+                                                                onClick={() => { setSelectedReport(report); setResultOpen(true) }}
+                                                                className="rounded-lg h-9 text-[11px] font-black uppercase border-none px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 gap-2"
                                                             >
-                                                                <Printer className="h-4 w-4" />
+                                                                <Activity className="h-4 w-4" />
+                                                                Add Result
                                                             </Button>
                                                         )}
+
+                                                        {report.status === 'completed' && (
+                                                            <div className="flex items-center gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => { setSelectedReport(report); setDetailOpen(true) }}
+                                                                    className="rounded-lg h-9 text-[11px] font-black uppercase border-none px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 gap-2"
+                                                                >
+                                                                    <Printer className="h-4 w-4" />
+                                                                    Print
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => { setSelectedReport(report); setResultOpen(true) }}
+                                                                    className="rounded-lg h-9 text-[11px] font-black uppercase border-none px-4 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/20 gap-2"
+                                                                >
+                                                                    <ClipboardList className="h-4 w-4" />
+                                                                    Edit
+                                                                </Button>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Secondary Actions (always small and ghost/outline) */}
+                                                        <div className="flex items-center gap-1 ml-2 border-l pl-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => { setSelectedReport(report); setDetailOpen(true) }}
+                                                                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            
+                                                            {report.isSampleCollected && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                                                                    onClick={() => {
+                                                                        setSelectedReport(report)
+                                                                        setLabelOpen(true)
+                                                                    }}
+                                                                >
+                                                                    <Beaker className="h-3.5 w-3.5" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -533,6 +547,7 @@ export default function DiagnosticReportsPage() {
                     open={detailOpen}
                     onOpenChange={setDetailOpen}
                     report={selectedReport}
+                    onEdit={() => setResultOpen(true)}
                 />
 
                 {/* Workflow Dialogs */}

@@ -59,7 +59,11 @@ export const diagnosticService = {
 
   deleteDiagnosticTest: async (id: string): Promise<void> => {
     await api.delete(`/services/${id}`);
-    
+  },
+
+  getDiagnosticTestById: async (id: string): Promise<{ data: DiagnosticTest }> => {
+    const response = await api.get<{ data: DiagnosticTest }>(`/services/${id}`);
+    return response.data;
   },
 
   // Diagnostic Report Workflow APIs
@@ -81,27 +85,26 @@ export const diagnosticService = {
     return response.data;
   },
 
-  collectSample: async (id: string, data: CollectSamplePayload): Promise<{ data: DiagnosticReport }> => {
-    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/collect-sample`, data);
+  collectSample: async (id: string, data: any): Promise<{ data: DiagnosticReport }> => {
+    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}`, data);
     
     return response.data;
   },
 
-  enterResult: async (id: string, data: ResultEntryPayload): Promise<{ data: DiagnosticReport }> => {
-    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/result`, data);
+  enterResult: async (id: string, data: any): Promise<{ data: DiagnosticReport }> => {
+    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}`, data);
    
     return response.data;
   },
 
-  approveReport: async (id: string, data: ApprovalPayload): Promise<{ data: DiagnosticReport }> => {
-    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/approve`, data);
+  approveReport: async (id: string, data: any): Promise<{ data: DiagnosticReport }> => {
+    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}`, data);
     
     return response.data;
   },
 
-  updateDeliveryStatus: async (id: string, data: UpdateDeliveryStatusPayload): Promise<{ data: DiagnosticReport }> => {
-    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}/delivery-status`, data);
-    
+  updateReport: async (id: string, data: Partial<DiagnosticReport>): Promise<{ data: DiagnosticReport }> => {
+    const response = await api.patch<{ data: DiagnosticReport }>(`/diagnostic/reports/${id}`, data);
     return response.data;
   },
 

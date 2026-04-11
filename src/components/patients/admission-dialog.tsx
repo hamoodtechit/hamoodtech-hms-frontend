@@ -1,6 +1,6 @@
 "use client"
 
-import { CommissionAgentSearch } from "@/components/hr/agent-search"
+import { ReferralSearch } from "@/components/hr/referral-search"
 import { PatientSearch } from "@/components/pharmacy/pos/patient-search"
 import { SearchableSelect } from "@/components/shared/searchable-select"
 import { Button } from "@/components/ui/button"
@@ -71,7 +71,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         guardianPhone: "",
         guardianRelation: "",
         fees: 0,
-        commissionAgentId: ""
+        referralPersonId: ""
     })
 
     const [patientExtData, setPatientExtData] = useState({
@@ -135,7 +135,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianPhone: admission.guardianPhone || "",
                     guardianRelation: admission.guardianRelation || "",
                     fees: Number(admission.fees) || 0,
-                    commissionAgentId: admission.commissionAgentId || ""
+                    referralPersonId: admission.referralPersonId || ""
                 })
                 setSelectedPatient(admission.patient || null)
             } else {
@@ -151,7 +151,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianPhone: "",
                     guardianRelation: "",
                     fees: 0,
-                    commissionAgentId: ""
+                    referralPersonId: ""
                 })
                 setSelectedPatient(null)
             }
@@ -554,13 +554,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Commission Agent (Optional)</Label>
-                                    <CommissionAgentSearch 
-                                        selectedAgentId={formData.commissionAgentId}
-                                        onSelect={(agent) => setFormData(prev => ({ ...prev, commissionAgentId: agent?.id || "" }))}
+                                    <ReferralSearch 
+                                        selectedReferralId={formData.referralPersonId}
+                                        onSelect={(referral) => setFormData(prev => ({ ...prev, referralPersonId: referral?.id || "" }))}
                                     />
-                                </div>
                             </div>
 
                             <div className="grid gap-2">

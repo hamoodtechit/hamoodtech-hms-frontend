@@ -14,7 +14,8 @@ export interface Appointment {
   saleId?: string;
   note?: string;
   purpose?: string;
-  commissionAgentId?: string;
+  referralPersonId?: string;
+  referralPerson?: any;
   chamberOrRoomNumber?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +34,8 @@ export interface Appointment {
     id: string;
     employeeNumber: string;
     name: string;
+    fullName?: string;
+    username?: string;
     employeeType: string;
     department?: {
         name: string;
@@ -57,7 +60,8 @@ export interface AppointmentPayload {
   fees?: number;
   note?: string;
   status?: AppointmentStatus;
-  commissionAgentId?: string;
+  referralPersonId?: string;
+  referralPerson?: any;
   chamberOrRoomNumber?: string;
   type?: 'hospital';
   serviceItems?: {

@@ -10,7 +10,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet"
-import { useDiagnosticReport, useUpdateDeliveryStatus } from "@/hooks/diagnostic-queries"
+import { useDiagnosticReport, useUpdateDeliveryStatus, useUpdateReport } from "@/hooks/diagnostic-queries"
 import { cn } from "@/lib/utils"
 import { DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
@@ -34,6 +34,7 @@ interface ReportDetailSheetProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     report: DiagnosticReport | null
+    onEdit?: () => void
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -72,41 +73,48 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
 function handlePrint() {
     const el = document.getElementById("print-report")
     if (!el) return
-    const win = window.open("", "_blank", "width=900,height=700")
+    const win = window.open("", "_blank", "width=1024,height=800")
     if (!win) return
+    
+    // Copy all style tags from current document to ensure PrintReport styles are preserved
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(style => style.outerHTML)
+        .join('\n');
+
     win.document.write(`
         <html>
         <head>
-            <title>Lab Report</title>
+            <title>Diagnostic Report</title>
+            ${styles}
             <style>
-                body { margin: 0; padding: 0; font-family: 'Times New Roman', serif; background: white; color: black; }
-                table { border-collapse: collapse; width: 100%; border: 1px solid black; }
-                th, td { padding: 4px 8px; border: 1px solid #ddd; }
-                th { background-color: #f8f9fa; font-weight: bold; }
-                .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; }
-                @page { margin: 10mm; size: A4; }
-                @media print { body { -webkit-print-color-adjust: exact; } }
+                body { margin: 0; padding: 0; background: white; }
+                #print-report { margin: 0 auto !important; box-shadow: none !important; }
+                @media print {
+                    @page { size: A4; margin: 0; }
+                    body { -webkit-print-color-adjust: exact; }
+                }
             </style>
         </head>
-        <body>${el.innerHTML}</body>
+        <body onload="setTimeout(() => { window.print(); window.close(); }, 500)">
+            ${el.innerHTML}
+        </body>
         </html>
     `)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print(); win.close() }, 500)
 }
 
-export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSheetProps) {
+export function ReportDetailSheet({ open, onOpenChange, report, onEdit }: ReportDetailSheetProps) {
     const { data: detailRes, isLoading } = useDiagnosticReport(report?.id ?? "")
     const detail = detailRes?.data ?? report
     
-    const { mutate: updateDelivery, isPending: isUpdating } = useUpdateDeliveryStatus()
+    const { mutate: updateReport, isPending: isUpdating } = useUpdateReport()
 
     const result = detail?.result as DiagnosticResult | null
 
-    const handleUpdateDelivery = (status: 'pending' | 'delivered' | 'cancelled') => {
+    const handleUpdateDelivery = (isDelivered: boolean) => {
         if (!detail?.id) return
-        updateDelivery({ id: detail.id, data: { deliveryStatus: status } })
+        updateReport({ id: detail.id, data: { isDelivered } })
     }
 
     return (
@@ -121,24 +129,21 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <Badge className={cn(
                                 "rounded-lg font-black uppercase text-[10px] tracking-tight py-1 px-3 border",
-                                statusConfig[detail.reportStatus]?.color
+                                statusConfig[detail.status]?.color
                             )}>
-                                {statusConfig[detail.reportStatus]?.label || detail.reportStatus}
+                                {statusConfig[detail.status]?.label || detail.status}
                             </Badge>
                             <Badge variant="outline" className={cn(
                                 "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
-                                detail.sampleStatus === 'collected' && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
-                                detail.sampleStatus === 'pending' && "border-amber-500/30 text-amber-600 bg-amber-500/10",
+                                detail.isSampleCollected ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-amber-500/30 text-amber-600 bg-amber-500/10",
                             )}>
-                                Sample: {detail.sampleStatus}
+                                Sample: {detail.isSampleCollected ? 'Collected' : 'Pending'}
                             </Badge>
                             <Badge variant="outline" className={cn(
                                 "rounded-lg font-bold uppercase text-[9px] tracking-tight py-1 px-2",
-                                detail.deliveryStatus === 'delivered' && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
-                                detail.deliveryStatus === 'pending' && "border-amber-500/30 text-amber-600 bg-amber-500/10",
-                                detail.deliveryStatus === 'cancelled' && "border-rose-500/30 text-rose-600 bg-rose-500/10",
+                                detail.isDelivered ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/10" : "border-slate-500/20 text-slate-500",
                             )}>
-                                Delivery: {detail.deliveryStatus || 'pending'}
+                                Handover: {detail.isDelivered ? 'Delivered' : 'Pending'}
                             </Badge>
                         </div>
                     )}
@@ -158,10 +163,21 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                 <InfoRow label="Phone" value={detail.patient?.phone} />
                             </Section>
                             <Section title="Identification" icon={QrCode}>
-                                <InfoRow label="Barcode" value={detail.barcode} />
-                                <InfoRow label="UHID" value={(detail.patient as any)?.patientNumber || detail.patientId.substring(0,8)} />
+                                <InfoRow label="UHID" value={(detail.patient as any)?.uhid || detail.patientId.substring(0,8)} />
+                                <InfoRow label="Invoice" value={detail.sale?.invoiceNumber} />
                             </Section>
                         </div>
+
+                        {/* Tests List */}
+                        <Section title="Tests in Report" icon={Beaker}>
+                            <div className="py-2 flex flex-wrap gap-2">
+                                {detail.diagnosticTests?.map((t, i) => (
+                                    <Badge key={i} variant="secondary" className="bg-blue-500/5 text-blue-700 font-bold border-blue-100">
+                                        {t.service?.name || t.itemName}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </Section>
 
                         {/* RESULT CONTENT */}
                         {result && (
@@ -175,7 +191,7 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                     </div>
                                     <Badge variant="secondary" className="rounded-lg text-[9px] font-bold">
                                         {result.mode === 'table' ? <ClipboardList className="w-3 h-3 mr-1" /> : <FileText className="w-3 h-3 mr-1" />}
-                                        {result.mode.toUpperCase()}
+                                        {(result.mode || 'MODERNIZIED').toUpperCase()}
                                     </Badge>
                                 </div>
 
@@ -186,7 +202,60 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                 )}
 
                                 <div className="bg-muted/30 rounded-2xl overflow-hidden border">
-                                    {result.mode === 'table' && result.rows ? (
+                                    {result.blocks ? (
+                                        <div className="p-4 space-y-4">
+                                            {result.blocks.map((block) => {
+                                                if (block.type === 'header') {
+                                                    return (
+                                                        <div key={block.id} className="py-2 border-b-2 border-primary/10">
+                                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/80">
+                                                                {block.headerText || block.content}
+                                                            </h3>
+                                                        </div>
+                                                    );
+                                                }
+                                                if (block.type === 'parameter') {
+                                                    return (
+                                                        <div key={block.id} className={cn(
+                                                            "flex items-center justify-between py-2 border-b border-border/30 last:border-0",
+                                                            block.isHeader && "bg-primary/5 px-2 rounded-lg py-3 my-1",
+                                                            block.isAbnormal && "bg-red-500/5 px-2 rounded-lg"
+                                                        )}>
+                                                            <div className="flex-1">
+                                                                <p className={cn(
+                                                                    "text-xs font-semibold",
+                                                                    block.isHeader ? "font-black text-primary uppercase" : "text-muted-foreground",
+                                                                    block.isBold && "font-bold text-foreground"
+                                                                )}>
+                                                                    {block.parameter}
+                                                                </p>
+                                                            </div>
+                                                            {block.value !== undefined && (
+                                                                <div className="text-right">
+                                                                    <p className={cn(
+                                                                        "text-sm font-black",
+                                                                        block.isAbnormal && "text-red-600"
+                                                                    )}>
+                                                                        {block.value}
+                                                                        {block.isAbnormal && <span className="ml-1 text-[10px]">(H)</span>}
+                                                                    </p>
+                                                                    {block.unit && <p className="text-[9px] font-bold text-muted-foreground uppercase">{block.unit}</p>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                }
+                                                if (block.type === 'narrative') {
+                                                    return (
+                                                        <div key={block.id} className="p-3 bg-card/50 rounded-xl border border-border/40 my-2">
+                                                            <div className="text-sm font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: block.content || "" }} />
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
+                                    ) : result.mode === 'table' && result.rows ? (
                                         <div className="divide-y divide-border/40">
                                             {result.rows.map((row, idx) => (
                                                 <div key={idx} className={cn(
@@ -239,15 +308,15 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                     )}
                                 </div>
                                 
-                                <div className="flex items-center justify-between gap-4 pt-2">
+                                 <div className="flex items-center justify-between gap-4 pt-2">
                                      <div className="flex items-center gap-2">
                                         <User className="w-3 h-3 text-muted-foreground" />
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Prepared: {result.preparedBy || detail.technician?.name || "System"}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Prepared: {result.preparedBy || detail.medicalTechnologistId || "System"}</p>
                                      </div>
-                                     {detail.approvedBy && (
+                                     {detail.doctor && (
                                         <div className="flex items-center gap-2">
                                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                            <p className="text-[10px] font-bold text-emerald-800 uppercase">Signed: {detail.approvedBy.name}</p>
+                                            <p className="text-[10px] font-bold text-emerald-800 uppercase">Signed: {detail.doctor.fullName}</p>
                                         </div>
                                      )}
                                 </div>
@@ -257,8 +326,8 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                         {/* Metadata Sections */}
                         <div className="grid grid-cols-2 gap-6">
                             <Section title="Collection" icon={Beaker}>
-                                <InfoRow label="Status" value={detail.sampleStatus} />
-                                <InfoRow label="At" value={detail.sampleCollectedAt ? format(new Date(detail.sampleCollectedAt), 'dd MMM, hh:mm a') : null} />
+                                <InfoRow label="Status" value={detail.isSampleCollected ? "Collected" : "Pending"} />
+                                <InfoRow label="At" value={format(new Date(detail.updatedAt), 'dd MMM, hh:mm a')} />
                             </Section>
                             <Section title="Timings" icon={Clock}>
                                 <InfoRow label="Requested" value={format(new Date(detail.createdAt), 'dd MMM, hh:mm a')} />
@@ -276,32 +345,22 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                                 <Button 
                                     variant="outline" 
                                     size="sm"
-                                    disabled={isUpdating || detail.deliveryStatus === 'delivered'}
-                                    onClick={() => handleUpdateDelivery('delivered')}
+                                    disabled={isUpdating || detail.isDelivered}
+                                    onClick={() => handleUpdateDelivery(true)}
                                     className="flex-1 rounded-lg h-9 text-[10px] font-black uppercase bg-emerald-600 hover:bg-emerald-700 text-white border-none gap-2"
                                 >
                                     <CheckCircle2 className="w-3.5 h-3.5" />
                                     Mark Delivered
                                 </Button>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    disabled={isUpdating || detail.deliveryStatus === 'cancelled'}
-                                    onClick={() => handleUpdateDelivery('cancelled')}
-                                    className="flex-1 rounded-lg h-9 text-[10px] font-black uppercase bg-rose-600 hover:bg-rose-700 text-white border-none gap-2"
-                                >
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    Cancel Delivery
-                                </Button>
-                                {detail.deliveryStatus !== 'pending' && (
+                                {detail.isDelivered && (
                                     <Button 
                                         variant="outline" 
                                         size="sm"
                                         disabled={isUpdating}
-                                        onClick={() => handleUpdateDelivery('pending')}
-                                        className="h-9 px-3 rounded-lg text-[10px] font-black uppercase border-dashed"
+                                        onClick={() => handleUpdateDelivery(false)}
+                                        className="h-9 px-3 rounded-lg text-[10px] font-black uppercase border-dashed shrink-0"
                                     >
-                                        Reset
+                                        Revert Handover
                                     </Button>
                                 )}
                             </div>
@@ -327,15 +386,28 @@ export function ReportDetailSheet({ open, onOpenChange, report }: ReportDetailSh
                     </div>
                 )}
 
-                <div className="p-6 border-t bg-muted/10 flex gap-4 shrink-0">
-                    {detail?.reportStatus === 'completed' && (
-                        <Button
-                            onClick={handlePrint}
-                            className="flex-1 h-12 rounded-xl font-black gap-2 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-                        >
-                            <Printer className="h-4 w-4" />
-                            Generate Print Report
-                        </Button>
+                <div className="p-6 border-t bg-muted/10 flex flex-col sm:flex-row gap-3 shrink-0">
+                    {detail?.status === 'completed' && (
+                        <>
+                            <Button
+                                onClick={handlePrint}
+                                className="flex-[2] h-12 rounded-xl font-black gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 text-white"
+                            >
+                                <Printer className="h-4 w-4" />
+                                Print Report
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    onOpenChange(false);
+                                    onEdit?.();
+                                }}
+                                className="flex-1 h-12 rounded-xl font-black gap-2 bg-amber-500/10 text-amber-700 border-amber-200 hover:bg-amber-500/20 shadow-sm transition-all active:scale-95"
+                            >
+                                <ClipboardList className="h-4 w-4" />
+                                Update Result
+                            </Button>
+                        </>
                     )}
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-12 rounded-xl font-black transition-all active:scale-95">
                         Close Details

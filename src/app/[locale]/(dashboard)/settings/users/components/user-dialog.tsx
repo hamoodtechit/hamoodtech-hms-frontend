@@ -39,6 +39,7 @@ const userSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
     fullNameBangla: z.string().optional(),
     phone: z.string().optional(),
+    designation: z.string().optional(),
     roleId: z.string().min(1, "Role is required"),
     branchId: z.string().optional(),
     employeeId: z.string().optional(),
@@ -84,6 +85,7 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit, defaultV
             roleId: "",
             branchId: "",
             employeeId: "",
+            designation: "",
             password: "",
         },
     })
@@ -105,6 +107,7 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit, defaultV
                 roleId: userToEdit.roleId,
                 branchId: userToEdit.branchId || "",
                 employeeId: userToEdit.employeeId || "",
+                designation: userToEdit.designation || "",
                 password: "",
             })
         } else if (defaultValues) {
@@ -122,6 +125,7 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit, defaultV
                 roleId: "",
                 branchId: "",
                 employeeId: "",
+                designation: "",
                 password: "",
             })
         }
@@ -225,6 +229,19 @@ export function UserDialog({ open, onOpenChange, onSuccess, userToEdit, defaultV
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
                                         <Input placeholder="john@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="designation"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Designation / Professional Title</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. Senior Consultant Pathologist" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

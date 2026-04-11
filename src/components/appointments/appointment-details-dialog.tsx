@@ -166,12 +166,15 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
 
                             {/* Medical Professional Info */}
                             <DetailSection icon={Stethoscope} title="Medical Context">
-                                <Field label="Treating Doctor" value={appointment?.doctor?.name} icon={User} />
+                                <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
                                     <Field label="Purpose" value={appointment?.purpose} className="capitalize" />
                                 </div>
+                                {appointment?.referralPerson && (
+                                    <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} />
+                                )}
                             </DetailSection>
 
                             {/* Billing & Payment Info - Only show if fee is present */}

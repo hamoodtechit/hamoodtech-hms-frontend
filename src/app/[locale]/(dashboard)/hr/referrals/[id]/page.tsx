@@ -1,0 +1,316 @@
+"use client"
+
+import { useReferral } from "@/hooks/hr-queries"
+import { useCurrency } from "@/hooks/use-currency"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Link } from "@/i18n/navigation"
+import { 
+    ArrowLeft, 
+    BarChart3, 
+    Calendar, 
+    DollarSign, 
+    Loader2, 
+    Mail, 
+    MapPin, 
+    Phone, 
+    TrendingUp, 
+    User, 
+    Wallet, 
+    ShieldCheck, 
+    Activity,
+    Users,
+    ChevronRight,
+    Search,
+    Percent
+} from "lucide-react"
+import { useParams } from "next/navigation"
+import { useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
+import { PermissionGuard } from "@/components/shared/permission-guard"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+export default function ReferralDetailPage() {
+    const params = useParams()
+    const id = params.id as string
+    const { formatCurrency } = useCurrency()
+    const [mounted, setMounted] = useState(false)
+
+    const { data: referralRes, isLoading } = useReferral(id)
+    const referral = referralRes?.data
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted || isLoading) {
+        return (
+            <div className="flex h-[450px] items-center justify-center text-primary">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
+
+    return (
+        <PermissionGuard permission="user:read">
+            {!referral ? (
+                <div className="flex flex-col items-center justify-center h-[450px] space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                        <Search className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold">Referral Not Found</h1>
+                        <p className="text-muted-foreground">The referral source you are looking for does not exist or has been deleted.</p>
+                    </div>
+                    <Link href="/hr/referrals">
+                       <Button variant="outline">
+                           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Directory
+                       </Button>
+                    </Link>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* Header Section */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <Link href="/hr/referrals">
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full border">
+                                    <ArrowLeft className="h-4 w-4" />
+                                </Button>
+                            </Link>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{referral.name}</h1>
+                                    {referral.employeeId ? (
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                            Internal Referral
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                            External Partner
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                                    <span className="font-medium">{referral.nameBangla}</span>
+                                    {referral.employee && (
+                                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full border italic">
+                                            Linked to Employee: {referral.employee.name}
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Earnings</p>
+                                <p className="text-xl font-black text-primary">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
+                            </div>
+                            <Separator orientation="vertical" className="h-10 mx-2 hidden sm:block" />
+                            <Badge className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                                <Wallet className="w-4 h-4 mr-2" />
+                                Active Referral
+                            </Badge>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-6 lg:grid-cols-12">
+                        {/* Profile & Commission Card */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <Card className="shadow-sm border-muted/40">
+                                <CardHeader className="bg-muted/10">
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <ShieldCheck className="h-5 w-5 text-primary" />
+                                        Verified Profile
+                                    </CardTitle>
+                                    <CardDescription>Contact and organizational details.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-5 pt-6">
+                                    <div className="space-y-4">
+                                        <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
+                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                                <Phone className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-muted-foreground">Direct Line</p>
+                                                <p className="text-sm font-semibold">{referral.phone}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
+                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                                <Mail className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-muted-foreground">Email Correspondence</p>
+                                                <p className="text-sm font-semibold underline decoration-primary/20">{referral.email || "No Email Provided"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
+                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                                <MapPin className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-muted-foreground">Official Address</p>
+                                                <p className="text-sm font-semibold text-pretty">{referral.address || "No Address Provided"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-4 border-t flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Designated Branch</p>
+                                            <p className="text-sm font-medium">{referral.branch?.name || referral.branchId}</p>
+                                        </div>
+                                        <Badge variant="secondary" className="rounded-md">Branch ID: {referral.branchId.slice(0, 8)}</Badge>
+                                    </div>
+                                </CardContent>
+                                {referral.employee && (
+                                    <CardFooter className="bg-blue-50/30 border-t border-blue-100 p-4">
+                                        <div className="flex items-center gap-3 w-full">
+                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <Users className="w-5 h-5 text-blue-600" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-[10px] uppercase font-bold text-blue-600">Linked Employee Entity</p>
+                                                <p className="text-sm font-bold hover:underline cursor-pointer flex items-center">
+                                                    {referral.employee.name}
+                                                    <ChevronRight className="w-3 h-3 ml-1" />
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardFooter>
+                                )}
+                            </Card>
+
+                            {/* Commission Rates Card */}
+                            <Card className="shadow-sm border-muted/40 overflow-hidden">
+                                <CardHeader className="bg-primary/5">
+                                    <CardTitle className="text-lg flex items-center gap-2 text-primary">
+                                        <Activity className="h-5 w-5" />
+                                        Service Commissions
+                                    </CardTitle>
+                                    <CardDescription>Custom rates locked for this source.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <ScrollArea className="max-h-[300px]">
+                                        <div className="divide-y">
+                                            {Array.isArray(referral.commissionStructure) && referral.commissionStructure.length > 0 ? (
+                                                referral.commissionStructure.map((rule: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                                                        <div className="space-y-0.5">
+                                                            <p className="text-xs font-bold text-foreground line-clamp-1">{rule.serviceName}</p>
+                                                            <p className="text-[10px] text-muted-foreground italic">Target: Diagnostic / Service</p>
+                                                        </div>
+                                                        <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs">
+                                                            {rule.commissionPercentage}%
+                                                        </Badge>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-8 text-center space-y-2">
+                                                    <div className="w-10 h-10 rounded-full bg-muted mx-auto flex items-center justify-center">
+                                                        <Percent className="w-5 h-5 text-muted-foreground/50" />
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground italic">No service-specific rules.</p>
+                                                    <p className="text-[10px] font-medium text-primary">Standard Branch Rate Applies</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Performance & Charts */}
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                <Card className="bg-primary/5 border-primary/10 shadow-sm">
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Referred Orders</CardTitle>
+                                        <TrendingUp className="h-4 w-4 text-primary" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-3xl font-black">{referral.yearlyStats?.totalSalesCount || 0}</div>
+                                        <p className="text-[10px] mt-1 text-muted-foreground font-medium flex items-center gap-1">
+                                            <Badge variant="outline" className="h-4 p-0 px-1 text-[8px] bg-white">ALL TIME</Badge>
+                                            Successful Referrals
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-emerald-500/5 border-emerald-500/10 shadow-sm">
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Revenue Generated</CardTitle>
+                                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-3xl font-black text-emerald-700">{formatCurrency(referral.yearlyStats?.totalSalesAmount || 0)}</div>
+                                        <p className="text-[10px] mt-1 text-emerald-600/70 font-bold uppercase">Total Patient Billing</p>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-amber-500/5 border-amber-500/10 shadow-sm">
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Net Payouts</CardTitle>
+                                        <Wallet className="h-4 w-4 text-amber-600" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-3xl font-black text-amber-600">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</div>
+                                        <p className="text-[10px] mt-1 text-amber-600/70 font-bold uppercase">Commission Settled</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            <Card className="shadow-sm border-muted/40">
+                                <CardHeader className="border-b">
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <BarChart3 className="h-5 w-5 text-primary" />
+                                        Incentive Performance Analysis
+                                    </CardTitle>
+                                    <CardDescription>Metrics for the current fiscal year.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="pt-6">
+                                    <div className="flex flex-col items-center justify-center p-12 space-y-4 border-2 border-dashed rounded-3xl border-muted bg-muted/5">
+                                        <div className="w-16 h-16 rounded-3xl bg-white shadow-xl flex items-center justify-center transform rotate-6 hover:rotate-0 transition-transform cursor-default">
+                                            <Calendar className="h-8 w-8 text-primary/40" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="text-xl font-black">{referral.yearlyStats?.year || new Date().getFullYear()} Annual Summary</h3>
+                                            <p className="text-xs text-muted-foreground px-4 max-w-sm mt-1">Consolidated data reflecting referral success and financial outcomes for this source.</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-16 gap-y-6 w-full max-w-lg pt-6">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Weighted Rate</p>
+                                                <p className="text-2xl font-black text-foreground">
+                                                    {Array.isArray(referral.commissionStructure) && referral.commissionStructure.length > 0 
+                                                        ? `${referral.commissionStructure.length} Services`
+                                                        : "Standard"}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Cases Closed</p>
+                                                <p className="text-2xl font-black text-foreground">{referral.yearlyStats?.totalSalesCount || 0}</p>
+                                            </div>
+                                            <div className="space-y-1 border-t pt-3">
+                                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Total Sales</p>
+                                                <p className="text-2xl font-black text-foreground">{formatCurrency(referral.yearlyStats?.totalSalesAmount || 0)}</p>
+                                            </div>
+                                            <div className="space-y-1 border-t pt-3">
+                                                <p className="text-[10px] text-emerald-600 uppercase font-black tracking-widest">Total Commission</p>
+                                                <p className="text-2xl font-black text-emerald-600">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="bg-muted/10 px-6 py-4 flex justify-between items-center border-t">
+                                    <p className="text-[10px] text-muted-foreground italic font-medium">Data synchronized with billing module • Refreshed hourly</p>
+                                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase tracking-tight">Export Statement</Button>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </PermissionGuard>
+    )
+}
