@@ -336,3 +336,41 @@ export interface LeaveFilters {
   employeeId?: string;
   status?: string;
 }
+
+export interface Commission {
+  id: string;
+  referralId: string;
+  patientId: string;
+  serviceId: string;
+  serviceName: string;
+  patientName: string;
+  patientNumber?: string;
+  saleId: string;
+  invoiceNumber: string;
+  commissionAmount: number;
+  commissionPercentage: number;
+  isPaid: boolean;
+  paymentId?: string;
+  createdAt: string;
+  updatedAt: string;
+  referral?: ReferralPerson;
+}
+
+export interface CommissionFilters {
+  page?: number | string;
+  limit?: number | string;
+  referralId?: string;
+  isPaid?: boolean | string;
+  branchId?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
+export interface CommissionPaymentPayload {
+  referralId: string;
+  accountId: string;
+  commissionIds: string[];
+  paymentMethod: string;
+  note?: string;
+}

@@ -12,7 +12,9 @@ import {
   LeavePayload,
   LeaveFilters,
   ApproveLeavePayload,
-  ReferralPersonPayload
+  ReferralPersonPayload,
+  CommissionFilters,
+  CommissionPaymentPayload
 } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
@@ -33,6 +35,7 @@ export const HR_KEYS = {
   leaveType: (id: string) => [...HR_KEYS.all, "leaveType", id] as const,
   leaves: (params?: LeaveFilters) => params ? [...HR_KEYS.all, "leaves", params] as const : [...HR_KEYS.all, "leaves"] as const,
   leave: (id: string) => [...HR_KEYS.all, "leave", id] as const,
+  commissions: (params?: CommissionFilters) => params ? [...HR_KEYS.all, "commissions", params] as const : [...HR_KEYS.all, "commissions"] as const,
 };
 
 // Holiday Hooks
@@ -410,6 +413,25 @@ export function useApproveLeave() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leave(variables.id) });
+    },
+  });
+}
+
+// Commission Hooks
+export function useCommissions(params?: CommissionFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.commissions(params),
+    queryFn: () => hrService.getCommissions(params),
+  });
+}
+
+export function useProcessCommissionPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CommissionPaymentPayload) => hrService.processCommissionPayment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.commissions() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.all });
     },
   });
 }

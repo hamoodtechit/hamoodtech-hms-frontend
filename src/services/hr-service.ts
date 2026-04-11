@@ -21,7 +21,10 @@ import {
     Leave,
     LeavePayload,
     LeaveFilters,
-    ApproveLeavePayload
+    ApproveLeavePayload,
+    Commission,
+    CommissionFilters,
+    CommissionPaymentPayload
 } from "@/types/hr";
 
 export const hrService = {
@@ -274,6 +277,17 @@ export const hrService = {
 
   approveLeave: async (id: string, data: ApproveLeavePayload): Promise<{ success: boolean; data: Leave }> => {
     const response = await api.patch<{ success: boolean; data: Leave }>(`/hr/leaves/${id}/approve`, data);
+    return response.data;
+  },
+
+  // Commission APIs
+  getCommissions: async (params?: CommissionFilters): Promise<HRPaginatedResponse<Commission>> => {
+    const response = await api.get<HRPaginatedResponse<Commission>>("/referrals/commissions", { params });
+    return response.data;
+  },
+
+  processCommissionPayment: async (data: CommissionPaymentPayload): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post<{ success: boolean; message: string }>("/referrals/commissions/payment", data);
     return response.data;
   },
 };
