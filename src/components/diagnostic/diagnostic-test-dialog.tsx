@@ -181,9 +181,11 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     }, [open, test, activeStoreId])
 
     const handleSave = async () => {
-        // Validation: ONLY 'name' and 'price' are mandatory.
-        if (!formData.name || formData.price === undefined) {
-            toast.error("Please fill in required fields (Name and Price)")
+        // Validation: Name, Price, and BranchId are critical for clinical scoping.
+        const effectiveBranchId = formData.branchId || activeStoreId
+
+        if (!formData.name || formData.price === undefined || !effectiveBranchId) {
+            toast.error(!effectiveBranchId ? "No active branch selected. Please select a branch from the top header." : "Please fill in required fields (Name and Price)")
             return
         }
 
@@ -206,9 +208,15 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
             const cleanPayload: any = {}
             Object.keys(rawPayload).forEach(key => {
                 const val = rawPayload[key]
-                // Mandatory fields OR non-empty/null/undefined values
-                // Explicitly include branchId even if empty (though it should be the activeStoreId)
-                if (key === 'name' || key === 'price' || key === 'branchId' || (val !== "" && val !== null && val !== undefined)) {
+                
+                // Force effective branchId
+                if (key === 'branchId') {
+                    cleanPayload[key] = effectiveBranchId
+                    return
+                }
+
+                // Mandatory fields OR non-empty values
+                if (key === 'name' || key === 'price' || (val !== "" && val !== null && val !== undefined)) {
                     cleanPayload[key] = val
                 }
             })
