@@ -68,6 +68,12 @@ export function CommissionPayoutDialog({
             return
         }
 
+        const selectedAccount = accountsRes?.data?.find(acc => acc.id === accountId)
+        if (selectedAccount && Number(selectedAccount.currentBalance) < totalAmount) {
+            toast.error(`Insufficient balance in ${selectedAccount.name}. Available: ${formatCurrency(selectedAccount.currentBalance)}`)
+            return
+        }
+
         setLoading(true)
         try {
             await processPayment.mutateAsync({

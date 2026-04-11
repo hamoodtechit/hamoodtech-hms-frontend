@@ -372,3 +372,81 @@ export function HolidayFilters({
         </div>
     )
 }
+
+// --- Referral Filters ---
+export interface ReferralFilterValues {
+    type?: string
+    status?: string
+    minCommission?: string
+    maxCommission?: string
+}
+
+interface ReferralFiltersProps {
+    values: ReferralFilterValues
+    onChange: (values: ReferralFilterValues) => void
+}
+
+export function ReferralFilters({ 
+    values, 
+    onChange 
+}: ReferralFiltersProps) {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Partner Type</Label>
+                <Select 
+                    value={values.type || "all"} 
+                    onValueChange={(v) => onChange({ ...values, type: v === "all" ? "" : v })}
+                >
+                    <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="All Partners" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Partners</SelectItem>
+                        <SelectItem value="internal">Internal Staff</SelectItem>
+                        <SelectItem value="external">External Partners</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Status</Label>
+                <Select 
+                    value={values.status || "all"} 
+                    onValueChange={(v) => onChange({ ...values, status: v === "all" ? "" : v })}
+                >
+                    <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Min Cumulative Earn</Label>
+                <Input 
+                    type="number"
+                    placeholder="E.g. 1000"
+                    className="h-9 text-xs"
+                    value={values.minCommission || ""}
+                    onChange={(e) => onChange({ ...values, minCommission: e.target.value })}
+                />
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Max Cumulative Earn</Label>
+                <Input 
+                    type="number"
+                    placeholder="E.g. 50000"
+                    className="h-9 text-xs"
+                    value={values.maxCommission || ""}
+                    onChange={(e) => onChange({ ...values, maxCommission: e.target.value })}
+                />
+            </div>
+        </div>
+    )
+}

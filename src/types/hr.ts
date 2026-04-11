@@ -116,6 +116,7 @@ export interface ReferralPerson {
   address: string;
   commissionStructure: any;
   employeeId?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   branch?: {
@@ -140,6 +141,7 @@ export interface ReferralPersonPayload {
   address: string;
   commissionStructure: any;
   employeeId?: string;
+  isActive?: boolean;
 }
 
 export interface Attendance {

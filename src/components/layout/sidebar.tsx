@@ -178,6 +178,12 @@ export function Sidebar() {
               href: "/billing/radiology",
               module: "sales",
               permission: "radiology:create",
+          },
+          {
+              label: "Referral Payouts",
+              href: "/billing/referral-payouts",
+              module: "hr",
+              permission: "referral:read",
           }
       ]
     },

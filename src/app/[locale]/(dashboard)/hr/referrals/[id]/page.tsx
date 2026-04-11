@@ -72,6 +72,12 @@ export default function ReferralDetailPage() {
         limit: 100
     })
 
+    useEffect(() => {
+        if (commissionsRes) {
+            console.log("Commissions API Response:", commissionsRes);
+        }
+    }, [commissionsRes]);
+
     const commissions = commissionsRes?.data || []
 
     useEffect(() => {
@@ -104,7 +110,7 @@ export default function ReferralDetailPage() {
     }
 
     return (
-        <PermissionGuard permission="user:read">
+        <PermissionGuard permission="referral:read">
             {!referral ? (
                 <div className="flex flex-col items-center justify-center h-[450px] space-y-4">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
@@ -134,11 +140,11 @@ export default function ReferralDetailPage() {
                                 <div className="flex items-center gap-2">
                                     <h1 className="text-3xl font-bold tracking-tight text-foreground">{referral.name}</h1>
                                     {referral.employeeId ? (
-                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
                                             Internal Referral
                                         </Badge>
                                     ) : (
-                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
                                             External Partner
                                         </Badge>
                                     )}
@@ -180,7 +186,7 @@ export default function ReferralDetailPage() {
                                 <CardContent className="space-y-5 pt-6">
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
-                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                            <div className="p-2 rounded-full bg-background shadow-sm border border-border/50">
                                                 <Phone className="h-4 w-4 text-primary" />
                                             </div>
                                             <div>
@@ -189,7 +195,7 @@ export default function ReferralDetailPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
-                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                            <div className="p-2 rounded-full bg-background shadow-sm border border-border/50">
                                                 <Mail className="h-4 w-4 text-primary" />
                                             </div>
                                             <div>
@@ -198,7 +204,7 @@ export default function ReferralDetailPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-4 p-3 rounded-lg bg-muted/20">
-                                            <div className="p-2 rounded-full bg-white shadow-sm">
+                                            <div className="p-2 rounded-full bg-background shadow-sm border border-border/50">
                                                 <MapPin className="h-4 w-4 text-primary" />
                                             </div>
                                             <div>
@@ -217,14 +223,14 @@ export default function ReferralDetailPage() {
                                     </div>
                                 </CardContent>
                                 {referral.employee && (
-                                    <CardFooter className="bg-blue-50/30 border-t border-blue-100 p-4">
+                                    <CardFooter className="bg-primary/5 dark:bg-primary/10 border-t border-primary/10 p-4">
                                         <div className="flex items-center gap-3 w-full">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                <Users className="w-5 h-5 text-blue-600" />
+                                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                                <Users className="w-5 h-5 text-primary" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-[10px] uppercase font-bold text-blue-600">Linked Employee Entity</p>
-                                                <p className="text-sm font-bold hover:underline cursor-pointer flex items-center">
+                                                <p className="text-[10px] uppercase font-bold text-primary/70">Linked Employee Entity</p>
+                                                <p className="text-sm font-bold hover:underline cursor-pointer flex items-center text-foreground">
                                                     {referral.employee.name}
                                                     <ChevronRight className="w-3 h-3 ml-1" />
                                                 </p>
