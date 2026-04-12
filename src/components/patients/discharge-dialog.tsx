@@ -80,9 +80,9 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const editingSale = useMemo(() => hospitalBills.find((b: any) => b.id === editingSaleId) as Sale | undefined, [hospitalBills, editingSaleId])
 
     // Use grandTotal directly from API (includes both hospital + pharmacy)
-    const grandTotalBill = Number(data?.grandTotal?.totalBill) || (hospitalTotals.totalBill + (Number(pharmacyTotals.totalBill) || 0))
-    const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (hospitalTotals.totalPaid + (Number(pharmacyTotals.totalPaid) || 0))
-    const grandTotalDue = Number(data?.grandTotal?.totalDue) || (hospitalTotals.totalDue + (Number(pharmacyTotals.totalDue) || 0))
+    const grandTotalBill = Number(data?.grandTotal?.totalBill) || (Number(hospitalTotals.totalBill) + (Number(pharmacyTotals.totalBill) || 0))
+    const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (Number(hospitalTotals.totalPaid) + (Number(pharmacyTotals.totalPaid) || 0))
+    const grandTotalDue = Number(data?.grandTotal?.totalDue) || (Number(hospitalTotals.totalDue) + (Number(pharmacyTotals.totalDue) || 0))
 
     // Initialize paid amount when data is loaded
     useEffect(() => {
@@ -228,15 +228,15 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                                     </Badge>
                                                                     {Number(bill.discountAmount) > 0 && (
                                                                         <Badge variant="outline" className="text-[7px] h-3 px-1 font-black uppercase border-none bg-amber-500/10 text-amber-600">
-                                                                            -{formatCurrency(bill.discountAmount)} disc
+                                                                            -{formatCurrency(Number(bill.discountAmount))} disc
                                                                         </Badge>
                                                                     )}
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <div className="flex flex-col items-end">
-                                                                    <span className="text-xs font-black tabular-nums">{formatCurrency(bill.netPrice)}</span>
-                                                                    {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(bill.dueAmount)}</span>}
+                                                                    <span className="text-xs font-black tabular-nums">{formatCurrency(Number(bill.netPrice))}</span>
+                                                                    {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(Number(bill.dueAmount))}</span>}
                                                                 </div>
                                                                 <Button
                                                                     variant="ghost"
@@ -336,23 +336,23 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="font-bold text-muted-foreground/60 uppercase text-[10px]">Total Hospital Charges</span>
-                                            <span className="font-black tabular-nums">{formatCurrency(hospitalTotals.totalBill)}</span>
+                                            <span className="font-black tabular-nums">{formatCurrency(Number(hospitalTotals.totalBill))}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs px-1">
                                             <span className="text-muted-foreground font-medium uppercase min-w-12.5">To be Due</span>
-                                            <span className="font-bold text-rose-500">{formatCurrency(Math.max(0, grandTotalDue - paidAmount))}</span>
+                                            <span className="font-bold text-rose-500">{formatCurrency(Math.max(0, Number(grandTotalDue) - paidAmount))}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm py-2 border-y border-dashed border-primary/10">
                                             <span className="font-bold text-muted-foreground/80 uppercase text-[11px]">Gross Total Bill</span>
-                                            <span className="font-black text-lg tabular-nums text-primary">{formatCurrency(grandTotalBill)}</span>
+                                            <span className="font-black text-lg tabular-nums text-primary">{formatCurrency(Number(grandTotalBill))}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="font-bold text-emerald-600/60 uppercase text-[10px]">Total Amount Paid</span>
-                                            <span className="font-black text-emerald-600 tabular-nums">-{formatCurrency(grandTotalPaid)}</span>
+                                            <span className="font-black text-emerald-600 tabular-nums">-{formatCurrency(Number(grandTotalPaid))}</span>
                                         </div>
                                         <div className="flex justify-between items-center p-4 bg-primary/10 rounded-2xl border border-primary/5 mt-4 group">
                                             <span className="font-black text-primary uppercase text-[11px] tracking-widest">Net Payable Due</span>
-                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(grandTotalDue)}</span>
+                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(Number(grandTotalDue))}</span>
                                         </div>
                                     </div>
 

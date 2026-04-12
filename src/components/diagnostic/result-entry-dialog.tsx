@@ -218,78 +218,84 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     }
 
     useEffect(() => {
-        if (open && report) {
-            // Reset only if report ID changed
-            if (report.id !== lastLoadedId) {
-                setLastLoadedId(report.id)
-                const result = report.result as DiagnosticResult | null
-                if (result?.testResults) {
-                    const rawResults = result.testResults as any;
-                    const convertedResults: Record<string, Record<string, ParamResult>> = {};
-                    Object.keys(rawResults).forEach(testId => {
-                        convertedResults[testId] = {};
-                        Object.keys(rawResults[testId]).forEach(paramKey => {
-                            const val = rawResults[testId][paramKey];
-                            convertedResults[testId][paramKey] = typeof val === 'string' 
-                                ? { result: val, unit: "", refRange: "" } 
-                                : val;
-                        });
-                    });
-                    setResultsState(convertedResults)
-                    setReportHeader(result.reportHeader || "DIAGNOSTIC REPORT")
-                    setReportNotes(report.note || "")
-                    setMachineInfo(result.machineInfo || "")
-                    return; // Don't proceed to defaults if we have saved results
-                }
-            }
+        if (!open || !report) return;
+
+        // Phase 1: Initial State Migration (Only when report ID changes)
+        if (report.id !== lastLoadedId) {
+            setLastLoadedId(report.id);
+            const result = report.result as DiagnosticResult | null;
             
-            // This part runs to fill in defaults for tests that don't have results yet
-            setResultsState(prev => {
-                const newState = { ...prev };
-                let modified = false;
-
-                report.diagnosticTests?.forEach((test, tIdx) => {
-                    const testKey = `${test.id}_${tIdx}`;
-                    if (!newState[testKey]) {
-                        newState[testKey] = {};
-                        modified = true;
-                    }
-                    
-                    const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service
-                    const templateType = serviceData?.templateType || (test as any).templateType || 'table'
-                    
-                    if (templateType === 'narrative') {
-                        // Crucial: Only set if current result is empty or placeholder
-                        if (!newState[testKey]['__narrative'] || newState[testKey]['__narrative'].result === "" || newState[testKey]['__narrative'].result === undefined) {
-                            const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || ""
-                            const templateDescription = decodeTemplate(rawTemplateDescription);
-
-                            if (templateDescription) {
-                                newState[testKey]['__narrative'] = {
-                                    result: templateDescription,
-                                    unit: "",
-                                    refRange: ""
-                                };
-                                modified = true;
-                            }
-                        }
-                    } else if (Array.isArray(serviceData?.testResultTemplate)) {
-                        serviceData.testResultTemplate.forEach((field: any, fIdx: number) => {
-                            const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
-                            if (!newState[testKey][paramKey]) {
-                                newState[testKey][paramKey] = {
-                                    result: field.result || "",
-                                    unit: field.unit || "",
-                                    refRange: field.refRange || field.normalRange || ""
-                                };
-                                modified = true;
-                            }
-                        });
-                    }
+            if (result?.testResults) {
+                const rawResults = result.testResults as any;
+                const convertedResults: Record<string, Record<string, ParamResult>> = {};
+                Object.keys(rawResults).forEach(testId => {
+                    convertedResults[testId] = {};
+                    Object.keys(rawResults[testId]).forEach(paramKey => {
+                        const val = rawResults[testId][paramKey];
+                        convertedResults[testId][paramKey] = typeof val === 'string' 
+                            ? { result: val, unit: "", refRange: "" } 
+                            : val;
+                    });
                 });
-                return modified ? newState : prev;
-            });
+                setResultsState(convertedResults);
+                setReportHeader(result.reportHeader || "DIAGNOSTIC REPORT");
+                setReportNotes(report.note || "");
+                setMachineInfo(result.machineInfo || "");
+            } else {
+                setResultsState({});
+            }
         }
+        
+        // Phase 2: Template Reflow/Merging (Runs on templatesMap updates or open)
+        // This ensures that even if results exist, missing defaults from templates can be filled in
+        setResultsState(prev => {
+            const newState = { ...prev };
+            let modified = false;
+
+            report.diagnosticTests?.forEach((test, tIdx) => {
+                const testKey = `${test.id}_${tIdx}`;
+                if (!newState[testKey]) {
+                    newState[testKey] = {};
+                    modified = true;
+                }
+                
+                const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service;
+                const templateType = serviceData?.templateType || (test as any).templateType || 'table';
+                
+                if (templateType === 'narrative') {
+                    // Inject template if current narrative is empty or placeholder
+                    const currentResult = newState[testKey]['__narrative']?.result || "";
+                    if (!currentResult || currentResult === "" || currentResult === "<p><br></p>") {
+                        const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || "";
+                        const templateDescription = decodeTemplate(rawTemplateDescription);
+
+                        if (templateDescription && templateDescription !== currentResult) {
+                            newState[testKey]['__narrative'] = {
+                                result: templateDescription,
+                                unit: "",
+                                refRange: ""
+                            };
+                            modified = true;
+                        }
+                    }
+                } else if (Array.isArray(serviceData?.testResultTemplate)) {
+                    // Table mode: Fill in missing parameters
+                    serviceData.testResultTemplate.forEach((field: any, fIdx: number) => {
+                        const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
+                        if (!newState[testKey][paramKey]) {
+                            newState[testKey][paramKey] = {
+                                result: field.result || "",
+                                unit: field.unit || "",
+                                refRange: field.refRange || field.normalRange || ""
+                            };
+                            modified = true;
+                        }
+                    });
+                }
+            });
+
+            return modified ? newState : prev;
+        });
     }, [open, report, lastLoadedId, templatesMap])
 
     const handleReloadTemplate = (testKey: string, serviceId: string) => {
