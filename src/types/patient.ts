@@ -55,6 +55,11 @@ export interface AdmissionPayload {
   doctorId?: string;
   refDoctorName?: string;
   departmentId?: string;
+  saleItems?: any[]; // For structured billing
+  discountPercentage?: number;
+  discountAmount?: number;
+  taxPercentage?: number;
+  taxAmount?: number;
 }
 
 export interface AdmissionQueryParams {
@@ -172,21 +177,25 @@ export interface DischargeInitiateData {
   };
   hospital: {
     bills: Sale[];
-    totals?: {
+    totals: {
       totalBill: number;
       totalPaid: number;
       totalDue: number;
     };
   };
+  grandTotal: {
+    totalBill: number;
+    totalPaid: number;
+    totalDue: number;
+  };
 }
 
 export interface DischargePayload {
-  admissionId: string;
-  dischargeDate: string;
-  note?: string;
-  status?: AdmissionStatus;
-  // Financial completion
-  paidAmount?: number;
-  paymentMethod?: string;
-  accountId?: string;
+  patientId: string;
+  payments: {
+    accountId: string;
+    amount: number;
+    paymentMethod: string;
+    note?: string;
+  }[];
 }

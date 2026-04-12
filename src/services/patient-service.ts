@@ -99,7 +99,7 @@ export const patientService = {
   },
 
   completeDischarge: async (data: DischargePayload): Promise<{ success: boolean; message: string; data: any }> => {
-    const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/discharge', data);
+    const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/discharge-payment', data);
     return response.data;
   },
 };

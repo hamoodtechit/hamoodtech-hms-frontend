@@ -77,14 +77,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         guardianName: "",
         guardianPhone: "",
         guardianRelation: "",
-        fees: 0,
         referralPersonId: "",
         doctorId: "",
         refDoctorName: "",
         departmentId: "",
     })
 
-    const [selectedServices, setSelectedServices] = useState<any[]>([])
+    const [saleItems, setSaleItems] = useState<any[]>([])
 
     const [patientExtData, setPatientExtData] = useState({
         village: "",
@@ -151,14 +150,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianName: admission.guardianName || "",
                     guardianPhone: admission.guardianPhone || "",
                     guardianRelation: admission.guardianRelation || "",
-                    fees: Number(admission.fees) || 0,
                     referralPersonId: admission.referralPersonId || "",
                     doctorId: admission.doctorId || "",
                     refDoctorName: admission.refDoctorName || "",
                     departmentId: admission.departmentId || "",
                 })
                 setSelectedPatient(admission.patient || null)
-                setSelectedServices([]) // Reset for now, as we don't have existing items in Admission object
+                setSaleItems([]) // Reset for now
             } else {
                 setFormData({
                     branchId: activeStoreId || "",
@@ -171,14 +169,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianName: "",
                     guardianPhone: "",
                     guardianRelation: "",
-                    fees: 0,
                     referralPersonId: "",
                     doctorId: "",
                     refDoctorName: "",
                     departmentId: "",
                 })
                 setSelectedPatient(null)
-                setSelectedServices([])
+                setSaleItems([])
             }
         }
     }, [open, admission, activeStoreId])
@@ -213,24 +210,67 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         }
     }, [selectedPatient])
 
-    const servicesTotal = selectedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
+    const updateItemDiscount = (index: number, field: 'discountPercentage' | 'discountAmount', val: number) => {
+        setSaleItems(prev => {
+            const next = [...prev];
+            const item = { ...next[index] };
+            if (field === 'discountPercentage') {
+                item.discountPercentage = val;
+                item.discountAmount = (Number(item.price) * val) / 100;
+            } else {
+                item.discountAmount = val;
+                item.discountPercentage = (val / (Number(item.price) || 1)) * 100;
+            }
+            next[index] = item;
+            return next;
+        });
+    }
 
-    // This effect only syncs the base fee (bed fee) when a bed is selected, for new admissions.
-    useEffect(() => {
-        if (!admission && formData.bedId && bedsRes?.data) {
-            const selectedBed = bedsRes.data.find(b => b.id === formData.bedId)
-            const bedPrice = Number(selectedBed?.bedType?.pricePerDay) || 0
-            setFormData(prev => ({ ...prev, fees: bedPrice }))
-        }
-    }, [formData.bedId, bedsRes, admission])
+    const removeItem = (index: number) => {
+        setSaleItems(prev => prev.filter((_, i) => i !== index));
+    }
 
     // Totals logic
-    const subtotal = formData.fees + servicesTotal
-    const discountAmount = discountFixedAmount || (subtotal * discount) / 100
-    const discountedSubtotal = Math.max(0, subtotal - discountAmount)
-    const tax = discountedSubtotal * (vatPercentage / 100)
-    const total = discountedSubtotal + tax
+    const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
+    const totalItemDiscount = saleItems.reduce((sum, item) => sum + (Number(item.discountAmount) || 0), 0)
+    
+    const discountedSubtotal = Math.max(0, subtotal - totalItemDiscount)
+    const discountAmount = discountFixedAmount || (discountedSubtotal * discount) / 100
+    const finalSubtotal = Math.max(0, discountedSubtotal - discountAmount)
+    const tax = finalSubtotal * (vatPercentage / 100)
+    const total = finalSubtotal + tax
     const dueAmount = Math.max(0, total - paidAmount)
+
+    // This effect only syncs the base fee (bed fee) when a bed is selected.
+    useEffect(() => {
+        if (formData.bedId && bedsRes?.data) {
+            const selectedBed = bedsRes.data.find(b => b.id === formData.bedId)
+            const bedPrice = Number(selectedBed?.bedType?.pricePerDay) || 0
+            
+            setSaleItems(prev => {
+                const bedItemIndex = prev.findIndex(item => item.isBedCharge);
+                const bedItem = {
+                    itemName: `Bed/Cabin Charge (${selectedBed?.bedNumber})`,
+                    unit: "day",
+                    price: bedPrice,
+                    mrp: bedPrice,
+                    quantity: 1,
+                    isDiagnosticTest: false,
+                    isBedCharge: true,
+                    discountPercentage: 0,
+                    discountAmount: 0
+                };
+
+                if (bedItemIndex > -1) {
+                    const next = [...prev];
+                    next[bedItemIndex] = bedItem;
+                    return next;
+                } else {
+                    return [bedItem, ...prev];
+                }
+            });
+        }
+    }, [formData.bedId, bedsRes])
 
     // Update paid amount when total changes (for new admission only)
     useEffect(() => {
@@ -289,7 +329,17 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     id: admission.id,
                     data: {
                         ...formData,
-                        branchId: activeStoreId || formData.branchId
+                        branchId: activeStoreId || formData.branchId,
+                        saleItems: saleItems.map(item => ({
+                            ...item,
+                            price: Number(item.price),
+                            mrp: Number(item.mrp),
+                            quantity: Number(item.quantity)
+                        })),
+                        discountPercentage: discount,
+                        discountAmount: discountAmount,
+                        taxPercentage: vatPercentage,
+                        taxAmount: tax
                     }
                 })
                 toast.success("Admission updated successfully")
@@ -303,52 +353,21 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                 resAdmission = await createMutation.mutateAsync({
                     ...formData,
-                    branchId: activeStoreId || formData.branchId
+                    branchId: activeStoreId || formData.branchId,
+                    saleItems: saleItems.map(item => ({
+                        ...item,
+                        price: Number(item.price),
+                        mrp: Number(item.mrp),
+                        quantity: Number(item.quantity)
+                    })),
+                    discountPercentage: discount,
+                    discountAmount: discountAmount,
+                    taxPercentage: vatPercentage,
+                    taxAmount: tax
                 })
 
                 // Extract Sale ID from the response (Backend auto-creates the Sale)
                 const saleId = resAdmission?.data?.sale?.id
-
-                // 2. Prepare items and update Sale if needed
-                if (saleId) {
-                    const saleItems = [
-                        // Include the Bed/Cabin Fee as the first item
-                        {
-                            itemName: `Bed/Cabin Charge - ${activeBranchName}`,
-                            unit: "day",
-                            price: formData.fees,
-                            mrp: formData.fees,
-                            quantity: 1,
-                            isDiagnosticTest: false
-                        },
-                        // Add selected services
-                        ...selectedServices.map(s => ({
-                            serviceId: s.id,
-                            itemName: s.name,
-                            unit: s.unit || "unit",
-                            price: s.price,
-                            mrp: s.price,
-                            quantity: 1,
-                            isDiagnosticTest: s.isDiagnosticTest
-                        }))
-                    ]
-
-                    try {
-                        await updateSaleMutation.mutateAsync({
-                            id: saleId,
-                            data: {
-                                saleItems,
-                                discountPercentage: discount,
-                                discountAmount: discountFixedAmount,
-                                taxPercentage: vatPercentage,
-                                taxAmount: tax
-                            }
-                        })
-                    } catch (saleError) {
-                        console.error("Failed to update sale with services:", saleError)
-                        toast.warning("Admission created, but services were not properly attached to the bill.")
-                    }
-                }
 
                 // 3. Process Payment if amount exists
                 if (saleId && paidAmount > 0) {
@@ -460,8 +479,18 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                         value=""
                                         onChange={(val) => {
                                             const service = tests.find(t => t.id === val)
-                                            if (service && !selectedServices.find(s => s.id === val)) {
-                                                setSelectedServices(prev => [...prev, service])
+                                            if (service && !saleItems.find(s => s.serviceId === val)) {
+                                                setSaleItems(prev => [...prev, {
+                                                    serviceId: service.id,
+                                                    itemName: service.name,
+                                                    unit: service.unit || "unit",
+                                                    price: service.price,
+                                                    mrp: service.price,
+                                                    quantity: 1,
+                                                    isDiagnosticTest: service.isDiagnosticTest || false,
+                                                    discountPercentage: 0,
+                                                    discountAmount: 0
+                                                }])
                                             }
                                         }}
                                         options={tests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(t.price)}` }))}
@@ -469,30 +498,67 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     />
                                 </div>
 
-                                {selectedServices.length > 0 && (
-                                    <div className="space-y-2">
-                                        {selectedServices.map(service => (
-                                            <div key={service.id} className="flex items-center justify-between p-2 pl-3 bg-background rounded-xl border border-border group">
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-bold leading-none">{service.name}</span>
-                                                    <span className="text-[10px] text-muted-foreground">{service.department?.name || 'General'}</span>
+                                {saleItems.length > 0 && (
+                                    <div className="space-y-3">
+                                        {saleItems.map((item, idx) => (
+                                            <div key={idx} className="p-3 bg-background rounded-2xl border border-border/60 shadow-sm group">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-black text-foreground">{item.itemName}</span>
+                                                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">{item.unit} | {formatCurrency(item.price)}</span>
+                                                    </div>
+                                                    {!item.isBedCharge && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-7 w-7 rounded-full text-destructive hover:bg-destructive/10"
+                                                            onClick={() => removeItem(idx)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-black text-primary">{formatCurrency(service.price)}</span>
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-7 w-7 rounded-full text-destructive transition-opacity"
-                                                        onClick={() => setSelectedServices(prev => prev.filter(s => s.id !== service.id))}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                
+                                                <div className="flex items-center gap-4 pt-3 border-t border-border/40">
+                                                    <div className="flex-1 space-y-1">
+                                                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-70">Disc %</Label>
+                                                        <div className="relative">
+                                                            <SmartNumberInput 
+                                                                value={item.discountPercentage}
+                                                                onChange={(v) => updateItemDiscount(idx, 'discountPercentage', v || 0)}
+                                                                className="h-8 text-xs font-bold pl-7"
+                                                                min={0}
+                                                                max={100}
+                                                            />
+                                                            <span className="absolute left-2.5 top-2 text-[10px] font-black text-muted-foreground">%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 space-y-1">
+                                                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-70">Disc Amt</Label>
+                                                        <div className="relative">
+                                                            <SmartNumberInput 
+                                                                value={item.discountAmount}
+                                                                onChange={(v) => updateItemDiscount(idx, 'discountAmount', v || 0)}
+                                                                className="h-8 text-xs font-bold pl-7"
+                                                                min={0}
+                                                            />
+                                                            <span className="absolute left-2.5 top-2 text-[10px] font-black text-muted-foreground">Tk</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 text-right">
+                                                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-70 block mb-1">Final</Label>
+                                                        <span className="text-sm font-black text-primary">{formatCurrency(Number(item.price) - Number(item.discountAmount))}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
-                                        <div className="flex items-center justify-between px-3 pt-2 border-t">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Services</span>
-                                            <span className="text-sm font-black text-primary">{formatCurrency(servicesTotal)}</span>
+                                        <div className="flex items-center justify-between px-3 pt-2 border-t mt-2">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Subtotal</span>
+                                            <span className="text-sm font-black text-foreground">{formatCurrency(subtotal)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-3">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Items Discount</span>
+                                            <span className="text-sm font-black text-emerald-600">-{formatCurrency(totalItemDiscount)}</span>
                                         </div>
                                     </div>
                                 )}
@@ -632,12 +698,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Total Admission Charges (Tk)</Label>
-                                    <SmartNumberInput 
-                                        value={subtotal}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, fees: Math.max(0, (val || 0) - servicesTotal) }))}
-                                        placeholder="0.00"
-                                    />
+                                    <Label>Total Bill Summary (After Items Discount)</Label>
+                                    <div className="h-10 px-4 rounded-xl bg-muted/50 flex items-center font-black text-sm text-primary border border-primary/10">
+                                        {formatCurrency(discountedSubtotal)}
+                                    </div>
                                 </div>
                             </div>
                             
@@ -790,20 +854,20 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                                             <div className="space-y-1.5 p-3 bg-background rounded-lg border shadow-sm">
                                                 <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
-                                                    <span>Bed/Cabin Fee</span>
-                                                    <span>{formatCurrency(formData.fees)}</span>
+                                                    <span>Gross Amount</span>
+                                                    <span>{formatCurrency(subtotal)}</span>
                                                 </div>
-                                                <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
-                                                    <span>Service Charges</span>
-                                                    <span>{formatCurrency(servicesTotal)}</span>
+                                                <div className="flex justify-between text-[10px] font-medium text-emerald-600 uppercase">
+                                                    <span>Total Items Discount</span>
+                                                    <span>-{formatCurrency(totalItemDiscount)}</span>
                                                 </div>
                                                 <div className="flex justify-between text-[10px] font-black text-primary uppercase border-t pt-1 mt-1">
                                                     <span>Subtotal</span>
                                                     <span>{formatCurrency(subtotal)}</span>
                                                 </div>
                                                 {discountAmount > 0 && (
-                                                    <div className="flex justify-between text-[10px] font-medium text-emerald-600 uppercase">
-                                                        <span>Discount</span>
+                                                    <div className="flex justify-between text-[10px] font-bold text-amber-600 uppercase italic">
+                                                        <span>Additional Discount</span>
                                                         <span>-{formatCurrency(discountAmount)}</span>
                                                     </div>
                                                 )}

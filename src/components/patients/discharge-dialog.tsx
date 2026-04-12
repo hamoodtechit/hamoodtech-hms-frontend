@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDischargeInitiate, useCompleteDischarge } from "@/hooks/patient-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useCreateSale } from "@/hooks/sales-queries"
+import { useCreateSale, useUpdateSale } from "@/hooks/sales-queries"
 import { format } from "date-fns"
 import { 
     AlertCircle,
@@ -21,6 +21,7 @@ import {
     CreditCard, 
     FileText, 
     Loader2, 
+    Pencil,
     Pill, 
     Plus,
     Receipt, 
@@ -30,7 +31,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { Admission, PaymentMethod } from "@/types/patient"
-import { SalePayload } from "@/types/sales"
+import { Sale, SalePayload } from "@/types/sales"
 import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -55,9 +56,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const { mutate: completeDischarge, isPending: isCompleting } = useCompleteDischarge()
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
     const { mutateAsync: createSale, isPending: isCreatingExtra } = useCreateSale()
+    const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
     
     // Extra Charge State
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
+    // Edit Sale State
+    const [editingSaleId, setEditingSaleId] = useState<string | null>(null)
+    // Discount form state
+    const [discountAmount, setDiscountAmount] = useState(0)
+    const [discountType, setDiscountType] = useState<'amount' | 'percent'>('amount')
+    const [discountPercent, setDiscountPercent] = useState(0)
     
     // Form State
     const [note, setNote] = useState("")
@@ -68,18 +76,13 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const data = res?.data
     const hospitalBills = useMemo(() => data?.hospital?.bills || [], [data?.hospital?.bills])
     const pharmacyTotals = useMemo(() => data?.pharmacy?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.pharmacy?.totals])
+    const hospitalTotals = useMemo(() => data?.hospital?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.hospital?.totals])
+    const editingSale = useMemo(() => hospitalBills.find((b: any) => b.id === editingSaleId) as Sale | undefined, [hospitalBills, editingSaleId])
 
-    // Calculate Hospital Totals
-    const hospitalTotals = useMemo(() => hospitalBills.reduce((acc: any, sale: any) => {
-        acc.totalBill += Number(sale.netPrice) || 0
-        acc.totalPaid += Number(sale.paidAmount) || 0
-        acc.totalDue += Number(sale.dueAmount) || 0
-        return acc
-    }, { totalBill: 0, totalPaid: 0, totalDue: 0 }), [hospitalBills])
-
-    const grandTotalBill = hospitalTotals.totalBill + (Number(pharmacyTotals.totalBill) || 0)
-    const grandTotalPaid = hospitalTotals.totalPaid + (Number(pharmacyTotals.totalPaid) || 0)
-    const grandTotalDue = hospitalTotals.totalDue + (Number(pharmacyTotals.totalDue) || 0)
+    // Use grandTotal directly from API (includes both hospital + pharmacy)
+    const grandTotalBill = Number(data?.grandTotal?.totalBill) || (hospitalTotals.totalBill + (Number(pharmacyTotals.totalBill) || 0))
+    const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (hospitalTotals.totalPaid + (Number(pharmacyTotals.totalPaid) || 0))
+    const grandTotalDue = Number(data?.grandTotal?.totalDue) || (hospitalTotals.totalDue + (Number(pharmacyTotals.totalDue) || 0))
 
     // Initialize paid amount when data is loaded
     useEffect(() => {
@@ -96,14 +99,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             return
         }
 
+        const payments = paidAmount > 0 ? [{
+            accountId: selectedAccountId,
+            amount: paidAmount,
+            paymentMethod: paymentMethod as string,
+            note: note || undefined,
+        }] : []
+
         completeDischarge({
-            admissionId: admission.id,
-            dischargeDate: new Date().toISOString(),
-            note,
-            status: "discharged",
-            paidAmount,
-            paymentMethod,
-            accountId: selectedAccountId
+            patientId: admission.patientId,
+            payments,
         }, {
             onSuccess: (res: any) => {
                 toast.success(res.message || "Patient discharged successfully")
@@ -217,14 +222,41 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                                 </span>
                                                                 <div className="flex items-center gap-1.5 opacity-60">
                                                                     <span className="text-[8px] font-bold text-muted-foreground uppercase">{bill.invoiceNumber}</span>
+                                                                    <span className="text-[8px] font-bold text-muted-foreground">{bill.saleItems?.length || 0} service(s)</span>
                                                                     <Badge variant="outline" className={`text-[7px] h-3 px-1 font-black uppercase border-none ${bill.paymentStatus === 'paid' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
                                                                         {bill.paymentStatus}
                                                                     </Badge>
+                                                                    {Number(bill.discountAmount) > 0 && (
+                                                                        <Badge variant="outline" className="text-[7px] h-3 px-1 font-black uppercase border-none bg-amber-500/10 text-amber-600">
+                                                                            -{formatCurrency(bill.discountAmount)} disc
+                                                                        </Badge>
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-xs font-black tabular-nums">{formatCurrency(bill.netPrice)}</span>
-                                                                {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(bill.dueAmount)}</span>}
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex flex-col items-end">
+                                                                    <span className="text-xs font-black tabular-nums">{formatCurrency(bill.netPrice)}</span>
+                                                                    {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(bill.dueAmount)}</span>}
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 rounded-lg"
+                                                                    title="Apply bill-level discount"
+                                                                    onClick={() => {
+                                                                        setEditingSaleId(bill.id)
+                                                                        // Pre-fill with current bill discount
+                                                                        if (Number(bill.discountPercentage) > 0) {
+                                                                            setDiscountType('percent')
+                                                                            setDiscountPercent(Number(bill.discountPercentage))
+                                                                        } else {
+                                                                            setDiscountType('amount')
+                                                                            setDiscountAmount(Number(bill.discountAmount) || 0)
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Pencil className="h-3 w-3" />
+                                                                </Button>
                                                             </div>
                                                         </div>
                                                     ))
@@ -405,6 +437,96 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                 admission={admission}
                 onSuccess={() => refetchDischarge()}
             />
+
+            {/* Edit Sale Discount Dialog */}
+            <Dialog open={!!editingSaleId} onOpenChange={(o) => { if (!o) { setEditingSaleId(null); setDiscountAmount(0); setDiscountPercent(0) } }}>
+                <DialogContent className="sm:max-w-sm rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-4 bg-amber-500/5 border-b border-amber-500/10">
+                        <DialogTitle className="text-base font-black text-amber-600 flex items-center gap-2">
+                            <Pencil className="h-4 w-4" />
+                            Apply Discount
+                        </DialogTitle>
+                        <DialogDescription className="text-xs font-medium opacity-60">
+                            {editingSale?.invoiceNumber} · {editingSale?.saleItems?.length || 0} service(s) · Total: {formatCurrency(Number(editingSale?.totalPrice) || 0)}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="p-6 space-y-4">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                variant={discountType === 'amount' ? 'default' : 'outline'}
+                                size="sm"
+                                className="rounded-xl text-xs font-black"
+                                onClick={() => setDiscountType('amount')}
+                            >
+                                Fixed Amount
+                            </Button>
+                            <Button
+                                variant={discountType === 'percent' ? 'default' : 'outline'}
+                                size="sm"
+                                className="rounded-xl text-xs font-black"
+                                onClick={() => setDiscountType('percent')}
+                            >
+                                Percentage
+                            </Button>
+                        </div>
+
+                        {discountType === 'amount' ? (
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-black uppercase opacity-60">Discount Amount</Label>
+                                <SmartNumberInput
+                                    value={discountAmount}
+                                    onChange={(v) => setDiscountAmount(v || 0)}
+                                    className="h-11 text-lg font-black"
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-black uppercase opacity-60">Discount %</Label>
+                                <SmartNumberInput
+                                    value={discountPercent}
+                                    onChange={(v) => setDiscountPercent(v || 0)}
+                                    className="h-11 text-lg font-black"
+                                />
+                                {discountPercent > 0 && (
+                                    <p className="text-[10px] font-bold text-amber-600">
+                                        = {formatCurrency((Number(editingSale?.totalPrice || 0) * discountPercent) / 100)} off
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="p-6 pt-0 gap-2">
+                        <Button variant="outline" size="sm" className="rounded-xl font-black text-xs" onClick={() => { setEditingSaleId(null); setDiscountAmount(0); setDiscountPercent(0) }}>
+                            Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            className="rounded-xl font-black text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                            disabled={isUpdatingSale}
+                            onClick={async () => {
+                                if (!editingSaleId) return
+                                const finalDiscountAmount = discountType === 'percent'
+                                    ? (Number(editingSale?.totalPrice || 0) * discountPercent) / 100
+                                    : discountAmount
+                                const finalDiscountPercent = discountType === 'percent' ? discountPercent : 0
+                                try {
+                                    await updateSale({ id: editingSaleId, data: { discountAmount: finalDiscountAmount, discountPercentage: finalDiscountPercent } })
+                                    toast.success('Discount applied successfully')
+                                    setEditingSaleId(null)
+                                    setDiscountAmount(0)
+                                    setDiscountPercent(0)
+                                    refetchDischarge()
+                                } catch (err: any) {
+                                    toast.error(err?.response?.data?.message || 'Failed to apply discount')
+                                }
+                            }}
+                        >
+                            {isUpdatingSale ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                            Apply Discount
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     )
 }

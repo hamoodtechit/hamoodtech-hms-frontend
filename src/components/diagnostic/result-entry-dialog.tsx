@@ -163,9 +163,14 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const [lastLoadedId, setLastLoadedId] = useState<string | null>(null)
 
     // Parallel fetch service details for full templates
-    const testIds = useMemo(() => report?.diagnosticTests?.map(t => t.serviceId) || [], [report]);
+    const testIdsMissingData = useMemo(() => {
+        return report?.diagnosticTests
+            ?.filter(t => !t.service?.templateDescription && !t.service?.testResultTemplate) // Only fetch if data is missing
+            ?.map(t => t.serviceId) || []
+    }, [report]);
+
     const templateQueries = useQueries({
-        queries: testIds.map(id => ({
+        queries: testIdsMissingData.map(id => ({
             queryKey: ['diagnostic-test', id],
             queryFn: () => diagnosticService.getDiagnosticTestById(id),
             enabled: open && !!id
@@ -176,14 +181,21 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const templatesMap = useMemo(() => {
         const map: Record<string, any> = {};
         
-        // 1. Populate from API queries
+        // 1. Populate from existing data in report (Highest priority)
+        report?.diagnosticTests?.forEach(t => {
+            if (t.serviceId && t.service) {
+                map[t.serviceId] = t.service;
+            }
+        });
+
+        // 2. Populate from API queries
         templateQueries.forEach(q => {
             if (q.data?.data) {
                 map[q.data.data.id] = q.data.data;
             }
         });
 
-        // 2. Fallback: Populate from saleItems already in report (Instant loading from JSON)
+        // 3. Fallback: Populate from saleItems already in report
         const saleItems = (report as any)?.sale?.saleItems || [];
         saleItems.forEach((item: any) => {
             if (item.serviceId && item.service) {
@@ -193,6 +205,17 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
         return map;
     }, [templateQueries, report]);
+
+    // Separate effect for decoding/sanitizing templates
+    const decodeTemplate = (raw: string) => {
+        if (!raw) return "";
+        return raw
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&nbsp;/g, ' ');
+    }
 
     useEffect(() => {
         if (open && report) {
@@ -220,7 +243,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 }
             }
             
-            // This part runs every time open/report/templatesMap changes
+            // This part runs to fill in defaults for tests that don't have results yet
             setResultsState(prev => {
                 const newState = { ...prev };
                 let modified = false;
@@ -234,19 +257,13 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                     
                     const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service
                     const templateType = serviceData?.templateType || (test as any).templateType || 'table'
-                    const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || ""
                     
-                    // Decode HTML entities (e.g., &lt; to <) for the Rich Text Editor
-                    const templateDescription = rawTemplateDescription
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&quot;/g, '"')
-                        .replace(/&amp;/g, '&')
-                        .replace(/&nbsp;/g, ' ');
-
                     if (templateType === 'narrative') {
                         // Crucial: Only set if current result is empty or placeholder
                         if (!newState[testKey]['__narrative'] || newState[testKey]['__narrative'].result === "" || newState[testKey]['__narrative'].result === undefined) {
+                            const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || ""
+                            const templateDescription = decodeTemplate(rawTemplateDescription);
+
                             if (templateDescription) {
                                 newState[testKey]['__narrative'] = {
                                     result: templateDescription,
@@ -274,6 +291,19 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             });
         }
     }, [open, report, lastLoadedId, templatesMap])
+
+    const handleReloadTemplate = (testKey: string, serviceId: string) => {
+        const serviceData = templatesMap[serviceId];
+        if (!serviceData) return;
+
+        const rawTemplateDescription = serviceData.templateDescription || "";
+        const templateDescription = decodeTemplate(rawTemplateDescription);
+
+        if (templateDescription) {
+            updateParam(testKey, '__narrative', 'result', templateDescription, { unit: '', refRange: '' });
+            toast.success("Template reloaded");
+        }
+    }
 
     const getClinicalIndicator = (val: string, min?: string | number, max?: string | number) => {
         if (!val || (!min && !max)) return null;
@@ -507,6 +537,15 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                     <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-tighter opacity-60 italic">Narrative Mode enabled for descriptive findings</p>
                                                                                 </div>
                                                                             </div>
+                                                                            <Button 
+                                                                                variant="outline" 
+                                                                                size="sm" 
+                                                                                onClick={() => handleReloadTemplate(testKey, test.serviceId)}
+                                                                                className="h-8 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/10 transition-all active:scale-95"
+                                                                            >
+                                                                                <History className="h-3 w-3 text-primary" />
+                                                                                Reload Template
+                                                                            </Button>
                                                                         </div>
                                                                         <div className="p-10 bg-background/50 backdrop-blur-md">
                                                                             <RichTextEditor 

@@ -90,14 +90,27 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                 </DialogHeader>
 
                 <ScrollArea className="max-h-[85vh]">
-                    {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Fetching Patient Record</span>
-                        </div>
-                    ) : admission ? (
-                        <div className="p-8 pt-2 grid gap-8">
-                            {/* Patient & Location Row */}
+                    {(() => {
+                        if (isLoading) {
+                            return (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+                                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Fetching Patient Record</span>
+                                </div>
+                            )
+                        }
+
+                        if (!admission) {
+                            return (
+                                <div className="p-20 text-center opacity-50 text-xs font-bold uppercase tracking-widest">
+                                    No record found for ID: {admissionId}
+                                </div>
+                            )
+                        }
+
+                        return (
+                            <div className="p-8 pt-2 grid gap-8">
+                                {/* Patient & Location Row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 text-primary">
@@ -347,16 +360,13 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                     <FileText className="h-4 w-4" />
                                     <h3 className="text-xs font-black uppercase tracking-widest">Administrative / Clinical Notes</h3>
                                 </div>
-                                <div className="bg-muted/10 p-4 rounded-xl text-xs font-medium leading-relaxed opacity-60 italic">
-                                    {admission.note || "No additional notes for this hospitalization record."}
+                                    <div className="bg-muted/10 p-4 rounded-xl text-xs font-medium leading-relaxed opacity-60 italic">
+                                        {admission.note || "No additional notes for this hospitalization record."}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="p-20 text-center opacity-50 text-xs font-bold uppercase tracking-widest">
-                            No record found for ID: {admissionId}
-                        </div>
-                    )}
+                        )
+                    })()}
                 </ScrollArea>
 
                 <AddAdmissionServiceDialog 
