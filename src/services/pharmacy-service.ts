@@ -409,5 +409,9 @@ export const pharmacyService = {
     const response = await api.get<PharmacySummaryResponse>('/reports/pharmacy/summary', { params });
     return response.data;
   },
+
+  bulkPriceUpdate: async (data: any[]): Promise<void> => {
+    await api.patch('/pharmacy/stocks/bulk-price-update', data);
+  },
 };
 

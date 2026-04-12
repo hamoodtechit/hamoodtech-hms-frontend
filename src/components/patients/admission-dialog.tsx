@@ -27,7 +27,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useBeds } from "@/hooks/facility-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCreateAdmission, useUpdateAdmission, useUpdatePatient } from "@/hooks/patient-queries"
-import { useAddSalePayment } from "@/hooks/sales-queries"
+import { useAddSalePayment, useUpdateSale } from "@/hooks/sales-queries"
+import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
+import { useUsers } from "@/hooks/user-queries"
+import { useDepartments } from "@/hooks/hr-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -35,7 +38,7 @@ import { FinanceAccount } from "@/types/finance"
 import { Admission, AdmissionStatus, Patient } from "@/types/patient"
 import { PaymentMethod } from "@/types/pharmacy"
 import { SalePayload } from "@/types/sales"
-import { Loader2, Wallet } from "lucide-react"
+import { Loader2, Trash2, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -57,6 +60,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     const createMutation = useCreateAdmission()
     const updateMutation = useUpdateAdmission()
     const updatePatientMutation = useUpdatePatient()
+    const updateSaleMutation = useUpdateSale()
+
+    const { data: testsRes } = useDiagnosticTests({ limit: 1000 })
+    const tests = testsRes?.data || []
 
     // Form State
     const [formData, setFormData] = useState({
@@ -71,8 +78,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         guardianPhone: "",
         guardianRelation: "",
         fees: 0,
-        referralPersonId: ""
+        referralPersonId: "",
+        doctorId: "",
+        refDoctorName: "",
+        departmentId: "",
     })
+
+    const [selectedServices, setSelectedServices] = useState<any[]>([])
 
     const [patientExtData, setPatientExtData] = useState({
         village: "",
@@ -100,6 +112,11 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     const addPaymentMutation = useAddSalePayment()
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
     const accounts = accountsRes?.data || []
+    const { data: usersRes } = useUsers({ limit: 1000 })
+    const { data: deptsRes } = useDepartments({ limit: 1000 })
+
+    const doctors = usersRes?.data?.filter(u => u.role?.name?.toLowerCase() === 'doctor') || []
+    const departments = deptsRes?.data || []
 
     useEffect(() => {
         if (open) {
@@ -135,9 +152,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianPhone: admission.guardianPhone || "",
                     guardianRelation: admission.guardianRelation || "",
                     fees: Number(admission.fees) || 0,
-                    referralPersonId: admission.referralPersonId || ""
+                    referralPersonId: admission.referralPersonId || "",
+                    doctorId: admission.doctorId || "",
+                    refDoctorName: admission.refDoctorName || "",
+                    departmentId: admission.departmentId || "",
                 })
                 setSelectedPatient(admission.patient || null)
+                setSelectedServices([]) // Reset for now, as we don't have existing items in Admission object
             } else {
                 setFormData({
                     branchId: activeStoreId || "",
@@ -151,9 +172,13 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     guardianPhone: "",
                     guardianRelation: "",
                     fees: 0,
-                    referralPersonId: ""
+                    referralPersonId: "",
+                    doctorId: "",
+                    refDoctorName: "",
+                    departmentId: "",
                 })
                 setSelectedPatient(null)
+                setSelectedServices([])
             }
         }
     }, [open, admission, activeStoreId])
@@ -188,27 +213,31 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         }
     }, [selectedPatient])
 
+    const servicesTotal = selectedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0)
+
+    // This effect only syncs the base fee (bed fee) when a bed is selected, for new admissions.
     useEffect(() => {
-        if (formData.bedId && bedsRes?.data) {
+        if (!admission && formData.bedId && bedsRes?.data) {
             const selectedBed = bedsRes.data.find(b => b.id === formData.bedId)
-            if (selectedBed?.bedType?.pricePerDay) {
-                const price = Number(selectedBed.bedType?.pricePerDay) || 0
-                setFormData(prev => ({ ...prev, fees: price }))
-                // Default paid amount to total if for new admission
-                if (!admission) {
-                    setPaidAmount(price + (price * (vatPercentage / 100)))
-                }
-            }
+            const bedPrice = Number(selectedBed?.bedType?.pricePerDay) || 0
+            setFormData(prev => ({ ...prev, fees: bedPrice }))
         }
-    }, [formData.bedId, bedsRes, admission, vatPercentage])
+    }, [formData.bedId, bedsRes, admission])
 
     // Totals logic
-    const subtotal = formData.fees
+    const subtotal = formData.fees + servicesTotal
     const discountAmount = discountFixedAmount || (subtotal * discount) / 100
     const discountedSubtotal = Math.max(0, subtotal - discountAmount)
     const tax = discountedSubtotal * (vatPercentage / 100)
     const total = discountedSubtotal + tax
     const dueAmount = Math.max(0, total - paidAmount)
+
+    // Update paid amount when total changes (for new admission only)
+    useEffect(() => {
+        if (!admission && open) {
+            setPaidAmount(total)
+        }
+    }, [total, admission, open])
 
     const handleSave = async () => {
         if (!formData.patientId || !formData.bedId) {
@@ -232,14 +261,19 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             );
 
             if (hasPatientChanges && selectedPatient) {
+                // Filter out null values (like dob) that cause backend validation errors
+                const cleanedPatientData = Object.fromEntries(
+                    Object.entries({
+                        ...selectedPatient,
+                        ...patientExtData,
+                        age: Number(selectedPatient.age)
+                    }).filter(([_, v]) => v !== null)
+                );
+
                 try {
                     await updatePatientMutation.mutateAsync({
                         id: selectedPatient.id,
-                        data: {
-                            ...selectedPatient, // Keep existing fields (name, age, etc.)
-                            ...patientExtData,  // Overlay new ones
-                            age: Number(selectedPatient.age) // Ensure numeric age
-                        } as any
+                        data: cleanedPatientData as any
                     });
                 } catch (pe) {
                     console.error("Failed to update patient demographics:", pe);
@@ -275,7 +309,48 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                 // Extract Sale ID from the response (Backend auto-creates the Sale)
                 const saleId = resAdmission?.data?.sale?.id
 
-                // 2. Process Payment if amount exists
+                // 2. Prepare items and update Sale if needed
+                if (saleId) {
+                    const saleItems = [
+                        // Include the Bed/Cabin Fee as the first item
+                        {
+                            itemName: `Bed/Cabin Charge - ${activeBranchName}`,
+                            unit: "day",
+                            price: formData.fees,
+                            mrp: formData.fees,
+                            quantity: 1,
+                            isDiagnosticTest: false
+                        },
+                        // Add selected services
+                        ...selectedServices.map(s => ({
+                            serviceId: s.id,
+                            itemName: s.name,
+                            unit: s.unit || "unit",
+                            price: s.price,
+                            mrp: s.price,
+                            quantity: 1,
+                            isDiagnosticTest: s.isDiagnosticTest
+                        }))
+                    ]
+
+                    try {
+                        await updateSaleMutation.mutateAsync({
+                            id: saleId,
+                            data: {
+                                saleItems,
+                                discountPercentage: discount,
+                                discountAmount: discountFixedAmount,
+                                taxPercentage: vatPercentage,
+                                taxAmount: tax
+                            }
+                        })
+                    } catch (saleError) {
+                        console.error("Failed to update sale with services:", saleError)
+                        toast.warning("Admission created, but services were not properly attached to the bill.")
+                    }
+                }
+
+                // 3. Process Payment if amount exists
                 if (saleId && paidAmount > 0) {
                     try {
                         await addPaymentMutation.mutateAsync({
@@ -306,7 +381,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[900px] p-0">
                 <DialogHeader className="p-6 pb-0">
                     <DialogTitle>{admission ? "Edit Admission" : "New Patient Admission (IPD)"}</DialogTitle>
                     <DialogDescription>
@@ -369,6 +444,58 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                         placeholder="Available beds"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Service Selection Section */}
+                            <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                        Admission Charges & Services
+                                    </h4>
+                                    <span className="text-[10px] font-bold text-muted-foreground italic">Add registration fees or initial tests</span>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <SearchableSelect 
+                                        value=""
+                                        onChange={(val) => {
+                                            const service = tests.find(t => t.id === val)
+                                            if (service && !selectedServices.find(s => s.id === val)) {
+                                                setSelectedServices(prev => [...prev, service])
+                                            }
+                                        }}
+                                        options={tests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(t.price)}` }))}
+                                        placeholder="Search and add service..."
+                                    />
+                                </div>
+
+                                {selectedServices.length > 0 && (
+                                    <div className="space-y-2">
+                                        {selectedServices.map(service => (
+                                            <div key={service.id} className="flex items-center justify-between p-2 pl-3 bg-background rounded-xl border border-border group">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold leading-none">{service.name}</span>
+                                                    <span className="text-[10px] text-muted-foreground">{service.department?.name || 'General'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs font-black text-primary">{formatCurrency(service.price)}</span>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-7 w-7 rounded-full text-destructive transition-opacity"
+                                                        onClick={() => setSelectedServices(prev => prev.filter(s => s.id !== service.id))}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="flex items-center justify-between px-3 pt-2 border-t">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Services</span>
+                                            <span className="text-sm font-black text-primary">{formatCurrency(servicesTotal)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {selectedPatient && (
@@ -505,12 +632,58 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Admission Fees (Tk)</Label>
+                                    <Label>Total Admission Charges (Tk)</Label>
                                     <SmartNumberInput 
-                                        value={formData.fees}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, fees: val || 0 }))}
+                                        value={subtotal}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, fees: Math.max(0, (val || 0) - servicesTotal) }))}
                                         placeholder="0.00"
                                     />
+                                </div>
+                            </div>
+                            
+                            <Separator className="my-2" />
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500">Assignment & Consultation</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>Assigned Doctor</Label>
+                                        <SearchableSelect 
+                                            value={formData.doctorId}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, doctorId: val }))}
+                                            options={doctors.map(d => ({ 
+                                                id: d.id, 
+                                                name: `${d.fullName} ${d.designation ? `(${d.designation})` : ''}` 
+                                            }))}
+                                            placeholder="Select Doctor"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Reference Doctor</Label>
+                                        <Input 
+                                            value={formData.refDoctorName}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, refDoctorName: e.target.value }))}
+                                            placeholder="Write doctor name manually"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Department</Label>
+                                    <Select 
+                                        value={formData.departmentId} 
+                                        onValueChange={(val) => setFormData(prev => ({ ...prev, departmentId: val }))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Department" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {departments.map((dept: any) => (
+                                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
@@ -617,7 +790,15 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                                             <div className="space-y-1.5 p-3 bg-background rounded-lg border shadow-sm">
                                                 <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
-                                                    <span>Base Fees</span>
+                                                    <span>Bed/Cabin Fee</span>
+                                                    <span>{formatCurrency(formData.fees)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
+                                                    <span>Service Charges</span>
+                                                    <span>{formatCurrency(servicesTotal)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-[10px] font-black text-primary uppercase border-t pt-1 mt-1">
+                                                    <span>Subtotal</span>
                                                     <span>{formatCurrency(subtotal)}</span>
                                                 </div>
                                                 {discountAmount > 0 && (

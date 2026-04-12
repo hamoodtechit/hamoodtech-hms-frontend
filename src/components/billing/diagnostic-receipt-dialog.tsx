@@ -210,7 +210,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                     </div>
                 </div>
                 <div className="p-2 px-3 font-bold min-h-[45px] flex items-center">
-                    Agent : {agentName}
+                    RefBy : {agentName}
                 </div>
             </div>
         </div>

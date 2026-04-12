@@ -43,7 +43,6 @@ export function BatchList({ itemId, initialStocks, branchId }: BatchListProps) {
     // Dialog States
     const [adjustmentOpen, setAdjustmentOpen] = useState(false)
     const [transferOpen, setTransferOpen] = useState(false)
-    const [editOpen, setEditOpen] = useState(false)
     const [selectedStock, setSelectedStock] = useState<Stock | null>(null)
 
     const loadBatches = async () => {
@@ -138,14 +137,6 @@ export function BatchList({ itemId, initialStocks, branchId }: BatchListProps) {
                                                 >
                                                     <ArrowRightLeft className="mr-2 h-4 w-4" /> Transfer Stock
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => {
-                                                        setSelectedStock(batch)
-                                                        setEditOpen(true)
-                                                    }}
-                                                >
-                                                    <Edit2 className="mr-2 h-4 w-4" /> Edit Record
-                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -180,12 +171,6 @@ export function BatchList({ itemId, initialStocks, branchId }: BatchListProps) {
                stock={selectedStock}
             />
 
-            <EditOpeningStockDialog 
-               open={editOpen}
-               onOpenChange={setEditOpen}
-               stock={selectedStock}
-               onSuccess={loadBatches}
-            />
         </div>
     )
 }

@@ -49,7 +49,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Filter, MoreVertical, CheckCircle2, XCircle, Clock4 } from "lucide-react"
+import { Filter, MoreVertical, CheckCircle2, XCircle, Clock4, History, Receipt } from "lucide-react"
+import { CommissionReceiptDialog } from "@/components/hr/commission-receipt-dialog"
 import { format } from "date-fns"
 
 export default function ReferralDetailPage() {
@@ -65,6 +66,8 @@ export default function ReferralDetailPage() {
     const [statusFilter, setStatusFilter] = useState<string>("false") // "all", "true", "false" (unpaid by default)
     const [selectedIds, setSelectedIds] = useState<string[]>([])
     const [payoutOpen, setPayoutOpen] = useState(false)
+    const [historyReceiptOpen, setHistoryReceiptOpen] = useState(false)
+    const [selectedHistoryPayout, setSelectedHistoryPayout] = useState<any>(null)
 
     const { data: commissionsRes, isLoading: commissionsLoading } = useCommissions({
         referralId: id,
@@ -290,14 +293,18 @@ export default function ReferralDetailPage() {
                                         <Activity className="w-4 h-4 mr-2" />
                                         Performance
                                     </TabsTrigger>
-                                    <TabsTrigger value="commissions" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full">
+                                    <TabsTrigger value="commissions" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full text-amber-600 data-[state=active]:text-amber-700">
                                         <DollarSign className="w-4 h-4 mr-2" />
-                                        Commission Log
+                                        Pending
                                         {commissions.filter(c => !c.isPaid).length > 0 && (
                                             <Badge className="ml-2 bg-amber-500 text-[10px] h-4 px-1 min-w-[1rem] flex items-center justify-center">
                                                 {commissions.filter(c => !c.isPaid).length}
                                             </Badge>
                                         )}
+                                    </TabsTrigger>
+                                    <TabsTrigger value="history" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full text-emerald-600 data-[state=active]:text-emerald-700">
+                                        <History className="w-4 h-4 mr-2" />
+                                        Paid History
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -495,6 +502,115 @@ export default function ReferralDetailPage() {
                                         </Table>
                                     </Card>
                                 </TabsContent>
+
+                                <TabsContent value="history" className="space-y-4 m-0">
+                                    <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                                                <CheckCircle2 className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-black text-emerald-900 dark:text-emerald-400">Total Settled Amount</h3>
+                                                <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-widest">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className="bg-white font-black text-emerald-600 border-emerald-500/20">
+                                            {commissions.filter(c => c.isPaid).length} Items Paid
+                                        </Badge>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {commissionsLoading ? (
+                                            <div className="h-40 flex items-center justify-center">
+                                                <Loader2 className="w-8 h-8 animate-spin text-emerald-500/30" />
+                                            </div>
+                                        ) : commissions.filter(c => c.isPaid).length === 0 ? (
+                                            <Card className="p-12 text-center bg-muted/20 border-dashed rounded-[2.5rem]">
+                                                <History className="w-12 h-12 mx-auto text-muted-foreground/20 mb-4" />
+                                                <h3 className="font-black text-muted-foreground">No Payment History</h3>
+                                                <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto mt-2 uppercase tracking-tighter">Settled commissions will appear here for audit and receipts.</p>
+                                            </Card>
+                                        ) : (
+                                            /* Grouping logic for Paid History */
+                                            (() => {
+                                                const paidComms = commissions.filter(c => c.isPaid);
+                                                // Group by date (DD-MM-YYYY HH:mm) to simulate payout batches
+                                                const groups: Record<string, typeof paidComms> = {};
+                                                paidComms.forEach(c => {
+                                                    const dateKey = format(new Date(c.updatedAt), 'yyyy-MM-dd HH:mm');
+                                                    if (!groups[dateKey]) groups[dateKey] = [];
+                                                    groups[dateKey].push(c);
+                                                });
+
+                                                return Object.entries(groups)
+                                                    .sort(([a], [b]) => b.localeCompare(a)) // Latest first
+                                                    .map(([dateKey, items]) => {
+                                                        const batchTotal = items.reduce((s, c) => s + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0);
+                                                        return (
+                                                            <Card key={dateKey} className="overflow-hidden border-muted/50 shadow-sm hover:shadow-md transition-all group">
+                                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/10 gap-4 border-b">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="p-2 rounded-lg bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                                                                            <Calendar className="w-4 h-4" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-xs font-black text-foreground">Paid on {format(new Date(dateKey), 'dd MMM yyyy')}</p>
+                                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{format(new Date(dateKey), 'hh:mm a')} • {items.length} Items</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center justify-between sm:justify-end gap-6">
+                                                                        <div className="text-right">
+                                                                            <p className="text-[10px] font-black text-muted-foreground uppercase opacity-60">Payout Amount</p>
+                                                                            <p className="text-lg font-black text-primary">{formatCurrency(batchTotal)}</p>
+                                                                        </div>
+                                                                        <Button 
+                                                                            variant="outline" 
+                                                                            size="sm" 
+                                                                            className="rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 h-10 px-4"
+                                                                            onClick={() => {
+                                                                                setSelectedHistoryPayout({
+                                                                                    referral: referral,
+                                                                                    commissions: items,
+                                                                                    totalAmount: batchTotal,
+                                                                                    paymentMethod: (items[0] as any).paymentMethod || "Electronic",
+                                                                                    date: items[0].updatedAt,
+                                                                                    note: "Re-printed from history"
+                                                                                });
+                                                                                setHistoryReceiptOpen(true);
+                                                                            }}
+                                                                        >
+                                                                            <Receipt className="w-4 h-4" />
+                                                                            Receipt
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="p-0">
+                                                                    <div className="grid grid-cols-1 divide-y divide-border/30">
+                                                                        {items.map((item) => (
+                                                                            <div key={item.id} className="flex items-center justify-between p-4 text-xs hover:bg-muted/5 transition-colors">
+                                                                                <div className="space-y-0.5">
+                                                                                    <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
+                                                                                    <p className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                                                                        <span>{item.patientName || "N/A"}</span>
+                                                                                        <span className="opacity-30">|</span>
+                                                                                        <span className="font-mono">#{item.invoiceNumber}</span>
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className="text-right shrink-0">
+                                                                                    <p className="font-black text-foreground">{formatCurrency(item.commissionValue || (item as any).commissionAmount)}</p>
+                                                                                    <p className="text-[9px] text-emerald-600 font-bold uppercase">Settled</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </Card>
+                                                        );
+                                                    });
+                                            })()
+                                        )}
+                                    </div>
+                                </TabsContent>
                             </Tabs>
                         </div>
                     </div>
@@ -505,6 +621,12 @@ export default function ReferralDetailPage() {
                         referralId={id}
                         selectedCommissions={selectedCommissions}
                         onSuccess={() => setSelectedIds([])}
+                    />
+
+                    <CommissionReceiptDialog 
+                        open={historyReceiptOpen}
+                        onOpenChange={setHistoryReceiptOpen}
+                        payoutData={selectedHistoryPayout}
                     />
                 </div>
             )}

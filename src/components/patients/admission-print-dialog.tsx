@@ -115,14 +115,20 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                         .border-dashed { border-style: dashed !important; border-width: 1px !important; }
                         .border-black { border-color: black !important; }
                         
+                        .px-1 { padding-left: 4px !important; padding-right: 4px !important; }
+                        
                         /* Typography */
                         .font-bold { font-weight: bold !important; }
                         .font-black { font-weight: 900 !important; }
                         .uppercase { text-transform: uppercase !important; }
-                        .text-xs { font-size: 10px !important; }
-                        .text-sm { font-size: 12px !important; }
-                        .text-lg { font-size: 18px !important; }
-                        .text-2xl { font-size: 24px !important; }
+                        .text-xs { font-size: 11px !important; }
+                        .text-sm { font-size: 16px !important; }
+                        .text-base { font-size: 17px !important; }
+                        .text-lg { font-size: 20px !important; }
+                        .text-2xl { font-size: 28px !important; }
+                        .text-\[10px\] { font-size: 10px !important; }
+                        .text-\[14px\] { font-size: 16px !important; }
+                        .w-24 { width: 7.5rem !important; }
                         .italic { font-style: italic !important; }
                         
                         /* Spacing */
@@ -223,15 +229,15 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '70px', width: 'auto', objectFit: 'contain' }} />
                                     </div>
                                     
-                                    <h1 className="text-2xl font-black uppercase tracking-tight text-slate-950 m-0 p-0 leading-none">
+                                    <h1 className="text-2xl font-black uppercase tracking-tight text-slate-950 m-0 p-0 leading-none mb-1">
                                         {general?.hospitalName || branch?.name || 'HamoodTech Hospital'}
                                     </h1>
                                     
-                                    <p className="text-[14px] font-bold m-0 p-0 leading-none text-black">
+                                    <p className="text-[16px] font-bold m-0 p-0 leading-none text-black mb-1">
                                         {(general?.address || branch?.address || 'Hospital Address').split(',').map(s => s.trim()).join(', ')}
                                     </p>
                                     
-                                    <p className="text-[14px] font-bold m-0 p-0 leading-none text-black">
+                                    <p className="text-[16px] font-bold m-0 p-0 leading-none text-black">
                                         Ph: {general?.phone || branch?.phone || "Hospital Phone"}
                                     </p>
                                 </div>
@@ -329,14 +335,34 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         </div>
                                     </div>
 
+                                    {/* Doctor & Department Assignment */}
+                                    <div className="grid grid-cols-1 border-b border-black border-dashed">
+                                        <div className="p-2 px-3 flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Assigned Doctor:</span>
+                                            <span className="font-black text-sm text-slate-900">
+                                                {admission?.doctor?.fullName || 'N/A'} {admission?.doctor?.designation ? `(${admission.doctor.designation})` : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 border-b border-black border-dashed">
+                                        <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Consultation Dr:</span>
+                                            <span className="font-bold text-sm">{admission?.refDoctorName || 'N/A'}</span>
+                                        </div>
+                                        <div className="p-2 px-3 flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Department:</span>
+                                            <span className="font-bold text-sm">{admission?.department?.name || 'N/A'}</span>
+                                        </div>
+                                    </div>
+
                                     <div className="border-b border-black border-dashed flex items-start">
-                                        <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
+                                        <span className="w-28 p-2 px-3 text-[11px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Reason:</span>
                                         <span className="p-2 px-3 font-bold text-sm">{admission?.reason || 'Routine Admission'}</span>
                                     </div>
 
                                     <div className="flex items-start">
-                                        <span className="w-24 p-2 px-3 text-[10px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Full Address:</span>
-                                        <span className="p-2 px-3 font-bold text-xs opacity-80">{patient?.address || 'N/A'}</span>
+                                        <span className="w-28 p-2 px-3 text-[11px] font-black uppercase opacity-60 border-r border-black border-dashed h-full">Full Address:</span>
+                                        <span className="p-2 px-3 font-bold text-sm opacity-80">{patient?.address || 'N/A'}</span>
                                     </div>
                                 </div>
 

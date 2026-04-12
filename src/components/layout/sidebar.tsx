@@ -143,7 +143,7 @@ export function Sidebar() {
               permission: "patient:read",
           },
           {
-              label: "Admissions (IPD)",
+              label: "In Patient Department",
               href: "/patients/admissions",
               module: "patients",
               permission: "patient:read",

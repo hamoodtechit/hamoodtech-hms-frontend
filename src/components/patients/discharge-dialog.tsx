@@ -118,7 +118,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-225 max-h-[95vh] overflow-hidden p-0 border-none shadow-2xl rounded-3xl">
+            <DialogContent className="sm:max-w-225 max-h-[95vh] overflow-hidden p-0 border-none shadow-2xl rounded-3xl flex flex-col">
                 <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
                     <div className="flex items-center justify-between">
                         <DialogTitle className="text-2xl font-black tracking-tight text-primary flex items-center gap-3">
@@ -136,7 +136,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                     </DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[75vh]">
+                <ScrollArea className="flex-1 overflow-y-auto">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />

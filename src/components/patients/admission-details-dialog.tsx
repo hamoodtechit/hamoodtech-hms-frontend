@@ -25,8 +25,14 @@ import {
     MapPin,
     Hash,
     Receipt,
-    Plus
+    Plus,
+    Printer,
+    ClipboardCheck
 } from "lucide-react"
+import { useSales, SALES_KEYS } from "@/hooks/sales-queries"
+import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
+import { DischargeDialog } from "./discharge-dialog"
+import { useQueryClient } from "@tanstack/react-query"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { AdmissionStatus } from "@/types/patient"
@@ -40,11 +46,20 @@ interface AdmissionDetailsDialogProps {
 }
 
 export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: AdmissionDetailsDialogProps) {
+    const queryClient = useQueryClient()
     const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
+    const { data: salesRes, isLoading: isLoadingSales } = useSales({ 
+        patientAdmissionId: admissionId || "",
+        limit: 100 
+    }, { enabled: !!admissionId })
+
     const [addServiceOpen, setAddServiceOpen] = useState(false)
+    const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false)
+    const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
+    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     
     const admission = res?.data?.patientAdmission
-    const sale = res?.data?.sale
+    const sales = salesRes?.data?.sales || salesRes?.data?.data || []
 
     const getStatusBadge = (status: AdmissionStatus) => {
         switch (status) {
@@ -163,7 +178,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
 
                             <Separator className="bg-white/5" />
 
-                            {/* Admission Details */}
+                            {/* Row 2: Admission Details & Guardian */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 text-primary">
@@ -210,6 +225,31 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div className="flex items-center gap-2 text-blue-500 pt-2">
+                                        {admission?.status === 'admitted' && (
+                                            <>
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="outline" 
+                                                    className="h-8 px-3 rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5 gap-2 text-[10px] font-black uppercase tracking-widest"
+                                                    onClick={() => setDischargeDialogOpen(true)}
+                                                >
+                                                    <ClipboardCheck className="h-3.5 w-3.5" />
+                                                    Discharge Patient
+                                                </Button>
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="outline" 
+                                                    className="h-8 px-3 rounded-xl border-blue-500/20 text-blue-600 hover:bg-blue-500/5 gap-2 text-[10px] font-black uppercase tracking-widest"
+                                                    onClick={() => setAddServiceOpen(true)}
+                                                >
+                                                    <Plus className="h-3.5 w-3.5" />
+                                                    Add Service
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -220,64 +260,63 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                         <Receipt className="h-4 w-4" />
                                         <h3 className="text-xs font-black uppercase tracking-widest font-black tracking-tight">Financial Record (Indoor Sale)</h3>
                                     </div>
-                                    {admission?.status === 'admitted' && (
-                                        <Button 
-                                            size="sm" 
-                                            variant="outline" 
-                                            className="h-8 px-3 rounded-xl border-blue-500/20 text-blue-600 hover:bg-blue-500/5 gap-2 text-[10px] font-black uppercase tracking-widest"
-                                            onClick={() => setAddServiceOpen(true)}
-                                        >
-                                            <Plus className="h-3.5 w-3.5" />
-                                            Add Service
-                                        </Button>
-                                    )}
                                 </div>
-                                {sale ? (
-                                    <div className="bg-blue-500/5 p-6 rounded-3xl border border-blue-500/10 overflow-hidden relative group">
-                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 group-hover:rotate-12 transition-transform">
-                                            <Receipt className="h-24 w-24" />
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative">
-                                            <div className="space-y-1">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Invoice No.</span>
-                                                <span className="text-xs font-black text-blue-600 block tabular-nums">{sale.invoiceNumber}</span>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Payment Status</span>
-                                                <Badge className={sale.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-orange-500'}>
-                                                    {sale.paymentStatus}
-                                                </Badge>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Billing Type</span>
-                                                <span className="text-xs font-black uppercase tracking-widest text-foreground/70">{sale.type}</span>
-                                            </div>
-                                            <div className="space-y-1 text-right">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Net Amount</span>
-                                                <span className="text-lg font-black text-primary tracking-tighter tabular-nums">{formatCurrency(sale.netPrice)}</span>
-                                            </div>
-                                        </div>
-
-                                        <Separator className="my-6 bg-blue-500/10" />
-
-                                        <div className="space-y-3">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-500/70">Billable Items / Fees</span>
-                                            <div className="space-y-2">
-                                                {sale.saleItems?.map((item: any) => (
-                                                    <div key={item.id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5 group/item hover:bg-white/10 transition-colors">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-xs font-black text-foreground/90">{item.itemName}</span>
-                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-40">Unit: {item.unit}</span>
+                                {isLoadingSales ? (
+                                    <div className="flex justify-center py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
+                                    </div>
+                                ) : sales && sales.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {sales.map((s: any) => (
+                                            <div key={s.id} className="bg-blue-500/5 p-5 rounded-2xl border border-blue-500/10 overflow-hidden relative group hover:bg-blue-500/[0.08] transition-all">
+                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-2 flex-grow">
+                                                        <div className="space-y-1">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50 leading-none">Invoice No.</span>
+                                                            <span className="text-xs font-black text-blue-600 block tabular-nums leading-none mt-1">{s.invoiceNumber}</span>
                                                         </div>
-                                                        <div className="text-right flex items-center gap-4">
-                                                            <span className="text-[9px] font-black tabular-nums opacity-60">QTY: {item.quantity}</span>
-                                                            <span className="text-xs font-black text-foreground tabular-nums group-hover/item:text-blue-500 transition-colors">{formatCurrency(item.totalPrice)}</span>
+                                                        <div className="space-y-1">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50 leading-none">Status</span>
+                                                            <div className="flex gap-1.5 mt-1">
+                                                                <Badge className={s.paymentStatus === 'paid' ? 'bg-emerald-500 h-4 text-[9px] px-1.5 font-black uppercase' : 'bg-orange-500 h-4 text-[9px] px-1.5 font-black uppercase'}>
+                                                                    {s.paymentStatus}
+                                                                </Badge>
+                                                                <span className="text-[9px] font-black uppercase text-foreground/40 mt-0.5">{s.type}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1 text-right md:text-left">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50 leading-none">Net Amount</span>
+                                                            <span className="text-sm font-black text-primary tracking-tighter tabular-nums leading-none mt-1">{formatCurrency(s.netPrice)}</span>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                    
+                                                    <Button 
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="h-10 w-full md:w-auto px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
+                                                        onClick={() => {
+                                                            setSelectedSaleForPrint(s)
+                                                            setReceiptDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Printer className="h-4 w-4" />
+                                                        Print Bill
+                                                    </Button>
+                                                </div>
+
+                                                <div className="mt-4 pt-4 border-t border-blue-500/10 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    {s.saleItems?.map((item: any) => (
+                                                        <div key={item.id} className="flex justify-between items-center py-1 opacity-70 group-hover/item:opacity-100 transition-opacity">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-foreground/90 leading-tight">{item.itemName}</span>
+                                                                <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">Qty: {item.quantity}</span>
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-foreground tabular-nums">{formatCurrency(item.totalPrice)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 ) : (
                                     <div className="bg-muted/10 border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3">
@@ -324,7 +363,26 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     open={addServiceOpen}
                     onOpenChange={setAddServiceOpen}
                     admission={admission || null}
-                    onSuccess={() => refetch()}
+                    onSuccess={() => {
+                        refetch()
+                        queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
+                    }}
+                />
+
+                <ReceiptDialog 
+                    open={receiptDialogOpen}
+                    onOpenChange={setReceiptDialogOpen}
+                    transaction={selectedSaleForPrint}
+                />
+
+                <DischargeDialog 
+                    open={dischargeDialogOpen}
+                    onOpenChange={setDischargeDialogOpen}
+                    admission={admission || null}
+                    onSuccess={() => {
+                        refetch()
+                        onOpenChange(false)
+                    }}
                 />
             </DialogContent>
         </Dialog>

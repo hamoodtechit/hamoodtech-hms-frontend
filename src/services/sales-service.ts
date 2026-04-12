@@ -30,6 +30,7 @@ export const salesService = {
     minAmount?: number;
     maxAmount?: number;
     type?: string;
+    patientAdmissionId?: string;
   }): Promise<SalesPaginatedResponse<Sale>> => {
     const response = await api.get<SalesPaginatedResponse<Sale>>('/sales', { params });
     return response.data;
@@ -75,6 +76,7 @@ export const salesService = {
     minAmount?: number;
     maxAmount?: number;
     type?: string;
+    patientAdmissionId?: string;
   }): Promise<SalesPaginatedResponse<SaleReturn>> => {
     const response = await api.get<SalesPaginatedResponse<SaleReturn>>('/sales/returns', { params });
     return response.data;

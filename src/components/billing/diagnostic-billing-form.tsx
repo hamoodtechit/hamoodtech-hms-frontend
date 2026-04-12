@@ -438,7 +438,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                                 </div>
 
                                 <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Facilitator / Agent</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">RefBy (Referral)</Label>
                                     <ReferralSearch 
                                         selectedReferralId={selectedReferralPersonId}
                                         onSelect={(referral) => setSelectedReferralPersonId(referral?.id || "")}

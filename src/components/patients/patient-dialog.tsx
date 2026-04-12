@@ -51,7 +51,7 @@ const patientSchema = z.object({
     phone: z.string().min(1, 'Phone number is required'),
     dob: z.string().optional(),
     bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
-    address: z.string().min(1, 'Address is required'),
+    address: z.string().optional(),
     visitType: z.enum(['ipd', 'opd', 'emergency']).optional(),
     // New Fields
     village: z.string().optional(),
@@ -102,7 +102,8 @@ export function PatientDialog({
       religion: "",
       occupation: "",
       maritalStatus: undefined,
-      nationality: "Bangladeshi"
+      nationality: "Bangladeshi",
+      dob: undefined
     },
   })
 
@@ -125,7 +126,8 @@ export function PatientDialog({
         religion: patient.religion || "",
         occupation: patient.occupation || "",
         maritalStatus: patient.maritalStatus,
-        nationality: patient.nationality || "Bangladeshi"
+        nationality: patient.nationality || "Bangladeshi",
+        dob: patient.dob || undefined
       })
     } else {
       form.reset({
@@ -145,7 +147,8 @@ export function PatientDialog({
         religion: "",
         occupation: "",
         maritalStatus: undefined,
-        nationality: "Bangladeshi"
+        nationality: "Bangladeshi",
+        dob: undefined
       })
     }
   }, [patient, form])
@@ -153,12 +156,17 @@ export function PatientDialog({
   const onSubmit = async (data: PatientFormValues) => {
     try {
       setSaving(true)
+      // Filter out null values before sending to API
+      const cleanedData = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== null)
+      );
+
       let response;
       if (isEditing && patient) {
-        response = await patientService.updatePatient(patient.id, data as any)
+        response = await patientService.updatePatient(patient.id, cleanedData as any)
         toast.success("Patient updated successfully")
       } else {
-        response = await patientService.createPatient(data as any)
+        response = await patientService.createPatient(cleanedData as any)
         toast.success("Patient created successfully")
       }
       onSuccess(response.data)
@@ -174,7 +182,7 @@ export function PatientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Update Patient Details' : 'Register New Patient'}</DialogTitle>
           <DialogDescription>
@@ -186,145 +194,118 @@ export function PatientDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="details">Address & Demographics</TabsTrigger>
+                <TabsTrigger value="basic">Basic Info & Address</TabsTrigger>
+                <TabsTrigger value="details">Other Details</TabsTrigger>
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Name *</FormLabel>
-                        <FormControl>
-                            <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="nameBangla"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Name (Bangla)</FormLabel>
-                        <FormControl>
-                            <Input placeholder="নাম (বাংলা)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Age *</FormLabel>
-                        <FormControl>
-                            <SmartNumberInput placeholder="30" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Gender *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                <ScrollArea className="h-[450px] pr-4">
+                  <div className="space-y-4 pb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Name *</FormLabel>
                             <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
+                                <Input placeholder="John Doe" {...field} />
                             </FormControl>
-                            <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Phone *</FormLabel>
-                        <FormControl>
-                            <Input placeholder="017..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="bloodGroup"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Blood Group</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="nameBangla"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Name (Bangla)</FormLabel>
                             <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select" />
-                            </SelectTrigger>
+                                <Input placeholder="নাম (বাংলা)" {...field} />
                             </FormControl>
-                            <SelectContent>
-                                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                                    <SelectItem key={bg} value={bg}>{bg}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="visitType"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Visit Type *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="age"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Age *</FormLabel>
                             <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select visit type" />
-                            </SelectTrigger>
+                                <SmartNumberInput placeholder="30" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
                             </FormControl>
-                            <SelectContent>
-                                <SelectItem value="opd">OPD (Out-Patient)</SelectItem>
-                                <SelectItem value="ipd">IPD (In-Patient)</SelectItem>
-                                <SelectItem value="emergency">Emergency</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-              </TabsContent>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Gender *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Phone *</FormLabel>
+                            <FormControl>
+                                <Input placeholder="017..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="bloodGroup"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Blood Group</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                                        <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
 
-              <TabsContent value="details" className="space-y-4 pt-4">
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
                         control={form.control}
@@ -383,34 +364,64 @@ export function PatientDialog({
                         />
                     </div>
 
-                    <FormField
-                    control={form.control}
-                    name="village"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Village / Area</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g. Uttara Sector 4" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="village"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Village / Area</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g. Uttara Sector 4" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="visitType"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Visit Type *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select visit type" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="opd">OPD (Out-Patient)</SelectItem>
+                                    <SelectItem value="ipd">IPD (In-Patient)</SelectItem>
+                                    <SelectItem value="emergency">Emergency</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
 
                     <FormField
                       control={form.control}
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Address *</FormLabel>
+                          <FormLabel>Full Address</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Street address, house number..." {...field} />
+                            <Textarea placeholder="Street address, house number..." {...field} className="h-20" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+                </ScrollArea>
+              </TabsContent>
 
+              <TabsContent value="details" className="space-y-4 pt-4">
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 pt-2">
                         <FormField
                         control={form.control}

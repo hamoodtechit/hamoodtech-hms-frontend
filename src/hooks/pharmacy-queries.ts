@@ -335,6 +335,20 @@ export function useUpdateOpeningStock() {
   });
 }
 
+export function useBulkPriceUpdate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any[]) => pharmacyService.bulkPriceUpdate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.all });
+      toast.success("Prices updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to update prices");
+    }
+  });
+}
+
 // Supplier Hooks
 export function useSuppliers(params: any = {}) {
   return useQuery({

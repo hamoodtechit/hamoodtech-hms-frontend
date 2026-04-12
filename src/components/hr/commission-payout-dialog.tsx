@@ -26,6 +26,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { Loader2, Wallet, CreditCard, Banknote } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { CommissionReceiptDialog } from "./commission-receipt-dialog"
 
 interface CommissionPayoutDialogProps {
     open: boolean
@@ -46,6 +47,15 @@ export function CommissionPayoutDialog({
     const [accountId, setAccountId] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("Cash")
     const [note, setNote] = useState("")
+    const [payoutResult, setPayoutResult] = useState<{
+        referral: any
+        commissions: Commission[]
+        totalAmount: number
+        paymentMethod: string
+        date: string
+        note?: string
+    } | null>(null)
+    const [receiptOpen, setReceiptOpen] = useState(false)
     
     const { formatCurrency } = useCurrency()
     const { data: accountsRes, isLoading: accountsLoading } = useFinanceAccounts({ limit: 100 })
@@ -84,7 +94,22 @@ export function CommissionPayoutDialog({
                 paymentMethod,
                 note
             })
+            
+            // Prepare data for receipt
+            const firstComm = selectedCommissions[0]
+            const referralObj = firstComm?.referral || { id: referralId, name: "Referral Partner" }
+            
+            setPayoutResult({
+                referral: referralObj,
+                commissions: selectedCommissions,
+                totalAmount,
+                paymentMethod,
+                date: new Date().toISOString(),
+                note
+            })
+            
             toast.success(`Successfully processed payout of ${formatCurrency(totalAmount)}`)
+            setReceiptOpen(true)
             onSuccess?.()
             onOpenChange(false)
         } catch (error) {
@@ -95,6 +120,7 @@ export function CommissionPayoutDialog({
     }
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px] border-none shadow-2xl rounded-[2rem] p-0 overflow-hidden">
                 <DialogHeader className="p-6 bg-primary/5 border-b border-primary/10">
@@ -105,7 +131,7 @@ export function CommissionPayoutDialog({
                         <div>
                             <DialogTitle className="text-2xl font-black tracking-tight">Process Payout</DialogTitle>
                             <DialogDescription className="text-xs font-medium text-muted-foreground/70 uppercase tracking-widest">
-                                Settle commission with agent
+                                Settle commission with RefBy
                             </DialogDescription>
                         </div>
                     </div>
@@ -202,5 +228,12 @@ export function CommissionPayoutDialog({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <CommissionReceiptDialog 
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            payoutData={payoutResult}
+        />
+        </>
     )
 }

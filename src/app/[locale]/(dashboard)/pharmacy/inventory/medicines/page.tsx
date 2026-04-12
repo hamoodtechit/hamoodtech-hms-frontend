@@ -44,6 +44,7 @@ import {
     ArrowLeft,
     Edit,
     Eye,
+    DollarSign,
     Loader2,
     MoreHorizontal,
     Plus,
@@ -59,6 +60,7 @@ import { ImportMedicinesDialog } from "./components/import-medicines-dialog"
 import { MedicineDetailsDialog } from "./components/medicine-details-dialog"
 import { MedicineDialog } from "./components/medicine-dialog"
 import { OpeningStockDialog } from "./components/opening-stock-dialog"
+import { BulkPriceUpdateDialog } from "./components/bulk-price-update-dialog"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function MedicinesPage() {
@@ -79,6 +81,8 @@ export default function MedicinesPage() {
   const [selectedMedicineForStock, setSelectedMedicineForStock] = useState<Medicine | null>(null)
   const [openingStockOpen, setOpeningStockOpen] = useState(false)
   const [selectedMedicineForOpeningStock, setSelectedMedicineForOpeningStock] = useState<Medicine | null>(null)
+  const [priceUpdateOpen, setPriceUpdateOpen] = useState(false)
+  const [selectedMedicineForPriceUpdate, setSelectedMedicineForPriceUpdate] = useState<Medicine | null>(null)
   const { activeStoreId } = useStoreContext()
 
   // Filter State
@@ -325,6 +329,12 @@ export default function MedicinesPage() {
                                           <RefreshCw className="mr-2 h-4 w-4" /> Manage Stock / Batches
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => {
+                                          setSelectedMedicineForPriceUpdate(medicine)
+                                          setPriceUpdateOpen(true)
+                                      }}>
+                                          <DollarSign className="mr-2 h-4 w-4" /> Update Price
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => {
                                           setSelectedMedicineForOpeningStock(medicine)
                                           setOpeningStockOpen(true)
                                       }}>
@@ -405,6 +415,12 @@ export default function MedicinesPage() {
           onOpenChange={setOpeningStockOpen}
           medicine={selectedMedicineForOpeningStock}
           branchId={activeStoreId || ""}
+        />
+
+        <BulkPriceUpdateDialog 
+          open={priceUpdateOpen}
+          onOpenChange={setPriceUpdateOpen}
+          medicine={selectedMedicineForPriceUpdate}
         />
 
         <Dialog open={!!selectedMedicineForStock} onOpenChange={(open) => !open && setSelectedMedicineForStock(null)}>

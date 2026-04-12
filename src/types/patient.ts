@@ -26,6 +26,16 @@ export interface Admission {
   patient?: Patient;
   bed?: Bed;
   branch?: Branch;
+  doctorId?: string;
+  doctor?: {
+    fullName: string;
+    designation?: string;
+  };
+  refDoctorName?: string;
+  departmentId?: string;
+  department?: {
+    name: string;
+  };
 }
 
 export interface AdmissionPayload {
@@ -42,6 +52,9 @@ export interface AdmissionPayload {
   fees?: number | string;
   referralPersonId?: string;
   referralPerson?: any;
+  doctorId?: string;
+  refDoctorName?: string;
+  departmentId?: string;
 }
 
 export interface AdmissionQueryParams {

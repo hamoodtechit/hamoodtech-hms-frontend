@@ -184,8 +184,13 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         // Validation: Name, Price, and BranchId are critical for clinical scoping.
         const effectiveBranchId = formData.branchId || activeStoreId
 
-        if (!formData.name || formData.price === undefined || !effectiveBranchId) {
-            toast.error(!effectiveBranchId ? "No active branch selected. Please select a branch from the top header." : "Please fill in required fields (Name and Price)")
+        if (!formData.name || formData.price === undefined || !effectiveBranchId || !formData.departmentId || !formData.testGroupId) {
+            let errorMsg = "Please fill in all required fields."
+            if (!effectiveBranchId) errorMsg = "No active branch selected. Please select a branch from the top header."
+            else if (!formData.departmentId) errorMsg = "Please select a Clinical Department."
+            else if (!formData.testGroupId) errorMsg = "Please select a Service Category / Group."
+            
+            toast.error(errorMsg)
             return
         }
 
@@ -293,8 +298,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
                                 <div className="space-y-2">
                                     <Label className="text-sm font-bold text-foreground flex items-center justify-between">
-                                        Clinical Department 
-                                        <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                                        Clinical Department <span className="text-destructive ml-1">*</span>
                                     </Label>
                                     <SearchableSelect 
                                         value={formData.departmentId || ""}
@@ -307,8 +311,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
                                 <div className="space-y-2">
                                     <Label className="text-sm font-bold text-foreground flex items-center justify-between">
-                                        Service Category / Group 
-                                        <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                                        Service Category / Group <span className="text-destructive ml-1">*</span>
                                     </Label>
                                     <SearchableSelect 
                                         value={formData.testGroupId || ""}

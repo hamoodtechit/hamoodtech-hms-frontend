@@ -183,6 +183,12 @@ function SidebarBase() {
               permission: "patient:read",
           },
           {
+              label: "In Patient Department",
+              href: "/patients/admissions",
+              module: "patients",
+              permission: "patient:read",
+          },
+          {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
               module: "diagnostic",
