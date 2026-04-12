@@ -74,30 +74,50 @@ const getStock = (medicine: Medicine) => {
 
 import { Medicine, Patient, Stock, PaymentMethod, Branch } from "@/types/pharmacy"
 
-const allocateBatches = (requestedQty: number, stocks: Stock[]) => {
+const allocateBatches = (requestedQty: number, stocks: Stock[], preferredBatchNumber?: string) => {
     let remaining = requestedQty;
     const allocated = [];
     
-    // Sort stocks by expiry date (FEFO - First Expiring, First Out)
-    const sortedStocks = [...(stocks || [])].sort((a, b) => {
-        if (!a.expiryDate) return 1;
-        if (!b.expiryDate) return -1;
-        return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
-    });
+    // 1. If there's a preferred batch, try to take from it first
+    if (preferredBatchNumber) {
+        const preferredStock = stocks.find(s => s.batchNumber === preferredBatchNumber);
+        if (preferredStock && (Number(preferredStock.quantity) || 0) > 0) {
+            const available = Number(preferredStock.quantity) || 0;
+            const take = Math.min(remaining, available);
+            allocated.push({
+                batchNumber: preferredStock.batchNumber,
+                expiryDate: preferredStock.expiryDate,
+                quantity: take,
+                price: Number(preferredStock.unitPrice) || 0
+            });
+            remaining -= take;
+        }
+    }
 
-    for (const stock of sortedStocks) {
-        if (remaining <= 0) break;
-        const available = Number(stock.quantity) || 0;
-        if (available <= 0) continue;
+    // 2. Allocate the rest using FEFO (First Expiring, First Out)
+    if (remaining > 0) {
+        const sortedStocks = [...(stocks || [])]
+            .filter(s => s.batchNumber !== preferredBatchNumber) // Don't take from preferred twice
+            .sort((a, b) => {
+                if (!a.expiryDate) return 1;
+                if (!b.expiryDate) return -1;
+                return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+            });
 
-        const take = Math.min(remaining, available);
-        allocated.push({
-            batchNumber: stock.batchNumber,
-            expiryDate: stock.expiryDate,
-            quantity: take,
-            price: Number(stock.unitPrice) || 0
-        });
-        remaining -= take;
+        for (const stock of sortedStocks) {
+            if (remaining <= 0) break;
+            const available = Number(stock.quantity) || 0;
+            if (available <= 0) continue;
+
+            const take = Math.min(remaining, available);
+            allocated.push({
+                batchNumber: stock.batchNumber,
+                expiryDate: stock.expiryDate,
+                quantity: take,
+                price: Number(stock.unitPrice) || 0
+            });
+            remaining -= take;
+        }
     }
 
     return allocated;
@@ -334,7 +354,15 @@ export default function POSPage() {
   // Helpers
   const handleAddToCart = (medicine: Medicine) => {
     const totalStock = getStock(medicine)
-    const activeBatch = medicine.stocks?.find(s => Number(s.quantity) > 0)
+    
+    // Sort stocks by expiry date (FEFO) to match allocation logic
+    const sortedStocks = [...(medicine.stocks || [])].sort((a, b) => {
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+    });
+
+    const activeBatch = sortedStocks.find(s => Number(s.quantity) > 0)
     
     if (totalStock <= 0) {
         toast.error("Item is out of stock")
@@ -361,7 +389,7 @@ export default function POSPage() {
       category: medicine.category?.name || 'Uncategorized',
       dosageForm: medicine.dosageForm,
       genericName: medicine.genericName,
-      stocks: medicine.stocks
+      stocks: sortedStocks // Pass sorted stocks
     } as any)
 
     // Focus special ID for newly added item quantity
@@ -457,11 +485,11 @@ export default function POSPage() {
               taxPercentage: vatPercentage,
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
-              saleItems: cart.flatMap(item => {
+               saleItems: cart.flatMap(item => {
                   // If item has quantity within its assigned batch, keep it simple
                   // BUT for safety, we implement auto-allocation for all multi-batch items
                   if (item.stocks && item.stocks.length > 0) {
-                      const allocations = allocateBatches(item.quantity, item.stocks);
+                      const allocations = allocateBatches(item.quantity, item.stocks, item.batchNumber);
                       return allocations.map(alloc => ({
                           medicineId: item.id,
                           itemName: item.name,
