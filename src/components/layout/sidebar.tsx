@@ -143,12 +143,6 @@ export function Sidebar() {
               permission: "patient:read",
           },
           {
-              label: "In Patient Department",
-              href: "/patients/admissions",
-              module: "patients",
-              permission: "patient:read",
-          },
-          {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
               module: "diagnostic",
@@ -168,20 +162,20 @@ export function Sidebar() {
               permission: "appointment:create",
           },
           {
-              label: "Pathology Billing",
-              href: "/billing/pathology",
+              label: "OPD Billing",
+              href: "/billing/opd",
               module: "sales",
               permission: "pathology:create",
           },
           {
-              label: "Radiology Billing",
-              href: "/billing/radiology",
-              module: "sales",
-              permission: "radiology:create",
+              label: "IPD Billing",
+              href: "/billing/ipd",
+              module: "patients",
+              permission: "patient:read",
           },
           {
-              label: "Referral Payouts",
-              href: "/billing/referral-payouts",
+              label: "Referral Billing",
+              href: "/billing/referral-billing",
               module: "hr",
               permission: "referral:read",
           }

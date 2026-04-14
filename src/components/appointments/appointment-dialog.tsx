@@ -138,9 +138,12 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
     useEffect(() => {
         if (formData.doctorId) {
             const doctor = doctorsRes?.data?.find(d => d.id === formData.doctorId)
-            if (doctor?.chamberOrRoomNumber) {
-                setFormData(prev => ({ ...prev, chamberOrRoomNumber: doctor.chamberOrRoomNumber || "" }))
-            }
+            setFormData(prev => ({ 
+                ...prev, 
+                chamberOrRoomNumber: doctor?.chamberOrRoomNumber || "" 
+            }))
+        } else {
+            setFormData(prev => ({ ...prev, chamberOrRoomNumber: "" }))
         }
     }, [formData.doctorId, doctorsRes])
 

@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useState } from "react"
 
-export default function AdmissionsPage() {
+export default function IPDBillingPage() {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState("")
     const [filters, setFilters] = useState<AdmissionQueryParams>({})
@@ -103,8 +103,8 @@ export default function AdmissionsPage() {
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-primary">Patient Admissions (IPD)</h1>
-                        <p className="text-muted-foreground text-sm font-medium">Manage hospitalizations, bed assignments, and admission records.</p>
+                        <h1 className="text-3xl font-black tracking-tight text-primary">IPD Billing</h1>
+                        <p className="text-muted-foreground text-sm font-medium">Manage hospitalizations, bed assignments, and inpatient billing.</p>
                     </div>
                     <Button 
                         onClick={() => {

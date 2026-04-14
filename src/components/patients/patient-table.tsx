@@ -24,11 +24,15 @@ import { PHARMACY_KEYS, usePatients } from "@/hooks/pharmacy-queries"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { Patient } from "@/types/pharmacy"
+import { cn } from "@/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { Edit, Eye, FileText, MoreHorizontal, RefreshCcw, Search, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
 import { PatientDialog } from "./patient-dialog"
+import { PharmacyPaymentDialog } from "@/components/pharmacy/pharmacy-payment-dialog"
+import { useCurrency } from "@/hooks/use-currency"
+import { ExternalLink, CreditCard, LayoutDashboard } from "lucide-react"
 
 export function PatientTable() {
     const { hasPermission } = usePermissions()
@@ -39,7 +43,10 @@ export function PatientTable() {
     // Modal State
     const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+    const [paymentPatient, setPaymentPatient] = useState<{ id: string, name: string } | null>(null)
     const queryClient = useQueryClient()
+    const { formatCurrency } = useCurrency()
 
     const { data: response, isLoading, isFetching } = usePatients({
         page,
@@ -141,11 +148,11 @@ export function PatientTable() {
                                             <span className="text-xs text-muted-foreground capitalize">{patient.gender}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="capitalize">
-                                            {patient.visitType || 'N/A'}
-                                        </Badge>
-                                    </TableCell>
+                                     <TableCell>
+                                         <Badge variant="outline" className="capitalize">
+                                             {patient.visitType || 'N/A'}
+                                         </Badge>
+                                     </TableCell>
                                     <TableCell>
                                         <span className="text-sm">
                                             {new Date(patient.createdAt).toLocaleDateString()}
@@ -159,7 +166,14 @@ export function PatientTable() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                 <DropdownMenuItem onClick={() => {
+                                                     setPaymentPatient({ id: patient.id, name: patient.name })
+                                                     setIsPaymentOpen(true)
+                                                 }}>
+                                                     <CreditCard className="mr-2 h-4 w-4 text-emerald-600" /> Collect Dues
+                                                 </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
                                                 <DropdownMenuItem asChild>
                                                     <Link href={`/sales?patientId=${patient.id}`}>
                                                         <Eye className="mr-2 h-4 w-4" /> View Sales
@@ -172,7 +186,7 @@ export function PatientTable() {
                                                 </DropdownMenuItem>
                                                 {hasPermission('patient:update') && (
                                                     <DropdownMenuItem onClick={() => handleEdit(patient)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit Profile
                                                     </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuSeparator />
@@ -226,6 +240,16 @@ export function PatientTable() {
                 onSuccess={handleSuccess}
                 patient={selectedPatient}
             />
+
+            {paymentPatient && (
+                <PharmacyPaymentDialog
+                    open={isPaymentOpen}
+                    onOpenChange={setIsPaymentOpen}
+                    patientId={paymentPatient.id}
+                    patientName={paymentPatient.name}
+                    onSuccess={handleSuccess}
+                />
+            )}
         </div>
     )
 }

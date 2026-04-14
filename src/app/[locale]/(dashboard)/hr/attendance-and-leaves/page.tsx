@@ -7,7 +7,7 @@ import { CalendarDays, FileText, ClipboardList, BedDouble } from "lucide-react"
 import { AttendanceView } from "@/components/hr/views/attendance-view"
 import { LeavesView } from "@/components/hr/views/leaves-view"
 import { LeaveTypesView } from "@/components/hr/views/leave-types-view"
-import { HolidaysView } from "@/components/hr/views/holidays-view"
+import { AnnualCalendarView } from "@/components/hr/views/annual-calendar-view"
 
 export default function AttendanceAndLeavesPage() {
   return (
@@ -15,29 +15,43 @@ export default function AttendanceAndLeavesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Time & Attendance</h1>
         <p className="text-muted-foreground">
-          Manage employee attendance, leave requests, leave types, and holidays.
+          Manage employee attendance, leave requests, leave types, and annual calendar.
         </p>
       </div>
 
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full xl:w-3/4 grid-cols-4 mb-6">
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Attendance</span>
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Leave Requests</span>
-          </TabsTrigger>
-          <TabsTrigger value="types" className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline">Leave Types</span>
-          </TabsTrigger>
-          <TabsTrigger value="holidays" className="flex items-center gap-2">
-            <BedDouble className="h-4 w-4" />
-            <span className="hidden sm:inline">Holidays</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center sm:justify-start mb-8">
+            <TabsList className="h-11 bg-muted/40 p-1.5 rounded-[0.9rem] border border-white/20 inline-flex w-auto shadow-sm">
+              <TabsTrigger 
+                value="attendance" 
+                className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+              >
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden md:inline">Attendance</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="requests" 
+                className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden md:inline">Leave Requests</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="types" 
+                className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden md:inline">Leave Types</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="holidays" 
+                className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden md:inline">Annual Calendar</span>
+              </TabsTrigger>
+            </TabsList>
+        </div>
         
         <TabsContent value="attendance" className="mt-0 border-0 p-0">
           <AttendanceView />
@@ -52,7 +66,7 @@ export default function AttendanceAndLeavesPage() {
         </TabsContent>
 
         <TabsContent value="holidays" className="mt-0 border-0 p-0">
-          <HolidaysView />
+          <AnnualCalendarView />
         </TabsContent>
       </Tabs>
     </div>

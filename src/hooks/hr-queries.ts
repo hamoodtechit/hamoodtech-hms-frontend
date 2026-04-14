@@ -5,8 +5,8 @@ import {
   EmployeePayload, 
   AttendancePayload, 
   AttendanceFilters, 
-  HolidayPayload, 
-  HolidayFilters,
+  AnnualCalendarPayload, 
+  AnnualCalendarFilters,
   LeaveTypePayload,
   LeaveTypeFilters,
   LeavePayload,
@@ -29,8 +29,8 @@ export const HR_KEYS = {
   referrals: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "referrals", params] as const : [...HR_KEYS.all, "referrals"] as const,
   referral: (id: string) => [...HR_KEYS.all, "referral", id] as const,
   attendance: (params?: AttendanceFilters) => params ? [...HR_KEYS.all, "attendance", params] as const : [...HR_KEYS.all, "attendance"] as const,
-  holidays: (params?: HolidayFilters) => params ? [...HR_KEYS.all, "holidays", params] as const : [...HR_KEYS.all, "holidays"] as const,
-  holiday: (id: string) => [...HR_KEYS.all, "holiday", id] as const,
+  annualCalendars: (params?: AnnualCalendarFilters) => params ? [...HR_KEYS.all, "annual-calendars", params] as const : [...HR_KEYS.all, "annual-calendars"] as const,
+  annualCalendar: (id: string) => [...HR_KEYS.all, "annual-calendar", id] as const,
   leaveTypes: (params?: LeaveTypeFilters) => params ? [...HR_KEYS.all, "leaveTypes", params] as const : [...HR_KEYS.all, "leaveTypes"] as const,
   leaveType: (id: string) => [...HR_KEYS.all, "leaveType", id] as const,
   leaves: (params?: LeaveFilters) => params ? [...HR_KEYS.all, "leaves", params] as const : [...HR_KEYS.all, "leaves"] as const,
@@ -38,49 +38,49 @@ export const HR_KEYS = {
   commissions: (params?: CommissionFilters) => params ? [...HR_KEYS.all, "commissions", params] as const : [...HR_KEYS.all, "commissions"] as const,
 };
 
-// Holiday Hooks
-export function useHolidays(params?: HolidayFilters) {
+// Annual Calendar Hooks
+export function useAnnualCalendars(params?: AnnualCalendarFilters) {
   return useQuery({
-    queryKey: HR_KEYS.holidays(params),
-    queryFn: () => hrService.getHolidays(params),
+    queryKey: HR_KEYS.annualCalendars(params),
+    queryFn: () => hrService.getAnnualCalendars(params),
   });
 }
 
-export function useHoliday(id?: string) {
+export function useAnnualCalendar(id?: string) {
   return useQuery({
-    queryKey: HR_KEYS.holiday(id!),
-    queryFn: () => hrService.getHolidayById(id!),
+    queryKey: HR_KEYS.annualCalendar(id!),
+    queryFn: () => hrService.getAnnualCalendarById(id!),
     enabled: !!id,
   });
 }
 
-export function useCreateHoliday() {
+export function useCreateAnnualCalendar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: HolidayPayload) => hrService.createHoliday(data),
+    mutationFn: (data: AnnualCalendarPayload) => hrService.createAnnualCalendar(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.annualCalendars() });
     },
   });
 }
 
-export function useUpdateHoliday() {
+export function useUpdateAnnualCalendar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<HolidayPayload> }) => 
-      hrService.updateHoliday(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<AnnualCalendarPayload> }) => 
+      hrService.updateAnnualCalendar(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.annualCalendars() });
     },
   });
 }
 
-export function useDeleteHoliday() {
+export function useDeleteAnnualCalendar() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => hrService.deleteHoliday(id),
+    mutationFn: (id: string) => hrService.deleteAnnualCalendar(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.holidays() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.annualCalendars() });
     },
   });
 }

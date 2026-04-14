@@ -95,7 +95,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             .signatures { margin-top: 60px; display: flex; justify-content: space-between; }
                             .sig-box { border-top: 1px dashed black; width: 180px; text-align: center; padding-top: 5px; font-size: 12px; font-weight: bold; }
                             .watermark { position: absolute; left: 0; top: 30%; width: 100%; text-align: center; font-size: 100px; opacity: 0.05; transform: rotate(-30deg); font-weight: bold; pointer-events: none; }
-                            .vertical-meta { position: absolute; left: -30px; top: 50%; transform: rotate(-90deg) translateY(-50%); font-size: 9px; color: #888; white-space: nowrap; font-weight: bold; }
+                            .text-primary { color: #000 !important; }
+                            .text-emerald-600 { color: #059669 !important; }
+                            .opacity-60 { opacity: 0.6 !important; }
                         </style>
                     </head>
                     <body>
@@ -118,18 +120,19 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     }
 
     const ReceiptBody = () => (
-        <div className="bg-white p-8 relative min-h-[500px] text-black">
-            <div className="vertical-meta hidden print:block">
-                PRINTED BY: {user?.fullName?.toUpperCase()} - {format(new Date(), "PPpp")} | Powered by Hamood Tech
-            </div>
-            
-            <div className="watermark hidden print:block">CONFIRMED</div>
+        <div className="bg-white p-8 relative min-h-[500px] text-black receipt-container">
+            <style dangerouslySetInnerHTML={{ __html: `
+                .receipt-container .text-primary { color: #0f172a !important; }
+                .receipt-container .text-emerald-600 { color: #059669 !important; }
+                .receipt-container .text-muted-foreground { color: #64748b !important; }
+                .receipt-container table td, .receipt-container table th { color: #000 !important; }
+            `}} />
 
             <div className="header text-center mb-8 pb-4 border-b-2 border-black">
-                <h1 className="hospital-name text-2xl font-black uppercase">{general?.hospitalName || "HamoodTech Health"}</h1>
-                <p className="hospital-info text-xs font-bold">{general?.address || "Address Not Set"}</p>
-                <p className="hospital-info text-xs font-bold">Ph: {general?.phone || "Phone Not Set"}</p>
-                <div className="receipt-title mt-4 px-8 py-1.5 border border-black rounded-full bg-gray-50 font-black tracking-widest text-sm inline-block">
+                <h1 className="text-2xl font-black uppercase text-black" style={{ color: '#000' }}>{general?.hospitalName || "HamoodTech Health"}</h1>
+                <p className="text-xs font-bold text-black" style={{ color: '#000' }}>{general?.address || "Address Not Set"}</p>
+                <p className="text-xs font-bold text-black" style={{ color: '#000' }}>Ph: {general?.phone || "Phone Not Set"}</p>
+                <div className="receipt-title mt-4 px-8 py-1.5 border border-black rounded-full bg-gray-50 font-black tracking-widest text-sm inline-block text-black">
                     Commission Payout Receipt
                 </div>
             </div>
@@ -139,7 +142,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                     <tr>
                         <td className="p-4 border border-dashed border-black">
                             <span className="opacity-60 uppercase text-[10px] block mb-1">Referral Partner</span>
-                            <span className="text-sm font-black uppercase text-primary">{referral.name}</span>
+                            <span className="text-sm font-black uppercase text-black" style={{ color: '#000' }}>{referral.name}</span>
                         </td>
                         <td className="p-4 border border-dashed border-black">
                             <span className="opacity-60 uppercase text-[10px] block mb-1">Receipt Date</span>
@@ -174,9 +177,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             <td className="py-3 text-xs">{idx + 1}</td>
                             <td className="py-3">
                                 <p className="text-xs font-bold">{comm.serviceName}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase">{comm.patientName || "N/A"}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</p>
                             </td>
-                            <td className="py-3 text-xs font-mono">{comm.invoiceNumber || "N/A"}</td>
+                            <td className="py-3 text-xs font-mono">{(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}</td>
                             <td className="py-3 text-right text-xs font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
                         </tr>
                     ))}
@@ -189,8 +192,8 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                     <span>{formatCurrency(totalAmount)}</span>
                 </div>
                 <div className="net-payable flex justify-between items-center py-4 border-y border-dashed border-black mt-2">
-                    <span className="text-sm font-black uppercase">Net Payout</span>
-                    <span className="text-2xl font-black text-primary tracking-tighter">{formatCurrency(totalAmount)}</span>
+                    <span className="text-sm font-black uppercase text-black">Net Payout</span>
+                    <span className="text-2xl font-black text-black tracking-tighter" style={{ color: '#0f172a' }}>{formatCurrency(totalAmount)}</span>
                 </div>
             </div>
 

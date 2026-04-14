@@ -28,21 +28,15 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const { activeBranch } = usePosStore()
   const { formatCurrency } = useCurrency()
   
-  // Get sale ID - transaction might be the sale itself or have a nested sale object
   const saleId = transaction?.id || (transaction as any)?.sale?.id || (transaction as any)?.data?.sale?.id
-  
-  // Use useSale hook to get full details (branch, patient, doctor etc.)
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
-  // Combine initial/prop data with fetched rich data
-  // Handle case where useSale returns the response object { success, message, data: { sale: ... } }
   const fetchedData = (saleRes?.data as any)?.data?.sale || (saleRes?.data as any)?.sale || (saleRes?.data as any)?.data || saleRes?.data
   const data = fetchedData || transaction
 
   if (!transaction && !isLoading) return null
   if (!data && !isLoading) return null
 
-  // Normalize data between POS Transaction and API Sale
   const items = (data as any)?.saleItems || (data as any)?.items || []
   const normalizedItems = items.map((item: any) => ({
     name: item.itemName || item.name || "Unknown Item",
@@ -76,11 +70,6 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
     return (
     <div className="p-2 space-y-3 border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0 relative">
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
-             {/* Vertical Metadata - Moved to not affect flow */}
-             <div className="absolute -left-10 top-1/2 -translate-y-1/2 -rotate-90 text-[7px] text-black/40 tracking-wider whitespace-nowrap hidden print:block font-bold">
-                 PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
-             </div>
-
              <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
                  {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img src={branchLogo} alt="Logo" style={{ height: '55px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
@@ -191,6 +180,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <p className="italic font-bold text-[9px] border-t border-black/20 pt-1">Note: Medicines once sold cannot be returned without receipt.</p>
             <div className="pt-4 mt-2 border-t border-black/30 w-32 mx-auto font-bold uppercase tracking-wider text-[9px]">
                 Authorized Signatory
+            </div>
+            {/* Metadata moved to footer as horizontal line */}
+            <div className="pt-4 text-[7px] text-black/40 tracking-wider font-bold uppercase hidden print:block">
+                PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
             </div>
         </div>
     </div>

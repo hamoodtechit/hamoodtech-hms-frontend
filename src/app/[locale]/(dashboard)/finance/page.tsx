@@ -27,7 +27,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { FinanceAccount } from "@/types/finance"
-import { ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
+import { Activity, ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
@@ -65,19 +65,45 @@ export default function FinancePage() {
                     <p className="text-muted-foreground">Manage accounts, balances, and hospital expenses.</p>
                 </div>
 
-                <Tabs defaultValue="accounts" className="space-y-4">
-                    <TabsList className="bg-background border">
-                        <TabsTrigger value="accounts" className="data-[state=active]:bg-primary/10">Accounts</TabsTrigger>
-                        {hasPermission('transaction:read') && (
-                            <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10">Transactions</TabsTrigger>
-                        )}
-                        {hasPermission('expense:read') && (
-                            <TabsTrigger value="expenses" className="data-[state=active]:bg-primary/10">Expenses</TabsTrigger>
-                        )}
-                        {hasPermission('expense-category:read') && (
-                            <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10">Categories</TabsTrigger>
-                        )}
-                    </TabsList>
+                <Tabs defaultValue="accounts" className="w-full">
+                    <div className="flex justify-center sm:justify-start mb-8">
+                        <TabsList className="h-11 bg-muted/40 p-1.5 rounded-[0.9rem] border border-white/20 inline-flex w-auto shadow-sm">
+                            <TabsTrigger 
+                                value="accounts" 
+                                className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                            >
+                                <Wallet className="h-4 w-4" />
+                                Accounts
+                            </TabsTrigger>
+                            {hasPermission('transaction:read') && (
+                                <TabsTrigger 
+                                    value="transactions" 
+                                    className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                >
+                                    <Activity className="h-4 w-4" />
+                                    Transactions
+                                </TabsTrigger>
+                            )}
+                            {hasPermission('expense:read') && (
+                                <TabsTrigger 
+                                    value="expenses" 
+                                    className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                >
+                                    <DollarSign className="h-4 w-4" />
+                                    Expenses
+                                </TabsTrigger>
+                            )}
+                            {hasPermission('expense-category:read') && (
+                                <TabsTrigger 
+                                    value="categories" 
+                                    className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Categories
+                                </TabsTrigger>
+                            )}
+                        </TabsList>
+                    </div>
 
                     <TabsContent value="accounts" className="space-y-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

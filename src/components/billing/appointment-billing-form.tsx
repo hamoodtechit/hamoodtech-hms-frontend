@@ -84,7 +84,7 @@ export function AppointmentBillingForm() {
     const [modalSearch, setModalSearch] = useState("")
     const debouncedModalSearch = useDebounce(modalSearch, 500)
     const [modalPage, setModalPage] = useState(1)
-    const [modalType, setModalType] = useState<string>("appointment")
+    const [modalType, setModalType] = useState<string>("hospital")
     const [modalStatus, setModalStatus] = useState<string>("all")
     const [modalPaymentStatus, setModalPaymentStatus] = useState<string>("all")
     const [modalPaymentMethod, setModalPaymentMethod] = useState<string>("all")
@@ -180,9 +180,9 @@ export function AppointmentBillingForm() {
         if (selectedDoctorId) {
             const user: any = users.find((u: any) => u.id === selectedDoctorId)
             // Some users might have employee details attached
-            if (user?.employee?.chamberOrRoomNumber) {
-                setChamberOrRoomNumber(user.employee.chamberOrRoomNumber)
-            }
+            setChamberOrRoomNumber(user?.employee?.chamberOrRoomNumber || "")
+        } else {
+            setChamberOrRoomNumber("")
         }
     }, [selectedDoctorId, users])
 
@@ -231,6 +231,8 @@ export function AppointmentBillingForm() {
                 doctorId: selectedDoctorId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
+                type: 'hospital',
+                chamberOrRoomNumber: chamberOrRoomNumber || undefined,
                 referralPersonId: selectedReferralPersonId || undefined,
                 serviceItems: cart.map(item => ({
                     serviceId: item.serviceId,
@@ -393,10 +395,12 @@ export function AppointmentBillingForm() {
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={users.map((u: any) => ({ 
-                                            id: u.id, 
-                                            name: u.fullName || u.username 
-                                        }))}
+                                        options={users
+                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
+                                            .map((u: any) => ({ 
+                                                id: u.id, 
+                                                name: u.fullName || u.username 
+                                            }))}
                                         placeholder="Assign Consultant..."
                                         loading={loadingUsers}
                                         showAll={false}

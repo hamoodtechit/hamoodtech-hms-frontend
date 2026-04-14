@@ -60,6 +60,7 @@ export interface AdmissionPayload {
   discountAmount?: number;
   taxPercentage?: number;
   taxAmount?: number;
+  type?: 'hospital';
 }
 
 export interface AdmissionQueryParams {
@@ -102,7 +103,6 @@ export interface Patient {
   bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
   address: string;
   visitType?: 'ipd' | 'opd' | 'emergency';
-  balance?: string | number;
 
   // Additional Fields
   village?: string;
@@ -198,4 +198,12 @@ export interface DischargePayload {
     paymentMethod: string;
     note?: string;
   }[];
+}
+
+export interface PharmacyPaymentPayload {
+  patientId: string;
+  amount: number;
+  accountId: string;
+  paymentMethod: string;
+  note?: string;
 }

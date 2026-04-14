@@ -38,6 +38,7 @@ import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { PermissionGuard } from "@/components/shared/permission-guard"
@@ -61,7 +62,11 @@ export default function SalesHistoryPage() {
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const urlType = searchParams.get('type')
+  
   const [saleType, setSaleType] = useState<string>(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
+  const [branchId, setBranchId] = useState<string>("all")
+  const [doctorId, setDoctorId] = useState<string>("all")
+  const [staffId, setStaffId] = useState<string>("all")
 
   // Sync with URL type if it changes
   useEffect(() => {
@@ -99,7 +104,10 @@ export default function SalesHistoryPage() {
                             (maxAmount ? 1 : 0) +
                             (dateRange ? 1 : 0) +
                             (saleType !== "all" ? 1 : 0) +
-                            (patientIdFilter ? 1 : 0)
+                            (patientIdFilter ? 1 : 0) +
+                            (branchId !== "all" ? 1 : 0) +
+                            (doctorId !== "all" ? 1 : 0) +
+                            (staffId !== "all" ? 1 : 0)
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -113,7 +121,7 @@ export default function SalesHistoryPage() {
     paymentStatus: paymentStatus !== "all" ? (paymentStatus as any) : undefined,
     paymentMethod: paymentMethod !== "all" ? paymentMethod : undefined,
     invoiceNumber: invoiceNumber || undefined,
-    createdBy: createdBy || undefined,
+    createdBy: staffId !== "all" ? staffId : (createdBy || undefined),
     isIndoorSale: isIndoorSale === "yes" ? true : isIndoorSale === "no" ? false : undefined,
     minAmount: minAmount ? Number(minAmount) : undefined,
     maxAmount: maxAmount ? Number(maxAmount) : undefined,
@@ -121,15 +129,31 @@ export default function SalesHistoryPage() {
     endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     search: debouncedSearch || undefined,
     patientId: patientIdFilter || undefined,
-    type: saleType !== "all" ? saleType : undefined
+    type: saleType !== "all" ? saleType : undefined,
+    branchId: branchId !== "all" ? branchId : undefined,
+    doctorId: doctorId !== "all" ? doctorId : undefined
   })
 
-  const { data: doctorsRes } = useEmployees({ limit: 100 })
-  const { data: staffsRes } = useEmployees({ limit: 100 }) // generic list for staff names
+  const { data: doctorsRes } = useEmployees({ 
+    limit: 1000, 
+    branchId: branchId !== "all" ? branchId : undefined 
+  })
+  const { data: staffsRes } = useEmployees({ 
+    limit: 1000, 
+    branchId: branchId !== "all" ? branchId : undefined 
+  })
+  const { data: branchesRes } = useQuery({ 
+    queryKey: ['pharmacy', 'branches', { limit: 100 }],
+    queryFn: () => import("@/services/pharmacy-service").then(m => m.pharmacyService.getBranches({ limit: 100 }))
+  })
 
   const sales = salesRes?.data?.sales || []
-  const doctors = doctorsRes?.data || []
+  const doctors = (doctorsRes?.data || []).filter((emp: any) => 
+    emp.designation?.name?.toLowerCase().includes('doctor') || 
+    emp.role?.name?.toLowerCase().includes('doctor')
+  )
   const staffs = staffsRes?.data || []
+  const branches = branchesRes?.data?.branches || []
   const pagination = salesRes?.data?.pagination
 
   return (
@@ -195,7 +219,7 @@ export default function SalesHistoryPage() {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4" align="end">
+                    <PopoverContent className="w-[450px] p-6 shadow-2xl rounded-2xl border-primary/20 bg-background/95 backdrop-blur-xl" align="end">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium leading-none">Advanced Filters</h4>
@@ -209,6 +233,9 @@ export default function SalesHistoryPage() {
                                 setPaymentMethod("all")
                                 setInvoiceNumber("")
                                 setCreatedBy("")
+                                setStaffId("all")
+                                setBranchId("all")
+                                setDoctorId("all")
                                 setIsIndoorSale("all")
                                 setMinAmount("")
                                 setMaxAmount("")
@@ -222,9 +249,9 @@ export default function SalesHistoryPage() {
                             </Button>
                           )}
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="grid gap-2 col-span-2">
+ 
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <div className="grid gap-2 col-span-2 md:col-span-3">
                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Date Range</Label>
                             <DatePickerWithRange 
                               date={dateRange} 
@@ -232,6 +259,51 @@ export default function SalesHistoryPage() {
                               className="w-full"
                             />
                           </div>
+ 
+                          <div className="grid gap-2">
+                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Branch</Label>
+                             <Select value={branchId} onValueChange={(v) => { setBranchId(v); setPage(1); }}>
+                               <SelectTrigger className="h-9">
+                                 <SelectValue placeholder="All Branches" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="all">All Branches</SelectItem>
+                                 {branches.map((b: any) => (
+                                   <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+
+                           <div className="grid gap-2">
+                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Doctor</Label>
+                             <Select value={doctorId} onValueChange={(v) => { setDoctorId(v); setPage(1); }}>
+                               <SelectTrigger className="h-9">
+                                 <SelectValue placeholder="All Doctors" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="all">All Doctors</SelectItem>
+                                 {doctors.map((d: any) => (
+                                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+
+                           <div className="grid gap-2">
+                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Staff / Casher</Label>
+                             <Select value={staffId} onValueChange={(v) => { setStaffId(v); setPage(1); }}>
+                               <SelectTrigger className="h-9">
+                                 <SelectValue placeholder="All Staff" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="all">All Staff</SelectItem>
+                                 {staffs.map((s: any) => (
+                                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
 
                           <div className="grid gap-2">
                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Invoice Number</Label>
@@ -239,16 +311,6 @@ export default function SalesHistoryPage() {
                               placeholder="SALE-..."
                               value={invoiceNumber}
                               onChange={(e) => setInvoiceNumber(e.target.value)}
-                              className="h-9"
-                            />
-                          </div>
-
-                          <div className="grid gap-2">
-                            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Created By</Label>
-                            <Input 
-                              placeholder="User name"
-                              value={createdBy}
-                              onChange={(e) => setCreatedBy(e.target.value)}
                               className="h-9"
                             />
                           </div>

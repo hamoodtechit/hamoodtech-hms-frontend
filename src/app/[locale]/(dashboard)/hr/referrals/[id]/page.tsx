@@ -69,22 +69,30 @@ export default function ReferralDetailPage() {
     const [historyReceiptOpen, setHistoryReceiptOpen] = useState(false)
     const [selectedHistoryPayout, setSelectedHistoryPayout] = useState<any>(null)
 
+    // Query for the badge count (Always pending items)
+    const { data: pendingCommissionsRes } = useCommissions({
+        referralId: id,
+        isPaid: "false",
+        limit: 100
+    })
+
+    // Main query for the "Pending" tab list (Affected by the custom filter)
     const { data: commissionsRes, isLoading: commissionsLoading } = useCommissions({
         referralId: id,
         isPaid: statusFilter === "all" ? undefined : statusFilter,
         limit: 100
     })
 
-    useEffect(() => {
-        if (commissionsRes) {
-            console.log("--- [DEBUG] Commissions API Response (Detail Page) ---", commissionsRes);
-        }
-        if (referralRes) {
-            console.log("--- [DEBUG] Referral API Response (Detail Page) ---", referralRes);
-        }
-    }, [commissionsRes, referralRes]);
+    // Dedicated query for the "Paid History" tab (Always paid items)
+    const { data: historyCommissionsRes, isLoading: historyLoading } = useCommissions({
+        referralId: id,
+        isPaid: "true",
+        limit: 100
+    })
 
     const commissions = commissionsRes?.data || []
+    const pendingCommissions = pendingCommissionsRes?.data || []
+    const historyCommissions = historyCommissionsRes?.data || []
 
     useEffect(() => {
         setMounted(true)
@@ -288,25 +296,36 @@ export default function ReferralDetailPage() {
                         {/* Performance & Charts & Commissions */}
                         <div className="lg:col-span-8 space-y-6">
                             <Tabs defaultValue="performance" className="w-full">
-                                <TabsList className="bg-muted/50 p-1 rounded-2xl h-14 w-fit mb-6">
-                                    <TabsTrigger value="performance" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full">
-                                        <Activity className="w-4 h-4 mr-2" />
-                                        Performance
-                                    </TabsTrigger>
-                                    <TabsTrigger value="commissions" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full text-amber-600 data-[state=active]:text-amber-700">
-                                        <DollarSign className="w-4 h-4 mr-2" />
-                                        Pending
-                                        {commissions.filter(c => !c.isPaid).length > 0 && (
-                                            <Badge className="ml-2 bg-amber-500 text-[10px] h-4 px-1 min-w-[1rem] flex items-center justify-center">
-                                                {commissions.filter(c => !c.isPaid).length}
-                                            </Badge>
-                                        )}
-                                    </TabsTrigger>
-                                    <TabsTrigger value="history" className="rounded-xl px-6 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full text-emerald-600 data-[state=active]:text-emerald-700">
-                                        <History className="w-4 h-4 mr-2" />
-                                        Paid History
-                                    </TabsTrigger>
-                                </TabsList>
+                                <div className="flex justify-center sm:justify-start mb-6">
+                                    <TabsList className="h-11 bg-muted/40 p-1.5 rounded-[0.9rem] border border-white/20 inline-flex w-auto shadow-sm">
+                                        <TabsTrigger 
+                                            value="performance" 
+                                            className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                        >
+                                            <Activity className="h-4 w-4" />
+                                            <span className="hidden md:inline">Performance</span>
+                                        </TabsTrigger>
+                                        <TabsTrigger 
+                                            value="commissions" 
+                                            className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                        >
+                                            <DollarSign className="h-4 w-4" />
+                                            <span className="hidden md:inline">Pending</span>
+                                            {pendingCommissions.length > 0 && (
+                                                <Badge className="ml-1 bg-amber-500 text-[10px] h-4 px-1 min-w-[1rem] flex items-center justify-center text-white">
+                                                    {pendingCommissions.length}
+                                                </Badge>
+                                            )}
+                                        </TabsTrigger>
+                                        <TabsTrigger 
+                                            value="history" 
+                                            className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                                        >
+                                            <History className="h-4 w-4" />
+                                            <span className="hidden md:inline">Paid History</span>
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </div>
 
                                 <TabsContent value="performance" className="space-y-6 m-0">
                                     <div className="grid gap-4 sm:grid-cols-2">
@@ -422,7 +441,7 @@ export default function ReferralDetailPage() {
                                                 <TableRow className="hover:bg-transparent border-muted">
                                                     <TableHead className="w-12">
                                                         <Checkbox 
-                                                            checked={selectedIds.length === commissions.filter(c => !c.isPaid).length && commissions.filter(c => !c.isPaid).length > 0}
+                                                            checked={selectedIds.length === pendingCommissions.length && pendingCommissions.length > 0}
                                                             onCheckedChange={toggleAll}
                                                             className="rounded-md border-muted-foreground/30"
                                                         />
@@ -469,8 +488,8 @@ export default function ReferralDetailPage() {
                                                                 <div className="space-y-1">
                                                                     <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{comm.serviceName}</p>
                                                                     <div className="flex items-center gap-2">
-                                                                        <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName}</Badge>
-                                                                        <span className="text-[10px] text-muted-foreground/50">#{comm.invoiceNumber}</span>
+                                                                        <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
+                                                                        <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
                                                                     </div>
                                                                 </div>
                                                             </TableCell>
@@ -515,16 +534,16 @@ export default function ReferralDetailPage() {
                                             </div>
                                         </div>
                                         <Badge variant="outline" className="bg-white font-black text-emerald-600 border-emerald-500/20">
-                                            {commissions.filter(c => c.isPaid).length} Items Paid
+                                            {historyCommissions.length} Items Paid
                                         </Badge>
                                     </div>
 
                                     <div className="space-y-4">
-                                        {commissionsLoading ? (
+                                        {historyLoading ? (
                                             <div className="h-40 flex items-center justify-center">
                                                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500/30" />
                                             </div>
-                                        ) : commissions.filter(c => c.isPaid).length === 0 ? (
+                                        ) : historyCommissions.length === 0 ? (
                                             <Card className="p-12 text-center bg-muted/20 border-dashed rounded-[2.5rem]">
                                                 <History className="w-12 h-12 mx-auto text-muted-foreground/20 mb-4" />
                                                 <h3 className="font-black text-muted-foreground">No Payment History</h3>
@@ -533,7 +552,7 @@ export default function ReferralDetailPage() {
                                         ) : (
                                             /* Grouping logic for Paid History */
                                             (() => {
-                                                const paidComms = commissions.filter(c => c.isPaid);
+                                                const paidComms = historyCommissions;
                                                 // Group by date (DD-MM-YYYY HH:mm) to simulate payout batches
                                                 const groups: Record<string, typeof paidComms> = {};
                                                 paidComms.forEach(c => {
@@ -591,9 +610,9 @@ export default function ReferralDetailPage() {
                                                                                 <div className="space-y-0.5">
                                                                                     <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
                                                                                     <p className="text-[10px] text-muted-foreground flex items-center gap-2">
-                                                                                        <span>{item.patientName || "N/A"}</span>
+                                                                                        <span>{item.patientName || (item as any).sale?.patientName || (item as any).sale?.patient?.name || "N/A"}</span>
                                                                                         <span className="opacity-30">|</span>
-                                                                                        <span className="font-mono">#{item.invoiceNumber}</span>
+                                                                                        <span className="font-mono">#{(item as any).invoiceNumber || (item as any).sale?.invoiceNumber || "N/A"}</span>
                                                                                     </p>
                                                                                 </div>
                                                                                 <div className="text-right shrink-0">

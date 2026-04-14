@@ -226,14 +226,16 @@ export interface AttendanceFilters {
   endDate?: string;
 }
 
-export interface Holiday {
+export interface AnnualCalendar {
   id: string;
   branchId: string;
+  type: 'holiday' | 'vacation' | 'event';
   name: string;
   nameBangla?: string;
   description?: string;
   startDate: string;
   endDate: string;
+  dayCount: number;
   createdAt: string;
   updatedAt: string;
   branch?: {
@@ -242,8 +244,9 @@ export interface Holiday {
   };
 }
 
-export interface HolidayPayload {
+export interface AnnualCalendarPayload {
   branchId: string;
+  type: 'holiday' | 'vacation' | 'event';
   name: string;
   nameBangla?: string;
   description?: string;
@@ -251,13 +254,14 @@ export interface HolidayPayload {
   endDate: string;
 }
 
-export interface HolidayFilters {
+export interface AnnualCalendarFilters {
   page?: number | string;
   limit?: number | string;
   searchTerm?: string;
   branchId?: string;
   year?: string;
   month?: string;
+  type?: string;
 }
 
 export interface LeaveType {

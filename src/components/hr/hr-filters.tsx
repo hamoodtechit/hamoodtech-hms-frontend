@@ -4,6 +4,10 @@ import { SearchableSelect } from "@/components/shared/searchable-select"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { CalendarIcon, Filter, MapPin, Calendar, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 // --- Department Filters ---
 export interface DepartmentFilterValues {
@@ -252,29 +256,25 @@ export function AttendanceFilters({
     )
 }
 
-import { CalendarIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-
-// --- Holiday Filters ---
-export interface HolidayFilterValues {
+// --- Annual Calendar Filters ---
+export interface AnnualCalendarFilterValues {
     branchId?: string
     year?: string
     month?: string
+    type?: string
 }
 
-interface HolidayFiltersProps {
-    values: HolidayFilterValues
-    onChange: (values: HolidayFilterValues) => void
+interface AnnualCalendarFiltersProps {
+    values: AnnualCalendarFilterValues
+    onChange: (values: AnnualCalendarFilterValues) => void
     branches: { id: string; name: string }[]
 }
 
-export function HolidayFilters({
+export function AnnualCalendarFilters({
     values,
     onChange,
     branches
-}: HolidayFiltersProps) {
+}: AnnualCalendarFiltersProps) {
     const currentYear = new Date().getFullYear()
     const years = Array.from({ length: 12 }, (_, i) => (currentYear - 6 + i).toString())
 
@@ -294,7 +294,27 @@ export function HolidayFilters({
     ]
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground px-1 flex items-center gap-2">
+                    <Filter className="h-3 w-3" />
+                    Entry Type
+                </Label>
+                <Select
+                    value={values.type || "all"}
+                    onValueChange={(v) => onChange({ ...values, type: v === "all" ? undefined : v })}
+                >
+                    <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="holiday">Holiday</SelectItem>
+                        <SelectItem value="vacation">Vacation</SelectItem>
+                        <SelectItem value="event">Event</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold uppercase text-muted-foreground">Branch</Label>
                 <SearchableSelect
@@ -307,7 +327,7 @@ export function HolidayFilters({
             </div>
             
             <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Year / Calender</Label>
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Year / Calendar</Label>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button 

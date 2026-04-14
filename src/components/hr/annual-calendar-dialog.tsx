@@ -29,12 +29,13 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Holiday, HolidayPayload } from "@/types/hr"
-import { useCreateHoliday, useUpdateHoliday } from "@/hooks/hr-queries"
+import { AnnualCalendar, AnnualCalendarPayload } from "@/types/hr"
+import { useCreateAnnualCalendar, useUpdateAnnualCalendar } from "@/hooks/hr-queries"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 
-const holidaySchema = z.object({
+const calendarSchema = z.object({
+    type: z.enum(["holiday", "vacation", "event"]),
     name: z.string().min(2, "Name is required"),
     nameBangla: z.string().optional(),
     description: z.string().optional(),
@@ -43,29 +44,30 @@ const holidaySchema = z.object({
     branchId: z.string().min(1, "Branch is required"),
 })
 
-interface HolidayDialogProps {
+interface AnnualCalendarDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    holiday?: Holiday | null
+    calendar?: AnnualCalendar | null
     branches: { id: string; name: string }[]
     initialStartDate?: string
     initialEndDate?: string
 }
 
-export function HolidayDialog({
+export function AnnualCalendarDialog({
     open,
     onOpenChange,
-    holiday,
+    calendar,
     branches,
     initialStartDate,
     initialEndDate,
-}: HolidayDialogProps) {
-    const createMutation = useCreateHoliday()
-    const updateMutation = useUpdateHoliday()
+}: AnnualCalendarDialogProps) {
+    const createMutation = useCreateAnnualCalendar()
+    const updateMutation = useUpdateAnnualCalendar()
 
-    const form = useForm<HolidayPayload>({
-        resolver: zodResolver(holidaySchema),
+    const form = useForm<AnnualCalendarPayload>({
+        resolver: zodResolver(calendarSchema),
         defaultValues: {
+            type: "holiday",
             name: "",
             nameBangla: "",
             description: "",
@@ -76,17 +78,19 @@ export function HolidayDialog({
     })
 
     useEffect(() => {
-        if (holiday) {
+        if (calendar) {
             form.reset({
-                name: holiday.name,
-                nameBangla: holiday.nameBangla || "",
-                description: holiday.description || "",
-                startDate: holiday.startDate.split("T")[0],
-                endDate: holiday.endDate.split("T")[0],
-                branchId: holiday.branchId,
+                type: calendar.type,
+                name: calendar.name,
+                nameBangla: calendar.nameBangla || "",
+                description: calendar.description || "",
+                startDate: calendar.startDate.split("T")[0],
+                endDate: calendar.endDate.split("T")[0],
+                branchId: calendar.branchId,
             })
         } else {
             form.reset({
+                type: "holiday",
                 name: "",
                 nameBangla: "",
                 description: "",
@@ -95,23 +99,23 @@ export function HolidayDialog({
                 branchId: "",
             })
         }
-    }, [holiday, form, open, initialStartDate, initialEndDate])
+    }, [calendar, form, open, initialStartDate, initialEndDate])
 
-    const onSubmit = async (data: HolidayPayload) => {
+    const onSubmit = async (data: AnnualCalendarPayload) => {
         // Convert to ISO string with time for backend compatibility
-        const payload: HolidayPayload = {
+        const payload: AnnualCalendarPayload = {
             ...data,
             startDate: data.startDate ? new Date(data.startDate).toISOString() : "",
             endDate: data.endDate ? new Date(data.endDate).toISOString() : "",
         }
 
         try {
-            if (holiday) {
-                await updateMutation.mutateAsync({ id: holiday.id, data: payload })
-                toast.success("Holiday updated successfully")
+            if (calendar) {
+                await updateMutation.mutateAsync({ id: calendar.id, data: payload })
+                toast.success("Entry updated successfully")
             } else {
                 await createMutation.mutateAsync(payload)
-                toast.success("Holiday created successfully")
+                toast.success("Entry created successfully")
             }
             onOpenChange(false)
         } catch {
@@ -125,17 +129,43 @@ export function HolidayDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>{holiday ? "Edit Holiday" : "Add Holiday"}</DialogTitle>
+                    <DialogTitle>{calendar ? "Edit Entry" : "Add Entry"}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                        <FormField
+                            control={form.control}
+                            name="type"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Entry Type</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        value={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="holiday">Holiday</SelectItem>
+                                            <SelectItem value="vacation">Vacation</SelectItem>
+                                            <SelectItem value="event">Event</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Holiday Name</FormLabel>
+                                        <FormLabel>Name</FormLabel>
                                         <FormControl>
                                             <Input placeholder="e.g. Eid-ul-Fitr" {...field} />
                                         </FormControl>
@@ -221,10 +251,10 @@ export function HolidayDialog({
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                 <FormLabel>Description</FormLabel>
                                     <FormControl>
                                         <Textarea 
-                                            placeholder="Special notes or details about the holiday..." 
+                                            placeholder="Special notes or details..." 
                                             className="resize-none"
                                             {...field} 
                                         />
@@ -245,7 +275,7 @@ export function HolidayDialog({
                             </Button>
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {holiday ? "Update Holiday" : "Create Holiday"}
+                                {calendar ? "Update Entry" : "Create Entry"}
                             </Button>
                         </DialogFooter>
                     </form>

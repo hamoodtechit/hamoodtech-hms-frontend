@@ -73,9 +73,9 @@ import { ReferralSearch } from "@/components/hr/referral-search"
 import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 interface DiagnosticBillingFormProps {
-    type: 'pathology' | 'radiology'
-    title: string
-    description: string
+    type?: 'pathology' | 'radiology' | 'opd'
+    title?: string
+    description?: string
 }
 
 interface CartItem {
@@ -87,15 +87,19 @@ interface CartItem {
     unit: string
     reportDays: number
     deliveryDate: string
-    staffId: string
-    staffName: string
-    discountAmount: number
     discountPercentage: number
+    discountAmount: number
+    title?: string
+    description?: string
     serviceId: string
     isDiagnosticTest: boolean
 }
 
-export function DiagnosticBillingForm({ type, title, description }: DiagnosticBillingFormProps) {
+export function DiagnosticBillingForm({ 
+    type = 'opd', 
+    title = "OPD Billing",
+    description = "Consolidated billing for diagnostic laboratory services."
+}: DiagnosticBillingFormProps) {
     const router = useRouter()
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
@@ -117,14 +121,13 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         branchId: activeStoreId || undefined,
         limit: 1000 
     })
-    const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
 
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")
     const debouncedModalSearch = useDebounce(modalSearch, 500)
     const [modalPage, setModalPage] = useState(1)
-    const [modalType, setModalType] = useState<string>(type)
+    const [modalType, setModalType] = useState<string>(type === 'opd' ? 'hospital' : type)
     const [modalStatus, setModalStatus] = useState<string>("all")
     const [modalPaymentStatus, setModalPaymentStatus] = useState<string>("all")
     const [modalPaymentMethod, setModalPaymentMethod] = useState<string>("all")
@@ -166,10 +169,8 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                             (modalInvoiceNumber ? 1 : 0) +
                             (modalDateRange ? 1 : 0)
 
-    const allStaff = staffRes?.data || []
     const allTests = testsRes?.data || []
     const users = usersRes?.data || []
-    const staffs = useMemo(() => staffRes?.data || [], [staffRes])
     const recentSales = recentSalesRes?.data?.sales || []
     const historyPagination = recentSalesRes?.data?.pagination
 
@@ -183,7 +184,6 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
     const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>("")
     const [selectedTestId, setSelectedTestId] = useState<string>("")
-    const [selectedStaffId, setSelectedStaffId] = useState<string>("") 
     const [roomNumber, setRoomNumber] = useState<string>("")
     const [cart, setCart] = useState<CartItem[]>([])
     
@@ -194,15 +194,15 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
     
-    // Set default staff to currently logged in user
+    // Auto-fill room based on user
     useEffect(() => {
-        if (user && staffs.length > 0 && !selectedStaffId) {
-            const currentStaff = staffs.find(s => s.id === user.id || (s as any).userId === user.id)
-            if (currentStaff) {
-                setTimeout(() => setSelectedStaffId(currentStaff.id), 0)
-            }
+        if (selectedDoctorId) {
+            const user: any = users.find((u: any) => u.id === selectedDoctorId)
+            setRoomNumber(user?.employee?.chamberOrRoomNumber || "")
+        } else {
+            setRoomNumber("")
         }
-    }, [user, staffs, selectedStaffId])
+    }, [selectedDoctorId, users])
 
     // Handlers
     const handleAddTest = () => {
@@ -220,7 +220,6 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
         delivery.setDate(delivery.getDate() + (test.reportDays || 0))
         const deliveryStr = delivery.toISOString().split('T')[0]
 
-        const staff = allStaff.find(s => s.id === selectedStaffId)
         const newItem: CartItem = {
             id: Math.random().toString(36).substring(7),
             testId: test.id,
@@ -230,8 +229,6 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             unit: test.unit || 'procedure',
             reportDays: test.reportDays || 0,
             deliveryDate: deliveryStr,
-            staffId: staff?.id || "",
-            staffName: staff?.name || "",
             discountAmount: 0,
             discountPercentage: 0,
             serviceId: test.id,
@@ -280,7 +277,6 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
             patientId: selectedCustomer.id,
             type: "hospital",
             doctorId: selectedDoctorId || undefined,
-            staffId: cart.find(c => c.staffId)?.staffId,
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,
             referralPersonId: selectedReferralPersonId || undefined,
@@ -307,7 +303,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                 discountPercentage: item.discountPercentage,
                 discountAmount: item.discountAmount,
                 deliveryDate: item.deliveryDate,
-                testBy: item.staffName || "",
+                testBy: "",
                 batchNumber: "",
                 expiryDate: "",
                 serviceId: item.serviceId,
@@ -427,10 +423,12 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={users.map((u: any) => ({ 
-                                            id: u.id, 
-                                            name: u.fullName || u.username 
-                                        }))}
+                                        options={users
+                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
+                                            .map((u: any) => ({ 
+                                                id: u.id, 
+                                                name: u.fullName || u.username 
+                                            }))}
                                         placeholder="Select Consultant..."
                                         loading={loadingUsers}
                                         showAll={false}
@@ -473,24 +471,13 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                         </CardHeader>
                         <CardContent className="p-8 space-y-8">
                             <div className="flex flex-col lg:flex-row gap-6">
-                                <div className="flex-3 space-y-2">
+                                <div className="flex-1 space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Catalog</Label>
                                     <SearchableSelect 
                                         value={selectedTestId}
                                         onChange={setSelectedTestId}
                                         options={allTests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(Number(t.price))}` }))}
                                         placeholder="Enter Service Code or Name..."
-                                        showAll={false}
-                                    />
-                                </div>
-                                <div className="flex-[2] space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Operator Assign</Label>
-                                    <SearchableSelect 
-                                        value={selectedStaffId}
-                                        onChange={setSelectedStaffId}
-                                        options={staffs.map(s => ({ id: s.id, name: s.name }))}
-                                        placeholder="Select Technician..."
-                                        loading={loadingStaff}
                                         showAll={false}
                                     />
                                 </div>
@@ -530,10 +517,7 @@ export function DiagnosticBillingForm({ type, title, description }: DiagnosticBi
                                                         <div className="flex flex-col gap-1">
                                                             <p className="text-sm font-black text-foreground leading-none">{item.name}</p>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[9px] font-black uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                                                                    By: {item.staffName || "Auto"}
-                                                                </span>
-                                                                <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
+                                                               <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
                                                                     <Clock className="w-2.5 h-2.5" /> {item.reportDays} Days TAT
                                                                 </span>
                                                             </div>

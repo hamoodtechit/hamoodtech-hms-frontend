@@ -33,7 +33,7 @@ import { FilterPopover } from "@/components/shared/filter-popover"
 import { ReferralFilters, ReferralFilterValues } from "@/components/hr/hr-filters"
 import { ReferralQuickSettleDialog } from "@/components/hr/referral-settle-dialog"
 
-export default function ReferralPayoutsPage() {
+export default function ReferralBillingPage() {
     const { formatCurrency } = useCurrency()
     const [search, setSearch] = useState("")
     const [filters, setFilters] = useState<ReferralFilterValues>({})
@@ -68,7 +68,7 @@ export default function ReferralPayoutsPage() {
 
     return (
         <PermissionGuard permission="referral:read">
-            <div className="space-y-8">
+            <div className="space-y-8 p-6">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
@@ -76,10 +76,10 @@ export default function ReferralPayoutsPage() {
                             <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
                                 <Wallet className="h-5 w-5" />
                             </div>
-                            <h1 className="text-3xl font-black tracking-tight text-foreground">Referral Payouts</h1>
+                            <h1 className="text-3xl font-black tracking-tight text-foreground">Referral Billing</h1>
                         </div>
                         <p className="text-sm font-medium text-muted-foreground/70 uppercase tracking-widest pl-1">
-                            Financial reconciliation with partners
+                            Partner settlements and commission management
                         </p>
                     </div>
 

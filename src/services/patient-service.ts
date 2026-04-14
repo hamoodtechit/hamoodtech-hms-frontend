@@ -8,7 +8,8 @@ import {
   PatientPayload,
   PatientQueryParams,
   DischargeInitiateData,
-  DischargePayload
+  DischargePayload,
+  PharmacyPaymentPayload
 } from '@/types/patient';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -100,6 +101,11 @@ export const patientService = {
 
   completeDischarge: async (data: DischargePayload): Promise<{ success: boolean; message: string; data: any }> => {
     const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/discharge-payment', data);
+    return response.data;
+  },
+
+  payPharmacyDues: async (data: PharmacyPaymentPayload): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/pharmacy-payment', data);
     return response.data;
   },
 };

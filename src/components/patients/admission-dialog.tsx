@@ -339,7 +339,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                         discountPercentage: discount,
                         discountAmount: discountAmount,
                         taxPercentage: vatPercentage,
-                        taxAmount: tax
+                        taxAmount: tax,
+                        type: 'hospital'
                     }
                 })
                 toast.success("Admission updated successfully")
@@ -363,7 +364,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     discountPercentage: discount,
                     discountAmount: discountAmount,
                     taxPercentage: vatPercentage,
-                    taxAmount: tax
+                    taxAmount: tax,
+                    type: 'hospital'
                 })
 
                 // Extract Sale ID from the response (Backend auto-creates the Sale)

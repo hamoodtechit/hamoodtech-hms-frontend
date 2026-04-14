@@ -1,7 +1,6 @@
 "use client"
 
 import { ApprovalDialog } from "@/components/diagnostic/approval-dialog"
-import { ConsolidatedReportDialog } from "@/components/diagnostic/consolidated-report-dialog"
 import { ReportDetailSheet } from "@/components/diagnostic/report-detail-sheet"
 import { ResultEntryDialog } from "@/components/diagnostic/result-entry-dialog"
 import { SampleCollectionDialog } from "@/components/diagnostic/sample-collection-dialog"
@@ -72,7 +71,6 @@ export default function DiagnosticReportsPage() {
     const [approvalOpen, setApprovalOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const [selectedReport, setSelectedReport] = useState<DiagnosticReport | null>(null)
-    const [consolidatedOpen, setConsolidatedOpen] = useState(false)
 
     const updateMutation = useUpdateReport()
     const isUpdating = updateMutation.isPending
@@ -182,13 +180,6 @@ export default function DiagnosticReportsPage() {
 
                     {urlPatientId && (
                         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
-                             <Button 
-                                onClick={() => setConsolidatedOpen(true)}
-                                className="h-12 rounded-xl px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-600/20 gap-2 border-none"
-                            >
-                                <FileStack className="h-5 w-5" />
-                                Combined Patient Report
-                            </Button>
                             {/* Clear filter button */}
                             <Button 
                                 variant="outline" 
@@ -578,14 +569,7 @@ export default function DiagnosticReportsPage() {
                     onSuccess={refetch}
                 />
 
-                {urlPatientId && (
-                    <ConsolidatedReportDialog
-                        open={consolidatedOpen}
-                        onOpenChange={setConsolidatedOpen}
-                        patientId={urlPatientId}
-                        branchId={activeStoreId || ''}
-                    />
-                )}
+
             </div>
         </PermissionGuard>
     )

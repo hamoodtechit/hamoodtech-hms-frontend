@@ -64,7 +64,7 @@ export function ExtraChargeBillingForm() {
 
     const { data: recentSalesRes, refetch: refetchSales } = useSales({ 
         branchId: activeStoreId || undefined, 
-        type: 'others', 
+        type: 'hospital', 
         limit: modalLimit, 
         page: modalPage,
         search: debouncedModalSearch || undefined,
@@ -153,7 +153,7 @@ export function ExtraChargeBillingForm() {
         const payload: SalePayload = {
             branchId: activeStoreId || "",
             patientId: selectedCustomer.id,
-            type: 'others',
+            type: 'hospital',
             staffId: selectedStaffId || undefined,
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,

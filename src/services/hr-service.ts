@@ -12,9 +12,9 @@ import {
     Attendance,
     AttendancePayload,
     AttendanceFilters,
-    Holiday,
-    HolidayPayload,
-    HolidayFilters,
+    AnnualCalendar,
+    AnnualCalendarPayload,
+    AnnualCalendarFilters,
     LeaveType,
     LeaveTypePayload,
     LeaveTypeFilters,
@@ -28,29 +28,29 @@ import {
 } from "@/types/hr";
 
 export const hrService = {
-    // Holiday APIs
-    getHolidays: async (params?: HolidayFilters): Promise<HRPaginatedResponse<Holiday>> => {
-        const response = await api.get<HRPaginatedResponse<Holiday>>("/hr/holidays", { params });
+    // Annual Calendar APIs
+    getAnnualCalendars: async (params?: AnnualCalendarFilters): Promise<HRPaginatedResponse<AnnualCalendar>> => {
+        const response = await api.get<HRPaginatedResponse<AnnualCalendar>>("/hr/annual-calendars", { params });
         return response.data;
     },
 
-    createHoliday: async (data: HolidayPayload): Promise<{ success: boolean; data: Holiday }> => {
-        const response = await api.post<{ success: boolean; data: Holiday }>("/hr/holidays", data);
+    createAnnualCalendar: async (data: AnnualCalendarPayload): Promise<{ success: boolean; data: AnnualCalendar }> => {
+        const response = await api.post<{ success: boolean; data: AnnualCalendar }>("/hr/annual-calendars", data);
         return response.data;
     },
 
-    getHolidayById: async (id: string): Promise<{ success: boolean; data: Holiday }> => {
-        const response = await api.get<{ success: boolean; data: Holiday }>(`/hr/holidays/${id}`);
+    getAnnualCalendarById: async (id: string): Promise<{ success: boolean; data: AnnualCalendar }> => {
+        const response = await api.get<{ success: boolean; data: AnnualCalendar }>(`/hr/annual-calendars/${id}`);
         return response.data;
     },
 
-    updateHoliday: async (id: string, data: Partial<HolidayPayload>): Promise<{ success: boolean; data: Holiday }> => {
-        const response = await api.patch<{ success: boolean; data: Holiday }>(`/hr/holidays/${id}`, data);
+    updateAnnualCalendar: async (id: string, data: Partial<AnnualCalendarPayload>): Promise<{ success: boolean; data: AnnualCalendar }> => {
+        const response = await api.patch<{ success: boolean; data: AnnualCalendar }>(`/hr/annual-calendars/${id}`, data);
         return response.data;
     },
 
-    deleteHoliday: async (id: string): Promise<{ success: boolean; message: string }> => {
-        const response = await api.delete<{ success: boolean; message: string }>(`/hr/holidays/${id}`);
+    deleteAnnualCalendar: async (id: string): Promise<{ success: boolean; message: string }> => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/hr/annual-calendars/${id}`);
         return response.data;
     },
 
