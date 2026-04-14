@@ -63,46 +63,49 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const invoiceNumber = (data as any)?.invoiceNumber || (data as any)?.number || "N/A"
   const date = (data as any)?.date || (data as any)?.createdAt || new Date().toISOString()
   
-  const ReceiptContent = ({ copyTitle }: { copyTitle?: string }) => {
+  const ReceiptContent = ({ copyTitle, isPrinting = false }: { copyTitle?: string, isPrinting?: boolean }) => {
     const { user } = useAuthStore()
     const branch = (data as any)?.branch || activeBranch
     const branchLogo = branch?.logoUrl || activeBranch?.logoUrl || "/Logo.png"
     return (
-    <div className="p-2 space-y-3 border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0 relative">
+    <div className={`p-2 ${isPrinting ? 'space-y-1' : 'space-y-3'} border-b border-black border-dashed pb-6 print:border-b-0 print:pb-0 relative`}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
              <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
-                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                 <img src={branchLogo} alt="Logo" style={{ height: '55px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
-             </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={branchLogo} alt="Logo" style={{ height: isPrinting ? '55px' : '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+              </div>
              {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1 leading-none">{copyTitle}</div>}
-            <h2 style={{ margin: '0', padding: '0', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || branch?.name || "Hospital Name"}</h2>
+            <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || branch?.name || "Hospital Name"}</h2>
+            <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Pharmacy</div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
-                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: '10px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
-                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: '10px', lineHeight: '1.2' }}>Ph: {general?.phone || branch?.phone || "Phone"}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Natore, Bonpara, Baraigram"}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Ph: {general?.phone || branch?.phone || "+8801537134852"}</p>
             </div>
         </div>
 
         <Separator className="border-black/20" />
 
         {/* Patient Details */}
-        <div className="grid grid-cols-2 gap-2 text-[10px] font-bold border-y border-black/20 py-1 leading-tight">
-            <div className="space-y-0.5">
-                <p className="text-black uppercase text-[8px] font-bold underline">Patient Details:</p>
-                <p className="font-bold">{(data as any)?.customerName || (data as any)?.patient?.name || "Walk-in"}</p>
+        <div className={`grid grid-cols-2 gap-2 ${isPrinting ? 'text-[7.5px] gap-1 py-1' : 'text-xs py-2'} font-semibold border-y border-black/20 leading-tight`}>
+            <div className={`${isPrinting ? 'space-y-0' : 'space-y-0.5'}`}>
+                <p className={`text-black uppercase ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-bold underline mb-0.5`}>Patient Details:</p>
+                <p className="font-semibold">{(data as any)?.customerName || (data as any)?.patient?.name || "Walk-in"}</p>
+                <p className="font-semibold">Type: OPD Patient</p>
             </div>
-            <div className="text-right space-y-0.5 font-bold">
-                <p>Invoice #: {invoiceNumber}</p>
-                <p>Date: {new Date(date).toLocaleString([], { hour12: true, dateStyle: 'short', timeStyle: 'short' })}</p>
+            <div className={`text-right ${isPrinting ? 'space-y-0' : 'space-y-0.5'} font-semibold`}>
+                <p>Inv #: {invoiceNumber}</p>
+                <p>Date: {new Date(date).toLocaleDateString('en-GB')}</p>
+                <p>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</p>
             </div>
         </div>
 
         {/* Items Table */}
-        <div className="space-y-1">
-            <div className="grid grid-cols-12 text-[10px] font-bold border-b border-black/40 pb-0.5">
+        <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
+            <div className={`grid grid-cols-12 ${isPrinting ? 'text-[7.5px] mt-0.5' : 'text-[10px] mt-1'} font-bold border-b border-black/40 pb-0.5 uppercase tracking-tighter`}>
                 <div className="col-span-6">ITEM</div>
-                <div className="col-span-1 text-center">QTY</div>
+                <div className="col-span-2 text-center">QTY</div>
                 <div className="col-span-2 text-right">RATE</div>
-                <div className="col-span-3 text-right">AMT</div>
+                <div className="col-span-2 text-right">AMT</div>
             </div>
             {normalizedItems.map((item: any, idx: number) => {
                  const itemTotal = item.price * item.quantity
@@ -110,17 +113,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  const netItemTotal = itemTotal - itemDisc
                  
                   return (
-                    <div key={idx} className="grid grid-cols-12 text-[10px] items-start leading-tight py-0.5 font-semibold">
+                    <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
-                            <span className="block font-bold">
+                            <span className="block font-black text-black">
                                 {item.name}
-                                {item.dosageForm && <span className="text-[9px] font-bold ml-1 uppercase opacity-70">({item.dosageForm})</span>}
-                                {item.genericName && <span className="block text-[8px] font-medium text-muted-foreground italic leading-tight">{item.genericName}</span>}
+                                {item.dosageForm && <span className={`${isPrinting ? 'text-[7px]' : 'text-[9px]'} font-semibold ml-1 uppercase opacity-70`}>({item.dosageForm})</span>}
                             </span>
                         </div>
-                        <div className="col-span-1 text-center">{item.quantity}</div>
-                        <div className="col-span-2 text-right">{item.price.toFixed(2)}</div>
-                        <div className="col-span-3 text-right font-bold">
+                        <div className="col-span-2 text-center font-semibold">{item.quantity}</div>
+                        <div className="col-span-2 text-right font-semibold">{item.price.toFixed(2)}</div>
+                        <div className="col-span-2 text-right font-black text-black">
                             {netItemTotal.toFixed(2)}
                         </div>
                     </div>
@@ -131,43 +133,37 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <Separator className="border-dashed border-black/20" />
 
         {/* Totals */}
-        <div className="space-y-1 text-[11px] font-bold">
+        <div className={`${isPrinting ? 'space-y-0.5 text-[8px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-semibold`}>
             <div className="flex justify-between">
                 <span className="text-black">Gross Total</span>
-                <span>{formatCurrency(grossTotal)}</span>
+                <span className="font-bold">: {formatCurrency(grossTotal)}</span>
             </div>
             {(totalItemDiscount > 0 || discountAmount > 0) && (
                 <div className="flex justify-between text-black">
                      <span>Total Discount</span>
-                     <span>-{formatCurrency(totalItemDiscount + discountAmount)}</span>
+                     <span className="font-bold">: -{formatCurrency(totalItemDiscount + discountAmount)}</span>
                 </div>
             )}
-            {taxAmount > 0 && (
-                <div className="flex justify-between text-black">
-                    <span>VAT ({taxPercentage}%)</span>
-                    <span>+{formatCurrency(taxAmount)}</span>
-                </div>
-            )}
-             
-             <div className="flex justify-between text-sm font-bold border-y border-black/40 py-1 my-1">
-                 <span>Net Payable</span>
-                 <span>{formatCurrency(netTotal)}</span>
+            
+             <div className={`flex justify-between ${isPrinting ? 'text-[9px] py-1 my-0.5' : 'text-sm py-2 my-1'} font-black border-y border-black/20 text-black`}>
+                 <span>NET PAYABLE</span>
+                 <span>: {formatCurrency(netTotal)}</span>
              </div>
              
-             <div className="flex justify-between pt-1 font-bold">
-                 <span className="text-black">Paid Amount</span>
-                 <span>{formatCurrency(paidAmount)}</span>
+             <div className={`flex justify-between pt-0.5 font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
+                 <span className="text-black tracking-tighter">Paid Amount</span>
+                 <span className="font-bold">: {formatCurrency(paidAmount)}</span>
              </div>
              
              {dueAmount > 0 ? (
-                  <div className="flex justify-between text-black font-bold">
-                      <span>Due Amount</span>
-                      <span>{formatCurrency(dueAmount)}</span>
+                  <div className={`flex justify-between text-black font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
+                      <span className="tracking-tighter">Due Amount</span>
+                      <span className="font-bold">: {formatCurrency(dueAmount)}</span>
                   </div>
              ) : (
-                  <div className="flex justify-between text-black">
-                      <span>Change Return</span>
-                      <span>{formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
+                  <div className={`flex justify-between text-black font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
+                      <span className="tracking-tighter">Change Return</span>
+                      <span className="font-bold">: {formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
                   </div>
              )}
         </div>
@@ -175,16 +171,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <Separator className="border-black/20" />
         
         {/* Footer */}
-        <div className="text-center text-[10px] text-black space-y-1.5 pt-2">
-            <p className="font-bold">Thank you for visiting {branch?.name || general?.hospitalName || "Hospital"}!</p>
-            <p className="italic font-bold text-[9px] border-t border-black/20 pt-1">Note: Medicines once sold cannot be returned without receipt.</p>
-            <div className="pt-4 mt-2 border-t border-black/30 w-32 mx-auto font-bold uppercase tracking-wider text-[9px]">
-                Authorized Signatory
+        <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t border-black/10 uppercase`}>
+            <p className="font-bold tracking-wider">THANK YOU FOR VISITING!</p>
+            <p className="font-semibold leading-tight">MEDICINES ONCE SOLD CANNOT BE<br />RETURNED WITHOUT THE RECEIPT.</p>
+            <div className={`mt-1 mx-auto font-bold uppercase tracking-widest ${isPrinting ? 'pt-2 w-24 text-[7px] border-t border-black/10' : 'pt-4 w-32 text-[9px] border-t-2 border-dashed border-black/20'}`}>
+                AUTHORIZED SIGNATORY
             </div>
-            {/* Metadata moved to footer as horizontal line */}
-            <div className="pt-4 text-[7px] text-black/40 tracking-wider font-bold uppercase hidden print:block">
-                PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
-            </div>
+            <p className={`${isPrinting ? 'text-[6.5px] pt-1' : 'text-[10px] pt-2'} font-semibold lowercase opacity-50`}>Powered by Hamood Tech.</p>
         </div>
     </div>
   )}
@@ -213,9 +206,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
             disabled={isLoading}
             onClick={() => {
+              const printContainer = document.createElement('div');
+              const root = (window as any).ReactDOM ? (window as any).ReactDOM.createRoot(printContainer) : null;
+              
               const printContent = document.getElementById('receipt-content')?.innerHTML;
               if (!printContent) return;
 
+              const stylizedPrintContent = printContent.replace('class="p-2 space-y-3', 'class="p-2 is-printing space-y-1');
+              
               const iframe = document.createElement('iframe');
               iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
               document.body.appendChild(iframe);
@@ -250,45 +248,44 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                   #receipt-print {
                                       width: 100%;
                                       max-width: 72mm;
-                                      padding: 2mm;
+                                      padding: 4mm 2mm;
                                       box-sizing: border-box;
+                                      display: flex;
+                                      flex-direction: column;
+                                      align-items: center;
+                                      text-align: center;
+                                      margin: 0 auto;
+                                      background: white;
                                   }
-                                  /* Reset styles for thermal printing */
                                   .border { border: 1px solid black !important; }
+                                  .border-y { border-top: 1px solid black !important; border-bottom: 1px solid black !important; }
+                                  .border-b { border-bottom: 1px solid black !important; }
                                   .border-dashed { border-style: dashed !important; border-width: 1px !important; }
                                   .border-black { border-color: black !important; }
-                                  .text-center { text-align: center !important; }
-                                  .text-right { text-align: right !important; }
-                                  .font-bold { font-weight: 700 !important; }
-                                  .flex { display: flex !important; }
-                                  .flex-col { flex-direction: column !important; }
-                                  .justify-between { justify-content: space-between !important; }
-                                  .justify-center { justify-content: center !important; }
-                                  .items-center { align-items: center !important; }
-                                  .uppercase { text-transform: uppercase !important; }
-                                  .grid { display: grid !important; }
-                                  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-                                  .grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
-                                  .col-span-6 { grid-column: span 6 / span 6 !important; }
-                                  .col-span-1 { grid-column: span 1 / span 1 !important; }
-                                  .col-span-2 { grid-column: span 2 / span 2 !important; }
-                                  .col-span-3 { grid-column: span 3 / span 3 !important; }
-                                  .m-0 { margin: 0 !important; }
-                                  .p-0 { padding: 0 !important; }
-                                  .mb-0 { margin-bottom: 0 !important; }
-                                  .mb-1 { margin-bottom: 4px !important; }
-                                  .mt-0 { margin-top: 0 !important; }
-                                  .leading-none { line-height: 1 !important; }
-                                  .leading-tight { line-height: 1.1 !important; }
-                                  .gap-0 { gap: 0 !important; }
-                                  .p-2 { padding: 8px !important; }
-                                  .px-2 { padding-left: 8px !important; padding-right: 8px !important; }
-                                  .py-1 { padding-top: 4px !important; padding-bottom: 4px !important; }
-                                  .space-y-0\\.5 > * + * { margin-top: 2px !important; }
-                                  .space-y-1 > * + * { margin-top: 4px !important; }
-                                  .space-y-3 > * + * { margin-top: 0.75rem !important; }
-                                  .pb-6 { padding-bottom: 1.5rem !important; }
-                                  .w-full { width: 100% !important; }
+                                  .is-printing { width: 100% !important; }
+                                  .is-printing .space-y-3 { margin-top: 4px !important; }
+                                  #receipt-print h2 { font-size: 18px !important; }
+                                  #receipt-print .text-xs { font-size: 8px !important; }
+                                  #receipt-print .text-sm { font-size: 9px !important; }
+                                  #receipt-print .text-xs.font-black { font-size: 8.5px !important; }
+                                  #receipt-print .py-2 { padding-top: 4px !important; padding-bottom: 4px !important; }
+                                  #receipt-print .my-1 { margin-top: 2px !important; margin-bottom: 2px !important; }
+                                  #receipt-print .pt-4 { padding-top: 8px !important; }
+                                  #receipt-print .mt-4 { margin-top: 8px !important; }
+                                  #receipt-print img { height: 55px !important; }
+                                  #receipt-print .w-32 { width: 6rem !important; }
+                                  #receipt-print .border-t-2 { border-top-width: 1px !important; }
+                                  .text-\[9px\] { font-size: 7px !important; }
+                                  .text-\[10px\] { font-size: 8px !important; }
+                                  .text-\[11px\] { font-size: 9px !important; }
+                                  .text-black\\/60 { color: rgba(0,0,0,0.6) !important; }
+                                  .space-y-3 > * + * { margin-top: 4px !important; }
+                                  .space-y-2 > * + * { margin-top: 2px !important; }
+                                  .space-y-1 > * + * { margin-top: 2px !important; }
+                                  .pt-4 { padding-top: 8px !important; }
+                                  .mt-4 { margin-top: 8px !important; }
+                                  .py-2 { padding-top: 4px !important; padding-bottom: 4px !important; }
+                                  .my-1 { margin-top: 2px !important; margin-bottom: 2px !important; }
                               </style>
                           </head>
                           <body>

@@ -151,9 +151,9 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                  {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img src={data.branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
              </div>
-            <h1 style={{ margin: '0', padding: '0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || data.branch?.name || "PATWARY GENERAL HOSPITAL"}</h1>
-            <p style={{ margin: '0', padding: '0', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || data.branch?.address || "Hospital Address"}</p>
-            <p style={{ margin: '0', padding: '0', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || data.branch?.phone || "Hospital Phone"}</p>
+            <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || data.branch?.name || "PATWARY GENERAL HOSPITAL"}</h1>
+            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || data.branch?.address || "Hospital Address"}</p>
+            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || data.branch?.phone || "Hospital Phone"}</p>
             
             <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
                 {(data.branch?.licenseNumber || activeStore?.licenseNumber) && <span>License No: {data.branch?.licenseNumber || activeStore?.licenseNumber}</span>}

@@ -229,15 +229,15 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '70px', width: 'auto', objectFit: 'contain' }} />
                                     </div>
                                     
-                                    <h1 className="text-2xl font-black uppercase tracking-tight text-slate-950 m-0 p-0 leading-none mb-1">
-                                        {general?.hospitalName || branch?.name || 'HamoodTech Hospital'}
+                                    <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%', color: '#000' }} className="mb-1">
+                                        {general?.hospitalName || branch?.name || 'PATWARY GENERAL HOSPITAL'}
                                     </h1>
                                     
-                                    <p className="text-[16px] font-bold m-0 p-0 leading-none text-black mb-1">
+                                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }} className="mb-1">
                                         {(general?.address || branch?.address || 'Hospital Address').split(',').map(s => s.trim()).join(', ')}
                                     </p>
                                     
-                                    <p className="text-[16px] font-bold m-0 p-0 leading-none text-black">
+                                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }}>
                                         Ph: {general?.phone || branch?.phone || "Hospital Phone"}
                                     </p>
                                 </div>

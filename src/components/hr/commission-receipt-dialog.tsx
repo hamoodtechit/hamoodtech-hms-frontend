@@ -129,9 +129,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
             `}} />
 
             <div className="header text-center mb-8 pb-4 border-b-2 border-black">
-                <h1 className="text-2xl font-black uppercase text-black" style={{ color: '#000' }}>{general?.hospitalName || "HamoodTech Health"}</h1>
-                <p className="text-xs font-bold text-black" style={{ color: '#000' }}>{general?.address || "Address Not Set"}</p>
-                <p className="text-xs font-bold text-black" style={{ color: '#000' }}>Ph: {general?.phone || "Phone Not Set"}</p>
+                <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%', color: '#000' }}>{general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
+                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }}>{general?.address || "Address Not Set"}</p>
+                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }}>Ph: {general?.phone || "Phone Not Set"}</p>
                 <div className="receipt-title mt-4 px-8 py-1.5 border border-black rounded-full bg-gray-50 font-black tracking-widest text-sm inline-block text-black">
                     Commission Payout Receipt
                 </div>
