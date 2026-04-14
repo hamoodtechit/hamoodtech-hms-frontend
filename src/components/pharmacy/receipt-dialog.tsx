@@ -72,32 +72,32 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
              <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={branchLogo} alt="Logo" style={{ height: isPrinting ? '55px' : '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+                  <img src={branchLogo} alt="Logo" style={{ height: '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
               </div>
              {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1 leading-none">{copyTitle}</div>}
             <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || branch?.name || "Hospital Name"}</h2>
             <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Pharmacy</div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
-                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Natore, Bonpara, Baraigram"}</p>
-                <p style={{ margin: '0', padding: '0', fontWeight: '600', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Ph: {general?.phone || branch?.phone || "+8801537134852"}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {general?.phone || branch?.phone || "Phone"}</p>
             </div>
         </div>
 
         <Separator className="border-black/20" />
 
-        {/* Patient Details */}
-        <div className={`grid grid-cols-2 gap-2 ${isPrinting ? 'text-[7.5px] gap-1 py-1' : 'text-xs py-2'} font-semibold border-y border-black/20 leading-tight`}>
-            <div className={`${isPrinting ? 'space-y-0' : 'space-y-0.5'}`}>
-                <p className={`text-black uppercase ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-bold underline mb-0.5`}>Patient Details:</p>
-                <p className="font-semibold">{(data as any)?.customerName || (data as any)?.patient?.name || "Walk-in"}</p>
-                <p className="font-semibold">Type: OPD Patient</p>
-            </div>
-            <div className={`text-right ${isPrinting ? 'space-y-0' : 'space-y-0.5'} font-semibold`}>
-                <p>Inv #: {invoiceNumber}</p>
-                <p>Date: {new Date(date).toLocaleDateString('en-GB')}</p>
-                <p>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
+        {/* Info Grid */}
+        <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
+           <div className="flex justify-between">
+                <span>Inv: {invoiceNumber}</span>
+                <span>Type: OPD Patient</span>
+           </div>
+           <div className="flex justify-between">
+                <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
+                <span>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+           </div>
         </div>
+
+        <Separator className={isPrinting ? "border-black/40" : "border-black/20"} />
 
         {/* Items Table */}
         <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
@@ -132,38 +132,46 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
         <Separator className="border-dashed border-black/20" />
 
-        {/* Totals */}
-        <div className={`${isPrinting ? 'space-y-0.5 text-[8px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-semibold`}>
-            <div className="flex justify-between">
-                <span className="text-black">Gross Total</span>
-                <span className="font-bold">: {formatCurrency(grossTotal)}</span>
+        {/* Totals Section */}
+        <div className={`${isPrinting ? 'space-y-0.5 text-[8.5px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-bold`}>
+            <div className="flex">
+                <span className={isPrinting ? "w-24" : "w-32"}>Gross Total</span>
+                <span className="w-4">:</span>
+                <span className="flex-1 text-right">{grossTotal.toFixed(2)} ৳</span>
             </div>
             {(totalItemDiscount > 0 || discountAmount > 0) && (
-                <div className="flex justify-between text-black">
-                     <span>Total Discount</span>
-                     <span className="font-bold">: -{formatCurrency(totalItemDiscount + discountAmount)}</span>
+                <div className="flex">
+                     <span className={isPrinting ? "w-24" : "w-32"}>Total Discount</span>
+                     <span className="w-4">:</span>
+                     <span className="flex-1 text-right">-{ (totalItemDiscount + discountAmount).toFixed(2) } ৳</span>
                 </div>
             )}
             
-             <div className={`flex justify-between ${isPrinting ? 'text-[9px] py-1 my-0.5' : 'text-sm py-2 my-1'} font-black border-y border-black/20 text-black`}>
-                 <span>NET PAYABLE</span>
-                 <span>: {formatCurrency(netTotal)}</span>
+            <Separator className={isPrinting ? "border-black/40 my-0.5" : "border-black/20 my-1"} />
+            
+             <div className={`flex ${isPrinting ? 'text-[9.5px]' : 'text-sm'} font-black text-black`}>
+                 <span className={isPrinting ? "w-24" : "w-32"}>NET PAYABLE</span>
+                 <span className="w-4">:</span>
+                 <span className="flex-1 text-right">{(netTotal).toFixed(2)} ৳</span>
              </div>
              
-             <div className={`flex justify-between pt-0.5 font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
-                 <span className="text-black tracking-tighter">Paid Amount</span>
-                 <span className="font-bold">: {formatCurrency(paidAmount)}</span>
+             <div className="flex">
+                 <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
+                 <span className="w-4">:</span>
+                 <span className="flex-1 text-right">{(paidAmount).toFixed(2)} ৳</span>
              </div>
              
              {dueAmount > 0 ? (
-                  <div className={`flex justify-between text-black font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
-                      <span className="tracking-tighter">Due Amount</span>
-                      <span className="font-bold">: {formatCurrency(dueAmount)}</span>
+                  <div className="flex">
+                      <span className={isPrinting ? "w-24" : "w-32"}>Due Amount</span>
+                      <span className="w-4">:</span>
+                      <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
              ) : (
-                  <div className={`flex justify-between text-black font-semibold ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
-                      <span className="tracking-tighter">Change Return</span>
-                      <span className="font-bold">: {formatCurrency(Math.max(0, paidAmount - netTotal))}</span>
+                  <div className="flex">
+                      <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
+                      <span className="w-4">:</span>
+                      <span className="flex-1 text-right">{Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</span>
                   </div>
              )}
         </div>
@@ -171,12 +179,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <Separator className="border-black/20" />
         
         {/* Footer */}
-        <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t border-black/10 uppercase`}>
+        <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
             <p className="font-bold tracking-wider">THANK YOU FOR VISITING!</p>
-            <p className="font-semibold leading-tight">MEDICINES ONCE SOLD CANNOT BE<br />RETURNED WITHOUT THE RECEIPT.</p>
-            <div className={`mt-1 mx-auto font-bold uppercase tracking-widest ${isPrinting ? 'pt-2 w-24 text-[7px] border-t border-black/10' : 'pt-4 w-32 text-[9px] border-t-2 border-dashed border-black/20'}`}>
-                AUTHORIZED SIGNATORY
-            </div>
+            <p className="font-semibold leading-tight px-4 text-center">Medicines once sold cannot be<br />returned without the receipt.</p>
             <p className={`${isPrinting ? 'text-[6.5px] pt-1' : 'text-[10px] pt-2'} font-semibold lowercase opacity-50`}>Powered by Hamood Tech.</p>
         </div>
     </div>
