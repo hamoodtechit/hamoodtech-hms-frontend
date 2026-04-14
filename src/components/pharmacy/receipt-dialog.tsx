@@ -211,14 +211,146 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
             disabled={isLoading}
             onClick={() => {
-              const printContainer = document.createElement('div');
-              const root = (window as any).ReactDOM ? (window as any).ReactDOM.createRoot(printContainer) : null;
-              
-              const printContent = document.getElementById('receipt-content')?.innerHTML;
-              if (!printContent) return;
+              const branch = (data as any)?.branch || activeBranch;
+              const branchLogo = branch?.logoUrl || activeBranch?.logoUrl || "/Logo.png";
+              const hospitalName = general?.hospitalName || branch?.name || "Hospital Name";
+              const address = general?.address || branch?.address || "Hospital Address";
+              const phone = general?.phone || branch?.phone || "Phone";
 
-              const stylizedPrintContent = printContent.replace('class="p-2 space-y-3', 'class="p-2 is-printing space-y-1');
-              
+              const rows = normalizedItems.map(item => {
+                const itemTotal = item.price * item.quantity;
+                const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0);
+                const netItemTotal = itemTotal - itemDisc;
+                return `
+                  <tr style="font-size: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <td style="text-align: left; font-weight: 900; padding: 4px 0; vertical-align: top;">
+                      ${item.name} ${item.dosageForm ? `<span style="font-size: 10px; font-weight: normal; opacity: 0.8;">(${item.dosageForm})</span>` : ''}
+                    </td>
+                    <td style="text-align: center; vertical-align: top; padding-top: 4px;">${item.quantity}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 4px;">${item.price.toFixed(2)}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900;">${netItemTotal.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('');
+
+              const printableHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        @page { size: 80mm auto; margin: 0; }
+                        body { 
+                            font-family: 'Courier New', Courier, monospace; 
+                            width: 80mm; 
+                            margin: 0; 
+                            padding: 5mm; 
+                            box-sizing: border-box;
+                            color: black;
+                            background: white;
+                            line-height: 1.2;
+                        }
+                        .container { width: 100%; display: flex; flex-direction: column; align-items: center; }
+                        .header { text-align: center; margin-bottom: 10px; width: 100%; }
+                        .hospital-name { font-size: 18px; font-weight: 900; margin: 0; text-transform: uppercase; }
+                        .pharmacy-tag { font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #444; margin: 2px 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 2px 0; }
+                        .contact-info { font-size: 10px; font-weight: bold; margin: 2px 0; }
+                        .info-grid { width: 100%; border-top: 1px solid black; border-bottom: 1px solid black; padding: 5px 0; margin-top: 5px; font-size: 11px; font-weight: bold; }
+                        .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                        .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .items-table th { font-size: 10px; border-bottom: 2px solid black; padding-bottom: 2px; text-align: left; }
+                        .totals-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-weight: 900; font-size: 13px; }
+                        .totals-table td { padding: 2px 0; }
+                        .footer { text-align: center; margin-top: 15px; border-top: 1px dashed black; padding-top: 10px; font-size: 10px; text-transform: uppercase; }
+                        .separator { border-top: 1px dashed #ccc; margin: 5px 0; }
+                        .label-col { width: 50%; }
+                        .colon-col { width: 15px; text-align: center; }
+                        .value-col { text-align: right; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <img src="${branchLogo}" style="height: 60px; margin-bottom: 5px;">
+                            <h1 class="hospital-name">${hospitalName}</h1>
+                            <div class="pharmacy-tag">PHARMACY</div>
+                            <div class="contact-info">${address}</div>
+                            <div class="contact-info">Phone: ${phone}</div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-row">
+                                <span>Inv: ${invoiceNumber}</span>
+                                <span>Type: OPD Patient</span>
+                            </div>
+                            <div class="info-row">
+                                <span>Date: ${new Date(date).toLocaleDateString('en-GB')}</span>
+                                <span>Time: ${new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                        </div>
+
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">ITEM</th>
+                                    <th style="width: 10%; text-align: center;">QTY</th>
+                                    <th style="width: 20%; text-align: right;">RATE</th>
+                                    <th style="width: 20%; text-align: right;">AMT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+
+                        <div style="border-top: 1px dashed black; margin-top: 5px;"></div>
+
+                        <table class="totals-table">
+                            <tr>
+                                <td class="label-col">Gross Total</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">${grossTotal.toFixed(2)} ৳</td>
+                            </tr>
+                            ${(totalItemDiscount + discountAmount) > 0 ? `
+                            <tr>
+                                <td class="label-col">Total Discount</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">-${(totalItemDiscount + discountAmount).toFixed(2)} ৳</td>
+                            </tr>` : ''}
+                            <tr><td colspan="3" style="border-top: 1px dashed black; padding: 2px 0;"></td></tr>
+                            <tr style="font-size: 15px; color: black;">
+                                <td class="label-col">NET PAYABLE</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">${netTotal.toFixed(2)} ৳</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Paid Amount</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">${paidAmount.toFixed(2)} ৳</td>
+                            </tr>
+                            ${dueAmount > 0 ? `
+                            <tr>
+                                <td class="label-col">Due Amount</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">${dueAmount.toFixed(2)} ৳</td>
+                            </tr>` : `
+                            <tr>
+                                <td class="label-col">Change Return</td>
+                                <td class="colon-col">:</td>
+                                <td class="value-col">${Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</td>
+                            </tr>`}
+                        </table>
+
+                        <div class="footer">
+                            <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>
+                            <p style="font-weight: bold; line-height: 1.4;">Medicines once sold cannot be<br>returned without the receipt.</p>
+                            <p style="margin-top: 10px; opacity: 0.6; text-transform: lowercase;">Powered by Hamood Tech.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+              `;
+
               const iframe = document.createElement('iframe');
               iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
               document.body.appendChild(iframe);
@@ -226,80 +358,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               const iframeDoc = iframe.contentWindow?.document;
               if (iframeDoc) {
                   iframeDoc.open();
-                  iframeDoc.write(`
-                      <!DOCTYPE html>
-                      <html>
-                          <head>
-                              <meta charset="UTF-8">
-                              <title>Print Receipt</title>
-                              <style>
-                                  @page { 
-                                      size: 80mm auto; 
-                                      margin: 0; 
-                                  }
-                                  body { 
-                                      font-family: Arial, sans-serif; 
-                                      -webkit-print-color-adjust: exact; 
-                                      print-color-adjust: exact;
-                                      margin: 0;
-                                      padding: 0;
-                                      display: flex;
-                                      flex-direction: column;
-                                      align-items: center;
-                                      width: 80mm;
-                                      background: white;
-                                      text-align: center;
-                                  }
-                                  #receipt-print {
-                                      width: 100%;
-                                      max-width: 72mm;
-                                      padding: 4mm 2mm;
-                                      box-sizing: border-box;
-                                      display: flex;
-                                      flex-direction: column;
-                                      align-items: center;
-                                      text-align: center;
-                                      margin: 0 auto;
-                                      background: white;
-                                  }
-                                  .border { border: 1px solid black !important; }
-                                  .border-y { border-top: 1px solid black !important; border-bottom: 1px solid black !important; }
-                                  .border-b { border-bottom: 1px solid black !important; }
-                                  .border-dashed { border-style: dashed !important; border-width: 1px !important; }
-                                  .border-black { border-color: black !important; }
-                                  .is-printing { width: 100% !important; }
-                                  .is-printing .space-y-3 { margin-top: 4px !important; }
-                                  #receipt-print h2 { font-size: 18px !important; }
-                                  #receipt-print .text-xs { font-size: 8px !important; }
-                                  #receipt-print .text-sm { font-size: 9px !important; }
-                                  #receipt-print .text-xs.font-black { font-size: 8.5px !important; }
-                                  #receipt-print .py-2 { padding-top: 4px !important; padding-bottom: 4px !important; }
-                                  #receipt-print .my-1 { margin-top: 2px !important; margin-bottom: 2px !important; }
-                                  #receipt-print .pt-4 { padding-top: 8px !important; }
-                                  #receipt-print .mt-4 { margin-top: 8px !important; }
-                                  #receipt-print img { height: 55px !important; }
-                                  #receipt-print .w-32 { width: 6rem !important; }
-                                  #receipt-print .border-t-2 { border-top-width: 1px !important; }
-                                  .text-\[9px\] { font-size: 7px !important; }
-                                  .text-\[10px\] { font-size: 8px !important; }
-                                  .text-\[11px\] { font-size: 9px !important; }
-                                  .text-black\\/60 { color: rgba(0,0,0,0.6) !important; }
-                                  .space-y-3 > * + * { margin-top: 4px !important; }
-                                  .space-y-2 > * + * { margin-top: 2px !important; }
-                                  .space-y-1 > * + * { margin-top: 2px !important; }
-                                  .pt-4 { padding-top: 8px !important; }
-                                  .mt-4 { margin-top: 8px !important; }
-                                  .py-2 { padding-top: 4px !important; padding-bottom: 4px !important; }
-                                  .my-1 { margin-top: 2px !important; margin-bottom: 2px !important; }
-                              </style>
-                          </head>
-                          <body>
-                              <div id="receipt-print">
-                                  ${printContent}
-                              </div>
-                          </body>
-                      </html>
-                  `);
+                  iframeDoc.write(printableHtml);
                   iframeDoc.close();
                   
                   setTimeout(() => {
@@ -308,7 +367,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       setTimeout(() => {
                           document.body.removeChild(iframe);
                       }, 1000);
-                  }, 800);
+                  }, 500);
               }
             }}
           >
