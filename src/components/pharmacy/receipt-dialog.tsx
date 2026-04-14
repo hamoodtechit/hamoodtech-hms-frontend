@@ -217,7 +217,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               const address = general?.address || branch?.address || "Hospital Address";
               const phone = general?.phone || branch?.phone || "Phone";
 
-              const rows = normalizedItems.map(item => {
+              const rows = normalizedItems.map((item: any) => {
                 const itemTotal = item.price * item.quantity;
                 const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0);
                 const netItemTotal = itemTotal - itemDisc;
