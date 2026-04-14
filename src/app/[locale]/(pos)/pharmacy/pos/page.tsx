@@ -249,10 +249,6 @@ export default function POSPage() {
     genericName: filters.genericName || undefined,
   })
 
-  // Local search index for instant results
-  const { data: allMedicinesRes } = useAllMedicines(activeStoreId)
-  const allMedicines = allMedicinesRes?.data || []
-
   const medicines = productsRes?.pages.flatMap(page => page.data) || []
   const uniqueMedicines = medicines.filter((medicine, index, self) =>
     index === self.findIndex((m) => m.id === medicine.id)
@@ -403,16 +399,7 @@ export default function POSPage() {
   }
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    // Instant Barcode Match (bypassing debounce)
-    if (e.key === 'Enter' && searchQuery.trim() !== "") {
-        const barcodeMatch = allMedicines.find(m => m.barcode === searchQuery.trim())
-        if (barcodeMatch) {
-            handleAddToCart(barcodeMatch)
-            setSearchQuery("")
-            setSelectedIndex(0)
-            return
-        }
-    }
+    // Search results are now backend driven via useInfiniteMedicines
 
     if (filteredProducts.length === 0) return
 
@@ -433,27 +420,8 @@ export default function POSPage() {
     }
   }
 
-  // Hybrid search logic: Local filtering for small queries, API for everything else
-  const filteredProducts = (() => {
-    if (!searchQuery.trim() && !activeFilterCount && activeCategory === "All") {
-        return uniqueMedicines
-    }
-
-    // If typing, prioritize local fast filtering from 'allMedicines'
-    if (searchQuery.trim().length > 0 && allMedicines.length > 0) {
-        const query = searchQuery.toLowerCase()
-        const localResults = allMedicines.filter(m => 
-            m.name.toLowerCase().includes(query) || 
-            m.genericName?.toLowerCase().includes(query) ||
-            m.barcode?.includes(query)
-        )
-        // If we found local results, show them immediately
-        if (localResults.length > 0) return localResults
-    }
-
-    // Fallback to API results (which are handled by productsRes)
-    return uniqueMedicines
-  })()
+  // Use backend search results strictly
+  const filteredProducts = uniqueMedicines
 
   const processTransaction = async () => {
       if (!activeStoreId) {
