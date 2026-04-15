@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+console.log("Current API URL:", API_URL);
 
 export const api = axios.create({
   baseURL: API_URL,
