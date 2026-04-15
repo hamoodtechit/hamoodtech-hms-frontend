@@ -146,7 +146,7 @@ export function DutyRosterView() {
 
                 <TabsContent value="board" className="border-none p-0 outline-none">
                     <RosterCalendar 
-                        assignments={assignmentsRes?.data || []}
+                        assignments={Array.isArray(assignmentsRes?.data) ? assignmentsRes.data : []}
                         branchId={activeStoreId || ""}
                         onSelectEvent={(asgn) => {
                             if (window.confirm("Do you want to delete this assignment?")) {

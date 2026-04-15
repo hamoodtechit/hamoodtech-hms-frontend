@@ -41,26 +41,28 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
         const dateEmployeeMap: Record<string, string[]> = {} // "date_iso:employeeId" -> [rosterIds]
         const conflictSet = new Set<string>() // Store assignment IDs that have conflicts
 
-        assignments.forEach((asgn) => {
-            const dateKey = `${asgn.startDate.split('T')[0]}:${asgn.employeeId}`
-            if (!dateEmployeeMap[dateKey]) {
-                dateEmployeeMap[dateKey] = []
-            }
-            dateEmployeeMap[dateKey].push(asgn.id)
-            
-            if (dateEmployeeMap[dateKey].length > 1) {
-                dateEmployeeMap[dateKey].forEach(id => conflictSet.add(id))
-            }
+        if (Array.isArray(assignments)) {
+            assignments.forEach((asgn) => {
+                const dateKey = `${asgn.startDate.split('T')[0]}:${asgn.employeeId}`
+                if (!dateEmployeeMap[dateKey]) {
+                    dateEmployeeMap[dateKey] = []
+                }
+                dateEmployeeMap[dateKey].push(asgn.id)
+                
+                if (dateEmployeeMap[dateKey].length > 1) {
+                    dateEmployeeMap[dateKey].forEach(id => conflictSet.add(id))
+                }
 
-            eventsList.push({
-                id: asgn.id,
-                title: `${asgn.employee?.name} - ${asgn.roster?.shift?.name}`,
-                start: new Date(asgn.startDate),
-                end: new Date(asgn.endDate),
-                resource: asgn,
-                hasConflict: false // Will update below
+                eventsList.push({
+                    id: asgn.id,
+                    title: `${asgn.employee?.name} - ${asgn.roster?.shift?.name}`,
+                    start: new Date(asgn.startDate),
+                    end: new Date(asgn.endDate),
+                    resource: asgn,
+                    hasConflict: false // Will update below
+                })
             })
-        })
+        }
 
         // Mark conflicts in the event list
         eventsList.forEach(evt => {
@@ -75,10 +77,12 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
     // 2. Cloning Logic
     const handleClonePreviousMonth = async () => {
         const prevMonth = subMonths(currentDate, 1)
-        const prevMonthAssignments = assignments.filter(asgn => 
-            new Date(asgn.startDate).getMonth() === prevMonth.getMonth() &&
-            new Date(asgn.startDate).getFullYear() === prevMonth.getFullYear()
-        )
+        const prevMonthAssignments = Array.isArray(assignments) 
+            ? assignments.filter(asgn => 
+                new Date(asgn.startDate).getMonth() === prevMonth.getMonth() &&
+                new Date(asgn.startDate).getFullYear() === prevMonth.getFullYear()
+            )
+            : []
 
         if (prevMonthAssignments.length === 0) {
             toast.info("No assignments found in the previous month to copy.")
