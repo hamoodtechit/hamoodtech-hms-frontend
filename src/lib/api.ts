@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-srv.hamoodtech.com/api/v1'
+const API_URL = process.env.NEXT_PUBLIC_API_URL 
 console.log("Current API URL:", API_URL); // Updated at 15-04-2026
 
 export const api = axios.create({
