@@ -85,3 +85,151 @@
   color: white !important;
   border-color: hsl(var(--primary)) !important;
 }
+
+/* =============================================================
+   Duty Roster PRINT SYSTEM (Rigid 1/7th Grid)
+   ============================================================= */
+@media print {
+  @page {
+    size: landscape;
+    margin: 5mm !important;
+  }
+
+  /* Reset all elements to high-contrast white & black */
+  *, *::before, *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #000 !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Aggressively hide all non-roster elements */
+  nav, header, aside, footer, [role="tablist"], .no-print, button, 
+  .sidebar, .dashboard-header, .bg-muted\/30, .inline-flex, .flex-wrap {
+    display: none !important;
+  }
+
+  /* Fix main containers */
+  main, .main-content, .container, .space-y-6 {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    border: none !important;
+  }
+
+  /* RIGID GRID SYSTEM - FIXES SMASHED COLUMNS */
+  .rbc-calendar {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .rbc-month-view {
+    width: 100% !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 420px !important;
+    transform: scale(0.95) !important; /* Precision Scaling to fit 1 page */
+    transform-origin: top center !important;
+  }
+
+  .rbc-month-row {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    border-top: 1px solid #000 !important;
+    min-height: 60px !important;
+    overflow: visible !important;
+  }
+
+  /* FORCE 1/7th WIDTH ON ALL COLUMNS */
+  .rbc-header, .rbc-day-bg, .rbc-date-cell {
+    width: 14.285% !important;
+    max-width: 14.285% !important;
+    min-width: 14.285% !important;
+    flex: 0 0 14.285% !important;
+  }
+
+  .rbc-header {
+    background: #eee !important;
+    border-left: 1px solid #000 !important;
+    padding: 10px 0 !important;
+    text-align: center !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    font-size: 14px !important;
+  }
+
+  .rbc-row-bg {
+    display: flex !important;
+    flex-direction: row !important;
+    position: absolute !important;
+    top: 0; left: 0; right: 0; bottom: 0 !important;
+    z-index: 1 !important;
+    width: 100% !important;
+  }
+
+  .rbc-day-bg {
+    border-left: 1px solid #000 !important;
+    height: 100% !important;
+  }
+
+  .rbc-row-content {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .rbc-row {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+  }
+
+  .rbc-date-cell {
+    text-align: right !important;
+    padding: 5px !important;
+    font-weight: 900 !important;
+    font-size: 16px !important;
+  }
+
+  /* First column reset */
+  .rbc-header:first-child, .rbc-day-bg:first-child {
+    border-left: none !important;
+  }
+
+  /* Event Styles */
+  .rbc-event {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    border-left: 5px solid #000 !important;
+    color: #000 !important;
+    margin: 2px 5px !important;
+    padding: 2px 4px !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+  }
+
+  h2.text-xl {
+    margin-top: 15px !important;
+    text-align: center !important;
+    font-weight: 900 !important;
+  }
+}

@@ -387,3 +387,97 @@ export interface CommissionPaymentPayload {
   paymentMethod: string;
   note?: string;
 }
+
+// Duty Roster Types
+export interface Shift {
+  id: string;
+  branchId: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  totalHours?: number;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShiftPayload {
+  branchId: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  description?: string;
+}
+
+export interface ShiftFilters {
+  page?: number | string;
+  limit?: number | string;
+  searchTerm?: string;
+  branchId?: string;
+}
+
+export interface Roster {
+  id: string;
+  shiftId: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  shift?: Shift;
+}
+
+export interface RosterPayload {
+  shiftId: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface RosterFilters {
+  page?: number | string;
+  limit?: number | string;
+  shiftId?: string;
+  branchId?: string;
+}
+
+export interface AssignedRoster {
+  id: string;
+  rosterId: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  buildingName?: string;
+  floorName?: string;
+  sectionName?: string;
+  buildingId?: string; // For facility integration
+  floorId?: string;    // For facility integration
+  sectionId?: string;  // For facility integration
+  assignedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  roster?: Roster;
+  employee?: Employee;
+}
+
+export interface AssignedRosterPayload {
+  rosterId: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  buildingName?: string;
+  floorName?: string;
+  sectionName?: string;
+  buildingId?: string;
+  floorId?: string;
+  sectionId?: string;
+  assignedBy?: string;
+}
+
+export interface AssignedRosterFilters {
+  page?: number | string;
+  limit?: number | string;
+  rosterId?: string;
+  employeeId?: string;
+  branchId?: string;
+  startDate?: string;
+  endDate?: string;
+}

@@ -14,7 +14,13 @@ import {
   ApproveLeavePayload,
   ReferralPersonPayload,
   CommissionFilters,
-  CommissionPaymentPayload
+  CommissionPaymentPayload,
+  ShiftFilters,
+  ShiftPayload,
+  RosterFilters,
+  RosterPayload,
+  AssignedRosterFilters,
+  AssignedRosterPayload
 } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
@@ -36,6 +42,11 @@ export const HR_KEYS = {
   leaves: (params?: LeaveFilters) => params ? [...HR_KEYS.all, "leaves", params] as const : [...HR_KEYS.all, "leaves"] as const,
   leave: (id: string) => [...HR_KEYS.all, "leave", id] as const,
   commissions: (params?: CommissionFilters) => params ? [...HR_KEYS.all, "commissions", params] as const : [...HR_KEYS.all, "commissions"] as const,
+  shifts: (params?: ShiftFilters) => params ? [...HR_KEYS.all, "shifts", params] as const : [...HR_KEYS.all, "shifts"] as const,
+  shift: (id: string) => [...HR_KEYS.all, "shift", id] as const,
+  rosters: (params?: RosterFilters) => params ? [...HR_KEYS.all, "rosters", params] as const : [...HR_KEYS.all, "rosters"] as const,
+  roster: (id: string) => [...HR_KEYS.all, "roster", id] as const,
+  assignedRosters: (params?: AssignedRosterFilters) => params ? [...HR_KEYS.all, "assignedRosters", params] as const : [...HR_KEYS.all, "assignedRosters"] as const,
 };
 
 // Annual Calendar Hooks
@@ -432,6 +443,128 @@ export function useProcessCommissionPayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.commissions() });
       queryClient.invalidateQueries({ queryKey: HR_KEYS.all });
+    },
+  });
+}
+
+// Shift Hooks
+export function useShifts(params?: ShiftFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.shifts(params),
+    queryFn: () => hrService.getShifts(params),
+  });
+}
+
+export function useShift(id?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.shift(id!),
+    queryFn: () => hrService.getShiftById(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateShift() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ShiftPayload) => hrService.createShift(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.shifts() });
+    },
+  });
+}
+
+export function useUpdateShift() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ShiftPayload> }) => 
+      hrService.updateShift(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.shifts() });
+    },
+  });
+}
+
+export function useDeleteShift() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteShift(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.shifts() });
+    },
+  });
+}
+
+// Roster Hooks
+export function useRosters(params?: RosterFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.rosters(params),
+    queryFn: () => hrService.getRosters(params),
+  });
+}
+
+export function useRoster(id?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.roster(id!),
+    queryFn: () => hrService.getRosterById(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RosterPayload) => hrService.createRoster(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
+    },
+  });
+}
+
+export function useUpdateRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<RosterPayload> }) => 
+      hrService.updateRoster(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
+    },
+  });
+}
+
+export function useDeleteRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteRoster(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
+    },
+  });
+}
+
+// Assigned Roster Hooks
+export function useAssignedRosters(params?: AssignedRosterFilters) {
+  return useQuery({
+    queryKey: HR_KEYS.assignedRosters(params),
+    queryFn: () => hrService.getAssignedRosters(params),
+  });
+}
+
+export function useCreateAssignedRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AssignedRosterPayload) => hrService.createAssignedRoster(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.assignedRosters() });
+    },
+  });
+}
+
+export function useDeleteAssignedRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => hrService.deleteAssignedRoster(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.assignedRosters() });
     },
   });
 }
