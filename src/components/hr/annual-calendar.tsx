@@ -70,6 +70,7 @@ export function AnnualCalendarComponent({ calendars, onSelectEvent, onSelectSlot
           onSelectSlot={onSelectSlot}
           selectable={!!onSelectSlot}
           popup
+          drilldownView={null}
           className="font-sans"
           eventPropGetter={(event: any) => ({
             className: "rbc-event-custom",
@@ -78,6 +79,13 @@ export function AnnualCalendarComponent({ calendars, onSelectEvent, onSelectSlot
             }
           })}
           components={{
+            month: {
+              dateHeader: ({ label }: any) => (
+                <div className="rbc-button-link pointer-events-none">
+                  {label}
+                </div>
+              )
+            },
             event: ({ event }: any) => (
               <div className="flex flex-col truncate px-1">
                 <span className="font-bold leading-tight">{event.title}</span>

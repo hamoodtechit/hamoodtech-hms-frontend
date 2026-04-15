@@ -206,7 +206,7 @@ export function Sidebar() {
                 permission: "user:read",
           },
           {
-                label: "Attendance & Leaves",
+                label: "Time & Attendance",
                 href: "/hr/attendance-and-leaves",
                 module: "hr",
                 permission: "user:read",

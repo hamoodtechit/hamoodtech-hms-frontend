@@ -89,14 +89,17 @@ export function TransactionHistory() {
     dateRange: DateRange | undefined;
     status: string;
     paymentMethod: string;
+    paymentStatus: string;
   }>({
     dateRange: undefined,
     status: "all",
-    paymentMethod: "all"
+    paymentMethod: "all",
+    paymentStatus: "all"
   })
 
   const activeFilterCount = (filters.status !== "all" ? 1 : 0) + 
                             (filters.paymentMethod !== "all" ? 1 : 0) +
+                            (filters.paymentStatus !== "all" ? 1 : 0) +
                             (filters.dateRange ? 1 : 0)
 
   const fetchTransactions = async () => {
@@ -113,6 +116,7 @@ export function TransactionHistory() {
             page,
             search: debouncedSearch || undefined,
             status: filters.status !== "all" ? filters.status : undefined,
+            paymentStatus: filters.paymentStatus !== "all" ? filters.paymentStatus : undefined,
             startDate: filters.dateRange?.from ? format(filters.dateRange.from, 'yyyy-MM-dd') : undefined,
             endDate: filters.dateRange?.to ? format(filters.dateRange.to, 'yyyy-MM-dd') : undefined,
             paymentMethod: filters.paymentMethod !== "all" ? filters.paymentMethod : undefined
@@ -184,7 +188,7 @@ export function TransactionHistory() {
     if (isOpen && activeStoreId) {
         fetchTransactions()
     }
-  }, [isOpen, activeStoreId, debouncedSearch, page, activeTab])
+  }, [isOpen, activeStoreId, debouncedSearch, page, activeTab, filters])
 
   const handleReprint = (tx: UnifiedTransaction) => {
     if (tx.type === 'return') {
@@ -314,7 +318,7 @@ export function TransactionHistory() {
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
-                                    onClick={() => setFilters({ dateRange: undefined, status: "all", paymentMethod: "all" })}
+                                    onClick={() => setFilters({ dateRange: undefined, status: "all", paymentMethod: "all", paymentStatus: "all" })}
                                     className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
                                 >
                                     <X className="h-3 w-3" />
@@ -326,15 +330,21 @@ export function TransactionHistory() {
                                 <Label className="text-xs uppercase tracking-wider text-muted-foreground">Date Range</Label>
                                 <DatePickerWithRange 
                                     date={filters.dateRange} 
-                                    setDate={(range: DateRange | undefined) => setFilters(f => ({ ...f, dateRange: range }))}
+                                    setDate={(range: DateRange | undefined) => {
+                                        setFilters(f => ({ ...f, dateRange: range }))
+                                        setPage(1)
+                                    }}
                                 />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Status</Label>
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Sale Status</Label>
                                 <Select 
                                     value={filters.status} 
-                                    onValueChange={(val) => setFilters(f => ({ ...f, status: val }))}
+                                    onValueChange={(val) => {
+                                        setFilters(f => ({ ...f, status: val }))
+                                        setPage(1)
+                                    }}
                                 >
                                     <SelectTrigger className="h-9">
                                         <SelectValue placeholder="All Statuses" />
@@ -349,10 +359,34 @@ export function TransactionHistory() {
                             </div>
 
                             <div className="grid gap-2">
+                                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Status</Label>
+                                <Select 
+                                    value={filters.paymentStatus} 
+                                    onValueChange={(val) => {
+                                        setFilters(f => ({ ...f, paymentStatus: val }))
+                                        setPage(1)
+                                    }}
+                                >
+                                    <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="All Payment Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Payment Status</SelectItem>
+                                        <SelectItem value="paid">Paid</SelectItem>
+                                        <SelectItem value="due">Due</SelectItem>
+                                        <SelectItem value="partial">Partial</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
                                 <Label className="text-xs uppercase tracking-wider text-muted-foreground">Payment Method</Label>
                                 <Select 
                                     value={filters.paymentMethod} 
-                                    onValueChange={(val) => setFilters(f => ({ ...f, paymentMethod: val }))}
+                                    onValueChange={(val) => {
+                                        setFilters(f => ({ ...f, paymentMethod: val }))
+                                        setPage(1)
+                                    }}
                                 >
                                     <SelectTrigger className="h-9">
                                         <SelectValue placeholder="All Methods" />

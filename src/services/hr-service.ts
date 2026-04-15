@@ -24,7 +24,16 @@ import {
     ApproveLeavePayload,
     Commission,
     CommissionFilters,
-    CommissionPaymentPayload
+    CommissionPaymentPayload,
+    Shift,
+    ShiftPayload,
+    ShiftFilters,
+    Roster,
+    RosterPayload,
+    RosterFilters,
+    AssignedRoster,
+    AssignedRosterPayload,
+    AssignedRosterFilters
 } from "@/types/hr";
 
 export const hrService = {
@@ -288,6 +297,74 @@ export const hrService = {
 
   processCommissionPayment: async (data: CommissionPaymentPayload): Promise<{ success: boolean; message: string }> => {
     const response = await api.post<{ success: boolean; message: string }>("/referrals/commissions/payment", data);
+    return response.data;
+  },
+
+  // Shift APIs
+  getShifts: async (params?: ShiftFilters): Promise<HRPaginatedResponse<Shift>> => {
+    const response = await api.get<HRPaginatedResponse<Shift>>("/hr/shifts", { params });
+    return response.data;
+  },
+
+  createShift: async (data: ShiftPayload): Promise<{ success: boolean; data: Shift }> => {
+    const response = await api.post<{ success: boolean; data: Shift }>("/hr/shifts", data);
+    return response.data;
+  },
+
+  getShiftById: async (id: string): Promise<{ success: boolean; data: Shift }> => {
+    const response = await api.get<{ success: boolean; data: Shift }>(`/hr/shifts/${id}`);
+    return response.data;
+  },
+
+  updateShift: async (id: string, data: Partial<ShiftPayload>): Promise<{ success: boolean; data: Shift }> => {
+    const response = await api.patch<{ success: boolean; data: Shift }>(`/hr/shifts/${id}`, data);
+    return response.data;
+  },
+
+  deleteShift: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/shifts/${id}`);
+    return response.data;
+  },
+
+  // Roster APIs
+  getRosters: async (params?: RosterFilters): Promise<HRPaginatedResponse<Roster>> => {
+    const response = await api.get<HRPaginatedResponse<Roster>>("/hr/rosters", { params });
+    return response.data;
+  },
+
+  createRoster: async (data: RosterPayload): Promise<{ success: boolean; data: Roster }> => {
+    const response = await api.post<{ success: boolean; data: Roster }>("/hr/rosters", data);
+    return response.data;
+  },
+
+  getRosterById: async (id: string): Promise<{ success: boolean; data: Roster }> => {
+    const response = await api.get<{ success: boolean; data: Roster }>(`/hr/rosters/${id}`);
+    return response.data;
+  },
+
+  updateRoster: async (id: string, data: Partial<RosterPayload>): Promise<{ success: boolean; data: Roster }> => {
+    const response = await api.patch<{ success: boolean; data: Roster }>(`/hr/rosters/${id}`, data);
+    return response.data;
+  },
+
+  deleteRoster: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/rosters/${id}`);
+    return response.data;
+  },
+
+  // Assigned Roster APIs
+  getAssignedRosters: async (params?: AssignedRosterFilters): Promise<HRPaginatedResponse<AssignedRoster>> => {
+    const response = await api.get<HRPaginatedResponse<AssignedRoster>>("/hr/assigned-rosters", { params });
+    return response.data;
+  },
+
+  createAssignedRoster: async (data: AssignedRosterPayload): Promise<{ success: boolean; data: AssignedRoster }> => {
+    const response = await api.post<{ success: boolean; data: AssignedRoster }>("/hr/assigned-rosters", data);
+    return response.data;
+  },
+
+  deleteAssignedRoster: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/assigned-rosters/${id}`);
     return response.data;
   },
 };
