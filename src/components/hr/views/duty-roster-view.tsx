@@ -169,7 +169,7 @@ export function DutyRosterView() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {shiftsRes?.data?.map((shift) => (
+                                {Array.isArray(shiftsRes?.data) && shiftsRes.data.map((shift) => (
                                     <TableRow key={shift.id}>
                                         <TableCell className="font-semibold">{shift.name}</TableCell>
                                         <TableCell>
@@ -192,7 +192,7 @@ export function DutyRosterView() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {(!shiftsRes?.data || shiftsRes.data.length === 0) && (
+                                {(!Array.isArray(shiftsRes?.data) || shiftsRes.data.length === 0) && (
                                     <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No shift templates found. Create one to get started.
@@ -216,7 +216,7 @@ export function DutyRosterView() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {rostersRes?.data?.map((roster) => (
+                                {Array.isArray(rostersRes?.data) && rostersRes.data.map((roster) => (
                                     <TableRow key={roster.id}>
                                         <TableCell className="font-medium">{roster.shift?.name}</TableCell>
                                         <TableCell>{format(new Date(roster.startDate), "PPP")}</TableCell>
@@ -228,7 +228,7 @@ export function DutyRosterView() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {(!rostersRes?.data || rostersRes.data.length === 0) && (
+                                {(!Array.isArray(rostersRes?.data) || rostersRes.data.length === 0) && (
                                     <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No roster periods defined.
