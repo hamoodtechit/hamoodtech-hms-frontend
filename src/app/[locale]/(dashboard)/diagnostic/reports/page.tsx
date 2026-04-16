@@ -183,38 +183,8 @@ export default function DiagnosticReportsPage() {
 
     const allReports = reportsRes?.data || []
 
-    // Strict report filtering on frontend (secondary safety layer)
-    const reports = useMemo(() => {
-        if (isAdmin) return allReports
-        
-        return allReports.filter(report => {
-            // Strict check: If user is assigned to a specific department, only show that ID
-            if (activeDepartmentId && activeDepartmentId !== 'all') {
-                return report.departmentId === activeDepartmentId;
-            }
-
-            // Fallback check
-            const reportDept = departments.find(d => d.id === report.departmentId);
-            const reportDeptName = reportDept?.name?.toLowerCase();
-
-            if (reportDeptName) {
-                if (isPathologyUser) return reportDeptName === 'pathology';
-                return reportDeptName !== 'pathology';
-            }
-
-            // Deeper fallback for items
-            const items = report.diagnosticTests || report.testItems || [];
-            const hasPathology = items.some((t: any) => {
-                const itemDeptId = t.departmentId || t.service?.departmentId;
-                const itemDeptName = t.service?.department?.name?.toLowerCase() || 
-                                   departments.find(d => d.id === itemDeptId)?.name?.toLowerCase();
-                return itemDeptName === 'pathology';
-            });
-            
-            if (isPathologyUser) return hasPathology
-            return !hasPathology
-        })
-    }, [allReports, isAdmin, isPathologyUser, departments, activeDepartmentId])
+    // Display raw results from API directly (removed frontend safety filter for manual testing)
+    const reports = allReports
 
     const activeFilterCount = [
         sampleStatus !== 'all',
