@@ -5,7 +5,7 @@ import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function OPDBillingPage() {
     return (
-        <PermissionGuard permission="pathology:create">
+        <PermissionGuard permission={["pathology:create", "sale:create"]}>
             <DiagnosticBillingForm 
                 type="opd"
                 title="OPD Billing"

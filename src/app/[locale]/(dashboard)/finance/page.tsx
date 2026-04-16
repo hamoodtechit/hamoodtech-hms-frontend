@@ -84,24 +84,6 @@ export default function FinancePage() {
                                     Transactions
                                 </TabsTrigger>
                             )}
-                            {hasPermission('expense:read') && (
-                                <TabsTrigger 
-                                    value="expenses" 
-                                    className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
-                                >
-                                    <DollarSign className="h-4 w-4" />
-                                    Expenses
-                                </TabsTrigger>
-                            )}
-                            {hasPermission('expense-category:read') && (
-                                <TabsTrigger 
-                                    value="categories" 
-                                    className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    Categories
-                                </TabsTrigger>
-                            )}
                         </TabsList>
                     </div>
 
@@ -263,17 +245,6 @@ export default function FinancePage() {
                         </PermissionGuard>
                     </TabsContent>
 
-                    <TabsContent value="expenses">
-                        <PermissionGuard permission="expense:read" mode="silent">
-                            <ExpenseList />
-                        </PermissionGuard>
-                    </TabsContent>
-
-                    <TabsContent value="categories">
-                        <PermissionGuard permission="expense-category:read" mode="silent">
-                            <ExpenseCategoryList />
-                        </PermissionGuard>
-                    </TabsContent>
                 </Tabs>
 
                  <WithdrawDialog 

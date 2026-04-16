@@ -9,13 +9,18 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import {
+    Ambulance,
+    BarChart3,
     Building2,
     ChevronLeft,
     ChevronRight,
+    FlaskConical,
     LayoutDashboard,
+    Microscope,
     Pill,
     Receipt,
     Settings,
+    Stethoscope,
     Users,
     Wallet
 } from "lucide-react"
@@ -43,10 +48,15 @@ export function Sidebar() {
     module?: string
     children?: {
         label: string
-        href: string
+        href?: string
         permission?: string | string[]
         module?: string
     }[]
+  }
+
+  interface SidebarSection {
+    category: string
+    items: Route[]
   }
 
   const { hasPermission, hasModuleAccess, user } = usePermissions() // Ensure hasPermission is used
@@ -69,214 +79,302 @@ export function Sidebar() {
     if (!isOpen) toggle() // Auto-open sidebar if expanding a menu
   }
 
-  const routes: Route[] = [
+  const sections: SidebarSection[] = [
     {
-      label: t("dashboard"),
-      icon: LayoutDashboard,
-      href: "/dashboard",
-      color: "text-sky-400",
-      permission: "dashboard:read",
-    },
-    {
-      label: "Pharmacy",
-      icon: Pill,
-      color: "text-pink-400",
-      module: "pharmacy",
-      children: [
-          {
-                label: "POS System",
-                href: "/pharmacy/pos",
-                permission: "sale:create",
-          },
-          {
-                label: "Sales History",
-                href: "/sales?type=pos",
-                permission: "sale:read",
-          },
-          {
-                label: "Returns",
-                href: "/sales/returns?type=pos",
-                permission: "sale-return:read",
-          },
-          {
-              label: "Stocks",
-              href: "/pharmacy/inventory",
-              permission: "stock:read",
-          },
-          {
-              label: "Purchase Orders",
-              href: "/purchases?type=pharmacy",
-              permission: "purchase:read",
-          },
-          {
-              label: "Suppliers",
-              href: "/suppliers",
-              permission: "supplier:read",
-          },
-          {
-              label: "Medicines",
-              href: "/pharmacy/inventory/medicines",
-              permission: "medicine:read",
-          },
-          {
-            label: "Pharmacy Reports",
-            href: "/reports",
-            module: "sales",
-            permission: "sale:read",
-          },
-          {
-            label: "Pharmacy Setup",
-            href: "/pharmacy/setup",
-            permission: "medicine-category:read",
-          }
+      category: "Main",
+      items: [
+        {
+          label: t("dashboard"),
+          icon: LayoutDashboard,
+          href: "/dashboard",
+          color: "text-sky-400",
+          permission: "dashboard:read",
+        },
       ]
     },
     {
-      label: "Clinical Operations",
-      icon: Building2,
-      color: "text-blue-400",
-      children: [
-          {
-              label: t("patients"),
+      category: "CLINICAL DEPARTMENTS",
+      items: [
+        {
+          label: "Patient Care",
+          icon: Stethoscope,
+          color: "text-blue-400",
+          children: [
+            {
+              label: "All Patients",
               href: "/patients",
               module: "patients",
               permission: "patient:read",
-          },
-          {
+            },
+            {
+              label: "OPD Patients",
+              href: "/patients?type=opd",
+              module: "patients",
+              permission: "patient:read",
+            },
+            {
+              label: "IPD Patients",
+              href: "/patients?type=ipd",
+              module: "patients",
+              permission: "patient:read",
+            },
+            {
+              label: "Appointments",
+              href: "/appointments",
+              permission: "appointment:read",
+            }
+          ]
+        },
+        {
+          label: "Clinical Ops",
+          icon: FlaskConical,
+          color: "text-indigo-400",
+          children: [
+            {
               label: "Diagnostic Reports",
               href: "/diagnostic/reports",
               module: "diagnostic",
               permission: ["pathology:read", "radiology:read"],
-          }
+            },
+            {
+              label: "Lab Management",
+              module: "diagnostic",
+              permission: "pathology:read",
+            },
+            {
+              label: "Prescriptions",
+              permission: "patient:read",
+            }
+          ]
+        }
       ]
     },
     {
-      label: "Billing & Collection",
-      icon: Receipt,
-      color: "text-indigo-600",
-      children: [
-          {
-              label: "Appointment Billing",
-              href: "/billing/appointment",
-              module: "appointment",
-              permission: "appointment:create",
-          },
-          {
+      category: "RESOURCE MANAGEMENT",
+      items: [
+        {
+          label: "Pharmacy & Stores",
+          icon: Pill,
+          color: "text-pink-400",
+          module: "pharmacy",
+          children: [
+            {
+              label: "POS System",
+              href: "/pharmacy/pos",
+              permission: "sale:create",
+            },
+            {
+              label: "Sales History",
+              href: "/sales?type=pos",
+              permission: "sale:read",
+            },
+            {
+              label: "Returns",
+              href: "/sales/returns?type=pos",
+              permission: "sale-return:read",
+            },
+            {
+              label: "Stock Management",
+              href: "/pharmacy/inventory",
+              permission: "stock:read",
+            },
+            {
+              label: "Purchase Orders",
+              href: "/purchases?type=pharmacy",
+              permission: "purchase:read",
+            },
+            {
+              label: "Medicines Catalog",
+              href: "/pharmacy/inventory/medicines",
+              permission: "medicine:read",
+            },
+            {
+              label: "Suppliers",
+              href: "/suppliers",
+              permission: "supplier:read",
+            },
+            {
+              label: "Pharmacy Reports",
+              href: "/reports",
+              module: "sales",
+              permission: "sale:read",
+            }
+          ]
+        },
+        {
+          label: "Ambulance Service",
+          icon: Ambulance,
+          color: "text-rose-500",
+          children: [
+            {
+              label: "Active Dispatch",
+            },
+            {
+              label: "Vehicle Directory",
+            },
+            {
+              label: "Driver Roster",
+            }
+          ]
+        }
+      ]
+    },
+    {
+      category: "FINANCIALS",
+      items: [
+        {
+          label: "Billing & Collection",
+          icon: Receipt,
+          color: "text-indigo-600",
+          children: [
+            {
               label: "OPD Billing",
               href: "/billing/opd",
               module: "sales",
-              permission: "pathology:create",
-          },
-          {
-              label: "IPD Billing",
+              permission: ["pathology:create", "sale:create"],
+            },
+            {
+              label: "IPD Billing & Ledgers",
               href: "/billing/ipd",
               module: "patients",
-              permission: "patient:read",
-          },
-          {
-              label: "Referral Billing",
-              href: "/billing/referral-billing",
-              module: "hr",
-              permission: "referral:read",
-          }
-      ]
-    },
-    {
-      label: "Finance & Accounts",
-      icon: Wallet,
-      color: "text-emerald-500",
-      children: [
-          {
-              label: "Finance / Accounts",
+              permission: ["patient:read", "sale:create"],
+            },
+            {
+              label: "All Invoices / Receipts",
+              href: "/sales",
+              permission: ["sale:read", "sale:create"],
+            },
+            {
+              label: "Appointment Billing",
+              href: "/billing/appointment",
+              module: "appointment",
+              permission: ["appointment:create", "sale:create"],
+            },
+            {
+              label: "Insurance & TPA",
+            }
+          ]
+        },
+        {
+          label: "Finance & Accounts",
+          icon: Wallet,
+          color: "text-emerald-500",
+          children: [
+            {
+              label: "Expense Tracking",
+              href: "/finance/expenses",
+              permission: "account:read",
+            },
+            {
+              label: "General Ledger",
               href: "/finance",
               module: "finance",
               permission: "account:read",
-          }
+            }
+          ]
+        }
       ]
     },
     {
-      label: "HR Management",
-      icon: Users,
-      color: "text-orange-500",
-      children: [
-          {
-                label: "Employees",
-                href: "/hr/employees",
-                module: "hr",
-                permission: "user:read",
-          },
-          {
-                label: "Time & Attendance",
-                href: "/hr/attendance-and-leaves",
-                module: "hr",
-                permission: "user:read",
-          },
-          {
-                label: "Departments",
-                href: "/hr/departments",
-                module: "hr",
-                permission: "department:read",
-          },
-          {
-                label: "Designations",
-                href: "/hr/designations",
-                module: "hr",
-                permission: "designation:read",
-          },
-          {
-                label: "Referral Persons",
-                href: "/hr/referrals",
-                module: "hr",
-                permission: "user:read",
-          }
-      ]
-    },
-    {
-      label: "Administration",
-      icon: Settings,
-      color: "text-zinc-500",
-      children: [
-          {
-              label: "Hospital Services",
+      category: "ADMINISTRATION",
+      items: [
+        {
+          label: "HR & Staff",
+          icon: Users,
+          color: "text-orange-500",
+          children: [
+            {
+              label: "Staff Directory",
+              href: "/hr/employees",
+              module: "hr",
+              permission: "user:read",
+            },
+            {
+              label: "Attendance & Shifts",
+              href: "/hr/attendance-and-leaves",
+              module: "hr",
+              permission: "user:read",
+            },
+            {
+              label: "Departments & Roles",
+              href: "/hr/departments",
+              module: "hr",
+              permission: "department:read",
+            },
+            {
+              label: "Payroll & Salary",
+            },
+            {
+              label: "Referral Network",
+              href: "/hr/referrals",
+              module: "hr",
+              permission: "user:read",
+            }
+          ]
+        },
+        {
+          label: "Clinical Services",
+          icon: Settings,
+          color: "text-zinc-500",
+          children: [
+            {
+              label: "Service Setup",
               href: "/diagnostic",
               module: "diagnostic",
               permission: "diagnostic-test:read",
-          },
-          {
-              label: "Branches",
-              href: "/branches",
-              module: "branches",
-              permission: "branch:read",
-          },
-          {
-              label: "Facility Management",
-              href: "/facility",
-              permission: "facility:read",
-          },
-          {
+            },
+            {
+              label: "Service Categories",
+            }
+          ]
+        },
+        {
+          label: "System & Settings",
+          icon: Settings,
+          color: "text-zinc-500",
+          children: [
+            {
               label: "User Management",
               href: "/settings/users",
               module: "users",
               permission: "user:read",
-          },
-          {
+            },
+            {
+              label: "Facility Management",
+              href: "/facility",
+              permission: "facility:read",
+            },
+            {
               label: "Roles & Permissions",
               href: "/settings/roles",
               module: "users",
               permission: "role:read",
-          },
-          {
+            },
+            {
+              label: "Pharmacy Setup",
+              href: "/pharmacy/setup",
+              permission: "medicine-category:read",
+            },
+            {
+              label: "System Settings",
+              href: "/settings",
+              module: "settings",
+              permission: "settings:read",
+            },
+            {
+              label: "Branches",
+              href: "/branches",
+              module: "branches",
+              permission: "branch:read",
+            },
+            {
               label: "Media Library",
               href: "/media",
               module: "media",
               permission: "media:read",
-          },
-          {
-            label: t("settings"),
-            href: "/settings",
-            module: "settings",
-            permission: "settings:read",
-          },
+            }
+          ]
+        }
       ]
     },
   ]
@@ -311,8 +409,8 @@ export function Sidebar() {
           return hasMod && hasPerm;
       }
 
-  const filterRoutes = (items: typeof routes): typeof routes => {
-      return items.reduce<typeof routes>((acc, route) => {
+  const filterRoutes = (items: Route[]): Route[] => {
+      return items.reduce<Route[]>((acc, route) => {
           if (route.children) {
               const filteredChildren = route.children.filter(child => checkAccess(child))
 
@@ -327,7 +425,7 @@ export function Sidebar() {
 
               if (route.href && checkAccess(route)) {
                   const { children, ...rest } = route
-                  acc.push(rest as any)
+                  acc.push(rest as Route)
                   return acc
               }
               
@@ -342,7 +440,13 @@ export function Sidebar() {
       }, [])
   }
 
-  const visibleRoutes = filterRoutes(routes)
+  const visibleSections = sections.reduce<SidebarSection[]>((acc, section) => {
+    const filteredItems = filterRoutes(section.items)
+    if (filteredItems.length > 0) {
+      acc.push({ ...section, items: filteredItems })
+    }
+    return acc
+  }, [])
 
   return (
     <div className={cn(
@@ -376,90 +480,112 @@ export function Sidebar() {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 py-6 px-3 min-h-0">
-        <div className="space-y-2">
-          {visibleRoutes.map((route) => {
-             // Check if children exist
-             if (route.children) {
-                 const isExpanded = expanded[route.label]
-                 // Check if any child is active to auto-expand? 
-                 // (Can add useEffect for this, but manual toggle is fine for now)
-                 const isActiveParent = route.children.some(child => pathname === child.href)
-                 
-                 return (
-                     <div key={route.label} className="space-y-1">
-                        <button
-                            onClick={() => toggleExpand(route.label)}
-                            className={cn(
-                                "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
-                                (isActiveParent || isExpanded) && "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/5"
+        <div className="space-y-6">
+          {visibleSections.map((section) => (
+            <div key={section.category} className="space-y-2">
+              {section.category !== "Main" && isOpen && (
+                <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 opacity-60">
+                  {section.category}
+                </h3>
+              )}
+              <div className="space-y-1">
+                {section.items.map((route) => {
+                  // Check if children exist
+                  if (route.children) {
+                      const isExpanded = expanded[route.label]
+                      const isActiveParent = route.children.some(child => pathname === child.href)
+                      
+                      return (
+                          <div key={route.label} className="space-y-1">
+                            <button
+                                onClick={() => toggleExpand(route.label)}
+                                className={cn(
+                                    "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
+                                    (isActiveParent || isExpanded) && "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/5"
+                                )}
+                            >
+                                <div className={cn("flex items-center flex-1", !isOpen && "justify-center")}>
+                                    <route.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", route.color, isOpen && "mr-3")} />
+                                    {isOpen && <span className="font-medium text-sm">{route.label}</span>}
+                                </div>
+                                {isOpen && (
+                                    <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isExpanded && "rotate-90")} />
+                                )}
+                            </button>
+
+                            {/* Dropdown Items */}
+                            {isOpen && isExpanded && (
+                                <div className="pl-12 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                                    {route.children.map(child => {
+                                        // Check child permission using robust checkAccess
+                                        if (!checkAccess(child)) return null
+
+                                        const isChildActive = child.href ? pathname === child.href : false
+                                        
+                                        const content = (
+                                            <div
+                                                className={cn(
+                                                    "block p-2 text-sm rounded-lg transition-colors",
+                                                    isChildActive 
+                                                        ? "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium" 
+                                                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
+                                                    !child.href && "cursor-default hover:bg-transparent dark:hover:bg-transparent"
+                                                )}
+                                            >
+                                                {child.label}
+                                            </div>
+                                        )
+
+                                        if (child.href) {
+                                            return (
+                                                <Link
+                                                    key={child.href}
+                                                    href={child.href}
+                                                >
+                                                    {content}
+                                                </Link>
+                                            )
+                                        }
+
+                                        return <div key={child.label}>{content}</div>
+                                    })}
+                                </div>
                             )}
-                        >
-                            <div className={cn("flex items-center flex-1", !isOpen && "justify-center")}>
-                                <route.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", route.color, isOpen && "mr-3")} />
-                                {isOpen && <span className="font-medium text-sm">{route.label}</span>}
-                            </div>
-                            {isOpen && (
-                                <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isExpanded && "rotate-90")} />
-                            )}
-                        </button>
+                          </div>
+                      )
+                  }
 
-                        {/* Dropdown Items */}
-                        {isOpen && isExpanded && (
-                            <div className="pl-12 space-y-1 animate-in slide-in-from-top-2 duration-200">
-                                {route.children.map(child => {
-                                    // Check child permission using robust checkAccess
-                                    if (!checkAccess(child)) return null
-
-                                    const isChildActive = pathname === child.href
-                                    return (
-                                        <Link
-                                            key={child.href}
-                                            href={child.href}
-                                            className={cn(
-                                                "block p-2 text-sm rounded-lg transition-colors",
-                                                isChildActive 
-                                                    ? "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium" 
-                                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
-                                            )}
-                                        >
-                                            {child.label}
-                                        </Link>
-                                    )
-                                })}
-                            </div>
-                        )}
-                     </div>
-                 )
-             }
-
-             const isActive = pathname === route.href || (route.href && pathname.startsWith(`${route.href}/`))
-             return (
-                <Link
-                key={route.href}
-                href={route.href!}
-                className={cn(
-                    "relative flex items-center p-3 rounded-xl transition-all duration-200 group overflow-hidden",
-                    isActive 
-                        ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm dark:shadow-md backdrop-blur-sm" 
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
-                )}
-                >
-                {isActive && (
-                    <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-full" />
-                )}
-                
-                <div className={cn("flex items-center flex-1", !isOpen && "justify-center")}>
-                    <route.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", route.color, isOpen && "mr-3")} />
-                    {isOpen && <span className="font-medium text-sm">{route.label}</span>}
-                </div>
-                
-                {/* Hover Glow Effect */}
-                {!isActive && (
-                    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent transition-opacity pointer-events-none" />
-                )}
-                </Link>
-             )
-          })}
+                  const isActive = pathname === route.href || (route.href && pathname.startsWith(`${route.href}/`))
+                  return (
+                    <Link
+                    key={route.href}
+                    href={route.href!}
+                    className={cn(
+                        "relative flex items-center p-3 rounded-xl transition-all duration-200 group overflow-hidden",
+                        isActive 
+                            ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm dark:shadow-md backdrop-blur-sm" 
+                            : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
+                    )}
+                    >
+                    {isActive && (
+                        <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-full" />
+                    )}
+                    
+                    <div className={cn("flex items-center flex-1", !isOpen && "justify-center")}>
+                        <route.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", route.color, isOpen && "mr-3")} />
+                        {isOpen && <span className="font-medium text-sm">{route.label}</span>}
+                    </div>
+                    
+                    {/* Hover Glow Effect */}
+                    {!isActive && (
+                        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent transition-opacity pointer-events-none" />
+                    )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </ScrollArea>
 

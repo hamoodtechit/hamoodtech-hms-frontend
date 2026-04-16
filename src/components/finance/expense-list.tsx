@@ -43,7 +43,7 @@ export function ExpenseList() {
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold tracking-tight">Expense Transactions</h2>
+                    <h2 className="text-xl font-semibold tracking-tight">Expense Tracking</h2>
                     <p className="text-sm text-muted-foreground">List of all recorded expenses across the hospital.</p>
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">

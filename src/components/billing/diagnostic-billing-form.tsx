@@ -108,9 +108,13 @@ export function DiagnosticBillingForm({
     const { user } = useAuthStore()
 
     // Permission check
-    const canCreateSale = type === 'pathology' 
-        ? hasPermission('pathology:create') 
-        : hasPermission('radiology:create')
+    const canCreateSale = hasPermission('sale:create') || (
+        type === 'pathology' 
+            ? hasPermission('pathology:create') 
+            : type === 'radiology'
+                ? hasPermission('radiology:create')
+                : (hasPermission('pathology:create') || hasPermission('radiology:create'))
+    )
 
     // Data Fetching
     const { data: testsRes } = useDiagnosticTests({ 
@@ -205,14 +209,16 @@ export function DiagnosticBillingForm({
     }, [selectedDoctorId, users])
 
     // Handlers
-    const handleAddTest = () => {
-        if (!selectedTestId) return
+    const handleAddTest = (serviceId?: string) => {
+        const testIdToAdd = serviceId || selectedTestId
+        if (!testIdToAdd) return
         
-        const test = allTests.find(t => t.id === selectedTestId)
+        const test = allTests.find(t => t.id === testIdToAdd)
         if (!test) return
 
         if (cart.some(item => item.testId === test.id)) {
             toast.error("This service is already added to the bill")
+            setSelectedTestId("")
             return
         }
 
@@ -475,20 +481,17 @@ export function DiagnosticBillingForm({
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Catalog</Label>
                                     <SearchableSelect 
                                         value={selectedTestId}
-                                        onChange={setSelectedTestId}
-                                        options={allTests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(Number(t.price))}` }))}
+                                        onChange={(val) => {
+                                            setSelectedTestId(val)
+                                            if (val) handleAddTest(val)
+                                        }}
+                                        options={allTests.map(t => ({ 
+                                            id: t.id, 
+                                            name: `${t.name} [${t.department?.name || 'N/A'}] - ${formatCurrency(Number(t.price))}` 
+                                        }))}
                                         placeholder="Enter Service Code or Name..."
                                         showAll={false}
                                     />
-                                </div>
-                                <div className="flex items-end">
-                                    <Button 
-                                        onClick={handleAddTest} 
-                                        disabled={!selectedTestId}
-                                        className="h-11 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-black shadow-lg shadow-indigo-500/20 gap-2 transition-all active:scale-95 w-full lg:w-auto"
-                                    >
-                                        <Plus className="h-4 w-4" /> Add Item
-                                    </Button>
                                 </div>
                             </div>
 

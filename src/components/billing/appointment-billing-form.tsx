@@ -69,7 +69,7 @@ export function AppointmentBillingForm() {
     const { pharmacy } = useSettingsStore()
 
     // Permission check
-    const canCreateSale = hasPermission('sale:create')
+    const canCreateSale = hasPermission('sale:create') || hasPermission('appointment:create')
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
@@ -188,6 +188,7 @@ export function AppointmentBillingForm() {
 
     // Cart Helpers
     const addToCart = (service: any) => {
+        if (!service) return
         const existing = cart.find(item => item.serviceId === service.id)
         if (existing) {
             setCart(cart.map(item => item.serviceId === service.id ? { ...item, quantity: item.quantity + 1 } : item))
@@ -485,22 +486,21 @@ export function AppointmentBillingForm() {
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
                                     <SearchableSelect 
-                                        options={allTests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(t.price)}` }))}
+                                        options={allTests.map(t => ({ 
+                                            id: t.id, 
+                                            name: `${t.name} [${t.department?.name || 'N/A'}] - ${formatCurrency(t.price)}` 
+                                        }))}
                                         value={selectedServiceId}
-                                        onChange={setSelectedServiceId}
+                                        onChange={(val) => {
+                                            setSelectedServiceId(val)
+                                            if (val) {
+                                                const service = allTests.find(t => t.id === val)
+                                                if (service) addToCart(service)
+                                            }
+                                        }}
                                         placeholder="Scan or Search Service Name..."
                                     />
                                 </div>
-                                <Button 
-                                    onClick={() => {
-                                        const service = allTests.find(t => t.id === selectedServiceId)
-                                        if (service) addToCart(service)
-                                    }}
-                                    className="h-11 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-black shadow-lg shadow-indigo-500/20 gap-2 transition-all active:scale-95"
-                                    disabled={!selectedServiceId}
-                                >
-                                    <Plus className="h-4 w-4" /> Add Item
-                                </Button>
                             </div>
 
                             {cart.length > 0 ? (

@@ -88,17 +88,6 @@ export default function AppointmentsPage() {
                         <h1 className="text-3xl font-black tracking-tight text-primary">Appointments</h1>
                         <p className="text-muted-foreground text-sm font-medium">Manage patient schedules and doctor availability.</p>
                     </div>
-                    {hasPermission('appointment:create') && (
-                        <Button 
-                            onClick={() => {
-                                setSelectedAppointment(null)
-                                setAppointmentDialogOpen(true)
-                            }}
-                            className="rounded-xl shadow-lg shadow-primary/20 gap-2"
-                        >
-                            <Plus className="h-4 w-4" /> Schedule Appointment
-                        </Button>
-                    )}
                 </div>
 
                 <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">

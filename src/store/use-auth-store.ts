@@ -2,6 +2,7 @@ import { authService } from '@/services/auth-service';
 import Cookies from 'js-cookie';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Employee } from '@/types/hr';
 
 export interface Permission {
   key: string;
@@ -27,6 +28,8 @@ export interface User {
   permissions: string[]; // Direct permissions (e.g. ["*"])
   employeeId?: string | null;
   branchId?: string | null;
+  departmentId?: string | null;
+  employee?: Employee | null;
 }
 
 

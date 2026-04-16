@@ -23,7 +23,8 @@ import {
     TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDiagnosticReports, useUpdateReport } from "@/hooks/diagnostic-queries"
+import { useDiagnosticReports, useDiagnosticTests, useUpdateReport } from "@/hooks/diagnostic-queries"
+import { useDepartments } from "@/hooks/hr-queries"
 import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
@@ -31,6 +32,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticReport, ReportStatus, SampleStatus } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { useAuthStore } from "@/store/use-auth-store"
 import {
     Activity,
     Beaker,
@@ -47,7 +49,7 @@ import {
     Truck,
     X
 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { DateRange } from "react-day-picker"
 
@@ -59,6 +61,11 @@ export default function DiagnosticReportsPage() {
     const [page, setPage] = useState(1)
     const [barcodeFilter, setBarcodeFilter] = useState("")
     const [testGroupId, setTestGroupId] = useState<string | 'all'>('all')
+    const [departmentId, setDepartmentId] = useState<string | 'all'>('all')
+    const [serviceId, setServiceId] = useState<string | 'all'>('all')
+    const [isSampleCollected, setIsSampleCollected] = useState<string | 'all'>('all')
+    const [isDelivered, setIsDelivered] = useState<string | 'all'>('all')
+    const [reportStatus, setReportStatus] = useState<string | 'all'>('all')
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [filterOpen, setFilterOpen] = useState(false)
     const [debouncedSearch] = useDebounce(search, 500)
@@ -78,6 +85,69 @@ export default function DiagnosticReportsPage() {
     const searchParams = useSearchParams()
     const urlPatientId = searchParams.get('patientId')
     const { activeStoreId } = useStoreContext()
+    const { user } = useAuthStore()
+    
+    const userRole = user?.role?.name?.toLowerCase() || ""
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin'
+    const userEmployeeDeptId = user?.departmentId || user?.employee?.departmentId || user?.employee?.department?.id
+
+    console.log("🛠️ Diagnostic Debug:", {
+        user,
+    })
+
+    const { data: departmentsRes } = useDepartments({ limit: 100 })
+    const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })
+    
+    const departments = departmentsRes?.data || []
+    const services = servicesRes?.data || []
+
+    // Determine if user belongs to pathology department (via role or employee record)
+    const isPathologyUser = useMemo(() => {
+        if (isAdmin) return false;
+        if (userEmployeeDeptId) {
+            const dept = departments.find(d => d.id === userEmployeeDeptId);
+            return dept?.name?.toLowerCase() === 'pathology';
+        }
+        if (userRole === 'pathology' || userRole === 'pathologist') return true;
+        return false;
+    }, [userRole, userEmployeeDeptId, departments, isAdmin]);
+
+    // Filter departments based on employee's designated departmentId (Primary) or role (Fallback)
+    const filteredDepartments = useMemo(() => {
+        if (isAdmin) return departments
+
+        if (userEmployeeDeptId) {
+            const assignedDept = departments.filter(d => d.id === userEmployeeDeptId);
+            if (assignedDept.length > 0) return assignedDept;
+        }
+        
+        if (isPathologyUser) {
+            return departments.filter(d => d.name.toLowerCase() === 'pathology')
+        }
+        return departments.filter(d => d.name.toLowerCase() !== 'pathology')
+    }, [isAdmin, isPathologyUser, departments, userEmployeeDeptId])
+
+    // Determine actual department ID for API call (Strict for non-admins)
+    const activeDepartmentId = useMemo(() => {
+        if (isAdmin) return departmentId === 'all' ? undefined : departmentId;
+        
+        // Priority 1: Direct or nested department ID
+        if (userEmployeeDeptId) return userEmployeeDeptId;
+
+        // Priority 2: Match by role name directly to the fetched departments (Very robust)
+        const roleDept = departments.find(d => {
+            const dName = d.name.toLowerCase();
+            const rName = userRole.toLowerCase();
+            return dName === rName || 
+                   (rName.includes('patholog') && dName.includes('patholog')) ||
+                   (rName.includes('radiolog') && (dName.includes('radiolog') || dName.includes('imaging') || dName.includes('usg') || dName.includes('x-ray')));
+        });
+        
+        if (roleDept) return roleDept.id;
+
+        // Priority 3: Filter selection
+        return departmentId === 'all' ? undefined : departmentId;
+    }, [isAdmin, userEmployeeDeptId, departmentId, filteredDepartments, departments, userRole]);
 
     const canReadPathology = hasPermission('pathology:read')
     const canReadRadiology = hasPermission('radiology:read')
@@ -92,20 +162,69 @@ export default function DiagnosticReportsPage() {
         search: debouncedSearch || undefined,
         barcode: debouncedBarcode || undefined,
         testGroupId: testGroupId === 'all' ? undefined : testGroupId,
+        departmentId: activeDepartmentId,
+        serviceId: serviceId === 'all' ? undefined : serviceId,
+        isSampleCollected: isSampleCollected === 'all' ? undefined : isSampleCollected,
+        isDelivered: isDelivered === 'all' ? undefined : isDelivered,
+        status: reportStatus === 'all' ? undefined : reportStatus,
         patientId: urlPatientId || undefined,
         startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
         endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
     }, { enabled: canRead })
 
+    // Auto-select and enforce department selection for non-admins
+    useEffect(() => {
+        if (!isAdmin && activeDepartmentId && activeDepartmentId !== 'all' && activeDepartmentId !== departmentId) {
+            setDepartmentId(activeDepartmentId)
+        } else if (!isAdmin && filteredDepartments.length === 1 && departmentId === 'all') {
+            setDepartmentId(filteredDepartments[0].id)
+        }
+    }, [isAdmin, activeDepartmentId, departmentId, filteredDepartments])
+
     const allReports = reportsRes?.data || []
 
-    // List of reports
-    const reports = allReports
+    // Strict report filtering on frontend (secondary safety layer)
+    const reports = useMemo(() => {
+        if (isAdmin) return allReports
+        
+        return allReports.filter(report => {
+            // Strict check: If user is assigned to a specific department, only show that ID
+            if (activeDepartmentId && activeDepartmentId !== 'all') {
+                return report.departmentId === activeDepartmentId;
+            }
+
+            // Fallback check
+            const reportDept = departments.find(d => d.id === report.departmentId);
+            const reportDeptName = reportDept?.name?.toLowerCase();
+
+            if (reportDeptName) {
+                if (isPathologyUser) return reportDeptName === 'pathology';
+                return reportDeptName !== 'pathology';
+            }
+
+            // Deeper fallback for items
+            const items = report.diagnosticTests || report.testItems || [];
+            const hasPathology = items.some((t: any) => {
+                const itemDeptId = t.departmentId || t.service?.departmentId;
+                const itemDeptName = t.service?.department?.name?.toLowerCase() || 
+                                   departments.find(d => d.id === itemDeptId)?.name?.toLowerCase();
+                return itemDeptName === 'pathology';
+            });
+            
+            if (isPathologyUser) return hasPathology
+            return !hasPathology
+        })
+    }, [allReports, isAdmin, isPathologyUser, departments, activeDepartmentId])
 
     const activeFilterCount = [
         sampleStatus !== 'all',
         barcodeFilter !== '',
         testGroupId !== 'all',
+        departmentId !== 'all',
+        serviceId !== 'all',
+        isSampleCollected !== 'all',
+        isDelivered !== 'all',
+        reportStatus !== 'all',
         !!dateRange?.from,
         !!dateRange?.to,
     ].filter(Boolean).length
@@ -238,7 +357,17 @@ export default function DiagnosticReportsPage() {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-6 px-2 text-[10px] font-bold text-destructive hover:text-destructive"
-                                                                onClick={() => { setSampleStatus('all'); setBarcodeFilter(''); setPage(1) }}
+                                                                onClick={() => { 
+                                                                    setSampleStatus('all'); 
+                                                                    setBarcodeFilter(''); 
+                                                                    setDepartmentId('all');
+                                                                    setServiceId('all');
+                                                                    setIsSampleCollected('all');
+                                                                    setIsDelivered('all');
+                                                                    setReportStatus('all');
+                                                                    setDateRange(undefined);
+                                                                    setPage(1) 
+                                                                }}
                                                             >
                                                                 Clear All
                                                             </Button>
@@ -277,6 +406,89 @@ export default function DiagnosticReportsPage() {
                                                         </div>
                                                     </div>
 
+                                                    <div className="grid grid-cols-2 gap-3 pb-2 border-b">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Department</Label>
+                                                            <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setPage(1) }}>
+                                                                <SelectTrigger className="h-8 rounded-lg bg-muted/50 border-none text-[10px] font-bold">
+                                                                    <SelectValue placeholder="All" />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="rounded-xl">
+                                                                    {(isAdmin || filteredDepartments.length > 1) && (
+                                                                        <SelectItem value="all" className="text-[10px] font-bold">
+                                                                            {isAdmin ? "All Departments" : "All Permitted"}
+                                                                        </SelectItem>
+                                                                    )}
+                                                                    {filteredDepartments.map(dept => (
+                                                                        <SelectItem key={dept.id} value={dept.id} className="text-[10px] font-bold">{dept.name}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Service / Test</Label>
+                                                            <Select value={serviceId} onValueChange={(v) => { setServiceId(v); setPage(1) }}>
+                                                                <SelectTrigger className="h-8 rounded-lg bg-muted/50 border-none text-[10px] font-bold">
+                                                                    <SelectValue placeholder="All" />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="rounded-xl max-h-[300px]">
+                                                                    <SelectItem value="all" className="text-[10px] font-bold">All Services</SelectItem>
+                                                                    {services.filter(s => departmentId === 'all' || s.departmentId === departmentId).map(service => (
+                                                                        <SelectItem key={service.id} value={service.id} className="text-[10px] font-bold truncate">
+                                                                            {service.name}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 pb-2 border-b">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Is Sample Collected</Label>
+                                                            <Select value={isSampleCollected} onValueChange={(v) => { setIsSampleCollected(v); setPage(1) }}>
+                                                                <SelectTrigger className="h-8 rounded-lg bg-muted/50 border-none text-[10px] font-bold">
+                                                                    <SelectValue placeholder="All" />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="rounded-xl">
+                                                                    <SelectItem value="all" className="text-[10px] font-bold">Both</SelectItem>
+                                                                    <SelectItem value="true" className="text-[10px] font-bold text-emerald-600">Yes (Collected)</SelectItem>
+                                                                    <SelectItem value="false" className="text-[10px] font-bold text-amber-600">No (Pending)</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Is Delivered</Label>
+                                                            <Select value={isDelivered} onValueChange={(v) => { setIsDelivered(v); setPage(1) }}>
+                                                                <SelectTrigger className="h-8 rounded-lg bg-muted/50 border-none text-[10px] font-bold">
+                                                                    <SelectValue placeholder="All" />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="rounded-xl">
+                                                                    <SelectItem value="all" className="text-[10px] font-bold">Both</SelectItem>
+                                                                    <SelectItem value="true" className="text-[10px] font-bold text-emerald-600">Yes (Delivered)</SelectItem>
+                                                                    <SelectItem value="false" className="text-[10px] font-bold text-amber-600">No (Pending)</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1.5 pb-2 border-b">
+                                                        <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Advanced Status</Label>
+                                                        <Select value={reportStatus} onValueChange={(v) => { setReportStatus(v); setPage(1) }}>
+                                                            <SelectTrigger className="h-8 rounded-lg bg-muted/50 border-none text-[10px] font-bold">
+                                                                <SelectValue placeholder="All Statuses" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-xl">
+                                                                <SelectItem value="all" className="text-[10px] font-bold">All Workflows</SelectItem>
+                                                                {Object.entries(statusConfig).map(([val, config]) => (
+                                                                    <SelectItem key={val} value={val} className="text-[10px] font-bold">
+                                                                        {config.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
                                                     <div className="space-y-2 pt-2 border-t">
                                                         <Label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Select Date Range</Label>
                                                         <DatePickerWithRange 
@@ -291,13 +503,43 @@ export default function DiagnosticReportsPage() {
                                     </div>
                                 </div>
 
-                                {/* Active filter chips */}
+                                 {/* Active filter chips */}
                                 {activeFilterCount > 0 && (
                                     <div className="flex items-center gap-2 flex-wrap">
                                         {sampleStatus !== 'all' && (
                                             <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
-                                                Sample: {sampleStatus}
+                                                Sample Status: {sampleStatus}
                                                 <button onClick={() => setSampleStatus('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {departmentId !== 'all' && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                Dept: {departments.find(d => d.id === departmentId)?.name}
+                                                <button onClick={() => setDepartmentId('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {serviceId !== 'all' && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                Service: {services.find(s => s.id === serviceId)?.name}
+                                                <button onClick={() => setServiceId('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {isSampleCollected !== 'all' && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                {isSampleCollected === 'true' ? 'Sample Collected' : 'Sample Pending'}
+                                                <button onClick={() => setIsSampleCollected('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {isDelivered !== 'all' && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                {isDelivered === 'true' ? 'Delivered' : 'Not Delivered'}
+                                                <button onClick={() => setIsDelivered('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
+                                            </Badge>
+                                        )}
+                                        {reportStatus !== 'all' && (
+                                            <Badge variant="secondary" className="rounded-full text-[10px] font-bold gap-1 pr-1">
+                                                Status: {statusConfig[reportStatus]?.label}
+                                                <button onClick={() => setReportStatus('all')} className="hover:opacity-70"><X className="h-2.5 w-2.5" /></button>
                                             </Badge>
                                         )}
                                         {barcodeFilter && (
@@ -373,16 +615,51 @@ export default function DiagnosticReportsPage() {
                                                         <span className="text-[10px] text-muted-foreground font-medium">{report.patient?.phone}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col max-w-[250px] overflow-hidden">
-                                                        <span className="text-xs font-black tracking-tight text-blue-900 truncate">
-                                                            {report.diagnosticTests && report.diagnosticTests.length > 0 
-                                                                ? report.diagnosticTests.map(t => t.itemName).join(', ') 
-                                                                : "No tests found"}
-                                                        </span>
-                                                        <span className="text-[9px] uppercase font-bold text-muted-foreground/60 tracking-widest mt-0.5">
-                                                            {report.diagnosticTests?.length || 0} Test items
-                                                        </span>
+                                                <TableCell className="max-w-[280px]">
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                            {((report.diagnosticTests && report.diagnosticTests.length > 0) || (report.testItems && report.testItems.length > 0)) ? (
+                                                                <>
+                                                                    {(report.diagnosticTests || report.testItems || []).slice(0, 2).map((test: any, idx: number) => (
+                                                                        <span key={idx} className="text-[11px] font-extrabold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
+                                                                            {test.itemName}
+                                                                        </span>
+                                                                    ))}
+                                                                    {(report.diagnosticTests || report.testItems || []).length > 2 && (
+                                                                        <Popover>
+                                                                            <PopoverTrigger asChild>
+                                                                                <button className="text-[10px] font-black bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded-md transition-all active:scale-95 border border-primary/20 cursor-pointer">
+                                                                                    +{(report.diagnosticTests || report.testItems || []).length - 2} MORE
+                                                                                </button>
+                                                                            </PopoverTrigger>
+                                                                            <PopoverContent className="w-64 p-3 rounded-xl shadow-2xl border-primary/10" side="right" align="start">
+                                                                                <div className="space-y-2">
+                                                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground border-b pb-1.5 mb-2">
+                                                                                        Tests In Requisition ({(report.diagnosticTests || report.testItems || []).length})
+                                                                                    </p>
+                                                                                    <div className="flex flex-col gap-1.5 max-h-[250px] overflow-y-auto pr-1">
+                                                                                        {(report.diagnosticTests || report.testItems || []).map((t: any, i: number) => (
+                                                                                            <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50">
+                                                                                                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                                                                                <span className="text-xs font-bold text-foreground">{t.itemName}</span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </PopoverContent>
+                                                                        </Popover>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-[10px] font-bold text-muted-foreground italic">No tests found</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 opacity-60">
+                                                            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
+                                                            <span className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">
+                                                                {(report.diagnosticTests?.length || report.testItems?.length || 0)} WORK ITEMS
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
