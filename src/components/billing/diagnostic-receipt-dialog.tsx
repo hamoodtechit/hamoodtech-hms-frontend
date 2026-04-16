@@ -131,10 +131,6 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
     return (
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
         <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
-        {/* Side Watermark / Vertical Text */}
-        <div className="absolute -left-8 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] text-gray-500 tracking-wider whitespace-nowrap hidden print:block font-bold">
-            PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()} | Powered by Hamood Tech
-        </div>
 
         {/* PAID Hologram */}
         {isFullPaid && (
@@ -316,7 +312,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
             ) : (
                 <>
                     <ReceiptContent copyTitle="OFFICE COPY" />
-                    <div className="print:block" style={{ height: "40px" }}></div>
+                    <div className="page-break" />
                     <ReceiptContent copyTitle="CUSTOMER COPY" />
                 </>
             )}
@@ -469,6 +465,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
                                   .whitespace-nowrap { white-space: nowrap !important; }
                                   .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+                                  .page-break { page-break-after: always !important; }
                                   body { margin: 0 !important; padding: 0 !important; }
                                   @page { margin: 5mm !important; }
                                 </style>

@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
+    DialogTitle,
+} from "@/components/ui/dialog"
+import {
     Sheet,
     SheetContent,
     SheetHeader,
@@ -170,12 +173,16 @@ export function ReportDetailSheet({ open, onOpenChange, report, onEdit }: Report
 
                         {/* Tests List */}
                         <Section title="Tests in Report" icon={Beaker}>
-                            <div className="py-2 flex flex-wrap gap-2">
-                                {detail.diagnosticTests?.map((t, i) => (
-                                    <Badge key={i} variant="secondary" className="bg-blue-500/5 text-blue-700 font-bold border-blue-100">
-                                        {t.service?.name || t.itemName}
-                                    </Badge>
-                                ))}
+                            <div className="py-2 flex flex-wrap gap-2 items-center">
+                                {((detail as any)?.diagnosticTests || (detail as any)?.testItems || []).length > 0 ? (
+                                    ((detail as any)?.diagnosticTests || (detail as any)?.testItems || []).map((t: any, i: number) => (
+                                        <Badge key={i} variant="secondary" className="bg-blue-500/5 text-blue-700 font-bold border-blue-100 px-3 py-1">
+                                            {t.service?.name || t.itemName}
+                                        </Badge>
+                                    ))
+                                ) : (
+                                    <span className="text-xs font-bold text-muted-foreground italic">No tests found</span>
+                                )}
                             </div>
                         </Section>
 
@@ -217,29 +224,41 @@ export function ReportDetailSheet({ open, onOpenChange, report, onEdit }: Report
                                                 if (block.type === 'parameter') {
                                                     return (
                                                         <div key={block.id} className={cn(
-                                                            "flex items-center justify-between py-2 border-b border-border/30 last:border-0",
-                                                            block.isHeader && "bg-primary/5 px-2 rounded-lg py-3 my-1",
+                                                            "py-1 border-b border-border/30 last:border-0",
+                                                            block.isHeader && "bg-primary/5 px-2 rounded-lg py-2 my-1",
                                                             block.isAbnormal && "bg-red-500/5 px-2 rounded-lg"
                                                         )}>
-                                                            <div className="flex-1">
-                                                                <p className={cn(
-                                                                    "text-xs font-semibold",
-                                                                    block.isHeader ? "font-black text-primary uppercase" : "text-muted-foreground",
-                                                                    block.isBold && "font-bold text-foreground"
-                                                                )}>
-                                                                    {block.parameter}
-                                                                </p>
-                                                            </div>
-                                                            {block.value !== undefined && (
-                                                                <div className="text-right">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex-1 min-w-0">
                                                                     <p className={cn(
-                                                                        "text-sm font-black",
-                                                                        block.isAbnormal && "text-red-600"
+                                                                        "text-xs font-semibold truncate",
+                                                                        block.isHeader ? "font-black text-primary uppercase" : "text-muted-foreground",
+                                                                        block.isBold && "font-bold text-foreground"
                                                                     )}>
-                                                                        {block.value}
-                                                                        {block.isAbnormal && <span className="ml-1 text-[10px]">(H)</span>}
+                                                                        {block.parameter}
+                                                                        {block.isHeader && block.machineInfo && (
+                                                                            <span className="ml-2 text-[10px] font-bold text-muted-foreground/60 uppercase italic tracking-tighter">
+                                                                                | {block.machineInfo}
+                                                                            </span>
+                                                                        )}
                                                                     </p>
-                                                                    {block.unit && <p className="text-[9px] font-bold text-muted-foreground uppercase">{block.unit}</p>}
+                                                                </div>
+                                                                {block.value !== undefined && (
+                                                                    <div className="text-right shrink-0">
+                                                                        <p className={cn(
+                                                                            "text-sm font-black",
+                                                                            block.isAbnormal && "text-red-600"
+                                                                        )}>
+                                                                            {block.value}
+                                                                            {block.isAbnormal && <span className="ml-1 text-[10px]">(H)</span>}
+                                                                        </p>
+                                                                        {block.unit && <p className="text-[9px] font-bold text-muted-foreground uppercase">{block.unit}</p>}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {block.referenceRange && !block.isHeader && (
+                                                                <div className="mt-1 text-[9px] text-muted-foreground/60 font-medium italic leading-tight">
+                                                                    Ref: <span dangerouslySetInnerHTML={{ __html: block.referenceRange.replace(/\n/g, '') }} />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -271,7 +290,9 @@ export function ReportDetailSheet({ open, onOpenChange, report, onEdit }: Report
                                                             {row.parameter}
                                                         </p>
                                                         {!row.isHeader && row.referenceRange && (
-                                                            <p className="text-[9px] text-muted-foreground mt-0.5">Ref: {row.referenceRange}</p>
+                                                            <div className="text-[9px] text-muted-foreground mt-0.5 leading-tight">
+                                                                Ref: <span dangerouslySetInnerHTML={{ __html: row.referenceRange.replace(/\n/g, '') }} />
+                                                            </div>
                                                         )}
                                                     </div>
                                                     {!row.isHeader && (

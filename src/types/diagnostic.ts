@@ -112,6 +112,7 @@ export interface DiagnosticBlock {
   isAbnormal?: boolean;
   isBold?: boolean;
   isHeader?: boolean; // For sub-headers within parameters
+  machineInfo?: string;
   // Narrative / Impression / Note fields
   content?: string;
   // For dynamic values in custom columns
@@ -145,6 +146,7 @@ export interface DiagnosticReport {
   branchId: string;
   doctorId?: string | null;
   saleId?: string | null;
+  departmentId?: string | null;
   medicalTechnologistId?: string | null;
   
   // New simplified arrays
@@ -258,6 +260,11 @@ export interface DiagnosticReportParams {
   patientId?: string;
   startDate?: string;
   endDate?: string;
+  status?: string;
+  isSampleCollected?: string;
+  isDelivered?: string;
+  serviceId?: string;
+  departmentId?: string;
 }
 export interface DiagnosticTestParams {
   page?: number;

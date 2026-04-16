@@ -99,7 +99,7 @@ export default function IPDBillingPage() {
     }
 
     return (
-        <PermissionGuard permission="patient:read">
+        <PermissionGuard permission={["patient:read", "sale:create"]}>
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>

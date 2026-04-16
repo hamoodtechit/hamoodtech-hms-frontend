@@ -204,7 +204,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
                     <DialogHeader className="p-6 pb-0">
-                        <DialogTitle>{isEdit ? "Edit Appointment" : "Schedule New Appointment"}</DialogTitle>
+                        <DialogTitle>{isEdit ? "Edit Appointment" : "Manage New Schedule"}</DialogTitle>
                         <DialogDescription>
                             Enter the details to {isEdit ? "update" : "schedule"} a patient appointment.
                         </DialogDescription>

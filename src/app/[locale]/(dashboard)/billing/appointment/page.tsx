@@ -5,7 +5,7 @@ import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function AppointmentBillingPage() {
     return (
-        <PermissionGuard permission="appointment:create">
+        <PermissionGuard permission={["appointment:create", "sale:create"]}>
             <AppointmentBillingForm />
         </PermissionGuard>
     )

@@ -123,9 +123,9 @@ export function PrintReport({ report }: PrintReportProps) {
                                             key={cIdx} 
                                             style={{ width: col.width }} 
                                             className={cn(
-                                                "py-1.5 px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
+                                                "py-1 px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
                                                 col.key !== 'parameter' && "text-center",
-                                                isParameter && (block.isBold || block.isHeader) ? (isParamHeader ? "font-black text-black uppercase text-[11pt] tracking-tight pt-3 pb-1" : "font-bold italic text-black") : "",
+                                                isParameter && (block.isBold || block.isHeader) ? (isParamHeader ? "font-black text-black uppercase text-[11pt] tracking-tight pt-2 pb-0.5" : "font-bold italic text-black") : "",
                                                 isResult && "font-black"
                                             )}
                                         >
@@ -141,7 +141,13 @@ export function PrintReport({ report }: PrintReportProps) {
                                                         </span>
                                                     )}
                                                 </div>
-                                            ) : (isParamHeader && !isParameter ? "" : val)}
+                                            ) : (
+                                                (isParamHeader && !isParameter) ? "" : (
+                                                    typeof val === 'string' 
+                                                        ? <div className="leading-tight" dangerouslySetInnerHTML={{ __html: val.replace(/\n/g, '') }} />
+                                                        : val
+                                                )
+                                            )}
                                         </td>
                                     );
                                 })}
