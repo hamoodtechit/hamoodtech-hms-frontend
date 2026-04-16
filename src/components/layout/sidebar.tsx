@@ -302,6 +302,12 @@ export function Sidebar() {
               permission: "department:read",
             },
             {
+              label: "Designations",
+              href: "/hr/designations",
+              module: "hr",
+              permission: "designation:read",
+            },
+            {
               label: "Payroll & Salary",
             },
             {
