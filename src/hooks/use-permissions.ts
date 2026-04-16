@@ -17,13 +17,17 @@ export function usePermissions() {
     }
 
     // 2. Check Role name as a reliable fallback for Super Admin access
-    const roleName = user.role?.name?.toLowerCase();
+    const rawRoleName = user.role?.name?.toLowerCase() || '';
+    const normalizedRoleName = rawRoleName.replace(/[\s\-_]+/g, '');
+    
     if (
-      roleName === 'super admin' || 
-      roleName === 'admin' || 
-      roleName === 'system admin' || 
-      roleName === 'hospital admin' ||
-      roleName === 'branch admin'
+      normalizedRoleName === 'superadmin' || 
+      normalizedRoleName === 'admin' || 
+      normalizedRoleName === 'systemadmin' || 
+      normalizedRoleName === 'hospitaladmin' ||
+      normalizedRoleName === 'branchadmin' ||
+      rawRoleName.includes('super admin') ||
+      rawRoleName.includes('hospital admin')
     ) {
       return true;
     }
