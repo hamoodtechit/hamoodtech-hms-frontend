@@ -222,25 +222,12 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                             </div>
                         ) : (
                             <div className="text-black bg-white antialiased font-sans">
-                                {/* Header Section */}
-                                <div className="flex flex-col items-center text-center mb-0 gap-0">
-                                    <div className="flex justify-center mb-0.5">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '70px', width: 'auto', objectFit: 'contain' }} />
-                                    </div>
-                                    
-                                    <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%', color: '#000' }} className="mb-1">
-                                        {general?.hospitalName || branch?.name || 'PATWARY GENERAL HOSPITAL'}
-                                    </h1>
-                                    
-                                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }} className="mb-1">
-                                        {(general?.address || branch?.address || 'Hospital Address').split(',').map(s => s.trim()).join(', ')}
-                                    </p>
-                                    
-                                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', color: '#000' }}>
-                                        Ph: {general?.phone || branch?.phone || "Hospital Phone"}
-                                    </p>
-                                </div>
+                                {/* 
+                                 * HOSPITAL HEADER REMOVED 
+                                 * As per User Request: Utilizing pre-printed letterheads (pads).
+                                 * We only print patient info and results.
+                                 */}
+                                <div className="pt-[35mm]" />
 
                                 {/* Structured Info Box */}
                                 <div className="border border-black border-dashed mb-2 mt-4 overflow-hidden">
@@ -398,10 +385,6 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                     <span>Printed By: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}</span>
                                 </div>
 
-                                {/* Vertical Side Label */}
-                                <div className="vertical-metadata hidden print:block">
-                                    PRINTED BY: {user?.fullName?.toUpperCase()} {user?.phone ? `(${user.phone})` : ''} - {new Date().toLocaleString()}
-                                </div>
                             </div>
                         )}
                     </div>
