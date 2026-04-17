@@ -91,9 +91,7 @@ export default function DiagnosticReportsPage() {
     const isAdmin = userRole === 'admin' || userRole === 'superadmin'
     const userEmployeeDeptId = user?.departmentId || user?.employee?.departmentId || user?.employee?.department?.id
 
-    console.log("🛠️ Diagnostic Debug:", {
-        user,
-    })
+    
 
     const { data: departmentsRes } = useDepartments({ limit: 100 })
     const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })

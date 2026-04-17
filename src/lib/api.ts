@@ -2,8 +2,8 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-console.log("Current API URL:", API_URL); // Updated at 15-04-2026
+const API_URL = process.env.NEXT_PUBLIC_API_URL 
+
 
 export const api = axios.create({
   baseURL: API_URL,

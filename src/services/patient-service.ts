@@ -42,31 +42,31 @@ export const patientService = {
   // Admissions
   getAdmissions: async (params?: AdmissionQueryParams): Promise<AdmissionListResponse> => {
     const response = await api.get<AdmissionListResponse>('/patients/admissions', { params });
-    console.log('GET /patients/admissions response:', response.data);
+   
     return response.data;
   },
 
   getAdmission: async (id: string): Promise<{ success: boolean; data: { patientAdmission: Admission; sale?: any } }> => {
     const response = await api.get<{ success: boolean; data: { patientAdmission: Admission; sale?: any } }>(`/patients/admissions/${id}`);
-    console.log('GET /patients/admissions/:id response:', response.data);
+   
     return response.data;
   },
 
   createAdmission: async (data: AdmissionPayload): Promise<{ success: boolean; message: string; data: Admission }> => {
     const response = await api.post<{ success: boolean; message: string; data: Admission }>('/patients/admissions', data);
-    console.log('POST /patients/admissions response:', response.data);
+    
     return response.data;
   },
 
   updateAdmission: async (id: string, data: Partial<AdmissionPayload>): Promise<{ success: boolean; message: string; data: Admission }> => {
     const response = await api.patch<{ success: boolean; message: string; data: Admission }>(`/patients/admissions/${id}`, data);
-    console.log('PATCH /patients/admissions response:', response.data);
+    
     return response.data;
   },
 
   deleteAdmission: async (id: string): Promise<{ success: boolean; message: string }> => {
     const response = await api.delete<{ success: boolean; message: string }>(`/patients/admissions/${id}`);
-    console.log('DELETE /patients/admissions response:', response.data);
+    
     return response.data;
   },
 
@@ -85,3 +85,4 @@ export const patientService = {
     return response.data;
   },
 };
+

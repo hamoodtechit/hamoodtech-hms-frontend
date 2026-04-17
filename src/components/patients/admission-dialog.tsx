@@ -130,11 +130,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     
     
 
-    useEffect(() => {
-        if (bedsRes) {
-            console.log('Available Beds for Admission:', bedsRes.data);
-        }
-    }, [bedsRes]);
+    
 
     useEffect(() => {
         if (open) {

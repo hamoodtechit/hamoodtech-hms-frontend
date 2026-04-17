@@ -44,9 +44,7 @@ export function ReferralQuickSettleDialog({
     })
 
     useEffect(() => {
-        if (commissionsRes) {
-            console.log('--- [DEBUG] Commissions API Response (Loaded) ---', commissionsRes);
-        }
+        
         if (error) {
             console.error('--- [DEBUG] Commissions API Error ---', error);
         }
