@@ -214,8 +214,8 @@ export function PrintReport({ report }: PrintReportProps) {
                                         {/* Narrative Style: Simplified Patient Info (Patwary Sample) */}
                                         <div className="flex justify-between items-start mb-8 text-[11.5pt] font-serif leading-relaxed text-black">
                                             <div className="space-y-1">
-                                                <p><span className="font-bold inline-block w-24">Patient ID</span>: <span className="font-black">{barcode.toUpperCase()}</span></p>
-                                                <p><span className="font-bold inline-block w-24">PtsName</span>: <span className="font-black uppercase">{patient?.name}</span></p>
+                                                <p><span className="font-bold inline-block w-24">Patient ID</span>: <span className="font-black">{patient?.patientNumber || barcode.toUpperCase()}</span></p>
+                                                <p><span className="font-bold inline-block w-24">Name</span>: <span className="font-black uppercase">{patient?.name}</span></p>
                                                 <p><span className="font-bold inline-block w-24">Refd. By</span>: <span className="font-black uppercase">{result?.consultantName || doctor?.fullName || 'SELF'}</span></p>
                                                 <p className="pl-24 text-[9.5pt] font-bold italic opacity-80 leading-tight">
                                                     {result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name}
@@ -223,7 +223,8 @@ export function PrintReport({ report }: PrintReportProps) {
                                             </div>
                                             <div className="text-right space-y-1">
                                                 <p><span className="font-bold inline-block w-16 text-left">Date</span>: {detail?.createdAt ? format(new Date(detail.createdAt), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")}</p>
-                                                <p><span className="font-bold inline-block w-16 text-left">Age</span>: {patient?.age ? `${patient.age} year` : "—"} <span className="ml-2 font-bold">Sex</span>: <span className="capitalize">{patient?.gender || "—"}</span></p>
+                                                <p><span className="font-bold inline-block w-16 text-left">Age</span>: {patient?.age ? `${patient.age} year` : "—"}</p>
+                                                <p><span className="font-bold inline-block w-16 text-left">Sex</span>: <span className="capitalize">{patient?.gender || "—"}</span></p>
                                             </div>
                                         </div>
 
@@ -377,13 +378,17 @@ export function PrintReport({ report }: PrintReportProps) {
                                 if (isNarrativeGroup) {
                                     return (
                                         <div className="flex justify-between items-end font-serif px-2">
-                                            {/* Left Side: Prepared By (Manual Style) */}
+                                            {/* Left Side: Prepared By (Professional Style) */}
                                             <div className="text-left w-[40%]">
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="font-bold text-[11pt] border-b border-black pb-0.5">Prepared By</span>
-                                                    <span className="font-black text-black text-[12pt] border-b border-black/40 pb-0.5 min-w-[120px]">
-                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
-                                                    </span>
+                                                <div className="flex flex-col items-start gap-1">
+                                                     <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                                    <p className="font-bold text-[11pt] text-black italic">Prepared By</p>
+                                                    <p className="font-black text-black text-[14pt] leading-tight uppercase tracking-tight">
+                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName}
+                                                    </p>
+                                                    <p className="text-[10pt] font-bold text-black italic opacity-80">
+                                                        {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation}
+                                                    </p>
                                                 </div>
                                             </div>
 
@@ -391,7 +396,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                             <div className="text-right w-[50%]">
                                                 <div className="ml-auto mb-1 w-64 h-[2.5px] bg-black" />
                                                 <p className="font-black text-black text-[16pt] leading-tight uppercase tracking-tight">
-                                                    Dr. {doctor?.fullName || "Manik Rana."}
+                                                    {doctor?.fullName || ""}
                                                 </p>
                                                 <p className="text-[11pt] font-bold text-black italic mt-1 border-t border-black/20 pt-1 inline-block">
                                                     {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name || "MBBS, CMU(Ultra)."}
