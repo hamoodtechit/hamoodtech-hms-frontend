@@ -212,16 +212,16 @@ export function PrintReport({ report }: PrintReportProps) {
                                 return (
                                     <>
                                         {/* Standardized Boxed Patient Info (Unified across all modes) */}
-                                        <div className="border-y-2 border-black py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                        <div className="py-6 mb-10 bg-white text-black text-[11pt] font-serif">
                                             <table className="w-full border-collapse text-[11pt]">
                                                 <tbody>
-                                                    <tr className="border-b border-black/10">
+                                                    <tr >
                                                         <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
                                                         <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
                                                         <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
                                                         <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
                                                     </tr>
-                                                    <tr className="border-b border-black/10">
+                                                    <tr >
                                                         <td className="pr-1 py-1.5 font-bold">Name</td>
                                                         <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
                                                         <td className="pr-1 py-1.5 font-bold">Report Date</td>
@@ -267,16 +267,16 @@ export function PrintReport({ report }: PrintReportProps) {
                                     </div>
 
                                     {/* Standard Style: Boxed Patient Info */}
-                                    <div className="border-y-2 border-black py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                    <div className="py-6 mb-10 bg-white text-black text-[11pt] font-serif">
                                         <table className="w-full border-collapse text-[11pt]">
                                             <tbody>
-                                                <tr className="border-b border-black/10">
+                                                <tr >
                                                     <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
                                                     <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
                                                     <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
                                                     <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
                                                 </tr>
-                                                <tr className="border-b border-black/10">
+                                                <tr >
                                                     <td className="pr-1 py-1.5 font-bold">Name</td>
                                                     <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
                                                     <td className="pr-1 py-1.5 font-bold">Report Date</td>
