@@ -22,12 +22,7 @@ export function usePermissions() {
     
     if (
       normalizedRoleName === 'superadmin' || 
-      normalizedRoleName === 'admin' || 
-      normalizedRoleName === 'systemadmin' || 
-      normalizedRoleName === 'hospitaladmin' ||
-      normalizedRoleName === 'branchadmin' ||
-      rawRoleName.includes('super admin') ||
-      rawRoleName.includes('hospital admin')
+      normalizedRoleName === 'admin'
     ) {
       return true;
     }
@@ -53,16 +48,28 @@ export function usePermissions() {
     return permissions.every(permission => hasPermission(permission));
   }, [hasPermission]);
 
+  const isAdmin = useCallback(() => {
+    if (!user) return false;
+
+    // 1. Direct super admin wildcard
+    if (user.permissions && user.permissions.includes('*')) return true;
+
+    // 2. Role name matching (Exact match for Super Admin or Admin)
+    const rawRoleName = user.role?.name?.toLowerCase() || '';
+    const normalizedRoleName = rawRoleName.replace(/[\s\-_]+/g, '');
+    
+    return (
+      normalizedRoleName === 'superadmin' || 
+      normalizedRoleName === 'admin' || 
+      (user.role?.permissions && user.role.permissions.some(p => p.key === '*'))
+    );
+  }, [user]);
+
   const hasModuleAccess = useCallback((moduleName: string) => {
     if (!user) return false;
     
-    // 1. Super admin fallback (direct or role name)
-    if (user.permissions && user.permissions.includes('*')) return true;
-    
-    const roleName = user.role?.name?.toLowerCase();
-    if (roleName === 'super admin' || roleName === 'admin') {
-      return true;
-    }
+    // 1. Admin bypass
+    if (isAdmin()) return true;
 
     // 2. Check if any permission in the role matches this module
     if (user.role && user.role.permissions) {
@@ -79,6 +86,7 @@ export function usePermissions() {
     hasAnyPermission,
     hasAllPermissions,
     hasModuleAccess,
+    isAdmin,
     user
   };
 }

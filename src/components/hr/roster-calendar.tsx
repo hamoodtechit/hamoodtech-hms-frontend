@@ -99,6 +99,7 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
                 const newEnd = addMonths(new Date(asgn.endDate), 1)
 
                 const payload: AssignedRosterPayload = {
+                    branchId, // Ensure branchId is saved during cloning
                     employeeId: asgn.employeeId,
                     rosterId: asgn.rosterId,
                     buildingId: asgn.buildingId,
