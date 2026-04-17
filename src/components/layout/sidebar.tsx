@@ -45,11 +45,13 @@ export function Sidebar() {
     href?: string
     color?: string
     permission?: string | string[]
+    roles?: string[]
     module?: string
     children?: {
         label: string
         href?: string
         permission?: string | string[]
+        roles?: string[]
         module?: string
     }[]
   }
@@ -59,7 +61,7 @@ export function Sidebar() {
     items: Route[]
   }
 
-  const { hasPermission, hasModuleAccess, user } = usePermissions() // Ensure hasPermission is used
+  const { hasPermission, hasModuleAccess, isAdmin, user } = usePermissions()
 
   // DEBUG LOGGING
   useEffect(() => {
@@ -89,6 +91,7 @@ export function Sidebar() {
           href: "/dashboard",
           color: "text-sky-400",
           permission: "dashboard:read",
+          roles: ["Super Admin", "Admin", "Pharmacist", "Doctor", "Pathologist", "Radiologist", "Receptionist", "Accountant"],
         },
       ]
     },
@@ -99,6 +102,7 @@ export function Sidebar() {
           label: "Patient Care",
           icon: Stethoscope,
           color: "text-blue-400",
+          roles: ["Super Admin", "Admin", "Receptionist", "Doctor"],
           children: [
             {
               label: "All Patients",
@@ -129,6 +133,7 @@ export function Sidebar() {
           label: "Clinical Ops",
           icon: FlaskConical,
           color: "text-indigo-400",
+          roles: ["Super Admin", "Admin", "Doctor", "Pathologist", "Radiologist", "Pathology", "Radiology", "USG"],
           children: [
             {
               label: "Diagnostic Reports",
@@ -157,6 +162,7 @@ export function Sidebar() {
           icon: Pill,
           color: "text-pink-400",
           module: "pharmacy",
+          roles: ["Super Admin", "Admin", "Pharmacist"],
           children: [
             {
               label: "POS System",
@@ -205,6 +211,7 @@ export function Sidebar() {
           label: "Ambulance Service",
           icon: Ambulance,
           color: "text-rose-500",
+          roles: ["Super Admin", "Admin", "Receptionist"],
           children: [
             {
               label: "Active Dispatch",
@@ -226,6 +233,7 @@ export function Sidebar() {
           label: "Billing & Collection",
           icon: Receipt,
           color: "text-indigo-600",
+          roles: ["Super Admin", "Admin", "Receptionist", "Accountant"],
           children: [
             {
               label: "OPD Billing",
@@ -259,6 +267,7 @@ export function Sidebar() {
           label: "Finance & Accounts",
           icon: Wallet,
           color: "text-emerald-500",
+          roles: ["Super Admin", "Admin", "Accountant"],
           children: [
             {
               label: "Expense Tracking",
@@ -282,6 +291,7 @@ export function Sidebar() {
           label: "HR & Staff",
           icon: Users,
           color: "text-orange-500",
+          roles: ["Super Admin", "Admin"],
           children: [
             {
               label: "Staff Directory",
@@ -322,6 +332,7 @@ export function Sidebar() {
           label: "Clinical Services",
           icon: Settings,
           color: "text-zinc-500",
+          roles: ["Super Admin", "Admin"],
           children: [
             {
               label: "Service Setup",
@@ -338,6 +349,7 @@ export function Sidebar() {
           label: "System & Settings",
           icon: Settings,
           color: "text-zinc-500",
+          roles: ["Super Admin", "Admin"],
           children: [
             {
               label: "User Management",
@@ -393,16 +405,33 @@ export function Sidebar() {
   // Yes, I should ensure it.
   
       // Helper to check access for a route item
-      const checkAccess = (route: { permission?: string | string[]; module?: string }) => {
+      const checkAccess = (route: { permission?: string | string[]; module?: string; roles?: string[] }) => {
+          // 1. Role-First Priority Gate (Absolute authority if defined)
+          if (route.roles && route.roles.length > 0) {
+              const userRole = user?.role?.name || "";
+              const normalizedUserRole = userRole.toLowerCase().replace(/[\s\-_]+/g, '');
+              
+              const isAuthorizedRole = route.roles.some(r => {
+                  const normalizedR = r.toLowerCase().replace(/[\s\-_]+/g, '');
+                  return normalizedUserRole === normalizedR || userRole.toLowerCase() === r.toLowerCase();
+              });
+              
+              // IF roles are listed: only those roles get access.
+              // IF you match? You see it (no permission check needed).
+              // IF you don't match? You don't see it.
+              return isAuthorizedRole;
+          }
+
+          // 2. Permission/Module Fallback (Only if NO roles are specified)
           let hasMod = true;
           let hasPerm = true;
 
-          // 1. Check module access if defined
+          // Check module access
           if (route.module) {
               hasMod = hasModuleAccess(route.module);
           }
 
-          // 2. Check specific permission if defined
+          // Check specific permission
           if (route.permission) {
               if (Array.isArray(route.permission)) {
                   hasPerm = route.permission.some(p => hasPermission(p));
@@ -411,7 +440,6 @@ export function Sidebar() {
               }
           }
 
-          // Both MUST be true if they are defined
           return hasMod && hasPerm;
       }
 
@@ -421,7 +449,8 @@ export function Sidebar() {
               const filteredChildren = route.children.filter(child => checkAccess(child))
 
               if (filteredChildren.length > 0) {
-                   if ((route.permission || route.module) && !checkAccess(route)) {
+                   // If any gating criteria exists (permission, module, OR roles), we must check access
+                   if ((route.permission || route.module || route.roles) && !checkAccess(route)) {
                        return acc
                    }
                    

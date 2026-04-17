@@ -73,11 +73,18 @@ export function AssignmentDialog({
     const { data: floorsRes } = useFloors({ buildingId: selectedBuildingId, limit: 100 })
     const { data: sectionsRes } = useSections({ floorId: selectedFloorId, limit: 100 })
 
-    const employees = employeesRes?.data || []
-    const rosters = rostersRes?.data || []
-    const buildings = buildingsRes?.data || []
-    const floors = floorsRes?.data || []
-    const sections = sectionsRes?.data || []
+    // Helper to robustly extract an array from various API response structures
+    const getArrayData = (res: any) => {
+        if (Array.isArray(res?.data?.data)) return res.data.data
+        if (Array.isArray(res?.data)) return res.data
+        return []
+    }
+    
+    const employees = getArrayData(employeesRes)
+    const rosters = getArrayData(rostersRes)
+    const buildings = getArrayData(buildingsRes)
+    const floors = getArrayData(floorsRes)
+    const sections = getArrayData(sectionsRes)
 
     const form = useForm<AssignmentFormValues>({
         resolver: zodResolver(assignmentSchema),
@@ -116,6 +123,7 @@ export function AssignmentDialog({
 
         const payload: AssignedRosterPayload = {
             ...values,
+            branchId, // Ensure branchId is saved
             buildingName,
             floorName,
             sectionName,

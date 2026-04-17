@@ -427,6 +427,7 @@ export interface Roster {
 }
 
 export interface RosterPayload {
+  branchId: string;
   shiftId: string;
   startDate: string;
   endDate: string;
@@ -459,6 +460,7 @@ export interface AssignedRoster {
 }
 
 export interface AssignedRosterPayload {
+  branchId: string;
   rosterId: string;
   employeeId: string;
   startDate: string;

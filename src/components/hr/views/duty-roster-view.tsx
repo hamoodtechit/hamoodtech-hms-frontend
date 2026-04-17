@@ -45,10 +45,25 @@ export function DutyRosterView() {
     const [selectedRoster, setSelectedRoster] = useState<Roster | null>(null)
     const [initialAssignmentDate, setInitialAssignmentDate] = useState<string | undefined>()
 
-    // Data Queries
-    const { data: shiftsRes } = useShifts({ branchId: activeStoreId || "" })
-    const { data: rostersRes } = useRosters({ branchId: activeStoreId || "" })
-    const { data: assignmentsRes } = useAssignedRosters({ branchId: activeStoreId || "" })
+    // Helper to robustly extract an array
+    const getArrayData = (res: any) => {
+        if (Array.isArray(res?.data?.data)) return res.data.data
+        if (Array.isArray(res?.data)) return res.data
+        return []
+    }
+    
+    // Data Queries - Pass branchId but handle existing null records if needed
+    const queryParams = { 
+        branchId: activeStoreId || undefined, // Use undefined if empty to avoid filtering by ""
+        limit: 100 
+    }
+    const { data: shiftsRes } = useShifts(queryParams)
+    const { data: rostersRes } = useRosters(queryParams)
+    const { data: assignmentsRes } = useAssignedRosters(queryParams)
+
+    const shifts = getArrayData(shiftsRes)
+    const rosters = getArrayData(rostersRes)
+    const assignments = getArrayData(assignmentsRes)
 
     // Mutations
     const deleteShiftMutation = useDeleteShift()
@@ -146,7 +161,7 @@ export function DutyRosterView() {
 
                 <TabsContent value="board" className="border-none p-0 outline-none">
                     <RosterCalendar 
-                        assignments={Array.isArray(assignmentsRes?.data) ? assignmentsRes.data : []}
+                        assignments={assignments}
                         branchId={activeStoreId || ""}
                         onSelectEvent={(asgn) => {
                             if (window.confirm("Do you want to delete this assignment?")) {
@@ -169,7 +184,7 @@ export function DutyRosterView() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {Array.isArray(shiftsRes?.data) && shiftsRes.data.map((shift) => (
+                                {shifts.map((shift: any) => (
                                     <TableRow key={shift.id}>
                                         <TableCell className="font-semibold">{shift.name}</TableCell>
                                         <TableCell>
@@ -192,7 +207,7 @@ export function DutyRosterView() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {(!Array.isArray(shiftsRes?.data) || shiftsRes.data.length === 0) && (
+                                {shifts.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No shift templates found. Create one to get started.
@@ -216,7 +231,7 @@ export function DutyRosterView() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {Array.isArray(rostersRes?.data) && rostersRes.data.map((roster) => (
+                                {rosters.map((roster: any) => (
                                     <TableRow key={roster.id}>
                                         <TableCell className="font-medium">{roster.shift?.name}</TableCell>
                                         <TableCell>{format(new Date(roster.startDate), "PPP")}</TableCell>
@@ -228,7 +243,7 @@ export function DutyRosterView() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {(!Array.isArray(rostersRes?.data) || rostersRes.data.length === 0) && (
+                                {rosters.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={4} className="h-24 text-center">
                                             No roster periods defined.

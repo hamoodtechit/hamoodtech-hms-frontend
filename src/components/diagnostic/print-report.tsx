@@ -172,6 +172,26 @@ export function PrintReport({ report }: PrintReportProps) {
                 >
 
                     <div className="px-10 py-6 pt-[35mm] relative z-10 min-h-[290mm] flex flex-col">
+                        {/* Barcodes at Top Left and Top Right */}
+                        <div className="flex justify-between items-start mb-6 px-1">
+                            <div className="flex flex-col items-center">
+                                <svg className="h-10 w-40" viewBox="0 0 100 20" preserveAspectRatio="none">
+                                    {[2, 5, 8, 12, 15, 20, 22, 25, 30, 32, 35, 40, 42, 45, 50, 52, 55, 60, 62, 65, 70, 72, 75, 80, 82, 85, 90, 92, 95].map((x, i) => (
+                                        <rect key={i} x={`${x}%`} y="0" width={i % 3 === 0 ? "2" : "1"} height="20" fill="black" />
+                                    ))}
+                                </svg>
+                                <span className="text-[7pt] font-mono font-bold mt-0.5">{barcode.toUpperCase()}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <svg className="h-10 w-40" viewBox="0 0 100 20" preserveAspectRatio="none">
+                                    {[3, 6, 9, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98].map((x, i) => (
+                                        <rect key={i} x={`${x}%`} y="0" width={i % 2 === 0 ? "2.5" : "1"} height="20" fill="black" />
+                                    ))}
+                                </svg>
+                                <span className="text-[7pt] font-mono font-bold mt-0.5">{barcode.toUpperCase()}</span>
+                            </div>
+                        </div>
+
                         {/* 
                          * HOSPITAL HEADER REMOVED 
                          * As per User Request: Utilizing pre-printed letterheads (pads).
@@ -391,7 +411,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                 {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
                                             </p>
                                             <p className="text-[10pt] font-bold text-black italic">
-                                                {(detail as any)?.medicalTechnologist?.designation || "—"}
+                                                {(detail as any)?.medicalTechnologist?.designation || ""}
                                             </p>
                                         </div>
 

@@ -40,6 +40,8 @@ const rosterSchema = z.object({
     endDate: z.string().min(1, "End date is required"),
 })
 
+type RosterFormValues = z.infer<typeof rosterSchema>
+
 interface RosterDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -58,10 +60,17 @@ export function RosterDialog({
     const createMutation = useCreateRoster()
     const updateMutation = useUpdateRoster()
     
+    // Helper to robustly extract an array
+    const getArrayData = (res: any) => {
+        if (Array.isArray(res?.data?.data)) return res.data.data
+        if (Array.isArray(res?.data)) return res.data
+        return []
+    }
+    
     const { data: shiftsRes } = useShifts({ branchId, limit: 100 })
-    const shifts = shiftsRes?.data || []
+    const shifts = getArrayData(shiftsRes)
 
-    const form = useForm<RosterPayload>({
+    const form = useForm<RosterFormValues>({
         resolver: zodResolver(rosterSchema),
         defaultValues: {
             shiftId: "",
@@ -88,10 +97,11 @@ export function RosterDialog({
         }
     }, [roster, form, open])
 
-    const onSubmit = async (values: RosterPayload) => {
+    const onSubmit = async (values: RosterFormValues) => {
         // Convert to ISO string with full time for backend
         const payload: RosterPayload = {
             ...values,
+            branchId,
             startDate: new Date(`${values.startDate}T00:00:00.000Z`).toISOString(),
             endDate: new Date(`${values.endDate}T23:59:59.999Z`).toISOString(),
         }
@@ -141,7 +151,7 @@ export function RosterDialog({
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {shifts.map((shift) => (
+                                            {shifts.map((shift: any) => (
                                                 <SelectItem key={shift.id} value={shift.id}>
                                                     {shift.name} ({new Date(shift.startTime).getUTCHours()}:00 - {new Date(shift.endTime).getUTCHours()}:00)
                                                 </SelectItem>
