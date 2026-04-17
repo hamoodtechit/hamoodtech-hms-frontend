@@ -211,21 +211,37 @@ export function PrintReport({ report }: PrintReportProps) {
                             if (isNarrativeGroup) {
                                 return (
                                     <>
-                                        {/* Narrative Style: Simplified Patient Info (Patwary Sample) */}
-                                        <div className="flex justify-between items-start mb-8 text-[11.5pt] font-serif leading-relaxed text-black">
-                                            <div className="space-y-1">
-                                                <p><span className="font-bold inline-block w-24">Patient ID</span>: <span className="font-black">{patient?.patientNumber || barcode.toUpperCase()}</span></p>
-                                                <p><span className="font-bold inline-block w-24">Name</span>: <span className="font-black uppercase">{patient?.name}</span></p>
-                                                <p><span className="font-bold inline-block w-24">Refd. By</span>: <span className="font-black uppercase">{result?.consultantName || doctor?.fullName || 'SELF'}</span></p>
-                                                <p className="pl-24 text-[9.5pt] font-bold italic opacity-80 leading-tight">
-                                                    {result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name}
-                                                </p>
-                                            </div>
-                                            <div className="text-right space-y-1">
-                                                <p><span className="font-bold inline-block w-16 text-left">Date</span>: {detail?.createdAt ? format(new Date(detail.createdAt), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")}</p>
-                                                <p><span className="font-bold inline-block w-16 text-left">Age</span>: {patient?.age ? `${patient.age} year` : "—"}</p>
-                                                <p><span className="font-bold inline-block w-16 text-left">Sex</span>: <span className="capitalize">{patient?.gender || "—"}</span></p>
-                                            </div>
+                                        {/* Standardized Boxed Patient Info (Unified across all modes) */}
+                                        <div className="border-y-2 border-black py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                            <table className="w-full border-collapse text-[11pt]">
+                                                <tbody>
+                                                    <tr className="border-b border-black/10">
+                                                        <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
+                                                        <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
+                                                        <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
+                                                        <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
+                                                    </tr>
+                                                    <tr className="border-b border-black/10">
+                                                        <td className="pr-1 py-1.5 font-bold">Name</td>
+                                                        <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
+                                                        <td className="pr-1 py-1.5 font-bold">Report Date</td>
+                                                        <td className="py-1.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="pr-1 py-1.5 font-bold">Age / Gender</td>
+                                                        <td className="pr-4 py-1.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                        <td className="pr-1 py-1.5 font-bold">Consultant</td>
+                                                        <td className="py-1.5">: <span className="font-medium text-black uppercase">
+                                                            {result?.consultantName || doctor?.fullName || 'SELF'}
+                                                            {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
+                                                                <span className="ml-1 text-[9pt] font-medium text-black/60 lowercase italic">
+                                                                    ({result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name})
+                                                                </span>
+                                                            )}
+                                                        </span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
 
                                         {/* Narrative Style: Test Title */}
@@ -255,13 +271,13 @@ export function PrintReport({ report }: PrintReportProps) {
                                         <table className="w-full border-collapse text-[11pt]">
                                             <tbody>
                                                 <tr className="border-b border-black/10">
-                                                    <td className="pr-1 py-1.5 w-[15%] font-bold">Lab ID</td>
-                                                    <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{barcode.toUpperCase()}</span></td>
+                                                    <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
+                                                    <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
                                                     <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
                                                     <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
                                                 </tr>
                                                 <tr className="border-b border-black/10">
-                                                    <td className="pr-1 py-1.5 font-bold">Patient Name</td>
+                                                    <td className="pr-1 py-1.5 font-bold">Name</td>
                                                     <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
                                                     <td className="pr-1 py-1.5 font-bold">Report Date</td>
                                                     <td className="py-1.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
@@ -326,9 +342,19 @@ export function PrintReport({ report }: PrintReportProps) {
                             
                             if (machines.size === 0) return null;
                             
+                            // Smart deduplication: filter out names that are substrings of other longer names
+                            const machineList = Array.from(machines);
+                            const uniqueMachines = machineList.filter((m, i) => 
+                                !machineList.some((other, j) => 
+                                    i !== j && 
+                                    other.toLowerCase().includes(m.toLowerCase()) && 
+                                    other.length > m.length
+                                )
+                            );
+                            
                             return (
                                 <div className="text-center mb-6 italic text-[11.5pt] text-black font-serif leading-tight">
-                                    {Array.from(machines).map((m, idx) => (
+                                    {uniqueMachines.map((m, idx) => (
                                         <div key={idx} className="mb-0.5">
                                             (Tests are carried out by {m})
                                         </div>
@@ -377,71 +403,60 @@ export function PrintReport({ report }: PrintReportProps) {
                                 
                                 if (isNarrativeGroup) {
                                     return (
-                                        <div className="flex justify-between items-end font-serif px-2">
-                                            {/* Left Side: Prepared By (Professional Style) */}
-                                            <div className="text-left w-[40%]">
-                                                <div className="flex flex-col items-start gap-1">
-                                                     <div className="w-48 h-[1.5px] bg-black mb-1" />
-                                                    <p className="font-bold text-[11pt] text-black italic">Prepared By</p>
-                                                    <p className="font-black text-black text-[14pt] leading-tight uppercase tracking-tight">
-                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName}
-                                                    </p>
-                                                    <p className="text-[10pt] font-bold text-black italic opacity-80">
-                                                        {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Right Side: Doctor Signature (Patwary Style) */}
-                                            <div className="text-right w-[50%]">
-                                                <div className="ml-auto mb-1 w-64 h-[2.5px] bg-black" />
-                                                <p className="font-black text-black text-[16pt] leading-tight uppercase tracking-tight">
-                                                    {doctor?.fullName || ""}
+                                        <div className="flex justify-between items-end font-serif px-2 text-black">
+                                        {/* Left Side: Prepared By (Standard Mode - Matches Professional Style) */}
+                                        <div className="text-left w-[40%]">
+                                            <div className="flex flex-col items-start gap-1">
+                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                                <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
+                                                <p className="font-black text-[14pt] leading-tight uppercase tracking-tight">
+                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
                                                 </p>
-                                                <p className="text-[11pt] font-bold text-black italic mt-1 border-t border-black/20 pt-1 inline-block">
-                                                    {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name || "MBBS, CMU(Ultra)."}
+                                                <p className="text-[10pt] font-bold italic opacity-80">
+                                                    {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation || ""}
                                                 </p>
                                             </div>
                                         </div>
-                                    );
+
+                                        {/* Right Side: Authorized Doctor (Standard Mode - Matches Patwary Style) */}
+                                        <div className="text-right w-[50%]">
+                                            <div className="ml-auto mb-1 w-48 h-[1.5px] bg-black" />
+                                            <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
+                                                {doctor?.fullName || ""}
+                                            </p>
+                                            <p className="text-[11pt] font-bold italic inline-block">
+                                                {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    )
                                 }
 
                                 return (
-                                    <div className="flex justify-between items-end font-serif">
-                                        {/* Left Side: Technologist */}
+                                    <div className="flex justify-between items-end font-serif px-2 text-black">
+                                        {/* Left Side: Prepared By (Standard Mode - Matches Professional Style) */}
                                         <div className="text-left w-[40%]">
-                                            <div className="mb-1 w-48 h-[1px] bg-black" />
-                                            <p className="font-bold text-[11pt] uppercase tracking-wider text-black">Medical Technologist</p>
-                                            <p className="mt-1 font-black text-black text-[12pt] leading-tight">
-                                                {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
-                                            </p>
-                                            <p className="text-[10pt] font-bold text-black italic">
-                                                {(detail as any)?.medicalTechnologist?.designation || ""}
-                                            </p>
+                                            <div className="flex flex-col items-start gap-1">
+                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                                <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
+                                                <p className="font-black text-[14pt] leading-tight uppercase tracking-tight">
+                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                                </p>
+                                                <p className="text-[10pt] font-bold italic opacity-80">
+                                                    {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation || ""}
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        {/* Right Side: Authorized Doctor (Digital Signature Style) */}
-                                        <div className="text-right w-[50%] relative">
-                                            <div className="absolute -top-12 right-0 opacity-10">
-                                                <div className="border-2 border-black text-black px-2 py-1 rotate-12 rounded text-[10pt] font-black uppercase">
-                                                    Digitally Signed
-                                                </div>
-                                            </div>
-                                            <div className="ml-auto mb-1 w-64 h-[2px] bg-black" />
-                                            <p className="font-['Dancing_Script',cursive] text-[20pt] text-black px-2 leading-none mb-1">
-                                                {doctor?.fullName || "Doctor Ibrahim"}
+                                        {/* Right Side: Authorized Doctor (Standard Mode - Matches Patwary Style) */}
+                                        <div className="text-right w-[50%]">
+                                            <div className="ml-auto mb-1 w-48 h-[1.5px] bg-black" />
+                                            <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
+                                                {doctor?.fullName || ""}
                                             </p>
-                                            <div className="mt-1 flex flex-col items-end leading-tight gap-0.5">
-                                                <p className="text-[10pt] font-black italic text-black">
-                                                    {result?.doctorDegrees || "MBBS(RMC),CMU(ULTRA),CCD(BIRDEM)"}
-                                                </p>
-                                                {(result?.doctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && 
-                                                 (result?.doctorDesignation !== result?.doctorDegrees) && (
-                                                    <p className="text-[9.5pt] font-black text-black uppercase tracking-tight">
-                                                        {result?.doctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name || "Senior Consultant Pathologist"}
-                                                    </p>
-                                                )}
-                                            </div>
+                                            <p className="text-[11pt] font-bold italic inline-block">
+                                                {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name || "MBBS, CMU(Ultra)."}
+                                            </p>
                                         </div>
                                     </div>
                                 );
@@ -449,7 +464,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             
                             <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2">
                                 <p>REPORT ID: {barcode.toUpperCase()}</p>
-                                <p className="uppercase">Page {gIdx + 1} of {groupReports.length}</p>
+                                
                                 <p className="italic">Printed by HamoodTech HMS</p>
                             </div>
                         </div>
