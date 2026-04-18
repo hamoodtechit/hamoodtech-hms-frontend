@@ -178,6 +178,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         
         <Separator className="border-black/20" />
         
+        {/* Payment Note Section */}
+        {(data?.payments?.[0]?.note || (data as any)?.note) && (
+            <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
+                <span className="shrink-0 uppercase text-[8px] opacity-70 mt-0.5">Note:</span>
+                <span className={`italic font-medium uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
+                    {data?.payments?.[0]?.note || (data as any)?.note}
+                </span>
+            </div>
+        )}
+
         {/* Footer */}
         <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
             <p className="font-bold tracking-wider">THANK YOU FOR VISITING!</p>
@@ -340,6 +350,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <td class="value-col">${Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</td>
                             </tr>`}
                         </table>
+
+                        ${(data?.payments?.[0]?.note || (data as any)?.note) ? `
+                        <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
+                            <span style="text-transform: uppercase; font-size: 9px; opacity: 0.7; font-weight: bold;">Note:</span>
+                            <span style="font-style: italic; font-weight: bold; text-transform: uppercase;">${data?.payments?.[0]?.note || (data as any)?.note}</span>
+                        </div>` : ''}
 
                         <div class="footer">
                             <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>

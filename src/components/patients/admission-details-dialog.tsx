@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAdmission } from "@/hooks/patient-queries"
+import { useAdmission, useDischargeInitiate } from "@/hooks/patient-queries"
 import { format } from "date-fns"
 import { 
     Bed, 
@@ -32,6 +32,7 @@ import {
 import { useSales, SALES_KEYS } from "@/hooks/sales-queries"
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { DischargeDialog } from "./discharge-dialog"
+import { DischargeReceiptDialog } from "./discharge-receipt-dialog"
 import { useQueryClient } from "@tanstack/react-query"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
@@ -52,14 +53,21 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
         patientAdmissionId: admissionId || "",
         limit: 100 
     }, { enabled: !!admissionId })
+    const { data: initDataRes } = useDischargeInitiate(res?.data?.patientAdmission?.patientId || "")
 
     const [addServiceOpen, setAddServiceOpen] = useState(false)
     const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false)
+    const [dischargeReceiptOpen, setDischargeReceiptOpen] = useState(false)
     const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
     const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     
     const admission = res?.data?.patientAdmission
-    const sales = salesRes?.data?.sales || salesRes?.data?.data || []
+    const baseSalesRaw = salesRes?.data?.sales || salesRes?.data?.data || []
+    const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === admission?.id)
+    const admissionSale = res?.data?.sale
+    const sales = admissionSale 
+        ? [admissionSale, ...baseSales.filter((s: any) => s.id !== admissionSale.id)]
+        : baseSales
 
     const getStatusBadge = (status: AdmissionStatus) => {
         switch (status) {
@@ -262,6 +270,17 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                                 </Button>
                                             </>
                                         )}
+                                        {admission?.status === 'discharged' && (
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline" 
+                                                className="h-8 px-3 rounded-xl border-blue-500/20 text-blue-600 hover:bg-blue-500/5 gap-2 text-[10px] font-black uppercase tracking-widest"
+                                                onClick={() => setDischargeReceiptOpen(true)}
+                                            >
+                                                <Printer className="h-3.5 w-3.5" />
+                                                Print Discharge Summary
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -393,6 +412,15 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                         refetch()
                         onOpenChange(false)
                     }}
+                />
+
+                <DischargeReceiptDialog
+                    open={dischargeReceiptOpen}
+                    onOpenChange={setDischargeReceiptOpen}
+                    admission={admission || null}
+                    data={initDataRes?.data || null}
+                    finalPaidAmount={0}
+                    overallDiscount={admission?.discountAmount || 0}
                 />
             </DialogContent>
         </Dialog>
