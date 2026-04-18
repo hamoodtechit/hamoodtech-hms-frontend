@@ -196,15 +196,17 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             note: paymentNote || undefined,
         }] : []
 
-        const finalDueAmount = Math.max(0, Number(hospitalTotals.totalDue) - overallDiscountAmount)
+        const currentPaymentTotal = payments.reduce((acc, p) => acc + p.amount, 0)
+        const finalTotalPaid = Number(hospitalTotals.totalPaid) + currentPaymentTotal
+        const finalRemainingDue = Math.max(0, Number(hospitalTotals.totalDue) - overallDiscountAmount - currentPaymentTotal)
 
         completeDischarge({
             patientId: admission.patientId,
             discountPercentage: overallDiscountPercent || 0,
             discountAmount: overallDiscountAmount || 0,
             totalAmount: Number(hospitalTotals.totalBill),
-            paidAmount: Number(hospitalTotals.totalPaid),
-            dueAmount: finalDueAmount,
+            paidAmount: finalTotalPaid,
+            dueAmount: finalRemainingDue,
             payments,
         }, {
             onSuccess: (res: any) => {
