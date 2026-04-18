@@ -327,7 +327,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                         {hospitalBills.length > 0 && (
                                             <div className="p-4 bg-primary/5 border-t border-dashed border-primary/10 flex justify-between items-center">
                                                 <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Charges Subtotal</span>
-                                                <span className="text-sm font-black text-primary tabular-nums">{formatCurrency(hospitalTotals.totalBill)}</span>
+                                                <span className="text-sm font-black text-primary tabular-nums">{formatCurrency(Number(hospitalTotals.totalBill || 0))}</span>
                                             </div>
                                         )}
                                     </div>
