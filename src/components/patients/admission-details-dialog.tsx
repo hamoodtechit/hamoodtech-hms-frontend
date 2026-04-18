@@ -420,7 +420,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     open={dischargeReceiptOpen}
                     onOpenChange={setDischargeReceiptOpen}
                     admission={admission || null}
-                    data={initDataRes?.data || res?.data || null}
+                    data={(initDataRes?.data || res?.data || null) as any}
                     finalPaidAmount={0}
                     overallDiscount={admission?.discountAmount || 0}
                 />
