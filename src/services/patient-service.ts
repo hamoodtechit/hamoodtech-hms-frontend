@@ -46,8 +46,8 @@ export const patientService = {
     return response.data;
   },
 
-  getAdmission: async (id: string): Promise<{ success: boolean; data: { patientAdmission: Admission; sale?: any } }> => {
-    const response = await api.get<{ success: boolean; data: { patientAdmission: Admission; sale?: any } }>(`/patients/admissions/${id}`);
+  getAdmission: async (id: string): Promise<{ success: boolean; data: { patientAdmission: Admission; sale?: any; allSales?: any[]; pharmacy?: any; hospital?: any; grandTotal?: any; } }> => {
+    const response = await api.get<{ success: boolean; data: { patientAdmission: Admission; sale?: any; allSales?: any[]; pharmacy?: any; hospital?: any; grandTotal?: any; } }>(`/patients/admissions/${id}`);
    
     return response.data;
   },
