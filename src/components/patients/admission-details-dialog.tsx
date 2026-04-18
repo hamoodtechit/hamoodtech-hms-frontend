@@ -65,9 +65,11 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     const baseSalesRaw = salesRes?.data?.sales || salesRes?.data?.data || []
     const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === admission?.id)
     const admissionSale = res?.data?.sale
-    const sales = admissionSale 
-        ? [admissionSale, ...baseSales.filter((s: any) => s.id !== admissionSale.id)]
-        : baseSales
+    const sales = res?.data?.allSales?.length > 0 
+        ? res.data.allSales 
+        : (admissionSale 
+            ? [admissionSale, ...baseSales.filter((s: any) => s.id !== admissionSale.id)]
+            : baseSales)
 
     const getStatusBadge = (status: AdmissionStatus) => {
         switch (status) {
