@@ -62,10 +62,14 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
     // Edit Sale State
     const [editingSaleId, setEditingSaleId] = useState<string | null>(null)
-    // Discount form state
     const [discountAmount, setDiscountAmount] = useState(0)
     const [discountType, setDiscountType] = useState<'amount' | 'percent'>('amount')
     const [discountPercent, setDiscountPercent] = useState(0)
+
+    // Global Discount State
+    const [overallDiscountValue, setOverallDiscountValue] = useState(0)
+    const [overallDiscountType, setOverallDiscountType] = useState<'amount' | 'percent'>('amount')
+    const [overallDiscountNote, setOverallDiscountNote] = useState("")
     
     // Form State
     const [note, setNote] = useState("")
@@ -84,12 +88,22 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (Number(hospitalTotals.totalPaid) + (Number(pharmacyTotals.totalPaid) || 0))
     const grandTotalDue = Number(data?.grandTotal?.totalDue) || (Number(hospitalTotals.totalDue) + (Number(pharmacyTotals.totalDue) || 0))
 
-    // Initialize paid amount when data is loaded
-    useEffect(() => {
-        if (open && grandTotalDue > 0 && paidAmount === 0) {
-            setPaidAmount(grandTotalDue)
+    // Calculate Overall Discount Amount
+    const overallDiscountAmount = useMemo(() => {
+        if (overallDiscountType === 'percent') {
+            return (grandTotalDue * overallDiscountValue) / 100
         }
-    }, [open, grandTotalDue])
+        return overallDiscountValue
+    }, [grandTotalDue, overallDiscountType, overallDiscountValue])
+
+    const netPayableDue = Math.max(0, grandTotalDue - overallDiscountAmount)
+
+    // Initialize paid amount when data is loaded OR when discount changes
+    useEffect(() => {
+        if (open && netPayableDue >= 0) {
+            setPaidAmount(netPayableDue)
+        }
+    }, [open, netPayableDue])
 
     const handleComplete = () => {
         if (!admission) return
@@ -109,6 +123,8 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
         completeDischarge({
             patientId: admission.patientId,
             payments,
+            discountAmount: overallDiscountAmount,
+            discountNote: overallDiscountNote || undefined,
         }, {
             onSuccess: (res: any) => {
                 toast.success(res.message || "Patient discharged successfully")
@@ -220,6 +236,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                                 <span className="text-[11px] font-black group-hover:text-primary transition-colors leading-tight">
                                                                     {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type?.toUpperCase()}
                                                                 </span>
+                                                                
+                                                                {/* Display Item Names */}
+                                                                <div className="flex flex-wrap gap-1 mb-1">
+                                                                    {bill.saleItems?.map((item: any) => (
+                                                                        <Badge key={item.id} variant="outline" className="text-[7.5px] py-0 h-3.5 bg-background font-bold text-muted-foreground/80 leading-none">
+                                                                            {item.itemName}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+
                                                                 <div className="flex items-center gap-1.5 opacity-60">
                                                                     <span className="text-[8px] font-bold text-muted-foreground uppercase">{bill.invoiceNumber}</span>
                                                                     <span className="text-[8px] font-bold text-muted-foreground">{bill.saleItems?.length || 0} service(s)</span>
@@ -350,9 +376,48 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                             <span className="font-bold text-emerald-600/60 uppercase text-[10px]">Total Amount Paid</span>
                                             <span className="font-black text-emerald-600 tabular-nums">-{formatCurrency(Number(grandTotalPaid))}</span>
                                         </div>
+
+                                        {/* Global Discount Section */}
+                                        <div className="pt-2 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-[10px] font-black uppercase text-amber-600">Overall Discount</Label>
+                                                <div className="flex bg-muted/50 rounded-lg p-0.5 border border-white/5">
+                                                    <button 
+                                                        className={`px-2 py-0.5 text-[8px] font-black uppercase rounded ${overallDiscountType === 'amount' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground'}`}
+                                                        onClick={() => setOverallDiscountType('amount')}
+                                                    >
+                                                        Fixed
+                                                    </button>
+                                                    <button 
+                                                        className={`px-2 py-0.5 text-[8px] font-black uppercase rounded ${overallDiscountType === 'percent' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground'}`}
+                                                        onClick={() => setOverallDiscountType('percent')}
+                                                    >
+                                                        %
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="relative">
+                                                <SmartNumberInput 
+                                                    value={overallDiscountValue}
+                                                    onChange={(v) => setOverallDiscountValue(v || 0)}
+                                                    className="h-9 text-sm font-black bg-amber-500/5 border-amber-500/20 text-amber-600 pr-10"
+                                                    placeholder="0.00"
+                                                />
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-amber-500/40">
+                                                    {overallDiscountType === 'percent' ? '%' : 'BDT'}
+                                                </div>
+                                            </div>
+                                            {overallDiscountAmount > 0 && (
+                                                <p className="text-[9px] font-bold text-amber-600 flex justify-between px-1">
+                                                    <span>Applied Discount:</span>
+                                                    <span>-{formatCurrency(overallDiscountAmount)}</span>
+                                                </p>
+                                            )}
+                                        </div>
+
                                         <div className="flex justify-between items-center p-4 bg-primary/10 rounded-2xl border border-primary/5 mt-4 group">
                                             <span className="font-black text-primary uppercase text-[11px] tracking-widest">Net Payable Due</span>
-                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(Number(grandTotalDue))}</span>
+                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(netPayableDue)}</span>
                                         </div>
                                     </div>
 
@@ -365,6 +430,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                         value={paidAmount}
                                                         onChange={(val) => setPaidAmount(val || 0)}
                                                         className="h-11 text-xl font-black bg-background border-primary/20 shadow-inner text-primary"
+                                                        max={netPayableDue}
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">

@@ -198,6 +198,8 @@ export interface DischargePayload {
     paymentMethod: string;
     note?: string;
   }[];
+  discountAmount?: number;
+  discountNote?: string;
 }
 
 export interface PharmacyPaymentPayload {
