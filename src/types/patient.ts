@@ -175,24 +175,37 @@ export interface DischargeInitiateData {
   pharmacy: {
     bills: Sale[];
     totals: {
-      totalBill: number;
-      totalPaid: number;
-      totalDue: number;
+      totalBill?: number;
+      totalPrice?: number;
+      netPrice?: number;
+      totalPaid?: number;
+      paidAmount?: number;
+      totalDue?: number;
+      dueAmount?: number;
     };
   };
   hospital: {
     bills: Sale[];
     totals: {
-      totalBill: number;
-      totalPaid: number;
-      totalDue: number;
+      totalBill?: number;
+      totalPrice?: number;
+      netPrice?: number;
+      totalPaid?: number;
+      paidAmount?: number;
+      totalDue?: number;
+      dueAmount?: number;
     };
   };
   grandTotal: {
-    totalBill: number;
-    totalPaid: number;
-    totalDue: number;
+    totalBill?: number;
+    totalPrice?: number;
+    netPrice?: number;
+    totalPaid?: number;
+    paidAmount?: number;
+    totalDue?: number;
+    dueAmount?: number;
   };
+  allSales?: Sale[];
 }
 
 export interface DischargePayload {

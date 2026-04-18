@@ -40,15 +40,15 @@ export function DischargeReceiptDialog({
     // However, the 'finalPaidAmount' and 'overallDiscount' provided is what applies to the Discharge Action itself.
     
     // Original Totals from Initiate Data
-    const grossHospitalBill = data.hospital.totals.totalBill
-    const grossPharmacyBill = data.pharmacy.totals.totalBill
-    const grossTotalBill = data.grandTotal.totalBill
+    const grossHospitalBill = data.hospital.totals.totalBill || data.hospital.totals.totalPrice || data.hospital.totals.netPrice || 0
+    const grossPharmacyBill = data.pharmacy.totals.totalBill || data.pharmacy.totals.totalPrice || data.pharmacy.totals.netPrice || 0
+    const grossTotalBill = data.grandTotal.totalBill || data.grandTotal.totalPrice || data.grandTotal.netPrice || 0
 
     // Calculate applied discounts (if any item-level discounts exist, they are reflected in totalBill vs subtotal, but we rely on what's given)
     // The previous paid amounts BEFORE this discharge:
-    const prevHospitalPaid = data.hospital.totals.totalPaid
-    const prevPharmacyPaid = data.pharmacy.totals.totalPaid
-    const prevTotalPaid = data.grandTotal.totalPaid
+    const prevHospitalPaid = data.hospital.totals.totalPaid || data.hospital.totals.paidAmount || 0
+    const prevPharmacyPaid = data.pharmacy.totals.totalPaid || data.pharmacy.totals.paidAmount || 0
+    const prevTotalPaid = data.grandTotal.totalPaid || data.grandTotal.paidAmount || 0
 
     // The Net Bill after the global discount (which the user says is "outside of items")
     const netPayable = grossTotalBill - overallDiscount
