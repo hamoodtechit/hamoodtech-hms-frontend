@@ -42,12 +42,92 @@ import { Label } from "@/components/ui/label"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useStoreContext } from "@/store/use-store-context"
 import { AddAdmissionServiceDialog } from "./add-service-dialog"
+import { DischargeReceiptDialog } from "./discharge-receipt-dialog"
 
 interface DischargeDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     admission: Admission | null
     onSuccess?: () => void
+}
+
+function BillItemRow({ bill, refetch }: { bill: any; refetch: () => void }) {
+    const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
+    const [discountAmount, setDiscountAmount] = useState<number | undefined>(Number(bill.discountAmount) || undefined)
+    const [discountPercent, setDiscountPercent] = useState<number | undefined>(Number(bill.discountPercentage) || undefined)
+
+    const isChanged = discountAmount !== (Number(bill.discountAmount) || undefined) || discountPercent !== (Number(bill.discountPercentage) || undefined)
+
+    const handleApply = async () => {
+        try {
+            await updateSale({ id: bill.id, data: { discountAmount: discountAmount || 0, discountPercentage: discountPercent || 0 } })
+            toast.success('Discount applied successfully')
+            refetch()
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to apply discount')
+        }
+    }
+
+    return (
+        <div className="flex justify-between items-center bg-muted/20 p-2.5 rounded-xl hover:bg-muted/40 transition-colors border border-transparent hover:border-white/10 group">
+            <div className="flex flex-col gap-0.5">
+                <span className="text-[11px] font-black group-hover:text-primary transition-colors leading-tight">
+                    {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type?.toUpperCase()}
+                </span>
+                
+                <div className="flex flex-wrap gap-1 mb-1">
+                    {bill.saleItems?.map((item: any) => (
+                        <Badge key={item.id} variant="outline" className="text-[7.5px] py-0 h-3.5 bg-background font-bold text-muted-foreground/80 leading-none">
+                            {item.itemName}
+                        </Badge>
+                    ))}
+                </div>
+
+                <div className="flex items-center gap-1.5 opacity-60">
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase">{bill.invoiceNumber}</span>
+                    <span className="text-[8px] font-bold text-muted-foreground">{bill.saleItems?.length || 0} service(s)</span>
+                    <Badge variant="outline" className={`text-[7px] h-3 px-1 font-black uppercase border-none ${bill.paymentStatus === 'paid' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+                        {bill.paymentStatus}
+                    </Badge>
+                </div>
+            </div>
+            
+            <div className="flex flex-col items-end gap-1.5">
+                <div className="flex flex-col items-end">
+                    <span className="text-xs font-black tabular-nums">{formatCurrency(Number(bill.netPrice))}</span>
+                    {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(Number(bill.dueAmount))}</span>}
+                </div>
+                
+                <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-0.5 border">
+                    <SmartNumberInput 
+                        placeholder="%"
+                        className="h-6 text-[10px] w-12 bg-background border-none px-1"
+                        min={0} max={100}
+                        value={discountPercent}
+                        onChange={(val: number | undefined) => { setDiscountPercent(val); setDiscountAmount(undefined); }}
+                    />
+                    <Separator orientation="vertical" className="h-4" />
+                    <SmartNumberInput 
+                        placeholder="Amt"
+                        className="h-6 text-[10px] w-16 bg-background border-none px-1"
+                        min={0}
+                        value={discountAmount}
+                        onChange={(val: number | undefined) => { setDiscountAmount(val); setDiscountPercent(undefined); }}
+                    />
+                    {isChanged && (
+                        <Button
+                            variant="ghost" size="icon"
+                            className="h-6 w-6 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-1"
+                            onClick={handleApply}
+                            disabled={isUpdatingSale}
+                        >
+                            {isUpdatingSale ? <Loader2 className="h-3 w-3 animate-spin"/> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: DischargeDialogProps) {
@@ -58,38 +138,48 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const { mutateAsync: createSale, isPending: isCreatingExtra } = useCreateSale()
     const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
     
+    // Receipt State
+    const [receiptOpen, setReceiptOpen] = useState(false)
     // Extra Charge State
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
-    // Edit Sale State
-    const [editingSaleId, setEditingSaleId] = useState<string | null>(null)
-    // Discount form state
-    const [discountAmount, setDiscountAmount] = useState(0)
-    const [discountType, setDiscountType] = useState<'amount' | 'percent'>('amount')
-    const [discountPercent, setDiscountPercent] = useState(0)
+    // Global Discount State
+    const [overallDiscountFixed, setOverallDiscountFixed] = useState(0)
+    const [overallDiscountPercent, setOverallDiscountPercent] = useState(0)
+    const [overallDiscountNote, setOverallDiscountNote] = useState("")
     
     // Form State
     const [note, setNote] = useState("")
     const [paidAmount, setPaidAmount] = useState(0)
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
     const [selectedAccountId, setSelectedAccountId] = useState("")
+    const [paymentNote, setPaymentNote] = useState("")
 
     const data = res?.data
     const hospitalBills = useMemo(() => data?.hospital?.bills || [], [data?.hospital?.bills])
     const pharmacyTotals = useMemo(() => data?.pharmacy?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.pharmacy?.totals])
     const hospitalTotals = useMemo(() => data?.hospital?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.hospital?.totals])
-    const editingSale = useMemo(() => hospitalBills.find((b: any) => b.id === editingSaleId) as Sale | undefined, [hospitalBills, editingSaleId])
 
     // Use grandTotal directly from API (includes both hospital + pharmacy)
     const grandTotalBill = Number(data?.grandTotal?.totalBill) || (Number(hospitalTotals.totalBill) + (Number(pharmacyTotals.totalBill) || 0))
     const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (Number(hospitalTotals.totalPaid) + (Number(pharmacyTotals.totalPaid) || 0))
     const grandTotalDue = Number(data?.grandTotal?.totalDue) || (Number(hospitalTotals.totalDue) + (Number(pharmacyTotals.totalDue) || 0))
 
-    // Initialize paid amount when data is loaded
-    useEffect(() => {
-        if (open && grandTotalDue > 0 && paidAmount === 0) {
-            setPaidAmount(grandTotalDue)
+    // Calculate Overall Discount Amount
+    const overallDiscountAmount = useMemo(() => {
+        if (overallDiscountPercent > 0) {
+            return (grandTotalDue * overallDiscountPercent) / 100
         }
-    }, [open, grandTotalDue])
+        return overallDiscountFixed
+    }, [grandTotalDue, overallDiscountPercent, overallDiscountFixed])
+
+    const netPayableDue = Math.max(0, grandTotalDue - overallDiscountAmount)
+
+    // Initialize paid amount when data is loaded OR when discount changes
+    useEffect(() => {
+        if (open && netPayableDue >= 0) {
+            setPaidAmount(netPayableDue)
+        }
+    }, [open, netPayableDue])
 
     const handleComplete = () => {
         if (!admission) return
@@ -103,17 +193,25 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             accountId: selectedAccountId,
             amount: paidAmount,
             paymentMethod: paymentMethod as string,
-            note: note || undefined,
+            note: paymentNote || undefined,
         }] : []
+
+        const finalDueAmount = Math.max(0, Number(hospitalTotals.totalDue) - overallDiscountAmount)
 
         completeDischarge({
             patientId: admission.patientId,
+            discountPercentage: overallDiscountPercent || 0,
+            discountAmount: overallDiscountAmount || 0,
+            totalAmount: Number(hospitalTotals.totalBill),
+            paidAmount: Number(hospitalTotals.totalPaid),
+            dueAmount: finalDueAmount,
             payments,
         }, {
             onSuccess: (res: any) => {
                 toast.success(res.message || "Patient discharged successfully")
                 onSuccess?.()
-                onOpenChange(false)
+                // Instead of immediately closing, open the receipt
+                setReceiptOpen(true)
             },
             onError: (err: any) => {
                 toast.error(err?.response?.data?.message || "Failed to discharge patient")
@@ -122,6 +220,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     }
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-225 max-h-[95vh] overflow-hidden p-0 border-none shadow-2xl rounded-3xl flex flex-col">
                 <DialogHeader className="p-8 pb-4 bg-primary/5 border-b border-primary/10">
@@ -215,50 +314,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                             <div className="p-4 space-y-2">
                                                 {hospitalBills.length > 0 ? (
                                                     hospitalBills.map((bill: any) => (
-                                                        <div key={bill.id} className="flex justify-between items-center bg-muted/20 p-2.5 rounded-xl hover:bg-muted/40 transition-colors border border-transparent hover:border-white/10 group">
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[11px] font-black group-hover:text-primary transition-colors leading-tight">
-                                                                    {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type?.toUpperCase()}
-                                                                </span>
-                                                                <div className="flex items-center gap-1.5 opacity-60">
-                                                                    <span className="text-[8px] font-bold text-muted-foreground uppercase">{bill.invoiceNumber}</span>
-                                                                    <span className="text-[8px] font-bold text-muted-foreground">{bill.saleItems?.length || 0} service(s)</span>
-                                                                    <Badge variant="outline" className={`text-[7px] h-3 px-1 font-black uppercase border-none ${bill.paymentStatus === 'paid' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
-                                                                        {bill.paymentStatus}
-                                                                    </Badge>
-                                                                    {Number(bill.discountAmount) > 0 && (
-                                                                        <Badge variant="outline" className="text-[7px] h-3 px-1 font-black uppercase border-none bg-amber-500/10 text-amber-600">
-                                                                            -{formatCurrency(Number(bill.discountAmount))} disc
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="flex flex-col items-end">
-                                                                    <span className="text-xs font-black tabular-nums">{formatCurrency(Number(bill.netPrice))}</span>
-                                                                    {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(Number(bill.dueAmount))}</span>}
-                                                                </div>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 rounded-lg"
-                                                                    title="Apply bill-level discount"
-                                                                    onClick={() => {
-                                                                        setEditingSaleId(bill.id)
-                                                                        // Pre-fill with current bill discount
-                                                                        if (Number(bill.discountPercentage) > 0) {
-                                                                            setDiscountType('percent')
-                                                                            setDiscountPercent(Number(bill.discountPercentage))
-                                                                        } else {
-                                                                            setDiscountType('amount')
-                                                                            setDiscountAmount(Number(bill.discountAmount) || 0)
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <Pencil className="h-3 w-3" />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
+                                                        <BillItemRow key={bill.id} bill={bill} refetch={refetchDischarge} />
                                                     ))
                                                 ) : (
                                                     <div className="py-12 text-center text-[10px] font-black uppercase opacity-20 tracking-widest">No Hospital Charges Recorded</div>
@@ -350,9 +406,50 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                             <span className="font-bold text-emerald-600/60 uppercase text-[10px]">Total Amount Paid</span>
                                             <span className="font-black text-emerald-600 tabular-nums">-{formatCurrency(Number(grandTotalPaid))}</span>
                                         </div>
+
+                                        {/* Global Discount Section */}
+                                        <div className="pt-2 space-y-3">
+                                            <Label className="text-[10px] font-black uppercase text-amber-600">Overall Discount</Label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="relative">
+                                                    <SmartNumberInput 
+                                                        placeholder="Percentage (%)" 
+                                                        className="h-9 text-sm font-black bg-amber-500/5 border-amber-500/20 text-amber-600 pr-8"
+                                                        min={0}
+                                                        max={100}
+                                                        value={overallDiscountPercent === 0 ? undefined : overallDiscountPercent}
+                                                        onChange={(val: number | undefined) => {
+                                                            setOverallDiscountPercent(val || 0)
+                                                            setOverallDiscountFixed(0)
+                                                        }}
+                                                    />
+                                                    <span className="absolute right-3 top-2.5 text-xs text-amber-500/50">%</span>
+                                                </div>
+                                                <div className="relative">
+                                                    <SmartNumberInput 
+                                                        placeholder="Fixed (Tk)" 
+                                                        className="h-9 text-sm font-black bg-amber-500/5 border-amber-500/20 text-amber-600 pr-8"
+                                                        min={0}
+                                                        value={overallDiscountFixed === 0 ? undefined : overallDiscountFixed}
+                                                        onChange={(val: number | undefined) => {
+                                                            setOverallDiscountFixed(val || 0)
+                                                            setOverallDiscountPercent(0)
+                                                        }}
+                                                    />
+                                                    <span className="absolute right-3 top-2.5 text-[10px] font-black text-amber-500/50">BDT</span>
+                                                </div>
+                                            </div>
+                                            {overallDiscountAmount > 0 && (
+                                                <p className="text-[9px] font-bold text-amber-600 flex justify-between px-1">
+                                                    <span>Applied Discount:</span>
+                                                    <span>-{formatCurrency(overallDiscountAmount)}</span>
+                                                </p>
+                                            )}
+                                        </div>
+
                                         <div className="flex justify-between items-center p-4 bg-primary/10 rounded-2xl border border-primary/5 mt-4 group">
                                             <span className="font-black text-primary uppercase text-[11px] tracking-widest">Net Payable Due</span>
-                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(Number(grandTotalDue))}</span>
+                                            <span className="text-3xl font-black text-primary tabular-nums tracking-tighter group-hover:scale-105 transition-transform">{formatCurrency(netPayableDue)}</span>
                                         </div>
                                     </div>
 
@@ -365,6 +462,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                         value={paidAmount}
                                                         onChange={(val) => setPaidAmount(val || 0)}
                                                         className="h-11 text-xl font-black bg-background border-primary/20 shadow-inner text-primary"
+                                                        max={netPayableDue}
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
@@ -396,6 +494,15 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
+                                                </div>
+                                                <div className="space-y-1.5 mt-2">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase">Payment Note (Optional)</Label>
+                                                    <Input 
+                                                        placeholder="Add payment memo..."
+                                                        value={paymentNote}
+                                                        onChange={(e) => setPaymentNote(e.target.value)}
+                                                        className="h-9 bg-background border-primary/5 text-xs font-bold"
+                                                    />
                                                 </div>
                                             </div>
                                         ) : (
@@ -438,95 +545,21 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                 onSuccess={() => refetchDischarge()}
             />
 
-            {/* Edit Sale Discount Dialog */}
-            <Dialog open={!!editingSaleId} onOpenChange={(o) => { if (!o) { setEditingSaleId(null); setDiscountAmount(0); setDiscountPercent(0) } }}>
-                <DialogContent className="sm:max-w-sm rounded-3xl border-none shadow-2xl p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-4 bg-amber-500/5 border-b border-amber-500/10">
-                        <DialogTitle className="text-base font-black text-amber-600 flex items-center gap-2">
-                            <Pencil className="h-4 w-4" />
-                            Apply Discount
-                        </DialogTitle>
-                        <DialogDescription className="text-xs font-medium opacity-60">
-                            {editingSale?.invoiceNumber} · {editingSale?.saleItems?.length || 0} service(s) · Total: {formatCurrency(Number(editingSale?.totalPrice) || 0)}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="p-6 space-y-4">
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                variant={discountType === 'amount' ? 'default' : 'outline'}
-                                size="sm"
-                                className="rounded-xl text-xs font-black"
-                                onClick={() => setDiscountType('amount')}
-                            >
-                                Fixed Amount
-                            </Button>
-                            <Button
-                                variant={discountType === 'percent' ? 'default' : 'outline'}
-                                size="sm"
-                                className="rounded-xl text-xs font-black"
-                                onClick={() => setDiscountType('percent')}
-                            >
-                                Percentage
-                            </Button>
-                        </div>
-
-                        {discountType === 'amount' ? (
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase opacity-60">Discount Amount</Label>
-                                <SmartNumberInput
-                                    value={discountAmount}
-                                    onChange={(v) => setDiscountAmount(v || 0)}
-                                    className="h-11 text-lg font-black"
-                                />
-                            </div>
-                        ) : (
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black uppercase opacity-60">Discount %</Label>
-                                <SmartNumberInput
-                                    value={discountPercent}
-                                    onChange={(v) => setDiscountPercent(v || 0)}
-                                    className="h-11 text-lg font-black"
-                                />
-                                {discountPercent > 0 && (
-                                    <p className="text-[10px] font-bold text-amber-600">
-                                        = {formatCurrency((Number(editingSale?.totalPrice || 0) * discountPercent) / 100)} off
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    <DialogFooter className="p-6 pt-0 gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl font-black text-xs" onClick={() => { setEditingSaleId(null); setDiscountAmount(0); setDiscountPercent(0) }}>
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="rounded-xl font-black text-xs bg-amber-500 hover:bg-amber-600 text-white"
-                            disabled={isUpdatingSale}
-                            onClick={async () => {
-                                if (!editingSaleId) return
-                                const finalDiscountAmount = discountType === 'percent'
-                                    ? (Number(editingSale?.totalPrice || 0) * discountPercent) / 100
-                                    : discountAmount
-                                const finalDiscountPercent = discountType === 'percent' ? discountPercent : 0
-                                try {
-                                    await updateSale({ id: editingSaleId, data: { discountAmount: finalDiscountAmount, discountPercentage: finalDiscountPercent } })
-                                    toast.success('Discount applied successfully')
-                                    setEditingSaleId(null)
-                                    setDiscountAmount(0)
-                                    setDiscountPercent(0)
-                                    refetchDischarge()
-                                } catch (err: any) {
-                                    toast.error(err?.response?.data?.message || 'Failed to apply discount')
-                                }
-                            }}
-                        >
-                            {isUpdatingSale ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                            Apply Discount
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </Dialog>
+
+        <DischargeReceiptDialog 
+            open={receiptOpen}
+            onOpenChange={(v) => {
+                setReceiptOpen(v)
+                if (!v) {
+                    onOpenChange(false)
+                }
+            }}
+            admission={admission}
+            data={data || null}
+            finalPaidAmount={paidAmount}
+            overallDiscount={overallDiscountAmount}
+        />
+        </>
     )
 }

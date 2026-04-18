@@ -272,15 +272,25 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
         </div>
 
         {/* Footer Info */}
-        <div className="grid grid-cols-2 border-t border-black border-dashed pt-2 font-bold text-[11px] relative z-10">
-            <div className="space-y-1">
-                <div>In Word : {amountInWords}</div>
-                <div>Delivery : {formattedDeliveryDate} {formattedDeliveryTime}</div>
+        <div className="border-t border-black border-dashed pt-2 font-bold text-[11px] relative z-10 flex flex-col gap-1">
+            <div className="grid grid-cols-2">
+                <div className="space-y-1">
+                    <div>In Word : {amountInWords}</div>
+                    <div>Delivery : {formattedDeliveryDate} {formattedDeliveryTime}</div>
+                </div>
+                <div className="text-right space-y-1">
+                    <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
+                    <div>Cashier : {assignedStaffName}</div>
+                </div>
             </div>
-            <div className="text-right space-y-1">
-                <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
-                <div>Cashier : {assignedStaffName}</div>
-            </div>
+            
+            {/* Payment Note Section */}
+            {(data?.payments?.[0]?.note || data?.note) && (
+                <div className="mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start">
+                    <span className="shrink-0 uppercase text-[9px] opacity-70 mt-0.5">Note:</span>
+                    <span className="italic font-medium text-[10px] uppercase leading-tight">{data?.payments?.[0]?.note || data.note}</span>
+                </div>
+            )}
         </div>
 
         <div className="flex justify-between items-end mt-8 pt-8 font-bold text-xs relative z-10">

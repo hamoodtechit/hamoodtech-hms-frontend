@@ -36,6 +36,11 @@ export interface Admission {
   department?: {
     name: string;
   };
+  discountPercentage?: number;
+  discountAmount?: number;
+  totalAmount?: number;
+  paidAmount?: number;
+  dueAmount?: number;
 }
 
 export interface AdmissionPayload {
@@ -192,6 +197,11 @@ export interface DischargeInitiateData {
 
 export interface DischargePayload {
   patientId: string;
+  discountPercentage?: number;
+  discountAmount?: number;
+  totalAmount?: number;
+  paidAmount?: number;
+  dueAmount?: number;
   payments: {
     accountId: string;
     amount: number;

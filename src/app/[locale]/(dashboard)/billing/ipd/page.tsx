@@ -406,7 +406,6 @@ export default function IPDBillingPage() {
                     admission={selectedAdmission}
                     onSuccess={() => {
                         refetch()
-                        setPrintDialogOpen(true)
                     }}
                 />
 

@@ -183,6 +183,7 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [selectedAccountId, setSelectedAccountId] = useState<string>("")
   const [paidAmount, setPaidAmount] = useState(0)
+  const [paymentNote, setPaymentNote] = useState("")
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [lastTransaction, setLastTransaction] = useState<any>(null)
@@ -492,7 +493,7 @@ export default function POSPage() {
                   accountId: selectedAccountId || pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id || "",
                   amount: actuallyPaid,
                   paymentMethod: paymentMethod,
-                  note: ""
+                  note: paymentNote || undefined
               }],
 
           }
@@ -529,6 +530,7 @@ export default function POSPage() {
           clearCart()
           setDiscount(0)
           setDiscountFixedAmount(0)
+          setPaymentNote("")
           setCartOpen(false) 
           
       } catch (error) {
@@ -632,6 +634,8 @@ export default function POSPage() {
                         onFinalizeCheckout={finalizeCheckout}
                         isCheckoutOpen={isCheckoutOpen}
                         setIsCheckoutOpen={setIsCheckoutOpen}
+                        paymentNote={paymentNote}
+                        setPaymentNote={setPaymentNote}
                     />
                 </SheetContent>
             </Sheet>
@@ -1109,6 +1113,8 @@ export default function POSPage() {
             onFinalizeCheckout={finalizeCheckout}
             isCheckoutOpen={isCheckoutOpen}
             setIsCheckoutOpen={setIsCheckoutOpen}
+            paymentNote={paymentNote}
+            setPaymentNote={setPaymentNote}
          />
       </div>
 

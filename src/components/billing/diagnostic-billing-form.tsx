@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
@@ -19,6 +20,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useEmployees } from "@/hooks/hr-queries"
@@ -60,7 +69,9 @@ import {
     AlertCircle,
     TestTube2,
     Microscope,
-    Radiation
+    Radiation,
+    Loader2,
+    ShoppingCart
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useMemo } from "react"
@@ -146,6 +157,7 @@ export function DiagnosticBillingForm({
     const [historyOpen, setHistoryOpen] = useState(false)
     const [receiptOpen, setReceiptOpen] = useState(false)
     const [lastSale, setLastSale] = useState<Sale | null>(null)
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
     const [detailsOpen, setDetailsOpen] = useState(false)
     const [selectedSaleForDetails, setSelectedSaleForDetails] = useState<Sale | null>(null)
     const [initialAddPayment, setInitialAddPayment] = useState(false)
@@ -197,6 +209,7 @@ export function DiagnosticBillingForm({
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
+    const [paymentNote, setPaymentNote] = useState<string>("")
     
     // Auto-fill room based on user
     useEffect(() => {
@@ -298,6 +311,7 @@ export function DiagnosticBillingForm({
                 accountId: selectedAccountId,
                 amount: paidAmount,
                 paymentMethod: paymentMethod,
+                note: paymentNote || undefined
             }] : [],
             saleItems: cart.map(item => ({
                 itemName: item.name,
@@ -328,6 +342,7 @@ export function DiagnosticBillingForm({
             setSelectedCustomer(null)
             setSelectedDoctorId("")
             setPaidAmount(0)
+            setPaymentNote("")
             setSelectedReferralPersonId("")
             setDiscount(0)
             setDiscountFixedAmount(0)
@@ -361,7 +376,7 @@ export function DiagnosticBillingForm({
     }
 
     return (
-        <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20 pb-20">
+        <div className="flex flex-col gap-4 p-4 lg:p-6 min-h-[calc(100vh-64px)] bg-muted/10 pb-12">
             {/* Header Suite */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -393,89 +408,18 @@ export function DiagnosticBillingForm({
                 {/* Main Workflow Column */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
                     
-                    {/* Patient & Consultant Settings */}
-                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2.5rem]">
-                        <CardHeader className="bg-primary/3 border-b p-6">
-                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
-                                <User className="w-4 h-4" /> Personnel Assignment
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Patient Registry *</Label>
-                                    <PatientSearch 
-                                        selectedPatient={selectedCustomer} 
-                                        onSelect={setSelectedCustomer} 
-                                    />
-                                    {selectedCustomer && (
-                                        <div className="flex items-center gap-3 p-3 bg-emerald-500/3 rounded-2xl border border-emerald-500/20 animate-in fade-in slide-in-from-left-2 duration-300">
-                                            <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black shadow-lg shadow-emerald-500/20">
-                                                {selectedCustomer.name.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="font-black text-sm text-foreground truncate">{selectedCustomer.name}</p>
-                                                <p className="text-[10px] font-bold text-muted-foreground">{selectedCustomer.phone}</p>
-                                            </div>
-                                            <div className="ml-auto flex flex-col items-end">
-                                                <Badge className="bg-emerald-100 text-emerald-700 text-[8px] font-black rounded-lg">ID: {selectedCustomer.patientNumber}</Badge>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Referred Consultant</Label>
-                                    <SearchableSelect 
-                                        value={selectedDoctorId}
-                                        onChange={setSelectedDoctorId}
-                                        options={users
-                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
-                                            .map((u: any) => ({ 
-                                                id: u.id, 
-                                                name: u.fullName || u.username 
-                                            }))}
-                                        placeholder="Select Consultant..."
-                                        loading={loadingUsers}
-                                        showAll={false}
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">RefBy (Referral)</Label>
-                                    <ReferralSearch 
-                                        selectedReferralId={selectedReferralPersonId}
-                                        onSelect={(referral) => setSelectedReferralPersonId(referral?.id || "")}
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Location Reference</Label>
-                                    <div className="relative">
-                                        <DoorOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-30" />
-                                        <Input 
-                                            placeholder="Room or Ward Number"
-                                            value={roomNumber}
-                                            onChange={(e) => setRoomNumber(e.target.value)}
-                                            className="h-11 pl-10 rounded-xl bg-muted/20 border-border focus:ring-primary/10 transition-all font-bold"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
 
                     {/* Procedure Inventory & Selection */}
-                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2.5rem]">
-                        <CardHeader className="bg-indigo-500/3 border-b p-6 flex flex-row items-center justify-between">
+                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2rem]">
+                        <CardHeader className="bg-indigo-500/5 border-b p-5 flex flex-row items-center justify-between">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700 flex items-center gap-2">
                                 <TestTube2 className="w-4 h-4" /> Lab Procedure Queue
                             </CardTitle>
-                            <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 uppercase font-black px-3 rounded-lg">
+                            <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 uppercase font-black px-3 py-0.5 rounded-lg">
                                 {allTests.length} Valid Services
                             </Badge>
                         </CardHeader>
-                        <CardContent className="p-8 space-y-8">
+                        <CardContent className="p-5 md:p-6 space-y-6">
                             <div className="flex flex-col lg:flex-row gap-6">
                                 <div className="flex-1 space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Catalog</Label>
@@ -496,9 +440,9 @@ export function DiagnosticBillingForm({
                             </div>
 
                             {cart.length > 0 ? (
-                                <div className="rounded-[2rem] border overflow-hidden bg-background shadow-inner">
+                                <div className="rounded-[2rem] border bg-background shadow-inner max-h-[40vh] overflow-y-auto custom-scrollbar relative">
                                     <Table>
-                                        <TableHeader className="bg-muted/50">
+                                        <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
                                             <TableRow className="h-12 border-b border-border/50">
                                                 <TableHead className="text-[9px] uppercase font-black px-6 tracking-widest">Procedure Detail</TableHead>
                                                 <TableHead className="text-[9px] uppercase font-black px-6 tracking-widest w-40">Delivery Projection</TableHead>
@@ -594,179 +538,315 @@ export function DiagnosticBillingForm({
                     </Card>
                 </div>
 
-                {/* Vertical Settlement Engine */}
-                <div className="lg:col-span-4 space-y-6">
-                    <Card className="border-none shadow-2xl shadow-primary/20 sticky top-6 overflow-hidden rounded-[2.5rem] bg-background">
-                        <CardHeader className="p-6 border-b bg-muted/30">
+                <div className="lg:col-span-4 self-start sticky top-20">
+                    <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
+                        <CardHeader className="p-5 border-b bg-muted/30 shrink-0">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
-                                <DollarSign className="w-4 h-4" /> Settlement Parameters
+                                <ShoppingCart className="w-4 h-4" /> Lab Transaction Summary
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-8 space-y-8">
-                            
-                            {/* Global Incentive Application */}
-                            <div className="space-y-3">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Bulk Discount Factor</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="relative">
-                                        <SmartNumberInput 
-                                            placeholder="Percent %" 
-                                            className="h-12 text-sm pr-10 rounded-2xl bg-muted/5 focus:ring-primary/10 transition-all font-bold" 
-                                            min={0}
-                                            max={100}
-                                            value={discount === 0 ? undefined : discount}
-                                            onChange={(val: number | undefined) => {
-                                                setDiscount(val || 0)
-                                                setDiscountFixedAmount(0)
-                                            }}
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground/30">%</span>
-                                    </div>
-                                    <div className="relative">
-                                        <SmartNumberInput 
-                                            placeholder="Fixed TK" 
-                                            className="h-12 text-sm pr-10 rounded-2xl bg-muted/5 focus:ring-primary/10 transition-all font-bold" 
-                                            min={0}
-                                            value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
-                                            onChange={(val: number | undefined) => {
-                                                setDiscountFixedAmount(val || 0)
-                                                setDiscount(0)
-                                            }}
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground/30">Tk</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Summary Visualizer */}
-                            <div className="space-y-4 p-6 bg-linear-to-br from-primary/4 to-indigo-500/4 rounded-[2rem] border border-primary/10 shadow-inner">
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                    <span>Gross Aggregate</span>
-                                    <span className="tabular-nums font-bold">{formatCurrency(subtotal)}</span>
-                                </div>
-                                {discountAmount > 0 && (
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-emerald-600">
-                                        <span>Discount Correction</span>
-                                        <span className="tabular-nums font-bold">-{formatCurrency(discountAmount)}</span>
-                                    </div>
-                                )}
-                                {tax > 0 && (
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                        <span>Consolidated Tax ({vatPercentage}%)</span>
-                                        <span className="tabular-nums font-bold">{formatCurrency(tax)}</span>
-                                    </div>
-                                )}
-                                <div className="pt-5 border-t border-dashed border-primary/20 flex flex-col gap-1 items-end">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 text-right">Adjusted Net Total</span>
-                                    <span className="text-4xl font-black text-primary tabular-nums tracking-tighter decoration-primary/10 underline underline-offset-8 decoration-4">{formatCurrency(total)}</span>
-                                </div>
-                            </div>
-
-                            {/* Payment Matrix */}
-                            <div className="space-y-6 pt-4">
-                                <div className="space-y-3">
-                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Received Cash/Credit</Label>
-                                    <SmartNumberInput 
-                                        value={paidAmount}
-                                        onFocus={(e: any) => e.target.select()} 
-                                        onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                        className="h-20 text-4xl font-black border-2 border-primary/20 text-primary bg-primary/3 rounded-[1.5rem] px-8 tabular-nums tracking-tighter focus:ring-8 focus:ring-primary/5 transition-all outline-none"
-                                    />
-                                    <div className="flex justify-between items-center bg-rose-500/4 px-4 py-3 rounded-xl border border-rose-500/10">
-                                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Residual Bal.</span>
-                                        <span className="font-black text-rose-600 text-lg tabular-nums">{formatCurrency(Math.max(0, total - paidAmount))}</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Instrument</Label>
-                                        <Select value={paymentMethod} onValueChange={(v: string) => setPaymentMethod(v as PaymentMethod)}>
-                                            <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 font-black text-[10px] uppercase tracking-widest focus:ring-primary/10">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
-                                                {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
-                                                    <SelectItem key={method} value={method} className="text-[10px] font-black uppercase tracking-widest py-3">
-                                                        {method}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Bank/Vault *</Label>
-                                        <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                                            <SelectTrigger className="h-12 rounded-xl border-border bg-muted/10 font-black text-[10px] uppercase tracking-widest focus:ring-primary/10">
-                                                <SelectValue placeholder="Source..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
-                                                {accounts.map((account: FinanceAccount) => (
-                                                    <SelectItem key={account.id} value={account.id} className="text-[10px] font-black uppercase tracking-widest py-3">
-                                                        {account.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 space-y-5">
-                                    <Button 
-                                        className={cn(
-                                            "w-full h-20 text-xl font-black uppercase tracking-[0.2em] rounded-[1.75rem] shadow-2xl transition-all active:scale-95 group relative overflow-hidden",
-                                            isReady ? "bg-primary hover:bg-primary/95 shadow-primary/30" : "bg-muted text-muted-foreground"
-                                        )}
-                                        disabled={!isReady || createSaleMutation.isPending}
-                                        onClick={handleCheckout}
-                                    >
-                                        <div className="flex items-center gap-4 relative z-10 font-black">
-                                            {createSaleMutation.isPending ? <Loader2 className="w-7 h-7 animate-spin" /> : <CreditCard className="w-7 h-7" />}
-                                            {createSaleMutation.isPending ? "Syncing..." : "Finalize Order"}
+                        <CardContent className="p-0 overflow-hidden flex flex-col flex-1">
+                            {/* Mini Cart / Summary List */}
+                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                                {cart.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3 opacity-40">
+                                        <div className="p-4 bg-muted rounded-2xl">
+                                            <ShoppingCart className="h-8 w-8" />
                                         </div>
-                                        {isReady && <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1500" />}
-                                    </Button>
-
-                                    {/* Action Checker Matrix */}
-                                    <div className="grid grid-cols-1 gap-1 p-5 bg-muted/30 rounded-[1.5rem] border border-border/50 shadow-inner">
-                                        {validationErrors.map((err) => (
-                                            <div key={err.key} className="flex items-center gap-3 py-1">
-                                                <div className={cn(
-                                                    "h-5 w-5 rounded-full flex items-center justify-center transition-all duration-500", 
-                                                    err.valid ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-muted-foreground/10 outline outline-1 outline-muted-foreground/20"
-                                                )}>
-                                                    {err.valid && <CheckCircle2 className="w-3.5 h-3.5 text-white animate-in zoom-in duration-300" />}
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Cart is empty</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {cart.map((item) => {
+                                             const itemDiscountAmount = item.discountAmount || 
+                                                (item.discountPercentage ? (item.price * item.discountPercentage) / 100 : 0)
+                                            const itemTotal = item.price - itemDiscountAmount
+                                            
+                                            return (
+                                                <div key={item.id} className="p-3 bg-muted/20 rounded-2xl border border-border/50 group animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div className="flex justify-between items-start gap-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-black text-[11px] text-foreground truncate leading-tight uppercase tracking-tight">
+                                                                {item.name}
+                                                            </p>
+                                                            <p className="text-[9px] text-muted-foreground font-bold flex items-center gap-1.5 mt-1">
+                                                                <Clock className="w-2.5 h-2.5" /> Due: {format(new Date(item.deliveryDate), 'MMM dd')}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="font-black text-xs text-primary">{formatCurrency(itemTotal)}</p>
+                                                            {itemDiscountAmount > 0 && (
+                                                                <p className="text-[8px] text-rose-500 font-bold">-{formatCurrency(itemDiscountAmount)}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <span className={cn(
-                                                    "text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-500", 
-                                                    err.valid ? "text-emerald-700 opacity-100" : "text-muted-foreground/30"
-                                                )}>
-                                                    {err.label}
-                                                </span>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Sticky Settlement Summary & Trigger */}
+                            <div className="p-6 bg-secondary/5 border-t shrink-0 space-y-6">
+                                <div className="space-y-1.5">
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <span>Items Subtotal</span>
+                                        <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+                                    </div>
+                                    {(discount > 0 || discountFixedAmount > 0) && (
+                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                                            <span>Bulk Discount</span>
+                                            <span className="tabular-nums">-{formatCurrency(discountAmount)}</span>
+                                        </div>
+                                    )}
+                                    {tax > 0 && (
+                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                            <span>Tax Calculation ({vatPercentage}%)</span>
+                                            <span className="tabular-nums">{formatCurrency(tax)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-baseline pt-4 border-t border-dashed mt-4 border-primary/20">
+                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Gross Total</span>
+                                        <span className="text-3xl font-black text-primary tabular-nums tracking-tighter">{formatCurrency(total)}</span>
                                     </div>
                                 </div>
+
+                                <Sheet open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button 
+                                            className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-3xl shadow-2xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 shadow-primary/20 group relative overflow-hidden"
+                                            disabled={cart.length === 0}
+                                        >
+                                            <div className="flex items-center gap-3 relative z-10">
+                                                <CreditCard className="w-6 h-6" />
+                                                Review & Finalize
+                                            </div>
+                                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000" />
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-full sm:max-w-md flex flex-col p-0 gap-0 border-none shadow-2xl rounded-l-[3rem] overflow-hidden">
+                                        <SheetHeader className="p-8 border-b bg-primary/3">
+                                            <SheetTitle className="flex items-center gap-3 text-xl font-black tracking-tight">
+                                                <div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                                                    <Receipt className="w-5 h-5 text-white" />
+                                                </div>
+                                                Checkout Details
+                                            </SheetTitle>
+                                        </SheetHeader>
+
+                                        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                                            {/* Section 1: Personnel Assignment */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="h-1 bg-primary w-6 rounded-full" />
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Personnel Assignment</Label>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Patient *</Label>
+                                                    <PatientSearch 
+                                                        selectedPatient={selectedCustomer} 
+                                                        onSelect={setSelectedCustomer} 
+                                                    />
+                                                    {selectedCustomer && (
+                                                        <div className="flex items-center gap-3 p-3 bg-emerald-500/3 rounded-2xl border border-emerald-500/20">
+                                                            <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black shadow-lg shadow-emerald-500/20">
+                                                                {selectedCustomer.name.charAt(0)}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-black text-sm text-foreground truncate">{selectedCustomer.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground">{selectedCustomer.phone}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-4">
+                                                    <div className="space-y-3">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Referred Consultant</Label>
+                                                        <SearchableSelect 
+                                                            value={selectedDoctorId}
+                                                            onChange={setSelectedDoctorId}
+                                                            options={users
+                                                                .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
+                                                                .map((u: any) => ({ 
+                                                                    id: u.id, 
+                                                                    name: u.fullName || u.username 
+                                                                }))}
+                                                            placeholder="Select Consultant..."
+                                                            loading={loadingUsers}
+                                                            showAll={false}
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-3">
+                                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Referral (RefBy)</Label>
+                                                            <ReferralSearch 
+                                                                selectedReferralId={selectedReferralPersonId}
+                                                                onSelect={(referral) => setSelectedReferralPersonId(referral?.id || "")}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Location</Label>
+                                                            <Input 
+                                                                placeholder="Room/Ward"
+                                                                value={roomNumber}
+                                                                onChange={(e) => setRoomNumber(e.target.value)}
+                                                                className="h-11 rounded-xl bg-muted/20 border-none font-bold text-xs"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-muted/50" />
+
+                                            {/* Section 2: Financial Application */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="h-1 bg-primary w-6 rounded-full" />
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Financial Application</Label>
+                                                </div>
+
+                                                {/* Global Discount */}
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Incentive</Label>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="relative">
+                                                            <SmartNumberInput 
+                                                                placeholder="%" 
+                                                                className="h-11 text-xs pr-8 rounded-xl bg-muted/20 border-none font-bold" 
+                                                                min={0}
+                                                                max={100}
+                                                                value={discount === 0 ? undefined : discount}
+                                                                onChange={(val: number | undefined) => {
+                                                                    setDiscount(val || 0)
+                                                                    setDiscountFixedAmount(0)
+                                                                }}
+                                                            />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-30">%</span>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <SmartNumberInput 
+                                                                placeholder="Tk" 
+                                                                className="h-11 text-xs pr-8 rounded-xl bg-muted/20 border-none font-bold" 
+                                                                min={0}
+                                                                value={discountFixedAmount === 0 ? undefined : discountFixedAmount}
+                                                                onChange={(val: number | undefined) => {
+                                                                    setDiscountFixedAmount(val || 0)
+                                                                    setDiscount(0)
+                                                                }}
+                                                            />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-30">Tk</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Method</Label>
+                                                        <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                                            <SelectTrigger className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                                {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                                                    <SelectItem key={method} value={method} className="text-xs font-bold py-3 capitalize">
+                                                                        {method}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Amount Paid</Label>
+                                                        <SmartNumberInput 
+                                                            value={paidAmount}
+                                                            onFocus={(e: any) => e.target.select()} 
+                                                            onChange={(val: number | undefined) => setPaidAmount(val || 0)}
+                                                            className="h-11 text-base font-black border-none bg-primary/5 text-primary rounded-xl tabular-nums"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Target Asset Account *</Label>
+                                                    <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                                        <SelectTrigger className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs">
+                                                            <SelectValue placeholder="Choose account..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                            {accounts.map((account: FinanceAccount) => (
+                                                                <SelectItem key={account.id} value={account.id} className="text-xs font-bold py-3">
+                                                                    {account.name} ({account.type}) - Tk {formatCurrency(Number(account.currentBalance))}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Memo / Note</Label>
+                                                    <Input 
+                                                        placeholder="Add transaction note..."
+                                                        value={paymentNote}
+                                                        onChange={(e) => setPaymentNote(e.target.value)}
+                                                        className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Drawer Sticky Footer */}
+                                        <div className="p-8 border-t bg-foreground text-background shrink-0">
+                                            <div className="flex justify-between items-center mb-6">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Payable Balance</p>
+                                                    <p className="text-3xl font-black tabular-nums tracking-tighter">{formatCurrency(total)}</p>
+                                                </div>
+                                                <div className="text-right space-y-0.5">
+                                                    <p className={cn(
+                                                        "text-[10px] font-black uppercase tracking-widest",
+                                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                                    )}>
+                                                        {paidAmount >= (total - 0.01) ? "Change Back" : "Ref. Due"}
+                                                    </p>
+                                                    <p className={cn(
+                                                        "text-xl font-black tabular-nums tracking-tight",
+                                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                                    )}>
+                                                        {formatCurrency(Math.abs(paidAmount - total))}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <Button 
+                                                className={cn(
+                                                    "w-full h-18 text-xl font-black uppercase tracking-[0.2em] rounded-3xl shadow-2xl transition-all active:scale-[0.98]",
+                                                    paidAmount < (total - 0.01) && total > 0 
+                                                        ? "bg-rose-500 hover:bg-rose-600 text-white" 
+                                                        : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+                                                )}
+                                                disabled={!isReady || createSaleMutation.isPending}
+                                                onClick={handleCheckout}
+                                            >
+                                                {createSaleMutation.isPending ? (
+                                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                                ) : (
+                                                    <div className="flex items-center gap-3">
+                                                        <CheckCircle2 className="w-6 h-6" />
+                                                        Complete Payment
+                                                    </div>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Operational Support Card */}
-                    <Card className="border-none shadow-xl shadow-primary/5 bg-indigo-50 dark:bg-indigo-900/5 rounded-[2rem]">
-                        <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center flex-shrink-0">
-                                    <AlertCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700">Financial Integrity</p>
-                                    <p className="text-[10px] font-bold text-indigo-900/40 dark:text-indigo-100/40 leading-relaxed uppercase">
-                                        All transactions are immutable once finalized and automatically reconciled with branch ledgers.
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
             </div>
 
@@ -899,9 +979,9 @@ export function DiagnosticBillingForm({
                         </div>
 
                         {/* Audit Log Table */}
-                        <div className="flex-1 border border-border/50 rounded-[2.5rem] overflow-hidden bg-background shadow-xl shadow-muted/20">
+                        <div className="flex-1 border border-border/50 rounded-[2.5rem] overflow-y-auto custom-scrollbar relative bg-background shadow-xl shadow-muted/20">
                             <Table>
-                                <TableHeader className="bg-muted/30">
+                                <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
                                     <TableRow className="hover:bg-transparent border-b-border/30">
                                         <TableHead className="w-44 h-14 text-[10px] font-black uppercase tracking-widest pl-8">Reference</TableHead>
                                         <TableHead className="text-[10px] font-black uppercase tracking-widest">Patient</TableHead>
@@ -1045,21 +1125,3 @@ export function DiagnosticBillingForm({
     )
 }
 
-function Loader2(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-    )
-}

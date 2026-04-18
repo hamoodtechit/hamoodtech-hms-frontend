@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Table,
     TableBody,
@@ -17,6 +18,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
+import { useCreateAppointment } from "@/hooks/appointment-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useEmployees } from "@/hooks/hr-queries"
 import { useCreateSale, useSales } from "@/hooks/sales-queries"
@@ -29,7 +33,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { FinanceAccount } from "@/types/finance"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
 import { Sale, SalePayload } from "@/types/sales"
-import { CreditCard, History, Plus, Receipt, Search, Trash2 } from "lucide-react"
+import { CreditCard, History, Plus, Receipt, Search, Trash2, ShoppingCart, Loader2, User, LayoutGrid, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
@@ -89,6 +93,7 @@ export function ExtraChargeBillingForm() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
+    const [paymentNote, setPaymentNote] = useState<string>("")
     
     // UI State
     const [receiptOpen, setReceiptOpen] = useState(false)
@@ -96,6 +101,10 @@ export function ExtraChargeBillingForm() {
     const [lastSale, setLastSale] = useState<any | null>(null)
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+
+    // Validation
+    const isReady = !!selectedCustomer && !!selectedAccountId && cart.length > 0
 
     // Set default staff
     useEffect(() => {
@@ -122,7 +131,7 @@ export function ExtraChargeBillingForm() {
             quantity: 1
         }
 
-        setCart([...cart, item])
+        setCart(prev => [...prev, item])
         setNewItemName("")
         setNewItemPrice(0)
         setNewItemDesc("")
@@ -158,25 +167,26 @@ export function ExtraChargeBillingForm() {
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,
             paymentStatus: paidAmount >= total ? 'paid' : paidAmount > 0 ? 'partial' : 'due',
-            paidAmount: paidAmount,
-            dueAmount: Math.max(0, total - paidAmount),
+            paidAmount: Number(paidAmount),
+            dueAmount: Math.max(0, total - Number(paidAmount)),
             discountPercentage: 0,
             discountAmount: 0,
-            taxPercentage: vatPercentage,
-            taxAmount: tax,
-            payments: paidAmount > 0 ? [{
+            taxPercentage: Number(vatPercentage),
+            taxAmount: Number(tax),
+            payments: Number(paidAmount) > 0 ? [{
                 accountId: selectedAccountId,
-                amount: paidAmount,
+                amount: Number(paidAmount),
                 paymentMethod: paymentMethod,
+                note: paymentNote || undefined
             }] : [],
             saleItems: cart.map(item => ({
                 itemName: item.name,
                 itemDescription: item.description,
                 unit: 'service',
-                price: item.price,
-                mrp: item.price,
-                quantity: item.quantity,
-                totalPrice: item.price * item.quantity,
+                price: Number(item.price),
+                mrp: Number(item.price),
+                quantity: Number(item.quantity),
+                totalPrice: Number(item.price) * Number(item.quantity),
             }))
         }
 
@@ -190,6 +200,7 @@ export function ExtraChargeBillingForm() {
             setCart([])
             setSelectedCustomer(null)
             setPaidAmount(0)
+            setPaymentNote("")
             refetchSales()
         } catch (error) {
             toast.error("Failed to process extra charge")
@@ -197,8 +208,8 @@ export function ExtraChargeBillingForm() {
     }
 
     return (
-        <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">
-            <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 p-4 lg:p-6 min-h-[calc(100vh-64px)] bg-muted/10 pb-12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-primary">Extra Charges</h1>
                     <p className="text-muted-foreground text-sm font-medium">Record additional fees and services for patients.</p>
@@ -206,47 +217,32 @@ export function ExtraChargeBillingForm() {
                 <Button 
                     variant="outline" 
                     size="sm" 
-                    className="gap-2 border-primary/20 hover:bg-primary/5 shadow-sm"
+                    className="gap-2 h-11 px-6 rounded-2xl border-primary/20 hover:bg-primary/5 shadow-sm font-black text-xs uppercase tracking-widest"
                     onClick={() => setHistoryOpen(true)}
                 >
                     <History className="h-4 w-4 text-primary" />
-                    Charge History
+                    Transaction Logs
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-none shadow-xl shadow-primary/5">
-                        <CardHeader className="p-4 border-b bg-muted/30">
-                            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Charge Information</CardTitle>
+                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2rem]">
+                        <CardHeader className="bg-primary/5 border-b p-6">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Service Admission
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Patient Selection *</Label>
-                                    <PatientSearch selectedPatient={selectedCustomer} onSelect={setSelectedCustomer} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Staff Member</Label>
-                                    <SearchableSelect 
-                                        value={selectedStaffId}
-                                        onChange={setSelectedStaffId}
-                                        options={staffs.map(s => ({ id: s.id, name: s.name }))}
-                                        placeholder="Select Staff"
-                                        loading={loadingStaff}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t">
-                                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Add New Charge Item</Label>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <CardContent className="p-8">
+                            <div className="space-y-4">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Define New Charge Parameter</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="md:col-span-1">
                                         <Input 
-                                            placeholder="Charge Name (e.g. Oxygen Service)" 
+                                            placeholder="Charge Name (e.g. Nursing Care)" 
                                             value={newItemName}
                                             onChange={(e) => setNewItemName(e.target.value)}
-                                            className="h-9 text-sm"
+                                            className="h-11 rounded-xl bg-muted/20 border-none font-bold text-xs"
                                         />
                                     </div>
                                     <div className="md:col-span-1">
@@ -254,19 +250,23 @@ export function ExtraChargeBillingForm() {
                                             placeholder="Price" 
                                             value={newItemPrice}
                                             onChange={(val) => setNewItemPrice(val || 0)}
-                                            className="h-9 text-sm"
+                                            className="h-11 rounded-xl bg-muted/20 border-none font-bold text-xs"
                                         />
                                     </div>
                                     <div className="flex gap-2">
-                                        <Input 
-                                            placeholder="Note (optional)" 
-                                            value={newItemDesc}
-                                            onChange={(e) => setNewItemDesc(e.target.value)}
-                                            className="h-9 text-sm flex-1"
-                                        />
-                                        <Button onClick={handleAddItem} disabled={!newItemName || newItemPrice <= 0}>
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
+                                            <Input 
+                                                placeholder="Note (optional)" 
+                                                value={newItemDesc}
+                                                onChange={(e) => setNewItemDesc(e.target.value)}
+                                                className="h-11 rounded-xl bg-muted/20 border-none font-bold text-xs flex-1"
+                                            />
+                                            <Button 
+                                                onClick={handleAddItem} 
+                                                disabled={!newItemName || newItemPrice <= 0}
+                                                className="h-11 w-11 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-90"
+                                            >
+                                                <Plus className="h-5 w-5" />
+                                            </Button>
                                     </div>
                                 </div>
                             </div>
@@ -274,31 +274,45 @@ export function ExtraChargeBillingForm() {
                     </Card>
 
                     {cart.length > 0 && (
-                        <Card className="border-none shadow-xl shadow-primary/5">
-                            <CardHeader className="p-4 border-b bg-muted/30">
-                                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Charge List ({cart.length})</CardTitle>
+                        <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2.5rem]">
+                            <CardHeader className="bg-indigo-500/5 border-b p-6">
+                                <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700 flex items-center gap-2">
+                                    <LayoutGrid className="w-4 h-4" /> Categorized Services
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-0">
+                            <CardContent className="p-0 max-h-[40vh] overflow-y-auto custom-scrollbar relative">
                                 <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="pl-4">Item Name</TableHead>
-                                            <TableHead>Price</TableHead>
-                                            <TableHead className="text-right pr-4">Total</TableHead>
+                                    <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
+                                        <TableRow className="h-12 border-b">
+                                            <TableHead className="text-[10px] uppercase font-black px-6 tracking-widest">Service Item</TableHead>
+                                            <TableHead className="text-[10px] uppercase font-black px-6 tracking-widest">Unit Rate</TableHead>
+                                            <TableHead className="text-[10px] uppercase font-black text-right px-6 tracking-widest">Subtotal</TableHead>
+                                            <TableHead className="w-16 px-6"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {cart.map((item) => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="pl-4 font-medium">
-                                                    {item.name}
-                                                    {item.description && <p className="text-[10px] text-muted-foreground">{item.description}</p>}
+                                            <TableRow key={item.id} className="h-16 hover:bg-muted/30 transition-colors border-b last:border-0 group">
+                                                <TableCell className="px-6">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <p className="text-sm font-black leading-tight text-foreground">{item.name}</p>
+                                                        {item.description && <p className="text-[10px] text-muted-foreground font-medium">{item.description}</p>}
+                                                    </div>
                                                 </TableCell>
-                                                <TableCell className="font-bold">{formatCurrency(item.price)}</TableCell>
-                                                <TableCell className="text-right pr-4 flex items-center justify-end gap-3 h-[52px]">
-                                                    <span className="font-black text-primary">{formatCurrency(item.price)}</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveItem(item.id)}>
-                                                        <Trash2 className="h-3 w-3" />
+                                                <TableCell className="px-6 text-xs font-bold text-muted-foreground tabular-nums">
+                                                    {formatCurrency(item.price)}
+                                                </TableCell>
+                                                <TableCell className="text-right px-6 text-sm font-black text-primary tabular-nums">
+                                                    {formatCurrency(item.price * item.quantity)}
+                                                </TableCell>
+                                                <TableCell className="px-6">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-10 w-10 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all rounded-xl opacity-0 group-hover:opacity-100" 
+                                                        onClick={() => handleRemoveItem(item.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -310,82 +324,228 @@ export function ExtraChargeBillingForm() {
                     )}
                 </div>
 
-                <div className="space-y-6">
-                    <Card className="border-none shadow-xl shadow-primary/5 sticky top-6">
-                        <CardHeader className="p-4 border-b bg-muted/30">
-                            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Settlement Summary</CardTitle>
+                <div className="lg:col-span-1 self-start sticky top-20">
+                    <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
+                        <CardHeader className="p-5 border-b bg-muted/30 shrink-0">
+                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
+                                <ShoppingCart className="w-4 h-4" /> Charge Summary
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 space-y-6">
-                            <div className="space-y-1.5 p-3 bg-secondary/10 rounded-lg border border-secondary/20">
-                                <div className="flex justify-between text-xs font-medium text-muted-foreground">
-                                    <span>Subtotal</span>
-                                    <span>{formatCurrency(subtotal)}</span>
-                                </div>
-                                {tax > 0 && (
-                                    <div className="flex justify-between text-xs font-medium text-muted-foreground">
-                                        <span>Tax ({vatPercentage}%)</span>
-                                        <span>{formatCurrency(tax)}</span>
+                        <CardContent className="p-0 overflow-hidden flex flex-col flex-1">
+                            {/* Summary Detail */}
+                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                                {cart.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3 opacity-40">
+                                        <div className="p-4 bg-muted rounded-2xl">
+                                            <Plus className="h-8 w-8" />
+                                        </div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-center">Awaiting Entry</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {cart.map((item) => (
+                                            <div key={item.id} className="p-3 bg-muted/20 rounded-2xl border border-border/50 animate-in fade-in slide-in-from-right-2">
+                                                <div className="flex justify-between items-start gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-black text-[11px] text-foreground truncate uppercase">{item.name}</p>
+                                                        <p className="text-[9px] text-muted-foreground font-bold mt-0.5">Quantity: 1</p>
+                                                    </div>
+                                                    <p className="font-black text-xs text-primary">{formatCurrency(item.price)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
-                                <div className="flex justify-between items-baseline pt-2 border-t mt-2">
-                                    <span className="text-sm font-bold uppercase">Total Charges</span>
-                                    <span className="text-2xl font-black text-primary">{formatCurrency(total)}</span>
-                                </div>
                             </div>
 
-                            <div className="space-y-4 pt-4 border-t">
+                            {/* Sticky SETTLEMENT Sums */}
+                            <div className="p-6 bg-secondary/5 border-t shrink-0 space-y-6">
                                 <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount Paid Now</Label>
-                                    <SmartNumberInput 
-                                        value={paidAmount}
-                                        onChange={(val) => setPaidAmount(val || 0)}
-                                        className="h-12 text-xl font-black border-primary/20 text-primary bg-primary/5"
-                                    />
-                                    <div className="flex justify-between items-center text-xs px-1">
-                                        <span className="text-muted-foreground font-medium uppercase min-w-[50px]">To be Due</span>
-                                        <span className="font-bold text-rose-500">{formatCurrency(Math.max(0, total - paidAmount))}</span>
+                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <span>Base Subtotal</span>
+                                        <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+                                    </div>
+                                    {tax > 0 && (
+                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                            <span>Govt. VAT ({vatPercentage}%)</span>
+                                            <span className="tabular-nums">{formatCurrency(tax)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-baseline pt-4 border-t border-dashed mt-4 border-primary/20">
+                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Final Payable</span>
+                                        <span className="text-3xl font-black text-primary tabular-nums tracking-tighter">{formatCurrency(total)}</span>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Method</Label>
-                                        <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
-                                            <SelectTrigger className="h-9 text-xs font-medium">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
-                                                    <SelectItem key={method} value={method}>
-                                                        <span className="capitalize">{method}</span>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account *</Label>
-                                        <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                                            <SelectTrigger className="h-9 text-xs font-medium">
-                                                <SelectValue placeholder="Account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {accounts.map((acc: FinanceAccount) => (
-                                                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
+                                <Sheet open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button 
+                                            className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-3xl shadow-2xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 shadow-primary/20 group relative overflow-hidden"
+                                            disabled={cart.length === 0}
+                                        >
+                                            <div className="flex items-center gap-3 relative z-10 font-black">
+                                                <Receipt className="w-6 h-6" />
+                                                Review & Finalize
+                                            </div>
+                                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000" />
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-full sm:max-w-md flex flex-col p-0 gap-0 border-none shadow-2xl rounded-l-[3rem] overflow-hidden">
+                                        <SheetHeader className="p-8 border-b bg-primary/3">
+                                            <SheetTitle className="flex items-center gap-3 text-xl font-black tracking-tight">
+                                                <div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                                                    <Receipt className="w-5 h-5 text-white" />
+                                                </div>
+                                                Refining Charge Detail
+                                            </SheetTitle>
+                                        </SheetHeader>
 
-                                <Button 
-                                    className="w-full h-14 text-lg font-black shadow-xl"
-                                    disabled={cart.length === 0 || !selectedCustomer || !selectedAccountId || createSaleMutation.isPending}
-                                    onClick={handleCheckout}
-                                >
-                                    <CreditCard className="mr-2 h-5 w-5" />
-                                    {createSaleMutation.isPending ? "Processing..." : "Process Charge"}
-                                </Button>
+                                        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                                            {/* Section 1: Personnel Attribution */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="h-1 bg-primary w-6 rounded-full" />
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Personnel Attribution</Label>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Target Patient *</Label>
+                                                    <PatientSearch selectedPatient={selectedCustomer} onSelect={setSelectedCustomer} />
+                                                    {selectedCustomer && (
+                                                        <div className="flex items-center gap-3 p-3 bg-emerald-500/3 rounded-2xl border border-emerald-500/20">
+                                                            <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-black shadow-lg shadow-emerald-500/20">
+                                                                {selectedCustomer.name.charAt(0)}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="font-black text-sm text-foreground truncate">{selectedCustomer.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground">{selectedCustomer.phone}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Staff Member</Label>
+                                                    <SearchableSelect 
+                                                        value={selectedStaffId}
+                                                        onChange={setSelectedStaffId}
+                                                        options={staffs.map(s => ({ id: s.id, name: s.name }))}
+                                                        placeholder="Attributing Staff..."
+                                                        loading={loadingStaff}
+                                                        showAll={false}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <Separator className="bg-muted/50" />
+
+                                            {/* Section 2: Financial Settlement */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="h-1 bg-primary w-6 rounded-full" />
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Settlement Detail</Label>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Method</Label>
+                                                        <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
+                                                            <SelectTrigger className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs uppercase tracking-widest">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                                {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
+                                                                    <SelectItem key={method} value={method} className="text-xs font-bold py-3 capitalize">
+                                                                        {method}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Amount Collected</Label>
+                                                        <SmartNumberInput 
+                                                            value={paidAmount}
+                                                            onFocus={(e: any) => e.target.select()} 
+                                                            onChange={(val) => setPaidAmount(val || 0)}
+                                                            className="h-11 text-base font-black border-none bg-primary/5 text-primary rounded-xl tabular-nums shadow-inner"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Target Account *</Label>
+                                                    <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                                                        <SelectTrigger className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs">
+                                                            <SelectValue placeholder="Choose account..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                            {accounts.map((acc: FinanceAccount) => (
+                                                                <SelectItem key={acc.id} value={acc.id} className="text-xs font-bold py-3">
+                                                                    {acc.name} ({acc.type}) - Tk {formatCurrency(Number(acc.currentBalance))}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction Note (Optional)</Label>
+                                                    <Input 
+                                                        placeholder="Add charge memo..."
+                                                        value={paymentNote}
+                                                        onChange={(e) => setPaymentNote(e.target.value)}
+                                                        className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Drawer Sticky Footer */}
+                                        <div className="p-8 border-t bg-foreground text-background shrink-0">
+                                            <div className="flex justify-between items-center mb-6">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Total Gross</p>
+                                                    <p className="text-3xl font-black tabular-nums tracking-tighter">{formatCurrency(total)}</p>
+                                                </div>
+                                                <div className="text-right space-y-0.5">
+                                                    <p className={cn(
+                                                        "text-[10px] font-black uppercase tracking-widest",
+                                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                                    )}>
+                                                        {paidAmount >= (total - 0.01) ? "Settled" : "Ref. Balance"}
+                                                    </p>
+                                                    <p className={cn(
+                                                        "text-xl font-black tabular-nums tracking-tight",
+                                                        paidAmount >= (total - 0.01) ? "text-emerald-400" : "text-rose-400"
+                                                    )}>
+                                                        {formatCurrency(Math.abs(paidAmount - total))}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <Button 
+                                                className={cn(
+                                                    "w-full h-18 text-xl font-black uppercase tracking-[0.2em] rounded-3xl shadow-2xl transition-all active:scale-[0.98]",
+                                                    paidAmount < (total - 0.01) && total > 0 
+                                                        ? "bg-rose-500 hover:bg-rose-600 text-white" 
+                                                        : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+                                                )}
+                                                disabled={!isReady || createSaleMutation.isPending}
+                                                onClick={handleCheckout}
+                                            >
+                                                {createSaleMutation.isPending ? (
+                                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                                ) : (
+                                                    <div className="flex items-center gap-3">
+                                                        <CheckCircle2 className="w-6 h-6" />
+                                                        Process Transaction
+                                                    </div>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
                             </div>
                         </CardContent>
                     </Card>
@@ -400,48 +560,56 @@ export function ExtraChargeBillingForm() {
                                 <History className="h-5 w-5 text-primary" />
                                 Charge History
                             </DialogTitle>
-                            <div className="relative w-64">
+                            <div className="relative w-72">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search invoice..."
+                                    placeholder="Search by invoice or patient..."
                                     value={modalSearch}
                                     onChange={(e) => setModalSearch(e.target.value)}
-                                    className="pl-9 h-9 text-xs"
+                                    className="pl-9 h-11 rounded-xl bg-muted/20 border-none font-bold text-xs"
                                 />
                             </div>
                         </div>
                     </DialogHeader>
-                    <div className="p-6 overflow-auto">
+                    <div className="flex-1 border border-border/50 rounded-[2.5rem] overflow-y-auto custom-scrollbar relative bg-background shadow-xl shadow-muted/20">
                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Invoice</TableHead>
-                                    <TableHead>Patient</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                            <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
+                                <TableRow className="h-12 border-b">
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Invoice #</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Patient Identifier</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Billed Amount</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Settlement</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest px-6">Timestamps</TableHead>
+                                    <TableHead className="text-right px-6"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {recentSalesRes?.data?.sales?.map((sale: Sale) => (
-                                    <TableRow key={sale.id}>
-                                        <TableCell className="font-black text-[10px]">{sale.invoiceNumber}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold">{sale.patient?.name}</span>
-                                                <span className="text-[10px] opacity-60">{sale.patient?.phone}</span>
+                                    <TableRow key={sale.id} className="h-16 hover:bg-muted/30 transition-colors border-b last:border-0 group">
+                                        <TableCell className="px-6 font-black text-xs text-primary">{sale.invoiceNumber}</TableCell>
+                                        <TableCell className="px-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-[10px] font-black">
+                                                    {sale.patient?.name.charAt(0)}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-black text-foreground">{sale.patient?.name}</span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{sale.patient?.phone}</span>
+                                                </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-bold">{formatCurrency(Number(sale.netPrice))}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className={cn("text-[9px] font-black uppercase", sale.paymentStatus === 'paid' ? "bg-emerald-500/10 text-emerald-600 border-none" : "bg-rose-500/10 text-rose-600 border-none")}>
+                                        <TableCell className="px-6 font-black text-sm tabular-nums">{formatCurrency(Number(sale.netPrice))}</TableCell>
+                                        <TableCell className="px-6">
+                                            <Badge variant="outline" className={cn(
+                                                "text-[9px] font-black uppercase rounded-lg px-2 py-0.5 border-none", 
+                                                sale.paymentStatus === 'paid' ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
+                                            )}>
                                                 {sale.paymentStatus}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-[10px] opacity-60">{new Date(sale.createdAt).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedSale(sale); setDetailsOpen(true); }}>
+                                        <TableCell className="px-6 text-[10px] font-bold text-muted-foreground">{new Date(sale.createdAt).toLocaleString()}</TableCell>
+                                        <TableCell className="text-right px-6">
+                                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-xl" onClick={() => { setSelectedSale(sale); setDetailsOpen(true); }}>
                                                 <Receipt className="h-4 w-4" />
                                             </Button>
                                         </TableCell>

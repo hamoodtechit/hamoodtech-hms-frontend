@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
     Popover,
@@ -48,6 +49,8 @@ interface CartContentsProps {
     setPaidAmount: (amount: number) => void
     isCheckoutOpen: boolean
     setIsCheckoutOpen: (open: boolean) => void
+    paymentNote: string
+    setPaymentNote: (note: string) => void
 }
 
 export function CartContents({
@@ -69,6 +72,8 @@ export function CartContents({
     setPaidAmount,
     isCheckoutOpen,
     setIsCheckoutOpen,
+    paymentNote,
+    setPaymentNote
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()
@@ -452,6 +457,16 @@ export function CartContents({
                                             )}
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Note (Optional)</Label>
+                                    <Input 
+                                        placeholder="Add transaction memo..."
+                                        value={paymentNote}
+                                        onChange={(e) => setPaymentNote(e.target.value)}
+                                        className="h-9 text-xs bg-background border-primary/5 font-medium"
+                                    />
                                 </div>
                             </div>
                         </div>

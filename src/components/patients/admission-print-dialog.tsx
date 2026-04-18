@@ -170,6 +170,8 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                         .hologram-paid { color: #10b981 !important; } /* Emerald-500 */
                         .hologram-due { color: #f43f5e !important; } /* Rose-500 */
                         
+                        .letterhead-spacer { height: 35mm !important; display: block !important; }
+
                         @media print {
                             .no-print { display: none; }
                             body { background: white; shadow: none; }
@@ -227,7 +229,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                  * As per User Request: Utilizing pre-printed letterheads (pads).
                                  * We only print patient info and results.
                                  */}
-                                <div className="pt-[35mm]" />
+                                <div className="h-4 letterhead-spacer" />
 
                                 {/* Structured Info Box */}
                                 <div className="border border-black border-dashed mb-2 mt-4 overflow-hidden">
