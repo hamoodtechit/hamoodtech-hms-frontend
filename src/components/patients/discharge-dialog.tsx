@@ -345,11 +345,11 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                         <div className="grid grid-cols-2 gap-4 relative">
                                             <div className="space-y-1">
                                                 <span className="text-[9px] font-black text-emerald-600/60 uppercase">Total Bill</span>
-                                                <span className="text-xl font-black block tabular-nums text-foreground/80">{formatCurrency(pharmacyTotals.totalBill)}</span>
+                                                <span className="text-xl font-black block tabular-nums text-foreground/80">{formatCurrency(Number(pharmacyTotals.totalBill || 0))}</span>
                                             </div>
                                             <div className="space-y-1 text-right">
                                                 <span className="text-[9px] font-black text-emerald-600/60 uppercase">Paid Amount</span>
-                                                <span className="text-xl font-black block tabular-nums text-emerald-600">{formatCurrency(pharmacyTotals.totalPaid)}</span>
+                                                <span className="text-xl font-black block tabular-nums text-emerald-600">{formatCurrency(Number(pharmacyTotals.totalPaid || 0))}</span>
                                             </div>
                                         </div>
                                         
@@ -358,7 +358,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                         <div className="flex justify-between items-center relative">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-black text-muted-foreground uppercase opacity-50">Pending Dues</span>
-                                                <span className="text-sm font-black text-rose-500 tabular-nums">{formatCurrency(pharmacyTotals.totalDue)}</span>
+                                                <span className="text-sm font-black text-rose-500 tabular-nums">{formatCurrency(Number(pharmacyTotals.totalDue || 0))}</span>
                                             </div>
                                             {Number(pharmacyTotals.totalDue) === 0 && (
                                                 <Badge className="bg-emerald-500/20 text-emerald-600 border-none px-2 h-5 text-[9px] font-black uppercase">Cleared</Badge>
