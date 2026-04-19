@@ -16,6 +16,7 @@ export interface DiagnosticTest {
   type: string;
   machineName?: string;
   machineDescription?: string;
+  refCommissionsPercentage?: number;
   createdAt: string;
   updatedAt: string;
   department?: {
@@ -49,6 +50,7 @@ export interface DiagnosticTestPayload {
   branchId?: string;
   machineName?: string;
   machineDescription?: string;
+  refCommissionsPercentage?: number;
 }
 
 export interface DiagnosticTestGroup {

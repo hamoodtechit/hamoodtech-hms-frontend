@@ -238,6 +238,7 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                                         phone: employee.phone || "",
                                         branchId: employee.branchId || "",
                                         employeeId: employee.id,
+                                        designation: employee.designation?.name || "",
                                         username: employee.email?.split('@')[0] || employee.name.toLowerCase().replace(/\s+/g, '.'),
                                     }}
                                 />

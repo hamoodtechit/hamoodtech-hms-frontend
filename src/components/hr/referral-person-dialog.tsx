@@ -250,7 +250,19 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
                                 <div className="grid grid-cols-12 gap-3 items-end mb-4">
                                     <div className="col-span-7 space-y-2">
                                         <Label className="text-xs">Search Service / Test</Label>
-                                        <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                                        <Select 
+                                            value={selectedServiceId} 
+                                            onValueChange={(val) => {
+                                                setSelectedServiceId(val)
+                                                // Auto-fill commission rate if available from service
+                                                const service = services.find(s => s.id === val)
+                                                if (service && service.refCommissionsPercentage) {
+                                                    setCurrentPercentage(service.refCommissionsPercentage.toString())
+                                                } else {
+                                                    setCurrentPercentage("10")
+                                                }
+                                            }}
+                                        >
                                             <SelectTrigger className="h-9 bg-background">
                                                 <SelectValue placeholder="Select a service..." />
                                             </SelectTrigger>

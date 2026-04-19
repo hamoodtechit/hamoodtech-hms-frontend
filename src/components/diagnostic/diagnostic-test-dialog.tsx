@@ -135,7 +135,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         type: 'pathology',
         templateDescription: "",
         machineName: "",
-        machineDescription: ""
+        machineDescription: "",
+        refCommissionsPercentage: 0
     })
 
     useEffect(() => {
@@ -156,7 +157,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     type: test.type || 'pathology',
                     templateDescription: test.templateDescription || "",
                     machineName: test.machineName || "",
-                    machineDescription: test.machineDescription || ""
+                    machineDescription: test.machineDescription || "",
+                    refCommissionsPercentage: test.refCommissionsPercentage || 0
                 })
             } else {
                 setFormData({
@@ -174,7 +176,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     type: 'pathology',
                     templateDescription: "",
                     machineName: "",
-                    machineDescription: ""
+                    machineDescription: "",
+                    refCommissionsPercentage: 0
                 })
             }
         }
@@ -398,11 +401,22 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                         <SelectTrigger className="h-11 rounded-xl bg-background border-border">
                                             <SelectValue placeholder="Select Mode" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl">
-                                            <SelectItem value="table">Table / Structured</SelectItem>
-                                            <SelectItem value="narrative">Narrative / Descriptive</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="refCommissionsPercentage" className="text-sm font-bold text-foreground flex items-center justify-between">
+                                        Referral Commission (%)
+                                        <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+                                    </Label>
+                                    <SmartNumberInput 
+                                        value={formData.refCommissionsPercentage} 
+                                        onChange={(val) => setFormData(prev => ({ ...prev, refCommissionsPercentage: val || 0 }))}
+                                        min={0}
+                                        max={100}
+                                        placeholder="Default commission rate"
+                                    />
                                 </div>
                             </div>
                         </div>
