@@ -401,6 +401,9 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                         <SelectTrigger className="h-11 rounded-xl bg-background border-border">
                                             <SelectValue placeholder="Select Mode" />
                                         </SelectTrigger>
+                                        <SelectContent className="rounded-xl">
+                                            <SelectItem value="table">Table / Structured</SelectItem>
+                                            <SelectItem value="narrative">Narrative / Descriptive</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
