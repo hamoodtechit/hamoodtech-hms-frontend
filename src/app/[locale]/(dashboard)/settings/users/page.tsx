@@ -40,7 +40,9 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { UserDetailsDialog } from "./components/user-details-dialog"
 import { UserDialog } from "./components/user-dialog"
+import { AdminChangePasswordDialog } from "./components/admin-change-password-dialog"
 import { PermissionGuard } from "@/components/shared/permission-guard"
+import { KeyRound } from "lucide-react"
 
 export default function UsersPage() {
   const { hasPermission } = usePermissions()
@@ -54,6 +56,7 @@ export default function UsersPage() {
   const [viewUser, setViewUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [passwordChangeUser, setPasswordChangeUser] = useState<User | null>(null)
 
   const loadUsers = async () => {
 
@@ -244,6 +247,11 @@ export default function UsersPage() {
                                   <Edit className="mr-2 h-4 w-4" /> Edit User
                                 </DropdownMenuItem>
                               )}
+                              {hasPermission("user:update") && (
+                                <DropdownMenuItem onClick={() => setPasswordChangeUser(user)}>
+                                  <KeyRound className="mr-2 h-4 w-4" /> Change Password
+                                </DropdownMenuItem>
+                              )}
                               {hasPermission("user:delete") && (
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
@@ -274,6 +282,12 @@ export default function UsersPage() {
             open={!!viewUser}
             onOpenChange={(open) => !open && setViewUser(null)}
             user={viewUser}
+          />
+
+          <AdminChangePasswordDialog
+            open={!!passwordChangeUser}
+            onOpenChange={(open) => !open && setPasswordChangeUser(null)}
+            user={passwordChangeUser}
           />
 
           <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

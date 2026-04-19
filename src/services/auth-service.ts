@@ -38,10 +38,14 @@ export interface SetupStatusResponse {
 }
 
 export interface ChangePasswordPayload {
-  oldPassword?: string;
+  currentPassword: string;
   newPassword: string;
-  confirmPassword?: string;
-  [key: string]: unknown;
+  confirmPassword: string;
+}
+
+export interface AdminChangePasswordPayload {
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export const authService = {
@@ -76,6 +80,11 @@ export const authService = {
 
   changePassword: async (data: ChangePasswordPayload) => {
       const response = await api.post('/auth/change-password', data);
+      return response.data;
+  },
+
+  adminChangePassword: async (userId: string, data: AdminChangePasswordPayload) => {
+      const response = await api.post(`/auth/admin/change-password/${userId}`, data);
       return response.data;
   },
   
