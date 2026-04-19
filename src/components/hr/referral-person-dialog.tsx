@@ -182,7 +182,22 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
                                     <Label htmlFor="employee">Link Internal Employee (Optional)</Label>
                                     <Select 
                                         value={employeeId || "none"} 
-                                        onValueChange={(val) => setEmployeeId(val === "none" ? undefined : val)}
+                                        onValueChange={(val) => {
+                                            if (val === "none") {
+                                                setEmployeeId(undefined)
+                                            } else {
+                                                setEmployeeId(val)
+                                                // Auto-fill from employee data
+                                                const emp = employees.find(e => e.id === val)
+                                                if (emp) {
+                                                    setName(emp.name)
+                                                    setNameBangla(emp.nameBangla || "")
+                                                    setPhone(emp.phone || "")
+                                                    setEmail(emp.email || "")
+                                                    setAddress(emp.address || "")
+                                                }
+                                            }
+                                        }}
                                     >
                                         <SelectTrigger className="h-10">
                                             <SelectValue placeholder="Select an employee" />
