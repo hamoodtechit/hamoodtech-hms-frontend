@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useState } from "react"
 import { toast } from "sonner"
+import { authService } from "@/services/auth-service"
 
 export default function ProfilePage() {
   const { user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [passwords, setPasswords] = useState({
-    oldPassword: "",
+    currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   })
@@ -30,21 +31,15 @@ export default function ProfilePage() {
     
     setIsLoading(true)
     try {
-      // Assuming authService is available via import, relying on existing imports or adding them if needed. 
-      // check imports first. imports are missing for authService.
-      // I will add authService import in a separate step or assume it is available if I replace the whole file.
-      // Current file imports: Button, Card..., Input, Label, useAuthStore, useState, toast.
-      // I need to import authService.
-      const { authService } = await import("@/services/auth-service") // Dynamic import or just add to top
       const res = await authService.changePassword({
-          oldPassword: passwords.oldPassword,
+          currentPassword: passwords.currentPassword,
           newPassword: passwords.newPassword,
           confirmPassword: passwords.confirmPassword
       })
       
       if(res.success) {
           toast.success("Password updated successfully")
-          setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" })
+          setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" })
       } else {
           toast.error(res.message || "Failed to update password")
       }
@@ -98,12 +93,12 @@ export default function ProfilePage() {
             <CardContent>
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="oldPassword">Current Password</Label>
+                        <Label htmlFor="currentPassword">Current Password</Label>
                         <Input 
-                            id="oldPassword" 
-                            name="oldPassword" 
+                            id="currentPassword" 
+                            name="currentPassword" 
                             type="password" 
-                            value={passwords.oldPassword} 
+                            value={passwords.currentPassword} 
                             onChange={handleChange} 
                             required 
                         />
