@@ -532,6 +532,8 @@ export default function POSPage() {
           setDiscountFixedAmount(0)
           setPaymentNote("")
           setCartOpen(false) 
+          setIsCheckoutOpen(false)
+          setShowInteractionAlert(false)
           
       } catch (error) {
           console.error(error)
@@ -588,9 +590,9 @@ export default function POSPage() {
                 onOpenChange={setShowInteractionAlert}
                 interactions={currentInteractions}
                 onProceed={() => {
-                    setShowInteractionAlert(false)
                     processTransaction()
                 }}
+                isProcessing={createSaleMutation.isPending}
             />
 
             <PrescriptionLinkDialog 
@@ -636,6 +638,7 @@ export default function POSPage() {
                         setIsCheckoutOpen={setIsCheckoutOpen}
                         paymentNote={paymentNote}
                         setPaymentNote={setPaymentNote}
+                        isProcessing={createSaleMutation.isPending}
                     />
                 </SheetContent>
             </Sheet>

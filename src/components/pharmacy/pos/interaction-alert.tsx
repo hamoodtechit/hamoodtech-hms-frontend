@@ -11,16 +11,17 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Interaction } from "@/hooks/use-drug-interaction"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Loader2 } from "lucide-react"
 
 interface InteractionAlertProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     interactions: Interaction[]
     onProceed: () => void
+    isProcessing?: boolean
 }
 
-export function InteractionAlert({ open, onOpenChange, interactions, onProceed }: InteractionAlertProps) {
+export function InteractionAlert({ open, onOpenChange, interactions, onProceed, isProcessing = false }: InteractionAlertProps) {
     if (!interactions.length) return null
 
     return (
@@ -58,8 +59,18 @@ export function InteractionAlert({ open, onOpenChange, interactions, onProceed }
 
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel Sale</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={onProceed}>
-                        Override & Proceed
+                    <AlertDialogAction 
+                        className="bg-destructive hover:bg-destructive/90" 
+                        onClick={(e) => {
+                            e.preventDefault()
+                            onProceed()
+                        }}
+                        disabled={isProcessing}
+                    >
+                        {isProcessing ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        {isProcessing ? "Processing..." : "Override & Proceed"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -26,7 +26,7 @@ import { usePosStore } from "@/store/use-pos-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { FinanceAccount } from "@/types/finance"
 import { Patient, PaymentMethod } from "@/types/pharmacy"
-import { CalendarDays, Check, ChevronDown, CreditCard, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
+import { CalendarDays, Check, ChevronDown, CreditCard, Loader2, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { PatientSearch } from "./patient-search"
 
@@ -51,6 +51,7 @@ interface CartContentsProps {
     setIsCheckoutOpen: (open: boolean) => void
     paymentNote: string
     setPaymentNote: (note: string) => void
+    isProcessing?: boolean
 }
 
 export function CartContents({
@@ -73,7 +74,8 @@ export function CartContents({
     isCheckoutOpen,
     setIsCheckoutOpen,
     paymentNote,
-    setPaymentNote
+    setPaymentNote,
+    isProcessing = false
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()
@@ -519,11 +521,15 @@ export function CartContents({
                                 )}
                                 onClick={() => {
                                     onFinalizeCheckout()
-                                    setIsCheckoutOpen(false)
                                 }}
+                                disabled={isProcessing}
                             >
-                                <CreditCard className="mr-3 h-6 w-6" />
-                                COMPLETE PAYMENT
+                                {isProcessing ? (
+                                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                                ) : (
+                                    <CreditCard className="mr-3 h-6 w-6" />
+                                )}
+                                {isProcessing ? "PROCESSING..." : "COMPLETE PAYMENT"}
                             </Button>
                         </div>
                     </SheetContent>
