@@ -109,7 +109,13 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 
 export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: DiagnosticTestDialogProps) {
     const [loading, setLoading] = useState(false)
-    const { activeStoreId } = useStoreContext()
+    const { activeStoreId, fetchStores } = useStoreContext()
+
+    useEffect(() => {
+        if (open && !activeStoreId) {
+            fetchStores()
+        }
+    }, [open, activeStoreId, fetchStores])
 
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
     const { data: testGroupsRes } = useTestGroups({ limit: 100 })
