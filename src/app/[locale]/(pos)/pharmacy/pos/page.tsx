@@ -676,26 +676,28 @@ export default function POSPage() {
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[80vw] sm:w-[500px] md:w-[700px] p-4 shadow-xl border-secondary-foreground/10" align="end">
-                            <MedicineFilters 
-                                values={filters} 
-                                onChange={(newFilters) => {
-                                    setFilters(newFilters)
-                                    // If category changed in filters, update the tab
-                                    if (newFilters.categoryId) {
-                                        const catName = categoriesRes?.data?.find(c => c.id === newFilters.categoryId)?.name
-                                        if (catName) setActiveCategory(catName)
-                                    } else if (activeCategory !== "All") {
-                                        // If category was cleared in filters, reset tab to All
+                        <PopoverContent className="w-[80vw] sm:w-[500px] md:w-[700px] p-0 shadow-xl border-secondary-foreground/10" align="end">
+                            <ScrollArea className="max-h-[70vh] p-4">
+                                <MedicineFilters 
+                                    values={filters} 
+                                    onChange={(newFilters) => {
+                                        setFilters(newFilters)
+                                        // If category changed in filters, update the tab
+                                        if (newFilters.categoryId) {
+                                            const catName = categoriesRes?.data?.find(c => c.id === newFilters.categoryId)?.name
+                                            if (catName) setActiveCategory(catName)
+                                        } else if (activeCategory !== "All") {
+                                            // If category was cleared in filters, reset tab to All
+                                            setActiveCategory("All")
+                                        }
+                                    }} 
+                                    onReset={() => {
+                                        setFilters({})
                                         setActiveCategory("All")
-                                    }
-                                }} 
-                                onReset={() => {
-                                    setFilters({})
-                                    setActiveCategory("All")
-                                }}
-                                showActiveStatus={false} // Only active medicines in POS
-                            />
+                                    }}
+                                    showActiveStatus={false} // Only active medicines in POS
+                                />
+                            </ScrollArea>
                         </PopoverContent>
                     </Popover>
                 </div>
@@ -1118,6 +1120,7 @@ export default function POSPage() {
             setIsCheckoutOpen={setIsCheckoutOpen}
             paymentNote={paymentNote}
             setPaymentNote={setPaymentNote}
+            isProcessing={createSaleMutation.isPending}
          />
       </div>
 

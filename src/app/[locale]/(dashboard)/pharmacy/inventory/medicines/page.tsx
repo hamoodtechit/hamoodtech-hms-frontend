@@ -93,7 +93,6 @@ export default function MedicinesPage() {
     page,
     limit: 10,
     search: debouncedSearch,
-    branchId: activeStoreId || undefined,
     ...filters,
   }
 

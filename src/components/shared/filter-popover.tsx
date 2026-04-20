@@ -7,6 +7,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Filter, X } from "lucide-react"
 
 interface FilterPopoverProps {
@@ -37,22 +38,22 @@ export function FilterPopover({
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className={`${className} p-4 shadow-xl`} align="end">
-                <div className="space-y-4 pt-1">
-                    <div className="flex items-center justify-between border-b pb-2 mb-2">
-                        <h4 className="font-semibold text-sm uppercase tracking-wider">{title}</h4>
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={onReset} 
-                            className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
-                        >
-                            <X className="h-3 w-3" />
-                            Reset All
-                        </Button>
-                    </div>
-                    {children}
+            <PopoverContent className={`${className} p-0 shadow-xl`} align="end">
+                <div className="flex items-center justify-between border-b p-4 pb-2 mb-0">
+                    <h4 className="font-semibold text-sm uppercase tracking-wider">{title}</h4>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={onReset} 
+                        className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive gap-1"
+                    >
+                        <X className="h-3 w-3" />
+                        Reset All
+                    </Button>
                 </div>
+                <ScrollArea className="max-h-[70vh] p-4 pt-1">
+                    {children}
+                </ScrollArea>
             </PopoverContent>
         </Popover>
     )
