@@ -37,9 +37,7 @@ import * as z from "zod"
 
 const ambulanceSchema = z.object({
     branchId: z.string().min(1, "Branch is required"),
-    vehicleType: z.enum(["owned", "contractual"], {
-        required_error: "Vehicle type is required",
-    }),
+    vehicleType: z.enum(["owned", "contractual"]),
     vehicleNumber: z.string().min(1, "Vehicle number is required"),
     vehicleModel: z.string().min(1, "Vehicle model is required"),
     driverName: z.string().min(1, "Driver name is required"),
