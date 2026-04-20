@@ -21,6 +21,7 @@ export interface MedicineFilterValues {
     groupId?: string
     medicineManufacturerId?: string
     isActive?: boolean | string
+    hasStock?: boolean | string
 }
 
 interface MedicineFiltersProps {
@@ -182,7 +183,6 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                         onChange={(e) => handleFieldChange('strength', e.target.value)} 
                     />
                 </div>
-
                 {showActiveStatus && (
                     <div className="space-y-1.5">
                         <Label className="text-[11px] font-bold uppercase text-muted-foreground">Status</Label>
@@ -201,6 +201,21 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
                         </Select>
                     </div>
                 )}
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold uppercase text-muted-foreground">Stock Availability</Label>
+                    <Select 
+                        value={values.hasStock === undefined ? "all" : String(values.hasStock)} 
+                        onValueChange={(v) => handleFieldChange('hasStock', v === 'all' ? undefined : v === 'true')}
+                    >
+                        <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent side="top">
+                            <SelectItem value="all">All Items</SelectItem>
+                            <SelectItem value="true">In-Stock Only</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
         </div>
     )
