@@ -215,12 +215,18 @@ export function Sidebar() {
           children: [
             {
               label: "Active Dispatch",
+              href: "/ambulances?view=dispatch",
+              permission: "ambulance:read",
             },
             {
               label: "Vehicle Directory",
+              href: "/ambulances",
+              permission: "ambulance:read",
             },
             {
               label: "Driver Roster",
+              href: "/ambulances?view=drivers",
+              permission: "ambulance:read",
             }
           ]
         }
