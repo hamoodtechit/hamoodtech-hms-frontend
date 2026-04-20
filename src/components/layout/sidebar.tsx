@@ -214,13 +214,18 @@ export function Sidebar() {
           roles: ["Super Admin", "Admin", "Receptionist"],
           children: [
             {
-              label: "Active Dispatch",
-              href: "/ambulances?view=dispatch",
+              label: "Booking Requests",
+              href: "/ambulances/bookings",
+              permission: "ambulance-booking:read",
+            },
+            {
+              label: "Fleet & Vehicles",
+              href: "/ambulances",
               permission: "ambulance:read",
             },
             {
-              label: "Vehicle Directory",
-              href: "/ambulances",
+              label: "Active Dispatch",
+              href: "/ambulances?view=dispatch",
               permission: "ambulance:read",
             },
             {

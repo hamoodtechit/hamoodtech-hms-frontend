@@ -2,7 +2,10 @@ import { api } from "@/lib/api";
 import { 
     Ambulance, 
     AmbulancePayload, 
-    AmbulancePaginatedResponse 
+    AmbulancePaginatedResponse,
+    AmbulanceBooking,
+    AmbulanceBookingPayload,
+    AmbulanceBookingPaginatedResponse
 } from "@/types/ambulance";
 
 export const ambulanceService = {
@@ -50,6 +53,58 @@ export const ambulanceService = {
             success: boolean; 
             message: string 
         }>(`/ambulances/${id}`);
+        return response.data;
+    },
+
+    // Booking Methods
+    getBookings: async (params?: { 
+        page?: number; 
+        limit?: number; 
+        search?: string; 
+        branchId?: string; 
+        ambulanceId?: string;
+        status?: string;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<AmbulanceBookingPaginatedResponse> => {
+        const response = await api.get<AmbulanceBookingPaginatedResponse>("/ambulances/bookings", { params });
+        return response.data;
+    },
+
+    createBooking: async (data: AmbulanceBookingPayload): Promise<{ 
+        success: boolean; 
+        message: string; 
+        data: AmbulanceBooking 
+    }> => {
+        const response = await api.post<{ 
+            success: boolean; 
+            message: string; 
+            data: AmbulanceBooking 
+        }>("/ambulances/bookings", data);
+        return response.data;
+    },
+
+    updateBooking: async (id: string, data: Partial<AmbulanceBookingPayload>): Promise<{ 
+        success: boolean; 
+        message: string; 
+        data: AmbulanceBooking 
+    }> => {
+        const response = await api.put<{ 
+            success: boolean; 
+            message: string; 
+            data: AmbulanceBooking 
+        }>(`/ambulances/bookings/${id}`, data);
+        return response.data;
+    },
+
+    deleteBooking: async (id: string): Promise<{ 
+        success: boolean; 
+        message: string 
+    }> => {
+        const response = await api.delete<{ 
+            success: boolean; 
+            message: string 
+        }>(`/ambulances/bookings/${id}`);
         return response.data;
     },
 };

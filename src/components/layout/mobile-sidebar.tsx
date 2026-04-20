@@ -262,13 +262,24 @@ function SidebarBase() {
           roles: ["Super Admin", "Admin", "Receptionist"],
           children: [
             {
-              label: "Active Dispatch",
+              label: "Booking Requests",
+              href: "/ambulances/bookings",
+              permission: "ambulance-booking:read",
             },
             {
-              label: "Vehicle Directory",
+              label: "Fleet & Vehicles",
+              href: "/ambulances",
+              permission: "ambulance:read",
+            },
+            {
+              label: "Active Dispatch",
+              href: "/ambulances?view=dispatch",
+              permission: "ambulance:read",
             },
             {
               label: "Driver Roster",
+              href: "/ambulances?view=drivers",
+              permission: "ambulance:read",
             }
           ]
         }
