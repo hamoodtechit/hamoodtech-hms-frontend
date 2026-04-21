@@ -113,7 +113,14 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                                     <User className="h-5 w-5" />
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <span className="font-bold text-foreground truncate">{booking.patientName}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-foreground truncate">{booking.patientName}</span>
+                                        {booking.patient?.patientNumber && (
+                                            <span className="text-[10px] font-black tracking-tight text-white bg-primary px-1.5 py-0.5 rounded-md shrink-0">
+                                                {booking.patient.patientNumber}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                         <span className="truncate">{booking.guardianPhone || "No phone"}</span>
                                         {booking.guardianName && (

@@ -28,19 +28,22 @@ export interface AmbulancePayload {
     note?: string;
 }
 
+export interface ApiMeta {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+}
+
 export interface AmbulancePaginatedResponse {
     success: boolean;
     message: string;
-    data: {
-        ambulances: Ambulance[];
-        pagination: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-        };
-    };
+    data: Ambulance[];
+    meta: ApiMeta;
 }
+
 export type AmbulanceBookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
 
 export interface AmbulanceBooking {
@@ -66,6 +69,7 @@ export interface AmbulanceBooking {
     };
     patient?: {
         id: string;
+        patientNumber: string;
         name: string;
         phone: string;
     };
@@ -89,13 +93,6 @@ export interface AmbulanceBookingPayload {
 export interface AmbulanceBookingPaginatedResponse {
     success: boolean;
     message: string;
-    data: {
-        bookings: AmbulanceBooking[];
-        pagination: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-        };
-    };
+    data: AmbulanceBooking[];
+    meta: ApiMeta;
 }

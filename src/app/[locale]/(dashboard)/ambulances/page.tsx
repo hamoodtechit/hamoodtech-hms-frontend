@@ -44,8 +44,8 @@ export default function AmbulanceDirectoryPage() {
         search: debouncedSearch,
     })
 
-    const ambulances = ambulanceRes?.data?.ambulances || []
-    const pagination = ambulanceRes?.data?.pagination
+    const ambulances = ambulanceRes?.data || []
+    const pagination = ambulanceRes?.meta
 
     // Actions
     const deleteMutation = useDeleteAmbulance()
