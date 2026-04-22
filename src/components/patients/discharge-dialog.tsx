@@ -156,13 +156,28 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
 
     const data = res?.data
     const hospitalBills = useMemo(() => data?.hospital?.bills || [], [data?.hospital?.bills])
-    const pharmacyTotals = useMemo(() => data?.pharmacy?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.pharmacy?.totals])
-    const hospitalTotals = useMemo(() => data?.hospital?.totals || { totalBill: 0, totalPaid: 0, totalDue: 0 }, [data?.hospital?.totals])
+    const pharmacyTotals = useMemo(() => {
+        const t = data?.pharmacy?.totals
+        return {
+            totalBill: Number(t?.totalBill || t?.totalPrice || t?.netPrice || 0),
+            totalPaid: Number(t?.totalPaid || t?.paidAmount || 0),
+            totalDue: Number(t?.totalDue || t?.dueAmount || 0)
+        }
+    }, [data?.pharmacy?.totals])
+
+    const hospitalTotals = useMemo(() => {
+        const t = data?.hospital?.totals
+        return {
+            totalBill: Number(t?.totalBill || t?.totalPrice || t?.netPrice || 0),
+            totalPaid: Number(t?.totalPaid || t?.paidAmount || 0),
+            totalDue: Number(t?.totalDue || t?.dueAmount || 0)
+        }
+    }, [data?.hospital?.totals])
 
     // Use grandTotal directly from API (includes both hospital + pharmacy)
-    const grandTotalBill = Number(data?.grandTotal?.totalBill) || (Number(hospitalTotals.totalBill) + (Number(pharmacyTotals.totalBill) || 0))
-    const grandTotalPaid = Number(data?.grandTotal?.totalPaid) || (Number(hospitalTotals.totalPaid) + (Number(pharmacyTotals.totalPaid) || 0))
-    const grandTotalDue = Number(data?.grandTotal?.totalDue) || (Number(hospitalTotals.totalDue) + (Number(pharmacyTotals.totalDue) || 0))
+    const grandTotalBill = Number(data?.grandTotal?.totalBill || data?.grandTotal?.totalPrice || data?.grandTotal?.netPrice || (hospitalTotals.totalBill + pharmacyTotals.totalBill))
+    const grandTotalPaid = Number(data?.grandTotal?.totalPaid || data?.grandTotal?.paidAmount || (hospitalTotals.totalPaid + pharmacyTotals.totalPaid))
+    const grandTotalDue = Number(data?.grandTotal?.totalDue || data?.grandTotal?.dueAmount || (hospitalTotals.totalDue + pharmacyTotals.totalDue))
 
     // Calculate Overall Discount Amount
     const overallDiscountAmount = useMemo(() => {
