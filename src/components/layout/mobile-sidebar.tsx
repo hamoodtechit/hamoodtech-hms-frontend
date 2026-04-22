@@ -23,6 +23,7 @@ import {
   Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export function MobileSidebar() {
@@ -61,6 +62,7 @@ export function MobileSidebar() {
 
 function SidebarBase() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { hasPermission, hasModuleAccess, isAdmin, user } = usePermissions()
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
@@ -160,13 +162,13 @@ function SidebarBase() {
             },
             {
               label: "OPD Patients",
-              href: "/patients?type=opd",
+              href: "/patients?visitType=opd",
               module: "patients",
               permission: "patient:read",
             },
             {
               label: "IPD Patients",
-              href: "/patients?type=ipd",
+              href: "/patients?visitType=ipd",
               module: "patients",
               permission: "patient:read",
             },
@@ -191,13 +193,10 @@ function SidebarBase() {
             },
             {
               label: "Lab Management",
+              href: "/diagnostic/reports?tab=pending",
               module: "diagnostic",
               permission: "pathology:read",
             },
-            {
-              label: "Prescriptions",
-              permission: "patient:read",
-            }
           ]
         }
       ]
@@ -317,9 +316,6 @@ function SidebarBase() {
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
             },
-            {
-              label: "Insurance & TPA",
-            }
           ]
         },
         {
@@ -529,7 +525,19 @@ function SidebarBase() {
                   // Check if children exist
                   if (route.children) {
                       const isExpanded = expanded[route.label]
-                      const isActiveParent = route.children.some(child => pathname === child.href)
+                      const isActiveParent = route.children.some(child => {
+                          if (!child.href) return false
+                          if (child.href.includes('?')) {
+                              const [hrefPath, hrefQuery] = child.href.split('?')
+                              if (pathname !== hrefPath) return false
+                              const hrefParams = new URLSearchParams(hrefQuery)
+                              for (const [key, value] of hrefParams.entries()) {
+                                  if (searchParams.get(key) !== value) return false
+                              }
+                              return true
+                          }
+                          return pathname === child.href && searchParams.toString() === ''
+                      })
                       
                       return (
                           <div key={route.label} className="space-y-1">
@@ -554,7 +562,19 @@ function SidebarBase() {
                                     {route.children.map(child => {
                                         if (!checkAccess(child)) return null
 
-                                        const isChildActive = child.href ? pathname === child.href : false
+                                        const isChildActive = (() => {
+                                            if (!child.href) return false
+                                            if (child.href.includes('?')) {
+                                                const [hrefPath, hrefQuery] = child.href.split('?')
+                                                const hrefParams = new URLSearchParams(hrefQuery)
+                                                if (pathname !== hrefPath) return false
+                                                for (const [key, value] of hrefParams.entries()) {
+                                                    if (searchParams.get(key) !== value) return false
+                                                }
+                                                return true
+                                            }
+                                            return pathname === child.href && searchParams.toString() === ''
+                                        })()
                                         return (
                                             <div key={child.label || child.href}>
                                                 {child.href ? (

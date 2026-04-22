@@ -47,6 +47,7 @@ export const HR_KEYS = {
   rosters: (params?: RosterFilters) => params ? [...HR_KEYS.all, "rosters", params] as const : [...HR_KEYS.all, "rosters"] as const,
   roster: (id: string) => [...HR_KEYS.all, "roster", id] as const,
   assignedRosters: (params?: AssignedRosterFilters) => params ? [...HR_KEYS.all, "assignedRosters", params] as const : [...HR_KEYS.all, "assignedRosters"] as const,
+  leaveSummary: (employeeId?: string) => employeeId ? [...HR_KEYS.all, "leaveSummary", employeeId] as const : [...HR_KEYS.all, "leaveSummary"] as const,
 };
 
 // Annual Calendar Hooks
@@ -396,12 +397,21 @@ export function useLeave(id?: string) {
   });
 }
 
+export function useEmployeeLeaveSummary(employeeId?: string) {
+  return useQuery({
+    queryKey: HR_KEYS.leaveSummary(employeeId),
+    queryFn: () => hrService.getEmployeeLeaveSummary(employeeId!),
+    enabled: !!employeeId,
+  });
+}
+
 export function useCreateLeave() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: LeavePayload) => hrService.createLeave(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveSummary() });
     },
   });
 }
@@ -412,6 +422,7 @@ export function useDeleteLeave() {
     mutationFn: (id: string) => hrService.deleteLeave(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveSummary() });
     },
   });
 }
@@ -424,6 +435,7 @@ export function useApproveLeave() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leaves() });
       queryClient.invalidateQueries({ queryKey: HR_KEYS.leave(variables.id) });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.leaveSummary() });
     },
   });
 }

@@ -22,7 +22,7 @@ import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateFinanceAccount, useUpdateFinanceAccount } from "@/hooks/finance-queries"
-import { FinanceAccount } from "@/types/finance"
+import { AccountGroup, FinanceAccount } from "@/types/finance"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -44,6 +44,7 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
     // Form State
     const [name, setName] = useState("")
     const [type, setType] = useState<'cash' | 'bank' | 'mfs' | 'asset' | 'liability' | 'equity' | 'income' | 'expense'>('cash')
+    const [group, setGroup] = useState<AccountGroup | ''>('')
     const [description, setDescription] = useState("")
     const [openingBalance, setOpeningBalance] = useState(0)
     const [isActive, setIsActive] = useState(true)
@@ -53,12 +54,14 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
             if (account) {
                 setName(account.name)
                 setType(account.type as any)
+                setGroup((account.group || '') as AccountGroup | '')
                 setDescription(account.description || "")
                 setOpeningBalance(Number(account.openingBalance))
                 setIsActive(account.isActive)
             } else {
                 setName("")
                 setType('cash')
+                setGroup('')
                 setDescription("")
                 setOpeningBalance(0)
                 setIsActive(true)
@@ -80,6 +83,7 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
                     data: {
                         name,
                         type,
+                        group: group || undefined,
                         description,
                         isActive
                     }
@@ -89,6 +93,7 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
                 await createMutation.mutateAsync({
                     name,
                     type,
+                    group: group || undefined,
                     description,
                     openingBalance,
                     isActive
@@ -138,6 +143,21 @@ export function AccountDialog({ open, onOpenChange, account, onSuccess }: Accoun
                                 <SelectItem value="equity">Equity</SelectItem>
                                 <SelectItem value="income">Income</SelectItem>
                                 <SelectItem value="expense">Expense</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="group">Account Group</Label>
+                        <Select value={group} onValueChange={(v: any) => setGroup(v)}>
+                            <SelectTrigger id="group">
+                                <SelectValue placeholder="Select group (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="general">General</SelectItem>
+                                <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                                <SelectItem value="hospital">Hospital</SelectItem>
+                                <SelectItem value="ambulance">Ambulance</SelectItem>
+                                <SelectItem value="administration">Administration</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

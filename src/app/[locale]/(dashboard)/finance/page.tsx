@@ -3,11 +3,19 @@
 import { AccountDialog } from "@/components/finance/account-dialog"
 import { ExpenseCategoryList } from "@/components/finance/expense-category-list"
 import { ExpenseList } from "@/components/finance/expense-list"
+import { FundTransferDialog } from "@/components/finance/fund-transfer-dialog"
 import { TransactionList } from "@/components/finance/transaction-list"
 import { WithdrawDialog } from "@/components/finance/withdraw-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {
     Table,
     TableBody,
@@ -26,8 +34,8 @@ import { useDeleteFinanceAccount, useFinanceAccounts } from "@/hooks/finance-que
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
-import { FinanceAccount } from "@/types/finance"
-import { Activity, ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
+import { AccountGroup, FinanceAccount } from "@/types/finance"
+import { Activity, ArrowLeftRight, ArrowUpRight, Ban, CheckCircle, CreditCard, DollarSign, Edit, Eye, Loader2, Plus, Trash2, Wallet } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
@@ -39,6 +47,8 @@ export default function FinancePage() {
     const [withdrawAccount, setWithdrawAccount] = useState<FinanceAccount | null>(null)
     const [accountDialogOpen, setAccountDialogOpen] = useState(false)
     const [selectedAccount, setSelectedAccount] = useState<FinanceAccount | null>(null)
+    const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+    const [groupFilter, setGroupFilter] = useState<AccountGroup | 'all'>('all')
 
     const { data, isLoading, refetch } = useFinanceAccounts({ limit: 100 })
     const deleteAccountMutation = useDeleteFinanceAccount()
@@ -48,6 +58,7 @@ export default function FinancePage() {
     }, [])
 
     const accounts = data?.data || []
+    const filteredAccounts = groupFilter === 'all' ? accounts : accounts.filter(a => a.group === groupFilter)
 
     if (!mounted) {
         return (
@@ -116,15 +127,37 @@ export default function FinancePage() {
                                         List of all financial accounts and their current status.
                                     </CardDescription>
                                 </div>
-                                {hasPermission('account:create') && (
-                                    <Button onClick={() => {
-                                        setSelectedAccount(null)
-                                        setAccountDialogOpen(true)
-                                    }}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Account
-                                    </Button>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {/* Group Filter */}
+                                    <Select value={groupFilter} onValueChange={(v: any) => setGroupFilter(v)}>
+                                        <SelectTrigger className="w-[160px] h-9">
+                                            <SelectValue placeholder="All Groups" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Groups</SelectItem>
+                                            <SelectItem value="general">General</SelectItem>
+                                            <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                                            <SelectItem value="hospital">Hospital</SelectItem>
+                                            <SelectItem value="ambulance">Ambulance</SelectItem>
+                                            <SelectItem value="administration">Administration</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {hasPermission('transaction:transfer') && (
+                                        <Button variant="outline" onClick={() => setTransferDialogOpen(true)}>
+                                            <ArrowLeftRight className="mr-2 h-4 w-4" />
+                                            Fund Transfer
+                                        </Button>
+                                    )}
+                                    {hasPermission('account:create') && (
+                                        <Button onClick={() => {
+                                            setSelectedAccount(null)
+                                            setAccountDialogOpen(true)
+                                        }}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Account
+                                        </Button>
+                                    )}
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -132,6 +165,7 @@ export default function FinancePage() {
                                         <TableRow>
                                             <TableHead>Account Name</TableHead>
                                             <TableHead>Type</TableHead>
+                                            <TableHead>Group</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Balance</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
@@ -140,18 +174,18 @@ export default function FinancePage() {
                                     <TableBody>
                                         {isLoading ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center">
+                                                <TableCell colSpan={6} className="h-24 text-center">
                                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                                 </TableCell>
                                             </TableRow>
-                                        ) : accounts.length === 0 ? (
+                                        ) : filteredAccounts.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                     No accounts found.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            accounts.map((account) => (
+                                            filteredAccounts.map((account) => (
                                                 <TableRow key={account.id}>
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-2">
@@ -165,6 +199,15 @@ export default function FinancePage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="capitalize">{account.type}</TableCell>
+                                                    <TableCell>
+                                                        {account.group ? (
+                                                            <Badge variant="outline" className="capitalize text-xs">
+                                                                {account.group}
+                                                            </Badge>
+                                                        ) : (
+                                                            <span className="text-muted-foreground text-xs">—</span>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell>
                                                         {account.isActive ? (
                                                             <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -254,6 +297,15 @@ export default function FinancePage() {
                     onSuccess={() => {
                         refetch()
                         setWithdrawAccount(null)
+                    }}
+                />
+
+                <FundTransferDialog
+                    open={transferDialogOpen}
+                    onOpenChange={setTransferDialogOpen}
+                    accounts={accounts}
+                    onSuccess={() => {
+                        refetch()
                     }}
                 />
 

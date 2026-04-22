@@ -7,7 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
+
+// Guard against null / undefined / invalid dates coming from the API
+const safeFormat = (value: string | null | undefined, fmt: string, fallback = 'N/A') => {
+  if (!value) return fallback
+  const d = new Date(value)
+  return isValid(d) ? format(d, fmt) : fallback
+}
 import { FileText, MapPin, Loader2, CalendarRange, Clock, User, Fingerprint } from "lucide-react"
 import { useLeave } from "@/hooks/hr-queries"
 
@@ -76,7 +83,7 @@ export function LeaveDetailsDialog({ id, open, onOpenChange, branches }: LeaveDe
                   <div className="flex-1">
                     <p className="font-medium">Leave Duration</p>
                     <p className="text-muted-foreground">
-                      {format(new Date(leave.startDate), "MMM d, yyyy")} to {format(new Date(leave.endDate), "MMM d, yyyy")}
+                      {safeFormat(leave.startDate, "MMM d, yyyy")} to {safeFormat(leave.endDate, "MMM d, yyyy")}
                     </p>
                   </div>
                 </div>
@@ -106,7 +113,7 @@ export function LeaveDetailsDialog({ id, open, onOpenChange, branches }: LeaveDe
                   <div className="flex-1">
                     <p className="font-medium">Requested On</p>
                     <p className="text-muted-foreground">
-                      {format(new Date(leave.createdAt), "MMMM d, yyyy 'at' h:mm a")}
+                      {safeFormat(leave.createdAt, "MMMM d, yyyy 'at' h:mm a")}
                     </p>
                   </div>
                 </div>

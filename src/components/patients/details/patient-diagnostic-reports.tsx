@@ -95,9 +95,9 @@ export function PatientDiagnosticReports({ patientId }: PatientDiagnosticReports
                                     <Badge 
                                         variant="outline" 
                                         className={`capitalize font-black text-[9px] tracking-widest px-2 py-0.5 rounded-lg ${
-                                            report.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 
-                                            report.status === 'sample-collected' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 
-                                            report.status === 'processing' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
+                                            (report.status as any) === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 
+                                            (report.status as any) === 'sample-collected' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 
+                                            (report.status as any) === 'processing' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
                                             'bg-amber-500/10 text-amber-600 border-amber-500/20'
                                         }`}
                                     >

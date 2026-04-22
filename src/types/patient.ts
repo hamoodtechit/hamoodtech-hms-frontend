@@ -153,6 +153,12 @@ export interface PatientQueryParams {
   name?: string;
   phone?: string;
   visitType?: 'ipd' | 'opd' | 'emergency';
+  gender?: 'male' | 'female' | 'other';
+  bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  district?: string;
+  religion?: string;
+  maritalStatus?: string;
+  occupation?: string;
 }
 
 export interface PatientListResponse {

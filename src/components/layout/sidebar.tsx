@@ -25,10 +25,12 @@ import {
     Wallet
 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { isOpen, toggle } = useSidebarStore()
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
@@ -112,13 +114,13 @@ export function Sidebar() {
             },
             {
               label: "OPD Patients",
-              href: "/patients?type=opd",
+              href: "/patients?visitType=opd",
               module: "patients",
               permission: "patient:read",
             },
             {
               label: "IPD Patients",
-              href: "/patients?type=ipd",
+              href: "/patients?visitType=ipd",
               module: "patients",
               permission: "patient:read",
             },
@@ -143,13 +145,10 @@ export function Sidebar() {
             },
             {
               label: "Lab Management",
+              href: "/diagnostic/reports?tab=pending",
               module: "diagnostic",
               permission: "pathology:read",
             },
-            {
-              label: "Prescriptions",
-              permission: "patient:read",
-            }
           ]
         }
       ]
@@ -269,9 +268,6 @@ export function Sidebar() {
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
             },
-            {
-              label: "Insurance & TPA",
-            }
           ]
         },
         {
@@ -539,7 +535,19 @@ export function Sidebar() {
                   // Check if children exist
                   if (route.children) {
                       const isExpanded = expanded[route.label]
-                      const isActiveParent = route.children.some(child => pathname === child.href)
+                      const isActiveParent = route.children.some(child => {
+                          if (!child.href) return false
+                          if (child.href.includes('?')) {
+                              const [hrefPath, hrefQuery] = child.href.split('?')
+                              if (pathname !== hrefPath) return false
+                              const hrefParams = new URLSearchParams(hrefQuery)
+                              for (const [key, value] of hrefParams.entries()) {
+                                  if (searchParams.get(key) !== value) return false
+                              }
+                              return true
+                          }
+                          return pathname === child.href && searchParams.toString() === ''
+                      })
                       
                       return (
                           <div key={route.label} className="space-y-1">
@@ -566,7 +574,26 @@ export function Sidebar() {
                                         // Check child permission using robust checkAccess
                                         if (!checkAccess(child)) return null
 
-                                        const isChildActive = child.href ? pathname === child.href : false
+                                        const isChildActive = (() => {
+                                            if (!child.href) return false
+                                            if (child.href.includes('?')) {
+                                                const [hrefPath, hrefQuery] = child.href.split('?')
+                                                const hrefParams = new URLSearchParams(hrefQuery)
+                                                // Path must match AND every key=value in the href must match the current URL
+                                                if (pathname !== hrefPath) return false
+                                                for (const [key, value] of hrefParams.entries()) {
+                                                    if (searchParams.get(key) !== value) return false
+                                                }
+                                                return true
+                                            }
+                                            // Plain href (no query): active only if no relevant query params are present
+                                            // e.g. /patients should NOT be active when /patients?visitType=opd
+                                            if (pathname === child.href) {
+                                                // For plain hrefs, active only if there are no query params at all
+                                                return searchParams.toString() === ''
+                                            }
+                                            return false
+                                        })()
                                         
                                         const content = (
                                             <div

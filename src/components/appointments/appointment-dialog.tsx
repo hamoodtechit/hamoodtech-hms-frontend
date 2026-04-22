@@ -1,5 +1,4 @@
 "use client"
-
 import { PatientDialog } from "@/components/patients/patient-dialog"
 import { SearchableSelect } from "@/components/shared/searchable-select"
 import { ReferralSearch } from "@/components/hr/referral-search"

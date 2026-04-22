@@ -84,7 +84,7 @@ export function AppointmentBillingForm() {
         limit: 1000 
     })
     const { data: testsRes } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 100, isActive: true })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, group: 'hospital', limit: 100, isActive: true })
     
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")
@@ -193,6 +193,13 @@ export function AppointmentBillingForm() {
             setChamberOrRoomNumber("")
         }
     }, [selectedDoctorId, users])
+
+    // Automatically select the first account if none is selected
+    useEffect(() => {
+        if (accounts.length > 0 && !selectedAccountId) {
+            setSelectedAccountId(accounts[0].id)
+        }
+    }, [accounts, selectedAccountId])
 
     // Cart Helpers
     const addToCart = (service: any) => {

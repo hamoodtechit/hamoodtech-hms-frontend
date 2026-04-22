@@ -72,7 +72,7 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
         branchId: activeStoreId || undefined,
         limit: 100 
     })
-    const ambulances = ambulanceRes?.data?.ambulances || []
+    const ambulances = Array.isArray(ambulanceRes?.data) ? ambulanceRes.data : []
 
     const { data: patientsRes } = usePatients({ limit: 100 })
     const patients = patientsRes?.data || []

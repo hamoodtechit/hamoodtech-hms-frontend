@@ -1,8 +1,8 @@
 import { api } from "@/lib/api";
-import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
+import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, FundTransferPayload, FundTransferResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
 
 export const financeService = {
-    getAccounts: async (params?: { page?: number; limit?: number; type?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
+    getAccounts: async (params?: { page?: number; limit?: number; type?: string; group?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
         const response = await api.get<AccountListResponse>("/finance/accounts", { params });
         return response.data;
     },
@@ -29,6 +29,11 @@ export const financeService = {
 
     withdraw: async (payload: WithdrawPayload): Promise<{ success: boolean; message: string }> => {
         const response = await api.post<{ success: boolean; message: string }>("/finance/transactions/withdraw", payload);
+        return response.data;
+    },
+
+    transferFunds: async (payload: FundTransferPayload): Promise<FundTransferResponse> => {
+        const response = await api.post<FundTransferResponse>("/finance/transactions/transfer", payload);
         return response.data;
     },
 

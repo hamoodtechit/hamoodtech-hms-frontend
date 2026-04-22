@@ -29,9 +29,15 @@ import { useStoreContext } from "@/store/use-store-context"
 import { Leave } from "@/types/hr"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 import { LeaveDialog } from "@/components/hr/leave-dialog"
-import { LeaveDetailsDialog } from "@/components/hr/leave-details-dialog"
+import { LeaveSummary } from "@/components/hr/leave-summary"
 import { ApproveLeaveDialog } from "@/components/hr/approve-leave-dialog"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
+
+const safeFormat = (value: string | null | undefined, fmt: string, fallback = 'N/A') => {
+  if (!value) return fallback
+  const d = new Date(value)
+  return isValid(d) ? format(d, fmt) : fallback
+}
 
 export function LeavesView() {
   const { activeStoreId } = useStoreContext()
@@ -45,7 +51,6 @@ export function LeavesView() {
   const [filterEmployeeId, setFilterEmployeeId] = useState<string>("all")
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [isApproveOpen, setIsApproveOpen] = useState(false)
   
   const [selectedLeaveId, setSelectedLeaveId] = useState<string | null>(null)
@@ -92,11 +97,6 @@ export function LeavesView() {
     setSelectedLeaveId(leave.id)
     setSelectedLeaveStatus(leave.status)
     setIsApproveOpen(true)
-  }
-
-  const handleViewDetails = (id: string) => {
-    setSelectedLeaveId(id)
-    setIsDetailsOpen(true)
   }
 
   const handleDelete = (id: string) => {
@@ -147,6 +147,10 @@ export function LeavesView() {
             </Button>
           </div>
         </div>
+
+        {filterEmployeeId !== "all" && (
+          <LeaveSummary employeeId={filterEmployeeId} />
+        )}
 
         <Card>
           <CardHeader className="pb-3">
@@ -242,7 +246,7 @@ export function LeavesView() {
                         </TableCell>
                         <TableCell>
                             <div className="text-sm font-medium">
-                                {format(new Date(leave.startDate), "MMM d")} - {format(new Date(leave.endDate), "MMM d, yyyy")}
+                                {safeFormat(leave.startDate, "MMM d")} - {safeFormat(leave.endDate, "MMM d, yyyy")}
                             </div>
                         </TableCell>
                         <TableCell>
@@ -256,10 +260,6 @@ export function LeavesView() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40 p-1 shadow-lg">
-                              <DropdownMenuItem onClick={() => handleViewDetails(leave.id)} className="cursor-pointer rounded-md">
-                                <span className="mr-2 h-4 w-4 flex items-center justify-center opacity-70">👁️</span>
-                                View Details
-                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleApprove(leave)} className="cursor-pointer rounded-md">
                                 <CheckCircle className="mr-2 h-4 w-4 text-emerald-600" />
                                 Action Request
@@ -341,13 +341,6 @@ export function LeavesView() {
         <LeaveDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-        />
-
-        <LeaveDetailsDialog
-          id={selectedLeaveId}
-          open={isDetailsOpen}
-          onOpenChange={setIsDetailsOpen}
-          branches={branches}
         />
 
         <ApproveLeaveDialog

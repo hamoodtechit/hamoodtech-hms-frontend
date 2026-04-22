@@ -21,6 +21,7 @@ import {
     Leave,
     LeavePayload,
     LeaveFilters,
+    LeaveSummary,
     ApproveLeavePayload,
     Commission,
     CommissionFilters,
@@ -276,6 +277,11 @@ export const hrService = {
 
   getLeaveById: async (id: string): Promise<{ success: boolean; data: Leave }> => {
     const response = await api.get<{ success: boolean; data: Leave }>(`/hr/leaves/${id}`);
+    return response.data;
+  },
+
+  getEmployeeLeaveSummary: async (employeeId: string): Promise<{ success: boolean; data: LeaveSummary }> => {
+    const response = await api.get<{ success: boolean; data: LeaveSummary }>(`/hr/leaves/${employeeId}`);
     return response.data;
   },
 

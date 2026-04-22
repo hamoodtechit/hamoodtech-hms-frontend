@@ -58,7 +58,7 @@ export function ExtraChargeBillingForm() {
 
     // Data Fetching
     const { data: staffRes, isLoading: loadingStaff } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, group: 'hospital', limit: 100, isActive: true })
 
     // Pagination/History State
     const [modalSearch, setModalSearch] = useState("")
@@ -116,6 +116,13 @@ export function ExtraChargeBillingForm() {
             }
         }
     }, [user, staffs, selectedStaffId])
+
+    // Automatically select the first account if none is selected
+    useEffect(() => {
+        if (accounts.length > 0 && !selectedAccountId) {
+            setSelectedAccountId(accounts[0].id)
+        }
+    }, [accounts, selectedAccountId])
 
     const handleAddItem = () => {
         if (!newItemName || newItemPrice <= 0) {

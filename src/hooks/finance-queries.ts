@@ -1,5 +1,5 @@
 import { financeService } from "@/services/finance-service";
-import { CreateAccountPayload, UpdateAccountPayload } from "@/types/finance";
+import { CreateAccountPayload, FundTransferPayload, UpdateAccountPayload } from "@/types/finance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const FINANCE_KEYS = {
@@ -82,6 +82,16 @@ export function useUpdateFinanceTransaction() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.transaction(id) });
             queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.transactions() });
+        },
+    });
+}
+
+export function useTransferFunds() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: FundTransferPayload) => financeService.transferFunds(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.all });
         },
     });
 }

@@ -32,6 +32,7 @@ import { CloseRegisterDialog } from "@/components/pharmacy/pos/close-register-di
 import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useActiveCashRegister, useAllMedicines, useInfiniteMedicines, usePharmacyEntities } from "@/hooks/pharmacy-queries"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCreateSale } from "@/hooks/sales-queries"
 import { patientService } from "@/services/patient-service"
 import { SalePayload } from "@/types/sales"
@@ -196,12 +197,21 @@ export default function POSPage() {
     setPaidAmount(total)
   }, [total])
 
+  const { data: accountsRes } = useFinanceAccounts({ group: 'pharmacy', limit: 100, isActive: true })
+  const availableAccounts = accountsRes?.data || []
   useEffect(() => {
-    if (pharmacyFinance?.paymentMethodAccounts) {
-        const defaultAccountId = pharmacyFinance.paymentMethodAccounts[paymentMethod]?.id || ""
-        setSelectedAccountId(defaultAccountId)
+    if (availableAccounts.length === 0) return;
+
+    const mappedAccountId = pharmacyFinance?.paymentMethodAccounts?.[paymentMethod]?.id
+    const mappedAccountValid = availableAccounts.find(a => String(a.id) === String(mappedAccountId))
+    
+    if (mappedAccountId && mappedAccountValid) {
+        setSelectedAccountId(mappedAccountId)
+    } else if (!selectedAccountId || !availableAccounts.find(a => String(a.id) === String(selectedAccountId))) {
+        // Fallback to first available account if nothing selected or current selection is invalid
+        setSelectedAccountId(availableAccounts[0].id)
     }
-  }, [paymentMethod, pharmacyFinance])
+  }, [paymentMethod, pharmacyFinance, availableAccounts, selectedAccountId, setSelectedAccountId])
 
   const handleCheckout = useCallback(() => {
       if (cart.length === 0) return
@@ -639,6 +649,7 @@ export default function POSPage() {
                         paymentNote={paymentNote}
                         setPaymentNote={setPaymentNote}
                         isProcessing={createSaleMutation.isPending}
+                        availableAccounts={availableAccounts}
                     />
                 </SheetContent>
             </Sheet>
@@ -1121,6 +1132,7 @@ export default function POSPage() {
             paymentNote={paymentNote}
             setPaymentNote={setPaymentNote}
             isProcessing={createSaleMutation.isPending}
+            availableAccounts={availableAccounts}
          />
       </div>
 

@@ -136,7 +136,7 @@ export function DiagnosticBillingForm({
         branchId: activeStoreId || undefined,
         limit: 1000 
     })
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, limit: 10, isActive: true })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId || undefined, group: 'hospital', limit: 100, isActive: true })
 
     // Modal Filters & Pagination
     const [modalSearch, setModalSearch] = useState("")
@@ -220,6 +220,13 @@ export function DiagnosticBillingForm({
             setRoomNumber("")
         }
     }, [selectedDoctorId, users])
+
+    // Automatically select the first account if none is selected
+    useEffect(() => {
+        if (accounts.length > 0 && !selectedAccountId) {
+            setSelectedAccountId(accounts[0].id)
+        }
+    }, [accounts, selectedAccountId])
 
     // Handlers
     const handleAddTest = (serviceId?: string) => {

@@ -343,6 +343,23 @@ export interface LeaveFilters {
   status?: string;
 }
 
+export interface LeaveCount {
+  leaveName: string;
+  leaveCount: number;
+  totalLeave: number;
+  availableLeave: number;
+}
+
+export interface LeaveSummary {
+  approvedLeaves: Leave[];
+  pendingLeaves: Leave[];
+  rejectedLeaves: Leave[];
+  leaveCounts: LeaveCount[];
+  totalApprovedLeaves: number;
+  totalPendingLeaves: number;
+  totalRejectedLeaves: number;
+}
+
 export interface Commission {
   id: string;
   branchId: string;

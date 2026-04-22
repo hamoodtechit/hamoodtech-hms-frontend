@@ -28,6 +28,7 @@ import { useCreateLeave, useLeaveTypes, useEmployees } from "@/hooks/hr-queries"
 import { useBranches } from "@/hooks/pharmacy-queries"
 import { toast } from "sonner"
 import { useStoreContext } from "@/store/use-store-context"
+import { LeaveSummary } from "./leave-summary"
 
 const leaveSchema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
@@ -134,6 +135,10 @@ export function LeaveDialog({ open, onOpenChange }: LeaveDialogProps) {
                 </FormItem>
               )}
             />
+
+            {form.watch("employeeId") && (
+              <LeaveSummary employeeId={form.watch("employeeId")} />
+            )}
 
             <FormField
               control={form.control}

@@ -29,6 +29,7 @@ import { Patient, PaymentMethod } from "@/types/pharmacy"
 import { CalendarDays, Check, ChevronDown, CreditCard, Loader2, Minus, Plus, Receipt, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { PatientSearch } from "./patient-search"
+import { useEffect } from "react"
 
 interface CartContentsProps {
     onCheckout: () => void
@@ -52,6 +53,7 @@ interface CartContentsProps {
     paymentNote: string
     setPaymentNote: (note: string) => void
     isProcessing?: boolean
+    availableAccounts?: FinanceAccount[]
 }
 
 export function CartContents({
@@ -75,14 +77,14 @@ export function CartContents({
     setIsCheckoutOpen,
     paymentNote,
     setPaymentNote,
-    isProcessing = false
+    isProcessing = false,
+    availableAccounts = []
 }: CartContentsProps) {
     
     const { cart, updateQuantity, removeFromCart, switchBatch } = usePosStore()
-    const { pharmacy, finance } = useSettingsStore()
+
+    const { pharmacy } = useSettingsStore()
     const { formatCurrency } = useCurrency()
-    const { data: accountsRes } = useFinanceAccounts({ limit: 100, isActive: true })
-    const accounts = accountsRes?.data || []
 
     const paymentMethodToAccountType: Record<string, string> = {
         'cash': 'cash',
@@ -95,8 +97,6 @@ export function CartContents({
         'Rocket': 'mfs'
     }
 
-    // Relaxed filtering to allow switching accounts regardless of payment method
-    const availableAccounts = accounts
     const vatPercentage = pharmacy?.vatPercentage || 0
 
     // Calculations: Discount Applied FIRST, then Tax on the discounted amount
@@ -113,7 +113,7 @@ export function CartContents({
     const total = discountedSubtotal + tax
 
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
-
+    console.log('availableAccounts', availableAccounts)
     return (
         <div className="flex flex-col h-full bg-card overflow-hidden">
             {/* Header - Compact */}
@@ -359,17 +359,6 @@ export function CartContents({
                                     selectedPatient={selectedCustomer} 
                                     onSelect={setSelectedCustomer} 
                                 />
-                                {selectedCustomer && (
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 p-2 rounded border border-primary/10">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                            {selectedCustomer.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-foreground">{selectedCustomer.name}</p>
-                                            <p className="text-[10px]">{selectedCustomer.phone}</p>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Drawer: Sale Discount */}
@@ -414,7 +403,7 @@ export function CartContents({
                                     <div className="space-y-1.5">
                                         <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Method</Label>
                                         <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                                            <SelectTrigger className="h-10 text-sm">
+                                            <SelectTrigger className="w-full h-10 text-sm">
                                                 <SelectValue placeholder="Method" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -436,30 +425,31 @@ export function CartContents({
                                         />
                                     </div>
                                 </div>
-
-                                <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</Label>
-                                    <Select 
-                                        value={selectedAccountId} 
-                                        onValueChange={setSelectedAccountId}
-                                    >
-                                        <SelectTrigger className="h-10 text-sm">
-                                            <SelectValue placeholder="Select Account" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableAccounts.map((account: FinanceAccount) => (
-                                                <SelectItem key={account.id} value={account.id}>
-                                                    {account.name} ({account.type})
-                                                </SelectItem>
-                                            ))}
-                                            {availableAccounts.length === 0 && (
-                                                <div className="p-2 text-xs text-muted-foreground text-center italic">
-                                                    No {paymentMethodToAccountType[paymentMethod]} accounts found
-                                                </div>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+ 
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target Account</Label>
+                                        <Select 
+                                            key={availableAccounts.length}
+                                            value={selectedAccountId} 
+                                            onValueChange={setSelectedAccountId}
+                                        >
+                                            <SelectTrigger className="w-full h-10 text-sm font-bold">
+                                                <SelectValue placeholder="Select Account" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableAccounts.map((account: FinanceAccount) => (
+                                                    <SelectItem key={account.id} value={String(account.id)}>
+                                                        {account.name} ({account.type})
+                                                    </SelectItem>
+                                                ))}
+                                                {availableAccounts.length === 0 && (
+                                                    <div className="p-2 text-xs text-muted-foreground text-center italic">
+                                                        No accounts found
+                                                    </div>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
                                 <div className="space-y-1.5">
                                     <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Note (Optional)</Label>

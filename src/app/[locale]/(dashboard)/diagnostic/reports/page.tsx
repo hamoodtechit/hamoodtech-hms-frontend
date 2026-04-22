@@ -44,18 +44,56 @@ import {
     Filter,
     FlaskConical,
     Loader2,
+    PackageCheck,
     Printer,
     Search,
     Truck,
     X
 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { DateRange } from "react-day-picker"
+
+// Tab definitions
+type ReportTab = 'pending' | 'complete' | 'all'
+
+const TAB_CONFIG: Record<ReportTab, {
+    label: string
+    icon: any
+    title: string
+    description: string
+    emptyMessage: string
+    color: string
+}> = {
+    pending: {
+        label: 'Pending Reports',
+        icon: Clock,
+        title: 'Pending Worklist',
+        description: 'Reports in progress — awaiting sample collection, result entry, or verification.',
+        emptyMessage: 'No pending reports. The worklist is clear!',
+        color: 'text-amber-500',
+    },
+    complete: {
+        label: 'Complete Reports',
+        icon: CheckCircle2,
+        title: 'Completed Reports',
+        description: 'All finalized reports ready for review or printing.',
+        emptyMessage: 'No completed reports match your filters.',
+        color: 'text-emerald-500',
+    },
+    all: {
+        label: 'All Reports',
+        icon: PackageCheck,
+        title: 'All Reports',
+        description: 'Every diagnostic report across all statuses.',
+        emptyMessage: 'No reports found matching your filters.',
+        color: 'text-blue-500',
+    },
+}
 
 export default function DiagnosticReportsPage() {
     const { hasPermission } = usePermissions()
-    const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all')
+    const router = useRouter()
     const [sampleStatus, setSampleStatus] = useState<SampleStatus | 'all'>('all')
     const [search, setSearch] = useState("")
     const [page, setPage] = useState(1)
@@ -84,6 +122,7 @@ export default function DiagnosticReportsPage() {
 
     const searchParams = useSearchParams()
     const urlPatientId = searchParams.get('patientId')
+    const activeTab: ReportTab = (searchParams.get('tab') as ReportTab) || 'complete'
     const { activeStoreId } = useStoreContext()
     const { user } = useAuthStore()
     
@@ -155,7 +194,13 @@ export default function DiagnosticReportsPage() {
         page,
         limit: 10,
         branchId: activeStoreId || undefined,
-        reportStatus: statusFilter === 'all' ? undefined : statusFilter,
+        // Backend status filter — each tab passes its real API value
+        // pending tab → status=pending, complete tab → status=completed, all tab → no filter
+        // If user manually selects a status on the pending tab, override with that
+        status: activeTab === 'complete' ? 'completed'
+              : activeTab === 'all' ? (reportStatus !== 'all' ? reportStatus : undefined)
+              : reportStatus !== 'all' ? reportStatus
+              : 'pending',
         sampleStatus: sampleStatus === 'all' ? undefined : sampleStatus,
         search: debouncedSearch || undefined,
         barcode: debouncedBarcode || undefined,
@@ -164,7 +209,6 @@ export default function DiagnosticReportsPage() {
         serviceId: serviceId === 'all' ? undefined : serviceId,
         isSampleCollected: isSampleCollected === 'all' ? undefined : isSampleCollected,
         isDelivered: isDelivered === 'all' ? undefined : isDelivered,
-        status: reportStatus === 'all' ? undefined : reportStatus,
         patientId: urlPatientId || undefined,
         startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
         endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
@@ -179,10 +223,7 @@ export default function DiagnosticReportsPage() {
         }
     }, [isAdmin, activeDepartmentId, departmentId, filteredDepartments])
 
-    const allReports = reportsRes?.data || []
-
-    // Display raw results from API directly (removed frontend safety filter for manual testing)
-    const reports = allReports
+    const reports = reportsRes?.data || []
 
     const activeFilterCount = [
         sampleStatus !== 'all',
@@ -192,31 +233,13 @@ export default function DiagnosticReportsPage() {
         serviceId !== 'all',
         isSampleCollected !== 'all',
         isDelivered !== 'all',
-        reportStatus !== 'all',
+        // reportStatus is locked by complete tab; only count when on pending or all tab  
+        activeTab === 'pending' && reportStatus !== 'all',
         !!dateRange?.from,
         !!dateRange?.to,
     ].filter(Boolean).length
 
-    const handleAction = (report: DiagnosticReport) => {
-        setSelectedReport(report)
-        switch (report.status) {
-            case 'pending-billing':
-                // Usually handled by billing module, but if needed:
-                break
-            case 'pending-sample-collection':
-                setCollectionOpen(true)
-                break
-            case 'sample-collected':
-            case 'processing':
-                setResultOpen(true)
-                break
-            case 'pending-verification':
-                setApprovalOpen(true)
-                break
-            default:
-                break
-        }
-    }
+    
 
     const handleDeliver = (report: DiagnosticReport) => {
         updateMutation.mutate({ 
@@ -249,8 +272,19 @@ export default function DiagnosticReportsPage() {
         'cancelled':                 { label: 'Cancelled',            color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',    icon: X },
     }
 
-    // Dynamic Title    
-    const pageTitle = "Diagnostic Worklist";
+    const tabInfo = TAB_CONFIG[activeTab]
+    const TabIcon = tabInfo.icon
+
+    const handleTabChange = (tab: string) => {
+        // Reset user filters when switching tabs
+        setSampleStatus('all')
+        setIsDelivered('all')
+        setReportStatus('all')
+        setPage(1)
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('tab', tab)
+        router.push(`?${params.toString()}`)
+    }
 
     return (
         <PermissionGuard permission={["pathology:read", "radiology:read"]}>
@@ -260,19 +294,18 @@ export default function DiagnosticReportsPage() {
                     <div>
                         <h1 className="text-3xl font-black tracking-tight text-primary flex items-center gap-3">
                             <FlaskConical className="w-8 h-8" />
-                            {pageTitle}
+                            Diagnostic Reports
                         </h1>
-                        <p className="text-muted-foreground text-sm font-medium">Manage the diagnostic lifecycle from requisition to approval.</p>
+                        <p className="text-muted-foreground text-sm font-medium">Clinical report lifecycle — from sample collection to patient delivery.</p>
                     </div>
 
                     {urlPatientId && (
                         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
-                            {/* Clear filter button */}
                             <Button 
                                 variant="outline" 
                                 size="icon" 
                                 className="h-12 w-12 rounded-xl bg-card border-none"
-                                onClick={() => window.location.href = '/diagnostic/reports'}
+                                onClick={() => router.push('/diagnostic/reports?tab=pending')}
                             >
                                 <X className="h-5 w-5" />
                             </Button>
@@ -280,17 +313,48 @@ export default function DiagnosticReportsPage() {
                     )}
                 </div>
 
+                {/* === TAB BAR === */}
+                <div className="flex items-center gap-1 bg-muted/60 rounded-2xl p-1.5 w-full md:w-fit">
+                    {(Object.keys(TAB_CONFIG) as ReportTab[]).map((tab) => {
+                        const cfg = TAB_CONFIG[tab]
+                        const Icon = cfg.icon
+                        const isActive = activeTab === tab
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => handleTabChange(tab)}
+                                className={cn(
+                                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200",
+                                    isActive
+                                        ? "bg-card shadow-sm text-foreground"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                )}
+                            >
+                                <Icon className={cn("h-4 w-4", isActive && cfg.color)} />
+                                <span className="hidden sm:inline">{cfg.label}</span>
+                                <span className="sm:hidden">{cfg.label.split(' ')[0]}</span>
+                            </button>
+                        )
+                    })}
+                </div>
+
 
                 <PermissionGuard permission={["pathology:read", "radiology:read"]} mode="silent">
                     <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
                         <CardHeader className="p-4 border-b bg-card/80">
-                            {/* ... (Search and filters content) ... */}
                             <div className="flex flex-col gap-3">
-                                {/* Tabs row */}
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                                    <div>
-                                        <h2 className="text-lg font-black tracking-tight text-primary">Pending Requirements</h2>
-                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Manage clinical workflow units</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("p-2 rounded-xl",
+                                            activeTab === 'pending' ? "bg-amber-500/10" :
+                                            activeTab === 'complete' ? "bg-emerald-500/10" : "bg-blue-500/10"
+                                        )}>
+                                            <TabIcon className={cn("h-5 w-5", tabInfo.color)} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-black tracking-tight text-primary">{tabInfo.title}</h2>
+                                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{tabInfo.description}</p>
+                                        </div>
                                     </div>
 
                                     {/* Search + Advanced Filter */}
@@ -560,11 +624,14 @@ export default function DiagnosticReportsPage() {
                                         <TableRow>
                                             <TableCell colSpan={8} className="h-96 text-center">
                                                 <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-50">
-                                                    <div className="p-6 bg-secondary/50 rounded-full mb-4">
-                                                        <ClipboardList className="h-12 w-12" />
+                                                    <div className={cn("p-6 rounded-full mb-4",
+                                                        activeTab === 'pending' ? "bg-amber-500/10" :
+                                                        activeTab === 'complete' ? "bg-emerald-500/10" : "bg-blue-500/10"
+                                                    )}>
+                                                        <TabIcon className={cn("h-12 w-12", tabInfo.color)} />
                                                     </div>
-                                                    <p className="text-lg font-black tracking-tight">Worklist Clear</p>
-                                                    <p className="text-sm">No reports matching the current filters.</p>
+                                                    <p className="text-lg font-black tracking-tight">{tabInfo.emptyMessage}</p>
+                                                    <p className="text-sm">Try adjusting your search or filter settings.</p>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

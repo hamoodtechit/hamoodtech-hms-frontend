@@ -76,7 +76,13 @@ export function usePatients(params: {
   search?: string; 
   name?: string; 
   phone?: string; 
-  visitType?: 'ipd' | 'opd' | 'emergency' 
+  visitType?: 'ipd' | 'opd' | 'emergency';
+  gender?: 'male' | 'female' | 'other';
+  bloodGroup?: string;
+  district?: string;
+  religion?: string;
+  maritalStatus?: string;
+  occupation?: string;
 }) {
   return useQuery({
     queryKey: PHARMACY_KEYS.patients(params),

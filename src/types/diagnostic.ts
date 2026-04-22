@@ -67,11 +67,7 @@ export interface DiagnosticTestGroupPayload {
 }
 
 export type ReportStatus =
-  | 'pending-billing'
-  | 'pending-sample-collection'
-  | 'sample-collected'
-  | 'processing'
-  | 'pending-verification'
+  | 'pending'
   | 'completed'
   | 'cancelled';
 

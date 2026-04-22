@@ -1,7 +1,10 @@
+export type AccountGroup = 'pharmacy' | 'hospital' | 'ambulance' | 'general' | 'administration';
+
 export interface FinanceAccount {
     id: string;
     name: string;
     type: string;
+    group?: AccountGroup;
     description?: string;
     openingBalance: string; // API returns string "0"
     currentBalance: string; // API returns string "0"
@@ -67,6 +70,7 @@ export interface WithdrawPayload {
 export interface CreateAccountPayload {
     name: string;
     type: 'cash' | 'bank' | 'mfs' | 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+    group?: AccountGroup;
     description?: string;
     openingBalance: number;
     isActive: boolean;
@@ -75,8 +79,21 @@ export interface CreateAccountPayload {
 export interface UpdateAccountPayload {
     name?: string;
     type?: string;
+    group?: AccountGroup;
     description?: string;
     isActive?: boolean;
+}
+
+export interface FundTransferPayload {
+    fromAccountId: string;
+    toAccountId: string;
+    amount: number;
+    note?: string;
+}
+
+export interface FundTransferResponse {
+    transferOut: FinanceTransaction;
+    transferIn: FinanceTransaction;
 }
 
 export interface TransactionQueryParams {
