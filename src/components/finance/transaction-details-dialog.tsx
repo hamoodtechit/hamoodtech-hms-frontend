@@ -250,7 +250,7 @@ export function TransactionDetailsDialog({ open, onOpenChange, transactionId }: 
                                         )}
                                     </div>
                                     <div className="col-span-2 space-y-1">
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Transaction Note</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Note:</p>
                                         {isEditing ? (
                                             <Input 
                                                 className="h-9 text-xs mt-1" 

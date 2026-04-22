@@ -265,6 +265,12 @@ export function SaleDetailsDialog({
                 </Select>
               )}
             </div>
+            {sale.note && (
+              <div className="col-span-2 mt-2 pt-2 border-t border-black/5">
+                <p className="text-[10px] font-black uppercase text-muted-foreground opacity-60">Note:</p>
+                <p className="text-xs font-bold text-primary italic leading-tight">"{sale.note}"</p>
+              </div>
+            )}
           </div>
 
           <Separator />

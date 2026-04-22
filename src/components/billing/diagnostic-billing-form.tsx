@@ -210,6 +210,7 @@ export function DiagnosticBillingForm({
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
     const [paymentNote, setPaymentNote] = useState<string>("")
+    const [saleNote, setSaleNote] = useState<string>("")
     
     // Auto-fill room based on user
     useEffect(() => {
@@ -302,6 +303,7 @@ export function DiagnosticBillingForm({
             branchId: activeStoreId || "",
             patientId: selectedCustomer.id,
             type: "hospital",
+            note: saleNote || undefined,
             doctorId: selectedDoctorId || undefined,
             status: paidAmount >= total ? 'completed' : 'pending',
             paymentMethod: paymentMethod,
@@ -350,6 +352,7 @@ export function DiagnosticBillingForm({
             setSelectedDoctorId("")
             setPaidAmount(0)
             setPaymentNote("")
+            setSaleNote("")
             setSelectedReferralPersonId("")
             setDiscount(0)
             setDiscountFixedAmount(0)
@@ -793,14 +796,26 @@ export function DiagnosticBillingForm({
                                                     </Select>
                                                 </div>
 
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Memo / Note</Label>
-                                                    <Input 
-                                                        placeholder="Add transaction note..."
-                                                        value={paymentNote}
-                                                        onChange={(e) => setPaymentNote(e.target.value)}
-                                                        className="h-11 rounded-xl border-none bg-muted/20 font-bold text-xs"
-                                                    />
+                                                <div className="space-y-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-primary">Note (For Sale)</Label>
+                                                        <Input 
+                                                            placeholder="General note for this sale..."
+                                                            value={saleNote}
+                                                            onChange={(e) => setSaleNote(e.target.value)}
+                                                            className="h-11 rounded-xl bg-muted/20 border-none font-bold text-xs"
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Payment Note (Finance Memo)</Label>
+                                                        <Input 
+                                                            placeholder="Add payment details memo..."
+                                                            value={paymentNote}
+                                                            onChange={(e) => setPaymentNote(e.target.value)}
+                                                            className="h-11 rounded-xl bg-background border-primary/5 font-medium text-xs italic"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

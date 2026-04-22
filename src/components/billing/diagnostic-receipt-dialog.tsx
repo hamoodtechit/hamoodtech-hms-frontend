@@ -285,10 +285,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
             </div>
             
             {/* Payment Note Section */}
-            {(data?.payments?.[0]?.note || data?.note) && (
+            {(data?.note || data?.payments?.[0]?.note) && (
                 <div className="mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start">
                     <span className="shrink-0 uppercase text-[9px] opacity-70 mt-0.5">Note:</span>
-                    <span className="italic font-medium text-[10px] uppercase leading-tight">{data?.payments?.[0]?.note || data.note}</span>
+                    <span className="italic font-medium text-[10px] uppercase leading-tight">{data?.note || data?.payments?.[0]?.note}</span>
                 </div>
             )}
         </div>

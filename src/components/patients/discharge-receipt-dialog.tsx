@@ -293,6 +293,14 @@ export function DischargeReceiptDialog({
                                     <span className="text-lg font-black">{formatCurrency(Math.max(0, currentDue))}</span>
                                 </div>
                             </div>
+                            
+                            {/* Discharge Note Section */}
+                            {(data?.note || admission?.note) && (
+                                <div className="mt-8 p-3 bg-gray-50 border border-black border-dotted flex gap-2 items-start relative z-10 w-[80%] mx-auto">
+                                    <span className="shrink-0 uppercase text-[10px] font-black opacity-70 mt-0.5">Note:</span>
+                                    <span className="italic font-bold text-[11px] uppercase leading-tight">{data?.note || admission?.note}</span>
+                                </div>
+                            )}
 
                             {/* Signatures */}
                             <div className="mt-16 flex justify-between px-4 relative z-10">

@@ -185,6 +185,7 @@ export default function POSPage() {
   const [selectedAccountId, setSelectedAccountId] = useState<string>("")
   const [paidAmount, setPaidAmount] = useState(0)
   const [paymentNote, setPaymentNote] = useState("")
+  const [saleNote, setSaleNote] = useState("")
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [lastTransaction, setLastTransaction] = useState<any>(null)
@@ -464,6 +465,7 @@ export default function POSPage() {
               taxPercentage: vatPercentage,
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
+              note: saleNote || undefined,
                saleItems: cart.flatMap(item => {
                   // If item has quantity within its assigned batch, keep it simple
                   // BUT for safety, we implement auto-allocation for all multi-batch items
@@ -541,6 +543,7 @@ export default function POSPage() {
           setDiscount(0)
           setDiscountFixedAmount(0)
           setPaymentNote("")
+          setSaleNote("")
           setCartOpen(false) 
           setIsCheckoutOpen(false)
           setShowInteractionAlert(false)
@@ -648,6 +651,8 @@ export default function POSPage() {
                         setIsCheckoutOpen={setIsCheckoutOpen}
                         paymentNote={paymentNote}
                         setPaymentNote={setPaymentNote}
+                        saleNote={saleNote}
+                        setSaleNote={setSaleNote}
                         isProcessing={createSaleMutation.isPending}
                         availableAccounts={availableAccounts}
                     />
@@ -1131,6 +1136,8 @@ export default function POSPage() {
             setIsCheckoutOpen={setIsCheckoutOpen}
             paymentNote={paymentNote}
             setPaymentNote={setPaymentNote}
+            saleNote={saleNote}
+            setSaleNote={setSaleNote}
             isProcessing={createSaleMutation.isPending}
             availableAccounts={availableAccounts}
          />

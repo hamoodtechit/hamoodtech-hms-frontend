@@ -132,7 +132,7 @@ export function StockTransferDialog({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="note">Transaction Note</Label>
+            <Label htmlFor="note">Note:</Label>
             <Textarea
               id="note"
               value={note}

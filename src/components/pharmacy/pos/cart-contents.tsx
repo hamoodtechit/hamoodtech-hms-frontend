@@ -52,6 +52,8 @@ interface CartContentsProps {
     setIsCheckoutOpen: (open: boolean) => void
     paymentNote: string
     setPaymentNote: (note: string) => void
+    saleNote: string
+    setSaleNote: (note: string) => void
     isProcessing?: boolean
     availableAccounts?: FinanceAccount[]
 }
@@ -77,6 +79,8 @@ export function CartContents({
     setIsCheckoutOpen,
     paymentNote,
     setPaymentNote,
+    saleNote,
+    setSaleNote,
     isProcessing = false,
     availableAccounts = []
 }: CartContentsProps) {
@@ -451,14 +455,26 @@ export function CartContents({
                                         </Select>
                                     </div>
 
-                                <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment Note (Optional)</Label>
-                                    <Input 
-                                        placeholder="Add transaction memo..."
-                                        value={paymentNote}
-                                        onChange={(e) => setPaymentNote(e.target.value)}
-                                        className="h-9 text-xs bg-background border-primary/5 font-medium"
-                                    />
+                                <div className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-primary">Note (For Sale)</Label>
+                                        <Input 
+                                            placeholder="General note for this sale..."
+                                            value={saleNote}
+                                            onChange={(e) => setSaleNote(e.target.value)}
+                                            className="h-9 text-xs bg-muted/20 border-primary/10 font-bold"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-70">Payment Note (Finance Memo)</Label>
+                                        <Input 
+                                            placeholder="Add payment details memo..."
+                                            value={paymentNote}
+                                            onChange={(e) => setPaymentNote(e.target.value)}
+                                            className="h-9 text-xs bg-background border-primary/5 font-medium italic"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

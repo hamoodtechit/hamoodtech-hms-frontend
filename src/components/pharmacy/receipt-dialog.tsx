@@ -183,7 +183,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
                 <span className="shrink-0 uppercase text-[8px] opacity-70 mt-0.5">Note:</span>
                 <span className={`italic font-medium uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
-                    {data?.payments?.[0]?.note || (data as any)?.note}
+                    {(data as any)?.note || data?.payments?.[0]?.note}
                 </span>
             </div>
         )}
@@ -354,7 +354,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         ${(data?.payments?.[0]?.note || (data as any)?.note) ? `
                         <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
                             <span style="text-transform: uppercase; font-size: 9px; opacity: 0.7; font-weight: bold;">Note:</span>
-                            <span style="font-style: italic; font-weight: bold; text-transform: uppercase;">${data?.payments?.[0]?.note || (data as any)?.note}</span>
+                            <span style="font-style: italic; font-weight: bold; text-transform: uppercase;">${(data as any)?.note || data?.payments?.[0]?.note}</span>
                         </div>` : ''}
 
                         <div class="footer">

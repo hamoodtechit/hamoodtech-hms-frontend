@@ -212,6 +212,7 @@ export interface DischargeInitiateData {
     dueAmount?: number;
   };
   allSales?: Sale[];
+  note?: string;
 }
 
 export interface DischargePayload {
@@ -221,6 +222,7 @@ export interface DischargePayload {
   totalAmount?: number;
   paidAmount?: number;
   dueAmount?: number;
+  note?: string;
   payments: {
     accountId: string;
     amount: number;

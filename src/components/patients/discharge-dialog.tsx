@@ -207,6 +207,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             totalAmount: Number(hospitalTotals.totalBill),
             paidAmount: finalTotalPaid,
             dueAmount: finalRemainingDue,
+            note: note || undefined,
             payments,
         }, {
             onSuccess: (res: any) => {
