@@ -19,6 +19,7 @@ import { Link, usePathname } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Bell, PlayCircle, Search } from "lucide-react"
+import { NotificationDropdown } from "./notification-dropdown"
 
 export function Header() {
   const pathname = usePathname()
@@ -101,11 +102,9 @@ export function Header() {
                 />
             </div>
 
+
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            </Button>
+            <NotificationDropdown />
 
             <div className="h-6 w-px bg-border mx-1" />
 

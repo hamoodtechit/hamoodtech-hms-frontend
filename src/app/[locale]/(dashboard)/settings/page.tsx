@@ -13,9 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { settingsService } from "@/services/settings-service"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { AppointmentConfig, FinanceConfig, GeneralConfig, PharmacyConfig } from "@/types/settings"
-import { Banknote, Building2, Calendar, Loader2, Pill, Save } from "lucide-react"
+import { Banknote, Building2, Calendar, Loader2, Megaphone, Pill, Save } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { CommunicationSettings } from "@/components/communication/communication-settings"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function SettingsPage() {
@@ -205,6 +206,13 @@ export default function SettingsPage() {
                         >
                             <Banknote className="mr-3 h-4 w-4" />
                             Finance & Accounts
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="communication"
+                            className="justify-start px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-foreground hover:bg-secondary/50 transition-all rounded-lg"
+                        >
+                            <Megaphone className="mr-3 h-4 w-4" />
+                            Communication
                         </TabsTrigger>
                     </TabsList>
 
@@ -450,6 +458,9 @@ export default function SettingsPage() {
                                     </Button>
                                 </CardFooter>
                             </Card>
+                        </TabsContent>
+                        <TabsContent value="communication" className="mt-0">
+                            <CommunicationSettings />
                         </TabsContent>
                     </div>
                 </Tabs>

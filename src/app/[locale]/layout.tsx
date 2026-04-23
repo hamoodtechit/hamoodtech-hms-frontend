@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { NotificationProvider } from "@/components/providers/notification-provider";
+
 export default async function RootLayout({
   children,
   params,
@@ -53,8 +55,10 @@ export default async function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
-              <Toaster />
+              <NotificationProvider>
+                {children}
+                <Toaster />
+              </NotificationProvider>
             </ThemeProvider>
           </QueryProvider>
         </NextIntlClientProvider>
