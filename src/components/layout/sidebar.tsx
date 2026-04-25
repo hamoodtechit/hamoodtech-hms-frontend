@@ -491,11 +491,11 @@ export function Sidebar() {
   }, [])
 
   return (
-    <div className={cn(
-        "hidden md:flex relative flex-col h-full bg-[#111827] text-zinc-900 dark:text-white border-r border-white/5 transition-all duration-300 w-full overflow-hidden"
+      <div className={cn(
+        "hidden md:flex relative flex-col h-full bg-white dark:bg-sidebar border-r border-zinc-200 dark:border-sidebar-border transition-all duration-300 w-full overflow-hidden"
     )}>
       {/* Brand Header */}
-      <div className="flex items-center h-20 px-6 border-b border-white/5 bg-[#111827]">
+      <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-sidebar-border bg-white dark:bg-sidebar">
         <Link href="/dashboard" className="flex items-center gap-3 w-full">
             {isMounted && activeBranch?.logoUrl ? (
                 <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-sidebar-border overflow-hidden", !isOpen && "mx-auto")}>
@@ -503,14 +503,14 @@ export function Sidebar() {
                     <img src={activeBranch.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             ) : (
-                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
+                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-sidebar-border overflow-hidden", !isOpen && "mx-auto")}>
                      {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             )}
           
           {isOpen && (
-             <div className="flex flex-col animate-in fade-in duration-300 overflow-hidden">
+             <div className="flex flex-col h-full bg-white dark:bg-sidebar text-zinc-900 dark:text-white animate-in fade-in duration-300 overflow-hidden">
                 <h1 className="text-lg font-bold tracking-tight truncate w-full">
                     {general?.hospitalName || "Patwary General hospital"}
                 </h1>
@@ -601,7 +601,7 @@ export function Sidebar() {
                                                     "block p-2 text-sm rounded-lg transition-colors",
                                                     isChildActive 
                                                         ? "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium" 
-                                                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
+                                                        : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
                                                     !child.href && "cursor-default hover:bg-transparent dark:hover:bg-transparent"
                                                 )}
                                             >
@@ -634,9 +634,9 @@ export function Sidebar() {
                     key={route.href}
                     href={route.href!}
                     className={cn(
-                        "relative flex items-center p-3 rounded-xl transition-all duration-200 group overflow-hidden",
-                        isActive 
-                            ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm dark:shadow-md backdrop-blur-sm" 
+                        "flex items-center p-3 rounded-xl transition-all duration-200 group",
+                        isActive
+                            ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-md backdrop-blur-sm" 
                             : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                     )}
                     >
@@ -663,7 +663,7 @@ export function Sidebar() {
       </ScrollArea>
 
       {/* Footer / Toggle */}
-      <div className="p-4 border-t border-white/5 bg-[#111827]">
+      <div className="p-4 border-t border-zinc-200 dark:border-sidebar-border bg-white dark:bg-sidebar">
         <Button 
             variant="ghost" 
             className={cn(

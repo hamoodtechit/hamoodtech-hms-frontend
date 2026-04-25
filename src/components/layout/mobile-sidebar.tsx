@@ -52,7 +52,7 @@ export function MobileSidebar() {
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 border-r-0 bg-[#111827] text-white w-72">
+      <SheetContent side="left" className="p-0 border-r-0 bg-white dark:bg-sidebar text-zinc-900 dark:text-white w-72">
         <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
         <SidebarBase />
       </SheetContent>
@@ -492,8 +492,8 @@ function SidebarBase() {
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-[#111827] text-white">
-      <div className="flex items-center h-20 px-6 border-b border-white/10 bg-[#111827]">
+    <div className="flex flex-col h-full bg-white dark:bg-sidebar text-zinc-900 dark:text-white">
+      <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-sidebar">
           <div className="flex items-center gap-3 w-full">
             {activeBranch?.logoUrl ? (
                 <div className="relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
@@ -547,8 +547,8 @@ function SidebarBase() {
                             <button
                                 onClick={() => toggleExpand(route.label)}
                                 className={cn(
-                                    "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-400 hover:text-white hover:bg-white/5",
-                                    (isActiveParent || isExpanded) && "text-white bg-white/5"
+                                    "w-full relative flex items-center justify-between p-3 rounded-xl transition-all duration-200 group overflow-hidden text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5",
+                                    (isActiveParent || isExpanded) && "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/5"
                                 )}
                             >
                                 <div className="flex items-center flex-1">
@@ -586,8 +586,8 @@ function SidebarBase() {
                                                         className={cn(
                                                             "block p-2 text-sm rounded-lg transition-colors",
                                                             isChildActive 
-                                                                ? "text-white bg-white/10 font-medium" 
-                                                                : "text-zinc-500 hover:text-white hover:bg-white/5"
+                                                                ? "text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 font-medium" 
+                                                                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                                                         )}
                                                     >
                                                         {child.label}
@@ -619,8 +619,8 @@ function SidebarBase() {
                     className={cn(
                         "flex items-center p-3 rounded-xl transition-all duration-200 group",
                         isActive
-                            ? "bg-white/10 text-white shadow-md backdrop-blur-sm" 
-                            : "text-zinc-400 hover:text-white hover:bg-white/5"
+                            ? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white shadow-md backdrop-blur-sm" 
+                            : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                     )}
                     >
                         <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
