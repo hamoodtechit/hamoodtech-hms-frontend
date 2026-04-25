@@ -31,12 +31,15 @@ export const useNotificationSocket = () => {
             
             // Show toast
             toast(notification.title || 'New Notification', {
-                description: notification.content,
+                description: notification.message,
                 action: {
                     label: 'View',
                     onClick: () => {
-                        // Forward to notification page or open dropdown
-                        window.dispatchEvent(new CustomEvent('notification:open'));
+                        if (notification.link) {
+                            window.location.href = notification.link;
+                        } else {
+                            window.dispatchEvent(new CustomEvent('notification:open'));
+                        }
                     },
                 },
             });

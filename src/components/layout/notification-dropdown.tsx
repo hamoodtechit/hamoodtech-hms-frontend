@@ -15,8 +15,10 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useNoticeStore } from "@/store/use-notice-store";
 
 export function NotificationDropdown() {
+    const { openNotice } = useNoticeStore();
     const { 
         notifications, 
         unreadCount, 
@@ -24,6 +26,20 @@ export function NotificationDropdown() {
         markAsRead, 
         markAllAsRead 
     } = useNotificationStore();
+
+    const handleNotificationClick = (notification: any) => {
+        if (!notification.isRead) {
+            markAsRead(notification.id);
+        }
+
+        // Connect the dot: Extract notice ID from link and open modal
+        if (notification.type === 'notice' && notification.link) {
+            const noticeId = notification.link.split('/').pop();
+            if (noticeId) {
+                openNotice(noticeId);
+            }
+        }
+    };
 
     return (
         <DropdownMenu>
@@ -83,7 +99,7 @@ export function NotificationDropdown() {
                                         "flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-muted/50 border-b border-muted/30 last:border-0",
                                         !notification.isRead && "bg-primary/5"
                                     )}
-                                    onClick={() => !notification.isRead && markAsRead(notification.id)}
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
                                     <div className="flex w-full items-start justify-between gap-2">
                                         <span className={cn(
@@ -97,20 +113,9 @@ export function NotificationDropdown() {
                                         </span>
                                     </div>
                                     <p className="text-[11px] font-medium text-muted-foreground/80 leading-relaxed line-clamp-2">
-                                        {notification.content}
+                                        {notification.message}
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <Badge 
-                                            variant="outline" 
-                                            className={cn(
-                                                "text-[8px] h-4 font-black uppercase px-1.5",
-                                                notification.priority === 'urgent' ? "bg-red-500/10 text-red-600 border-red-500/20" :
-                                                notification.priority === 'high' ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
-                                                "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                                            )}
-                                        >
-                                            {notification.priority}
-                                        </Badge>
                                         <span className="text-[8px] font-bold text-muted-foreground/40 uppercase">
                                             {notification.type}
                                         </span>

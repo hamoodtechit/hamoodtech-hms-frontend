@@ -209,6 +209,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
             const rawPayload: any = {
                 ...formData,
                 price: Number(formData.price),
+                refCommissionsPercentage: Number(formData.refCommissionsPercentage || 0),
                 testResultTemplate: formData.isDiagnosticTest && Array.isArray(formData.testResultTemplate) 
                     ? formData.testResultTemplate.map((p: any) => ({
                         ...p,

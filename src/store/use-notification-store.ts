@@ -6,10 +6,10 @@ interface NotificationState {
     notifications: Notification[];
     unreadCount: number;
     isLoading: boolean;
-    pagination: {
-        total: number;
+    meta: {
+        totalItems: number;
         page: number;
-        limit: number;
+        pageSize: number;
         totalPages: number;
     };
     fetchNotifications: (page?: number, limit?: number) => Promise<void>;
@@ -23,10 +23,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     notifications: [],
     unreadCount: 0,
     isLoading: false,
-    pagination: {
-        total: 0,
+    meta: {
+        totalItems: 0,
         page: 1,
-        limit: 20,
+        pageSize: 20,
         totalPages: 0,
     },
 
@@ -37,8 +37,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             if (response.success) {
                 set({
                     notifications: response.data,
-                    unreadCount: response.unreadCount,
-                    pagination: response.pagination,
+                    unreadCount: response.meta.unreadCount,
+                    meta: {
+                        totalItems: response.meta.totalItems,
+                        page: response.meta.page,
+                        pageSize: response.meta.pageSize,
+                        totalPages: response.meta.totalPages,
+                    },
                     isLoading: false
                 });
             }
@@ -49,10 +54,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     },
 
     addNotification: (notification) => {
-        set((state) => ({
-            notifications: [notification, ...state.notifications],
-            unreadCount: state.unreadCount + 1,
-        }));
+        set((state) => {
+            // Prevent duplicate notifications if already fetched/added
+            if (state.notifications.some(n => n.id === notification.id)) return state;
+            
+            return {
+                notifications: [notification, ...state.notifications],
+                unreadCount: state.unreadCount + 1,
+            };
+        });
     },
 
     markAsRead: async (id) => {
@@ -86,10 +96,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             notifications: [],
             unreadCount: 0,
             isLoading: false,
-            pagination: {
-                total: 0,
+            meta: {
+                totalItems: 0,
                 page: 1,
-                limit: 20,
+                pageSize: 20,
                 totalPages: 0,
             },
         });

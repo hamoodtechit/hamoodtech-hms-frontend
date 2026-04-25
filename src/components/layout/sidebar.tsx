@@ -492,13 +492,13 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-        "hidden md:flex relative flex-col h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-white/10 transition-all duration-300 w-full overflow-hidden"
+        "hidden md:flex relative flex-col h-full bg-white dark:bg-sidebar text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-sidebar-border transition-all duration-300 w-full overflow-hidden"
     )}>
       {/* Brand Header */}
-      <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900">
+      <div className="flex items-center h-20 px-6 border-b border-zinc-200 dark:border-sidebar-border bg-white dark:bg-sidebar">
         <Link href="/dashboard" className="flex items-center gap-3 w-full">
             {isMounted && activeBranch?.logoUrl ? (
-                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 overflow-hidden", !isOpen && "mx-auto")}>
+                <div className={cn("relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-sidebar-border overflow-hidden", !isOpen && "mx-auto")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={activeBranch.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
@@ -663,7 +663,7 @@ export function Sidebar() {
       </ScrollArea>
 
       {/* Footer / Toggle */}
-      <div className="p-4 border-t border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-zinc-950">
+      <div className="p-4 border-t border-zinc-200 dark:border-sidebar-border bg-zinc-50 dark:bg-background/20">
         <Button 
             variant="ghost" 
             className={cn(

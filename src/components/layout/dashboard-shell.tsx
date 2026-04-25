@@ -3,6 +3,9 @@
 import { cn } from "@/lib/utils"
 import { useSidebarStore } from "@/store/use-sidebar-store"
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
+import { NotificationTicker } from "./notification-ticker"
+import { NoticeDetailModal } from "../communication/notice-detail-modal"
 
 export default function DashboardShell({
   children,
@@ -14,6 +17,7 @@ export default function DashboardShell({
   header: React.ReactNode
 }) {
   const { isOpen, setOpen } = useSidebarStore()
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,7 +39,7 @@ export default function DashboardShell({
     <div className="relative h-full">
       {/* Sidebar Wrapper (Fixed) */}
       <div className={cn(
-        "hidden md:flex md:flex-col md:fixed md:inset-y-0 z-40 bg-gray-900 transition-all duration-300",
+        "hidden md:flex md:flex-col md:fixed md:inset-y-0 z-40 bg-sidebar border-r border-sidebar-border transition-all duration-300",
         isOpen ? "md:w-72" : "md:w-20"
       )}>
         {sidebar}
@@ -43,15 +47,17 @@ export default function DashboardShell({
 
       {/* Main Content Wrapper (Margin Left) */}
       <main className={cn(
-        "transition-all duration-300 min-h-screen bg-background",
+        "transition-all duration-300 min-h-screen bg-background flex flex-col",
         isOpen ? "md:ml-72" : "md:ml-20"
       )}>
         {header}
-        <div className="p-3 sm:p-4 md:p-8 h-full">
+        {pathname.endsWith("/dashboard") && <NotificationTicker />}
+        <div className="p-3 sm:p-4 md:p-8 flex-1 overflow-auto">
             {children}
         </div>
       </main>
 
+      <NoticeDetailModal />
     </div>
   )
 }

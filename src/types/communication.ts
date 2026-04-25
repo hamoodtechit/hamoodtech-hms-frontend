@@ -1,11 +1,11 @@
 export interface Notification {
     id: string;
+    userId: string;
     title: string;
-    content: string;
-    type: 'individual' | 'department' | 'branch' | 'global';
-    priority: 'low' | 'medium' | 'high' | 'urgent';
+    message: string;
+    type: string;
+    link: string;
     isRead: boolean;
-    metadata?: any;
     createdAt: string;
 }
 
@@ -13,20 +13,23 @@ export interface Notice {
     id: string;
     title: string;
     content: string;
-    departmentId?: string;
-    attachmentUrl?: string;
-    createdBy: string;
+    departmentId?: string | null;
+    branchId?: string | null;
+    attachmentUrl?: string | null;
     createdAt: string;
 }
 
 export interface NotificationResponse {
     success: boolean;
+    message: string;
     data: Notification[];
-    unreadCount: number;
-    pagination: {
-        total: number;
+    meta: {
         page: number;
-        limit: number;
+        pageSize: number;
         totalPages: number;
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        unreadCount: number;
     };
 }

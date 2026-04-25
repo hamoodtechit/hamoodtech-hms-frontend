@@ -21,7 +21,7 @@ export const communicationService = {
     },
 
     // Notices
-    getNotices: async (params: { page?: number; limit?: number; departmentId?: string; search?: string }) => {
+    getNotices: async (params: { page?: number; limit?: number; departmentId?: string; branchId?: string; search?: string }) => {
         const response = await api.get('/communication/notices', { params });
         return response.data;
     },
@@ -30,9 +30,20 @@ export const communicationService = {
         title: string; 
         content: string; 
         departmentId?: string | null; 
+        branchId?: string | null;
         attachmentUrl?: string | null 
     }) => {
         const response = await api.post('/communication/notices', data);
+        return response.data;
+    },
+
+    getNoticeDetails: async (id: string) => {
+        const response = await api.get(`/communication/notices/${id}`);
+        return response.data;
+    },
+
+    deleteNotice: async (id: string) => {
+        const response = await api.delete(`/communication/notices/${id}`);
         return response.data;
     }
 };

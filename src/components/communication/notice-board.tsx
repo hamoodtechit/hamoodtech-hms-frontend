@@ -80,8 +80,8 @@ export function NoticeBoard() {
                                     </p>
                                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-dashed border-muted/30">
                                         <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/60 uppercase">
-                                            <User className="h-3 w-3" />
-                                            {notice.createdBy}
+                                            <Calendar className="h-3 w-3" />
+                                            Live Update
                                         </div>
                                         {notice.departmentId && (
                                             <Badge variant="secondary" className="text-[7px] h-3.5 font-black uppercase tracking-tighter">
