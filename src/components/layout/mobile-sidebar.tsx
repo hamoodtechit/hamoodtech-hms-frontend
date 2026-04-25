@@ -493,7 +493,7 @@ function SidebarBase() {
 
   return (
     <div className="flex flex-col h-full bg-[#111827] text-white">
-      <div className="flex items-center h-20 px-6 border-b border-white/10">
+      <div className="flex items-center h-20 px-6 border-b border-white/10 bg-[#111827]">
           <div className="flex items-center gap-3 w-full">
             {activeBranch?.logoUrl ? (
                 <div className="relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
@@ -501,13 +501,16 @@ function SidebarBase() {
                     <img src={activeBranch.logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             ) : (
-                <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20 text-white">
-                   <Activity className="w-6 h-6" />
+                <div className="relative flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
                 </div>
             )}
-             <h1 className="text-lg font-bold tracking-tight truncate w-full">
-                {general?.hospitalName || activeBranch?.name || "MediCare"}
-             </h1>
+             <div className="flex flex-col overflow-hidden">
+                <h1 className="text-lg font-bold tracking-tight truncate w-full">
+                    {general?.hospitalName || "Patwary General hospital"}
+                </h1>
+             </div>
           </div>
       </div>
 

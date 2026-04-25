@@ -75,10 +75,10 @@ export function NotificationTicker() {
                                 <Megaphone className="h-2.5 w-2.5 text-primary" />
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-black text-primary/80 uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10 group-hover:border-primary/30 transition-colors">
+                                <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-0.5 rounded border border-red-500/10 group-hover:border-red-500/30 transition-colors">
                                     {notice.title}
                                 </span>
-                                <span className="text-[11px] font-semibold text-foreground/90 tracking-tight group-hover:text-primary transition-colors">
+                                <span className="text-[13px] font-black text-foreground tracking-tight group-hover:text-red-500 transition-colors">
                                     {notice.content}
                                 </span>
                             </div>

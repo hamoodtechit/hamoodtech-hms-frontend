@@ -46,7 +46,7 @@ export function NoticeDetailModal() {
                         
                         <ScrollArea className="max-h-[60vh]">
                             <div className="p-8 space-y-8">
-                                <div className="text-sm font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                                <div className="text-lg font-black leading-relaxed text-foreground bg-muted/5 p-6 rounded-3xl border border-white/5 shadow-inner whitespace-pre-wrap">
                                     {selectedNotice.content}
                                 </div>
 

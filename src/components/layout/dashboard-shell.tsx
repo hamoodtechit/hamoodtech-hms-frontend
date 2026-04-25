@@ -39,7 +39,7 @@ export default function DashboardShell({
     <div className="relative h-full">
       {/* Sidebar Wrapper (Fixed) */}
       <div className={cn(
-        "hidden md:flex md:flex-col md:fixed md:inset-y-0 z-40 bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "hidden md:flex md:flex-col md:fixed md:inset-y-0 z-40 bg-[#111827] border-r border-white/5 transition-all duration-300",
         isOpen ? "md:w-72" : "md:w-20"
       )}>
         {sidebar}
