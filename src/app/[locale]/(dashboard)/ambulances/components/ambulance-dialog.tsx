@@ -142,7 +142,7 @@ export function AmbulanceDialog({ open, onOpenChange, ambulanceToEdit }: Ambulan
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {branches.map((branch) => (
+                                                {Array.isArray(branches) && branches.map((branch) => (
                                                     <SelectItem key={branch.id} value={branch.id}>
                                                         {branch.name}
                                                     </SelectItem>

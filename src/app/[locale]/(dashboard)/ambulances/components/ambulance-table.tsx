@@ -98,7 +98,7 @@ export function AmbulanceTable({ ambulances, loading, onEdit, onDelete }: Ambula
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {ambulances.map((ambulance) => (
+                {Array.isArray(ambulances) && ambulances.map((ambulance) => (
                     <TableRow key={ambulance.id}>
                         <TableCell>
                             <div className="flex items-center gap-3">

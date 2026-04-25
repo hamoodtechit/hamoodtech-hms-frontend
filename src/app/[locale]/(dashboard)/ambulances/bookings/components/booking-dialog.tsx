@@ -75,7 +75,7 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
     const ambulances = Array.isArray(ambulanceRes?.data) ? ambulanceRes.data : []
 
     const { data: patientsRes } = usePatients({ limit: 100 })
-    const patients = patientsRes?.data || []
+    const patients = Array.isArray(patientsRes?.data) ? patientsRes.data : []
 
     const form = useForm<z.infer<typeof bookingSchema>>({
         resolver: zodResolver(bookingSchema),
@@ -192,7 +192,7 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                                                     <SearchableSelect 
                                                         value={field.value || ""}
                                                         onChange={handlePatientChange}
-                                                        options={patients.map(p => ({ id: p.id, name: `${p.name} (${p.phone})` }))}
+                                                        options={Array.isArray(patients) ? patients.map(p => ({ id: p.id, name: `${p.name} (${p.phone})` })) : []}
                                                         placeholder="Search patients..."
                                                     />
                                                     <FormMessage />
@@ -234,7 +234,7 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                                                             </SelectTrigger>
                                                         </FormControl>
                                                         <SelectContent className="rounded-xl border-blue-500/20">
-                                                            {ambulances.map((unit) => (
+                                                            {Array.isArray(ambulances) && ambulances.map((unit) => (
                                                                 <SelectItem key={unit.id} value={unit.id} className="font-medium">
                                                                     <div className="flex flex-col">
                                                                         <span>{unit.vehicleNumber}</span>

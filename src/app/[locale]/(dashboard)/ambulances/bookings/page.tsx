@@ -56,7 +56,7 @@ export default function AmbulanceBookingsPage() {
         status: statusFilter === "all" ? undefined : statusFilter,
     })
 
-    const bookings = bookingRes?.data || []
+    const bookings = Array.isArray(bookingRes?.data) ? bookingRes.data : []
     const pagination = bookingRes?.meta
 
     // Actions
@@ -189,7 +189,7 @@ export default function AmbulanceBookingsPage() {
                                     </Button>
                                     
                                     <div className="flex items-center gap-2">
-                                        {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, i) => {
+                                        {Array.from({ length: Math.min(5, (pagination?.totalPages || 0)) }).map((_, i) => {
                                             const pageNum = i + 1;
                                             return (
                                                 <Button

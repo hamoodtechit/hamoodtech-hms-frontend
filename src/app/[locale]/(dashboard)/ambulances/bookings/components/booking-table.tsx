@@ -102,7 +102,7 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {bookings.map((booking) => (
+                {Array.isArray(bookings) && bookings.map((booking) => (
                     <TableRow key={booking.id} className="group transition-colors">
                         <TableCell>
                             <div className="flex items-center gap-3">
