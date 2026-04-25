@@ -134,7 +134,8 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const { activeStoreId } = useStoreContext()
     const { data: res, isLoading, isError, refetch: refetchDischarge } = useDischargeInitiate(admission?.patientId || "")
     const { mutate: completeDischarge, isPending: isCompleting } = useCompleteDischarge()
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
+    const accounts = useMemo(() => accountsRes?.data || [], [accountsRes])
     const { mutateAsync: createSale, isPending: isCreatingExtra } = useCreateSale()
     const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
     
@@ -195,6 +196,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             setPaidAmount(netPayableDue)
         }
     }, [open, netPayableDue])
+
+    // Automatically select the first account if none is selected or if current one is invalid
+    useEffect(() => {
+        if (open && accounts.length > 0) {
+            const isCurrentAccountValid = accounts.some(acc => acc.id === selectedAccountId)
+            if (!selectedAccountId || !isCurrentAccountValid) {
+                setSelectedAccountId(accounts[0].id)
+            }
+        }
+    }, [open, accounts, selectedAccountId])
 
     const handleComplete = () => {
         if (!admission) return
@@ -504,7 +515,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                                 <SelectValue placeholder="Select Account" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {accountsRes?.data?.map((acc: any) => (
+                                                                {accounts.map((acc: any) => (
                                                                     <SelectItem key={acc.id} value={acc.id} className="text-xs font-bold">
                                                                         {acc.name}
                                                                     </SelectItem>

@@ -104,13 +104,24 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
 
+
     const { formatCurrency } = useCurrency()
     const { pharmacy, fetchSettings } = useSettingsStore()
     const vatPercentage = pharmacy?.vatPercentage || 0
 
     const addPaymentMutation = useAddSalePayment()
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
     const accounts = accountsRes?.data || []
+
+    // Automatically select the first account if none is selected or if current one is invalid
+    useEffect(() => {
+        if (open && accounts.length > 0) {
+            const isCurrentAccountValid = accounts.some(acc => acc.id === selectedAccountId)
+            if (!selectedAccountId || !isCurrentAccountValid) {
+                setSelectedAccountId(accounts[0].id)
+            }
+        }
+    }, [open, accounts, selectedAccountId])
     const { data: usersRes } = useUsers({ limit: 1000 })
     const { data: deptsRes } = useDepartments({ limit: 1000 })
 

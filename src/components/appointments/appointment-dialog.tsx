@@ -59,7 +59,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
     const { formatCurrency } = useCurrency()
 
-    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, isActive: true, limit: 100 })
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
     const accounts = accountsRes?.data || []
 
     const isEdit = !!appointment
@@ -91,6 +91,16 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paidAmount, setPaidAmount] = useState<number>(0)
     const [showPayment, setShowPayment] = useState(false)
+
+    // Automatically select the first account if none is selected or if current one is invalid
+    useEffect(() => {
+        if (open && accounts.length > 0) {
+            const isCurrentAccountValid = accounts.some(acc => acc.id === selectedAccountId)
+            if (!selectedAccountId || !isCurrentAccountValid) {
+                setSelectedAccountId(accounts[0].id)
+            }
+        }
+    }, [open, accounts, selectedAccountId])
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })

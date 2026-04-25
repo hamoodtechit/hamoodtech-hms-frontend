@@ -195,10 +195,13 @@ export function AppointmentBillingForm() {
         }
     }, [selectedDoctorId, users])
 
-    // Automatically select the first account if none is selected
+    // Automatically select the first account if none is selected or if current one is invalid
     useEffect(() => {
-        if (accounts.length > 0 && !selectedAccountId) {
-            setSelectedAccountId(accounts[0].id)
+        if (accounts.length > 0) {
+            const isCurrentAccountValid = accounts.some(acc => acc.id === selectedAccountId)
+            if (!selectedAccountId || !isCurrentAccountValid) {
+                setSelectedAccountId(accounts[0].id)
+            }
         }
     }, [accounts, selectedAccountId])
 
