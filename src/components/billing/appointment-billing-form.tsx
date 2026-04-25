@@ -252,7 +252,7 @@ export function AppointmentBillingForm() {
                 date: appointmentDate,
                 timeSlot: timeSlot,
                 note: saleNote || undefined,
-                type: 'hospital',
+                
                 chamberOrRoomNumber: chamberOrRoomNumber || undefined,
                 referralPersonId: selectedReferralPersonId || undefined,
                 serviceItems: cart.map(item => ({
