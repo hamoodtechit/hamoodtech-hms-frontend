@@ -3,20 +3,12 @@
 import { useEffect, useState } from "react";
 import { communicationService } from "@/services/communication-service";
 import { Notice } from "@/types/communication";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Megaphone, Calendar, User, Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-
-import { useNoticeStore } from "@/store/use-notice-store";
-import { communicationService } from "@/services/communication-service";
-import { Notice } from "@/types/communication";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Megaphone, Calendar, ArrowRight, BellRing } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { useNoticeStore } from "@/store/use-notice-store";
 import { cn } from "@/lib/utils";
 
 export function NoticeBoard() {
