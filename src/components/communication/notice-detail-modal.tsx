@@ -8,7 +8,8 @@ import {
     DialogTitle, 
     DialogDescription 
 } from "@/components/ui/dialog";
-import { Loader2, Calendar, Megaphone, Paperclip } from "lucide-react";
+import { Loader2, Calendar, Megaphone, Paperclip, Download, FileText, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,7 +19,7 @@ export function NoticeDetailModal() {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && closeNotice()}>
-            <DialogContent className="max-w-2xl bg-card border-none shadow-2xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-4xl max-w-[95vw] bg-card border-none shadow-2xl p-0 overflow-hidden">
                 <DialogTitle className="sr-only">Notice Details</DialogTitle>
                 
                 {isLoading ? (
@@ -50,17 +51,59 @@ export function NoticeDetailModal() {
                                 </div>
 
                                 {selectedNotice.attachmentUrl && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-50">
-                                            <Paperclip className="h-3 w-3" />
-                                            Attachment
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-50">
+                                                <Paperclip className="h-3 w-3" />
+                                                Attachment
+                                            </div>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-8 rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 shadow-sm"
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = selectedNotice.attachmentUrl!;
+                                                    link.download = selectedNotice.attachmentUrl!.split('/').pop() || 'attachment';
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                            >
+                                                <Download className="h-3 w-3" />
+                                                Download File
+                                            </Button>
                                         </div>
-                                        <div className="relative group rounded-2xl overflow-hidden border border-border/50 shadow-lg">
-                                            <img 
-                                                src={selectedNotice.attachmentUrl} 
-                                                alt="Notice Attachment" 
-                                                className="w-full object-contain max-h-[400px] bg-muted/20 transition-transform duration-500 group-hover:scale-105"
-                                            />
+
+                                        <div className="relative group rounded-3xl overflow-hidden border border-border/50 shadow-2xl bg-muted/5 p-4 flex flex-col items-center justify-center min-h-[120px] transition-all hover:border-primary/30">
+                                            {selectedNotice.attachmentUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) ? (
+                                                <img 
+                                                    src={selectedNotice.attachmentUrl} 
+                                                    alt="Notice Attachment" 
+                                                    className="w-full object-contain max-h-[500px] rounded-2xl transition-transform duration-500 group-hover:scale-[1.02]"
+                                                />
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-4 py-8">
+                                                    <div className="h-20 w-20 rounded-[2rem] bg-primary/10 flex items-center justify-center shadow-inner">
+                                                        <FileText className="h-10 w-10 text-primary" />
+                                                    </div>
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-xs font-black uppercase tracking-widest text-foreground">Document File</span>
+                                                        <span className="text-[10px] font-bold text-muted-foreground mt-1 max-w-[200px] truncate opacity-60">
+                                                            {selectedNotice.attachmentUrl.split('/').pop()}
+                                                        </span>
+                                                    </div>
+                                                    <a 
+                                                        href={selectedNotice.attachmentUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
+                                                    >
+                                                        <ExternalLink className="h-3 w-3" />
+                                                        Open in Browser
+                                                    </a >
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
