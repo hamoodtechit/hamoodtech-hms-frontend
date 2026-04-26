@@ -81,12 +81,19 @@ export function AppointmentBillingForm() {
             return
         }
 
+        const selectedDoctor: any = users.find(u => u.id === selectedDoctorId)
+        
+        if (!selectedDoctor?.employeeId) {
+            toast.error("Selected doctor record is incomplete")
+            return
+        }
+
         try {
             await createAppointmentMutation.mutateAsync({
                 branchId: activeStoreId || "",
                 patientId: selectedCustomer.id,
-                departmentId: selectedDepartmentId || "",
-                doctorId: selectedDoctorId,
+                departmentId: selectedDoctor.employee?.departmentId || "",
+                doctorId: selectedDoctor.employeeId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
                 note: note || undefined,
@@ -100,7 +107,6 @@ export function AppointmentBillingForm() {
             // Reset
             setSelectedCustomer(null)
             setSelectedDoctorId("")
-            setSelectedDepartmentId("")
             setTimeSlot("")
             setChamberOrRoomNumber("")
             setNote("")
@@ -298,7 +304,9 @@ export function AppointmentBillingForm() {
                                             {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
-                                            {users.find(u => u.id === selectedDoctorId)?.designation || 'Specialist Consultant'}
+                                            {(users.find(u => u.id === selectedDoctorId) as any)?.employee?.designation?.name || 
+                                             users.find(u => u.id === selectedDoctorId)?.designation || 
+                                             'Specialist Consultant'}
                                         </p>
                                     </div>
                                 </div>
