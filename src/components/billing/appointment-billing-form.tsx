@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useCreateAppointment } from "@/hooks/appointment-queries"
-import { useDepartments, useEmployees } from "@/hooks/hr-queries"
+import { useDepartments } from "@/hooks/hr-queries"
+import { useUsers } from "@/hooks/user-queries"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -40,14 +41,13 @@ export function AppointmentBillingForm() {
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ 
+    const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
         branchId: activeStoreId || undefined,
-        limit: 1000,
-        employeeType: 'Doctor'
+        limit: 1000 
     })
     
     const departments = departmentsRes?.data || []
-    const doctors = useMemo(() => doctorsRes?.data || [], [doctorsRes])
+    const users = useMemo(() => usersRes?.data || [], [usersRes])
 
     const createAppointmentMutation = useCreateAppointment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
@@ -65,15 +65,15 @@ export function AppointmentBillingForm() {
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     const [note, setNote] = useState<string>("")
     
-    // Auto-fill room based on doctor
+    // Auto-fill room based on user
     useEffect(() => {
         if (selectedDoctorId) {
-            const doctor = doctors.find(d => d.id === selectedDoctorId)
-            setChamberOrRoomNumber(doctor?.chamberOrRoomNumber || "")
+            const user: any = users.find((u: any) => u.id === selectedDoctorId)
+            setChamberOrRoomNumber(user?.employee?.chamberOrRoomNumber || "")
         } else {
             setChamberOrRoomNumber("")
         }
-    }, [selectedDoctorId, doctors])
+    }, [selectedDoctorId, users])
 
     const handleCreateAppointment = async () => {
         if (!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot) {
@@ -81,14 +81,14 @@ export function AppointmentBillingForm() {
             return
         }
 
-        const selectedDoctor = doctors.find(d => d.id === selectedDoctorId)
+        const selectedUser: any = users.find(u => u.id === selectedDoctorId)
 
         try {
             await createAppointmentMutation.mutateAsync({
                 branchId: activeStoreId || "",
                 patientId: selectedCustomer.id,
-                departmentId: selectedDoctor?.departmentId || "",
-                doctorId: selectedDoctorId,
+                departmentId: selectedUser?.employee?.departmentId || "",
+                doctorId: selectedUser?.employeeId || selectedDoctorId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
                 note: note || undefined,
@@ -181,12 +181,14 @@ export function AppointmentBillingForm() {
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={doctors.map(d => ({ 
-                                            id: d.id, 
-                                            name: d.name 
-                                        }))}
+                                        options={users
+                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
+                                            .map((u: any) => ({ 
+                                                id: u.id, 
+                                                name: u.fullName || u.username 
+                                            }))}
                                         placeholder="Assign Specialist..."
-                                        loading={loadingDoctors}
+                                        loading={loadingUsers}
                                         showAll={false}
                                     />
                                 </div>
@@ -294,10 +296,12 @@ export function AppointmentBillingForm() {
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Specialist</p>
                                         <p className="font-black text-foreground">
-                                            {doctors.find(d => d.id === selectedDoctorId)?.name || 'Specialist not assigned'}
+                                            {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
-                                            {doctors.find(d => d.id === selectedDoctorId)?.designation?.name || 'Specialist Consultant'}
+                                            {(users.find(u => u.id === selectedDoctorId) as any)?.employee?.designation?.name || 
+                                             users.find(u => u.id === selectedDoctorId)?.designation || 
+                                             'Specialist Consultant'}
                                         </p>
                                     </div>
                                 </div>
