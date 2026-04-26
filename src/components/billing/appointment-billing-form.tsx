@@ -58,7 +58,6 @@ export function AppointmentBillingForm() {
 
     // Form State
     const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
-    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("")
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
     const [appointmentDate, setAppointmentDate] = useState<string>(new Date().toISOString().split('T')[0])
     const [timeSlot, setTimeSlot] = useState<string>("")
@@ -177,35 +176,18 @@ export function AppointmentBillingForm() {
                             {/* Clinical Assignment */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
-                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Department *</Label>
-                                    <SearchableSelect 
-                                        value={selectedDepartmentId}
-                                        onChange={(val) => {
-                                            setSelectedDepartmentId(val)
-                                            setSelectedDoctorId("")
-                                        }}
-                                        options={departments.map(d => ({ id: d.id, name: d.name }))}
-                                        placeholder="Choose Clinical Department..."
-                                        showAll={false}
-                                    />
-                                </div>
-                                <div className="space-y-4">
                                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Specialist Doctor *</Label>
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
                                         options={users
-                                            .filter((u: any) => 
-                                                u.role?.name?.toLowerCase() === 'doctor' && 
-                                                (!selectedDepartmentId || u.employee?.departmentId === selectedDepartmentId)
-                                            )
+                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
                                             .map((u: any) => ({ 
                                                 id: u.id, 
                                                 name: u.fullName || u.username 
                                             }))}
                                         placeholder="Assign Specialist..."
                                         loading={loadingUsers}
-                                        disabled={!selectedDepartmentId}
                                         showAll={false}
                                     />
                                 </div>
@@ -316,7 +298,7 @@ export function AppointmentBillingForm() {
                                             {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
-                                            {departments.find(d => d.id === selectedDepartmentId)?.name || 'Select department'}
+                                            {users.find(u => u.id === selectedDoctorId)?.designation || 'Specialist Consultant'}
                                         </p>
                                     </div>
                                 </div>
