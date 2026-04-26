@@ -10,10 +10,7 @@ export interface Appointment {
   date: string;
   timeSlot: string;
   status: AppointmentStatus;
-  fees: number;
-  saleId?: string;
   note?: string;
-  purpose?: string;
   referralPersonId?: string;
   referralPerson?: any;
   chamberOrRoomNumber?: string;
@@ -77,13 +74,11 @@ export interface AppointmentPaginatedResponse {
   };
 }
 
-import { Sale } from "./sales";
 
 export interface AppointmentDetailsResponse {
   success: boolean;
   message: string;
   data: {
     appointment: Appointment;
-    sale: Sale;
   };
 }

@@ -23,8 +23,6 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { APPOINTMENT_KEYS, useAppointment } from "@/hooks/appointment-queries"
-import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useAddSalePayment } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { Sale } from "@/types/sales"
@@ -58,12 +56,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
     const { data: response, isLoading } = useAppointment(appointmentId || "")
     const { formatCurrency } = useCurrency()
     
-    // Response now contains { appointment, sale }
+    // Response now contains { appointment }
     const appointment = response?.data?.appointment
-    const sale = response?.data?.sale
     const queryClient = useQueryClient()
 
-    const [isPaying, setIsPaying] = useState(false)
 
     if (!appointmentId) return null
 
@@ -168,80 +164,12 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             <DetailSection icon={Stethoscope} title="Medical Context">
                                 <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
-                                <div className="grid grid-cols-2 gap-4">
                                     <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
-                                    <Field label="Purpose" value={appointment?.purpose} className="capitalize" />
-                                </div>
                                 {appointment?.referralPerson && (
                                     <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} />
                                 )}
                             </DetailSection>
 
-                            {/* Billing & Payment Info - Only show if fee is present */}
-                            {(appointment?.fees || sale) && (
-                                <DetailSection icon={Receipt} title="Billing & Payment" className="md:col-span-2">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="space-y-4">
-                                            <Field label="Invoice Number" value={sale?.invoiceNumber} icon={FileText} />
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Status</span>
-                                                <Badge variant={sale?.paymentStatus === 'paid' ? 'default' : 'destructive'} className="capitalize h-5 py-0">
-                                                    {sale?.paymentStatus || 'pending'}
-                                                </Badge>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2 col-span-2 bg-background/50 p-4 rounded-xl border border-primary/5">
-                                            <div className="flex justify-between items-center text-sm font-medium">
-                                                <span className="text-muted-foreground">Consultation Fee</span>
-                                                <span>{formatCurrency(Number(appointment?.fees || sale?.totalPrice || 0))}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm font-medium text-emerald-600">
-                                                <span>Paid Amount</span>
-                                                <span>{formatCurrency(Number(sale?.paidAmount || 0))}</span>
-                                            </div>
-                                            
-                                            {/* Show due if balance exists (either via sale or appointment fees) */}
-                                            {(() => {
-                                                const totalDue = sale ? Number(sale.dueAmount || 0) : Number(appointment?.fees || 0);
-                                                if (totalDue <= 0) return null;
-                                                
-                                                return (
-                                                    <>
-                                                        <Separator className="my-2" />
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Due</span>
-                                                            <span className="text-lg font-black text-destructive">{formatCurrency(totalDue)}</span>
-                                                        </div>
-
-                                                        {!isPaying && (
-                                                            <Button 
-                                                                className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-xl"
-                                                                onClick={() => setIsPaying(true)}
-                                                            >
-                                                                <DollarSign className="h-4 w-4 mr-2" />
-                                                                Process Payment
-                                                            </Button>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    {isPaying && sale && (
-                                        <PaymentForm 
-                                            sale={sale} 
-                                            appointment={appointment}
-                                            onCancel={() => setIsPaying(false)} 
-                                            onSuccess={() => {
-                                                setIsPaying(false)
-                                                queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.details(appointmentId) })
-                                            }}
-                                        />
-                                    )}
-                                </DetailSection>
-                            )}
 
                             {/* Additional Info */}
                             <div className="md:col-span-2 space-y-3 pt-4">
@@ -274,125 +202,3 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
     )
 }
 
-function PaymentForm({ sale, appointment, onCancel, onSuccess }: { sale: Sale, appointment?: Appointment, onCancel: () => void, onSuccess: () => void }) {
-    const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
-    const accounts = accountsRes?.data || []
-    const addPaymentMutation = useAddSalePayment()
-    
-    const [accountId, setAccountId] = useState("")
-    const [paymentMethod, setPaymentMethod] = useState<string>("cash")
-    const [paymentAmount, setPaymentAmount] = useState<number | undefined>(Number(sale.dueAmount))
-    const [paymentNote, setPaymentNote] = useState("")
-
-    useEffect(() => {
-        // Update default account when method changes
-        const matchingAccount = accounts.find(a => a.type === paymentMethod)
-        if (matchingAccount) setAccountId(matchingAccount.id)
-    }, [paymentMethod, accounts])
-
-    const handleProcessPayment = async () => {
-        if (!accountId) return toast.error("Please select a payment account")
-        if (!paymentAmount || paymentAmount <= 0) return toast.error("Amount must be greater than 0")
-
-        try {
-            await addPaymentMutation.mutateAsync({
-                id: sale.id,
-                data: {
-                    accountId,
-                    amount: paymentAmount,
-                    paymentMethod: paymentMethod as any,
-                    note: paymentNote || `Appointment Payment - ${appointment?.serialNumber || ''}`
-                }
-            })
-            onSuccess()
-        } catch (error) {
-            // Error toast handled in mutation hook
-        }
-    }
-
-    return (
-        <div className="mt-4 p-6 rounded-2xl bg-primary/5 border border-primary/20 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex justify-between items-center">
-                <h4 className="text-sm font-bold flex items-center gap-2 text-primary">
-                    <Wallet className="h-4 w-4" />
-                    Record Payment
-                </h4>
-                <Button variant="ghost" size="sm" onClick={onCancel} className="h-8 w-8 p-0 rounded-full">
-                    ×
-                </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label>Payment Method</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                        <SelectTrigger className="rounded-xl border-primary/10">
-                            <SelectValue placeholder="Select method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer'].map(method => (
-                                <SelectItem key={method} value={method}>
-                                    <span className="capitalize">{method}</span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="account">Target Account</Label>
-                    <Select value={accountId} onValueChange={setAccountId}>
-                        <SelectTrigger id="account" className="rounded-xl border-primary/10">
-                            <SelectValue placeholder="Select payment account" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {accounts.map(acc => (
-                                <SelectItem key={acc.id} value={acc.id}>
-                                    <div className="flex items-center gap-2">
-                                        {acc.type === 'cash' ? <Wallet className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
-                                        <span>{acc.name}</span>
-                                        <span className="text-[10px] text-muted-foreground ml-2 capitalize">({acc.type})</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="amount">Payment Amount</Label>
-                    <SmartNumberInput 
-                        id="amount"
-                        prefix="Tk"
-                        value={paymentAmount} 
-                        onChange={setPaymentAmount}
-                        className="rounded-xl border-primary/10"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="note">Payment Note (Optional)</Label>
-                    <Input 
-                        id="note"
-                        value={paymentNote} 
-                        onChange={(e) => setPaymentNote(e.target.value)}
-                        placeholder="e.g. Received via bKash"
-                        className="rounded-xl border-primary/10"
-                    />
-                </div>
-            </div>
-            
-            <div className="flex justify-end gap-3 pt-2">
-                <Button variant="outline" size="sm" onClick={onCancel} className="rounded-lg">Cancel</Button>
-                <Button 
-                    size="sm" 
-                    onClick={handleProcessPayment} 
-                    disabled={addPaymentMutation.isPending}
-                    className="rounded-lg h-9 px-6 bg-primary hover:bg-primary/90 font-bold"
-                >
-                    {addPaymentMutation.isPending && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
-                    Confirm Payment
-                </Button>
-            </div>
-        </div>
-    )
-}
