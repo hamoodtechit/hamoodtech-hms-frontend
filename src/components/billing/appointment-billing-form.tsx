@@ -186,6 +186,7 @@ export function AppointmentBillingForm() {
                                         }}
                                         options={departments.map(d => ({ id: d.id, name: d.name }))}
                                         placeholder="Choose Clinical Department..."
+                                        showAll={false}
                                     />
                                 </div>
                                 <div className="space-y-4">
@@ -205,6 +206,7 @@ export function AppointmentBillingForm() {
                                         placeholder="Assign Specialist..."
                                         loading={loadingDoctors}
                                         disabled={!selectedDepartmentId}
+                                        showAll={false}
                                     />
                                 </div>
                             </div>
@@ -274,11 +276,11 @@ export function AppointmentBillingForm() {
                 <div className="lg:col-span-4">
                     <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] sticky top-24">
                         <CardHeader className="bg-primary p-6 text-white">
-                            <CardTitle className="text-xs font-black uppercase tracking-[0.25em] opacity-80 flex items-center gap-2">
+                            <CardTitle className="text-xs font-black uppercase tracking-[0.25em] opacity-90 flex items-center gap-2">
                                 <Clock className="w-4 h-4" /> Booking Summary
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-8 space-y-8">
+                        <CardContent className="p-8 space-y-8 bg-background">
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
                                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
