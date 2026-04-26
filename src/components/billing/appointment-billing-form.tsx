@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useCreateAppointment } from "@/hooks/appointment-queries"
-import { useDepartments } from "@/hooks/hr-queries"
-import { useUsers } from "@/hooks/user-queries"
+import { useDepartments, useEmployees } from "@/hooks/hr-queries"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -41,13 +40,14 @@ export function AppointmentBillingForm() {
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
+    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ 
         branchId: activeStoreId || undefined,
-        limit: 1000 
+        limit: 1000,
+        employeeType: 'Doctor'
     })
     
     const departments = departmentsRes?.data || []
-    const users = useMemo(() => usersRes?.data || [], [usersRes])
+    const doctors = useMemo(() => doctorsRes?.data || [], [doctorsRes])
 
     const createAppointmentMutation = useCreateAppointment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
@@ -65,15 +65,15 @@ export function AppointmentBillingForm() {
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     const [note, setNote] = useState<string>("")
     
-    // Auto-fill room based on user
+    // Auto-fill room based on doctor
     useEffect(() => {
         if (selectedDoctorId) {
-            const user: any = users.find((u: any) => u.id === selectedDoctorId)
-            setChamberOrRoomNumber(user?.employee?.chamberOrRoomNumber || "")
+            const doctor = doctors.find(d => d.id === selectedDoctorId)
+            setChamberOrRoomNumber(doctor?.chamberOrRoomNumber || "")
         } else {
             setChamberOrRoomNumber("")
         }
-    }, [selectedDoctorId, users])
+    }, [selectedDoctorId, doctors])
 
     const handleCreateAppointment = async () => {
         if (!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot) {
@@ -81,19 +81,14 @@ export function AppointmentBillingForm() {
             return
         }
 
-        const selectedDoctor: any = users.find(u => u.id === selectedDoctorId)
-        
-        if (!selectedDoctor?.employeeId) {
-            toast.error("Selected doctor record is incomplete")
-            return
-        }
+        const selectedDoctor = doctors.find(d => d.id === selectedDoctorId)
 
         try {
             await createAppointmentMutation.mutateAsync({
                 branchId: activeStoreId || "",
                 patientId: selectedCustomer.id,
-                departmentId: selectedDoctor.employee?.departmentId || "",
-                doctorId: selectedDoctor.employeeId,
+                departmentId: selectedDoctor?.departmentId || "",
+                doctorId: selectedDoctorId,
                 date: appointmentDate,
                 timeSlot: timeSlot,
                 note: note || undefined,
@@ -186,14 +181,12 @@ export function AppointmentBillingForm() {
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={users
-                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
-                                            .map((u: any) => ({ 
-                                                id: u.id, 
-                                                name: u.fullName || u.username 
-                                            }))}
+                                        options={doctors.map(d => ({ 
+                                            id: d.id, 
+                                            name: d.name 
+                                        }))}
                                         placeholder="Assign Specialist..."
-                                        loading={loadingUsers}
+                                        loading={loadingDoctors}
                                         showAll={false}
                                     />
                                 </div>
@@ -301,12 +294,10 @@ export function AppointmentBillingForm() {
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Specialist</p>
                                         <p className="font-black text-foreground">
-                                            {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
+                                            {doctors.find(d => d.id === selectedDoctorId)?.name || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
-                                            {(users.find(u => u.id === selectedDoctorId) as any)?.employee?.designation?.name || 
-                                             users.find(u => u.id === selectedDoctorId)?.designation || 
-                                             'Specialist Consultant'}
+                                            {doctors.find(d => d.id === selectedDoctorId)?.designation?.name || 'Specialist Consultant'}
                                         </p>
                                     </div>
                                 </div>
