@@ -275,8 +275,8 @@ export function AppointmentBillingForm() {
                 {/* Right Side - Summary & Action */}
                 <div className="lg:col-span-4">
                     <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] sticky top-24">
-                        <CardHeader className="bg-primary p-6 text-white">
-                            <CardTitle className="text-xs font-black uppercase tracking-[0.25em] opacity-90 flex items-center gap-2">
+                        <CardHeader className="bg-primary/5 border-b p-6">
+                            <CardTitle className="text-xs font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
                                 <Clock className="w-4 h-4" /> Booking Summary
                             </CardTitle>
                         </CardHeader>
