@@ -57,26 +57,10 @@ export interface AppointmentPayload {
   departmentId: string;
   date: string;
   timeSlot: string;
-  fees?: number;
   note?: string;
   status?: AppointmentStatus;
   referralPersonId?: string;
-  referralPerson?: any;
   chamberOrRoomNumber?: string;
-  type?: 'hospital';
-  serviceItems?: {
-    serviceId: string;
-    itemName: string;
-    unit: string;
-    price: number;
-    mrp: number;
-    quantity: number;
-    totalPrice: number;
-    isDiagnosticTest?: boolean;
-    discountPercentage?: number;
-    discountAmount?: number;
-    deliveryDate?: string;
-  }[];
 }
 
 export interface AppointmentPaginatedResponse {
