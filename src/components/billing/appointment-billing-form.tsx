@@ -41,13 +41,13 @@ export function AppointmentBillingForm() {
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
+    const { data: doctorsRes, isLoading: loadingDoctors } = useEmployees({ 
         branchId: activeStoreId || undefined,
         limit: 1000 
     })
     
     const departments = departmentsRes?.data || []
-    const users = useMemo(() => usersRes?.data || [], [usersRes])
+    const doctors = useMemo(() => doctorsRes?.data || [], [doctorsRes])
 
     const createAppointmentMutation = useCreateAppointment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
@@ -66,15 +66,15 @@ export function AppointmentBillingForm() {
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     const [note, setNote] = useState<string>("")
     
-    // Auto-fill room based on user
+    // Auto-fill room based on doctor
     useEffect(() => {
         if (selectedDoctorId) {
-            const user: any = users.find((u: any) => u.id === selectedDoctorId)
-            setChamberOrRoomNumber(user?.employee?.chamberOrRoomNumber || "")
+            const doctor = doctors.find(d => d.id === selectedDoctorId)
+            setChamberOrRoomNumber(doctor?.chamberOrRoomNumber || "")
         } else {
             setChamberOrRoomNumber("")
         }
-    }, [selectedDoctorId, users])
+    }, [selectedDoctorId, doctors])
 
     const handleCreateAppointment = async () => {
         if (!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot) {
@@ -193,14 +193,17 @@ export function AppointmentBillingForm() {
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
-                                        options={users
-                                            .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor' && (!selectedDepartmentId || u.departmentId === selectedDepartmentId))
-                                            .map((u: any) => ({ 
-                                                id: u.id, 
-                                                name: u.fullName || u.username 
+                                        options={doctors
+                                            .filter((d: any) => 
+                                                d.employeeType?.toLowerCase() === 'doctor' && 
+                                                (!selectedDepartmentId || d.departmentId === selectedDepartmentId)
+                                            )
+                                            .map((d: any) => ({ 
+                                                id: d.id, 
+                                                name: d.name 
                                             }))}
                                         placeholder="Assign Specialist..."
-                                        loading={loadingUsers}
+                                        loading={loadingDoctors}
                                         disabled={!selectedDepartmentId}
                                     />
                                 </div>
@@ -308,7 +311,7 @@ export function AppointmentBillingForm() {
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Specialist</p>
                                         <p className="font-black text-foreground">
-                                            {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
+                                            {doctors.find(d => d.id === selectedDoctorId)?.name || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
                                             {departments.find(d => d.id === selectedDepartmentId)?.name || 'Select department'}
