@@ -122,7 +122,8 @@ export function Overview() {
   const today = format(new Date(), 'yyyy-MM-dd')
   const { data: appointmentsRes, isLoading: loadingAppointments } = useAppointments({ 
     branchId: activeStoreId || undefined,
-    date: today,
+    startDate: today,
+    endDate: today,
     limit: 1000 
   })
   const { data: admissionsRes, isLoading: loadingAdmissions } = useAdmissions({ 
