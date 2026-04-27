@@ -42,6 +42,7 @@ import {
     CalendarDays,
     Users
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -83,7 +84,7 @@ export function AppointmentBillingForm() {
     const [modalPage, setModalPage] = useState(1)
     const modalLimit = 10
 
-    const { data: recentAppointmentsRes, isLoading: loadingHistory } = useAppointments({ 
+    const { data: recentAppointmentsRes, isLoading: loadingHistory, refetch: refetchHistory } = useAppointments({ 
         branchId: activeStoreId || undefined, 
         limit: modalLimit, 
         page: modalPage,
@@ -126,6 +127,7 @@ export function AppointmentBillingForm() {
             })
 
             toast.success("Appointment successfully scheduled!")
+            refetchHistory()
             
             // Reset
             setSelectedCustomer(null)
