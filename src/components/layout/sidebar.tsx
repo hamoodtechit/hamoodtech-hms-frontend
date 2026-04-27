@@ -393,6 +393,12 @@ export function Sidebar() {
               permission: "branch:read",
             },
             {
+              label: "Audit Logs",
+              href: "/settings/audit-logs",
+              module: "settings",
+              permission: "settings:read",
+            },
+            {
               label: "Media Library",
               href: "/media",
               module: "media",
