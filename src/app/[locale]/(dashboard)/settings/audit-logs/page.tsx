@@ -37,30 +37,38 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { FilterPopover } from "@/components/shared/filter-popover"
+import { AuditLogFilters } from "@/components/settings/audit-log-filters"
+import { AuditLogQueryParams } from "@/types/audit-log"
+import { RefreshCcw, X } from "lucide-react"
+import { DateRange } from "react-day-picker"
 
 export default function AuditLogsPage() {
     const [page, setPage] = useState(1)
     const [searchTerm, setSearchTerm] = useState("")
     const [debouncedSearch] = useDebounce(searchTerm, 500)
-    const [module, setModule] = useState<string>("all")
-    const [action, setAction] = useState<string>("all")
+    const [filters, setFilters] = useState<AuditLogQueryParams>({})
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [selectedLog, setSelectedLog] = useState<any>(null)
 
-    const { data: response, isLoading } = useAuditLogs({
+    const { data: response, isLoading, isFetching } = useAuditLogs({
         page,
         limit: 10,
         search: debouncedSearch,
-        module: module === "all" ? undefined : module,
-        action: action === "all" ? undefined : action,
+        module: filters.module,
+        action: filters.action,
+        userId: filters.userId,
+        startDate: dateRange?.from ? new Date(`${format(dateRange.from, 'yyyy-MM-dd')}T00:00:00.000Z`).toISOString() : undefined,
+        endDate: dateRange?.to ? new Date(`${format(dateRange.to, 'yyyy-MM-dd')}T23:59:59.999Z`).toISOString() : undefined,
     })
-
+    console.log("response", response);
     const logs = response?.data || []
     const meta = response?.meta
 
@@ -92,45 +100,71 @@ export default function AuditLogsPage() {
 
                 <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
                     <CardHeader className="p-6 bg-card/80 border-b">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search logs..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 h-10 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
-                                />
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 flex-1 w-full sm:max-w-2xl">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search logs by user, module, or record ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value)
+                                            setPage(1)
+                                        }}
+                                        className="pl-10 h-11 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
+                                    />
+                                    {isFetching && !isLoading && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <RefreshCcw className="h-4 w-4 animate-spin text-muted-foreground opacity-50" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <FilterPopover
+                                    activeFilterCount={
+                                        [
+                                            filters.module,
+                                            filters.action,
+                                            filters.userId,
+                                            dateRange?.from || dateRange?.to,
+                                        ].filter(Boolean).length
+                                    }
+                                    onReset={() => {
+                                        setFilters({})
+                                        setDateRange(undefined)
+                                        setPage(1)
+                                    }}
+                                    title="Advanced Audit Filters"
+                                >
+                                    <AuditLogFilters 
+                                        values={filters}
+                                        onChange={(val) => {
+                                            setFilters(val)
+                                            setPage(1)
+                                        }}
+                                        dateRange={dateRange}
+                                        setDateRange={setDateRange}
+                                    />
+                                </FilterPopover>
+
+                                {(Object.keys(filters).length > 0 || dateRange || searchTerm) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="gap-2 text-muted-foreground hover:text-foreground shrink-0 h-11 rounded-xl"
+                                        onClick={() => {
+                                            setFilters({})
+                                            setDateRange(undefined)
+                                            setSearchTerm("")
+                                            setPage(1)
+                                        }}
+                                    >
+                                        <X className="h-4 w-4" /> Clear
+                                    </Button>
+                                )}
                             </div>
-                            
-                            <Select value={module} onValueChange={setModule}>
-                                <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-none focus:ring-primary/20">
-                                    <SelectValue placeholder="Module Filter" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Modules</SelectItem>
-                                    <SelectItem value="Medicine">Medicine</SelectItem>
-                                    <SelectItem value="User">User</SelectItem>
-                                    <SelectItem value="Patient">Patient</SelectItem>
-                                    <SelectItem value="Sale">Sale</SelectItem>
-                                    <SelectItem value="Purchase">Purchase</SelectItem>
-                                    <SelectItem value="Appointment">Appointment</SelectItem>
-                                </SelectContent>
-                            </Select>
 
-                            <Select value={action} onValueChange={setAction}>
-                                <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-none focus:ring-primary/20">
-                                    <SelectValue placeholder="Action Filter" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Actions</SelectItem>
-                                    <SelectItem value="CREATE">Create</SelectItem>
-                                    <SelectItem value="UPDATE">Update</SelectItem>
-                                    <SelectItem value="DELETE">Delete</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary">
+                            <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary">
                                 <Calendar className="h-4 w-4" />
                                 <span className="text-xs font-bold uppercase tracking-wider">
                                     {format(new Date(), 'MMMM yyyy')}
@@ -188,9 +222,9 @@ export default function AuditLogsPage() {
                                                         <User className="h-4 w-4" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold text-sm">{log.userName}</span>
+                                                        <span className="font-bold text-sm">{log.userName || "System"}</span>
                                                         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                                                            {log.userRole}
+                                                            {log.userRole || "Automated"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -207,7 +241,7 @@ export default function AuditLogsPage() {
                                                 <div className="flex items-center gap-2">
                                                     {log.deviceInfo.mobile ? <Smartphone className="h-4 w-4 text-muted-foreground" /> : <Monitor className="h-4 w-4 text-muted-foreground" />}
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold">{log.deviceInfo.platform}</span>
+                                                        <span className="text-[10px] font-bold">{log.deviceInfo.platform?.replace(/"/g, '') || "Unknown"}</span>
                                                         <span className="text-[10px] text-muted-foreground font-mono">{log.ipAddress}</span>
                                                     </div>
                                                 </div>
@@ -274,8 +308,8 @@ export default function AuditLogsPage() {
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">User</p>
-                                    <p className="font-bold text-sm">{selectedLog?.userName}</p>
-                                    <Badge variant="secondary" className="text-[10px]">{selectedLog?.userRole}</Badge>
+                                    <p className="font-bold text-sm">{selectedLog?.userName || "System"}</p>
+                                    <Badge variant="secondary" className="text-[10px]">{selectedLog?.userRole || "Automated Action"}</Badge>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Action</p>
@@ -304,7 +338,7 @@ export default function AuditLogsPage() {
                                 <div className="grid grid-cols-2 gap-4 text-xs font-medium">
                                     <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/10 border border-secondary/20">
                                         <Monitor className="h-4 w-4 text-primary/60" />
-                                        <span>{selectedLog?.deviceInfo.platform}</span>
+                                        <span>{selectedLog?.deviceInfo.platform?.replace(/"/g, '') || "Unknown"}</span>
                                     </div>
                                     <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/10 border border-secondary/20">
                                         <Activity className="h-4 w-4 text-primary/60" />

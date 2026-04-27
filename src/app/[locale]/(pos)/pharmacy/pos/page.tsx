@@ -1054,7 +1054,7 @@ export default function POSPage() {
                                     <div className="flex-1 min-w-0 flex items-center gap-3">
                                         <div className="flex flex-col gap-0.5">
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
+                                                <h3 className="font-semibold  sm:text-base text-slate-900 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
                                                     {product.name}
                                                 </h3>
                                                 {product.dosageForm && (
