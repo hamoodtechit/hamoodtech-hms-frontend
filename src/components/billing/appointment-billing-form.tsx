@@ -183,7 +183,7 @@ export function AppointmentBillingForm() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto w-full">
                 {/* Left Side - Appointment Form */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
-                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2rem]">
+                    <Card className="border-none  overflow-hidden rounded-[2rem]">
                         <CardHeader className="bg-primary/5 border-b p-6">
                             <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
                                 <User className="w-4 h-4" /> Patient & Doctor Information
@@ -296,7 +296,7 @@ export function AppointmentBillingForm() {
 
                 {/* Right Side - Summary & Action */}
                 <div className="lg:col-span-4">
-                    <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] sticky top-24">
+                    <Card className="border-none   overflow-hidden rounded-[2rem] sticky top-24">
                         <CardHeader className="bg-primary/5 border-b p-6">
                             <CardTitle className="text-xs font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
                                 <Clock className="w-4 h-4" /> Booking Summary
@@ -347,7 +347,7 @@ export function AppointmentBillingForm() {
                             </div>
 
                             <Button 
-                                className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] group"
+                                className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-2xl   transition-all active:scale-[0.98] group"
                                 onClick={handleCreateAppointment}
                                 disabled={createAppointmentMutation.isPending || !selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot}
                             >

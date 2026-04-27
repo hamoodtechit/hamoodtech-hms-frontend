@@ -240,7 +240,7 @@ export function ExtraChargeBillingForm() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2rem]">
+                    <Card className="border-none  overflow-hidden rounded-[2rem]">
                         <CardHeader className="bg-primary/5 border-b p-6">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
                                 <Plus className="w-4 h-4" /> Service Admission
@@ -287,7 +287,7 @@ export function ExtraChargeBillingForm() {
                     </Card>
 
                     {cart.length > 0 && (
-                        <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2.5rem]">
+                        <Card className="border-none  overflow-hidden rounded-[2.5rem]">
                             <CardHeader className="bg-indigo-500/5 border-b p-6">
                                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700 flex items-center gap-2">
                                     <LayoutGrid className="w-4 h-4" /> Categorized Services
@@ -338,7 +338,7 @@ export function ExtraChargeBillingForm() {
                 </div>
 
                 <div className="lg:col-span-1 self-start sticky top-20">
-                    <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
+                    <Card className="border-none   overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
                         <CardHeader className="p-5 border-b bg-muted/30 shrink-0">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
                                 <ShoppingCart className="w-4 h-4" /> Charge Summary

@@ -34,6 +34,7 @@ import {
     Edit,
     Eye,
     FileText,
+    LucidePhone,
     MoreHorizontal,
     RefreshCcw,
     Search,
@@ -131,20 +132,20 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2 flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 flex-1">
                     {/* Search */}
-                    <div className="relative flex-1 w-full sm:max-w-sm">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <div className="relative flex-1 w-full sm:max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder={
                                 fixedVisitType
                                     ? `Search ${fixedVisitType.toUpperCase()} patients…`
-                                    : "Search by name, phone…"
+                                    : "Search by name, MRN, phone…"
                             }
-                            className="pl-9"
+                            className="pl-10 h-11 bg-card/50 border-border/50 focus:ring-primary/20"
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value)
@@ -152,7 +153,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                             }}
                         />
                         {isFetching && !isLoading && (
-                            <div className="absolute right-3 top-2.5 flex items-center gap-1 text-[10px] text-muted-foreground animate-in fade-in duration-300">
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/50 px-2 py-1 rounded-md border border-border/50 backdrop-blur-sm animate-in fade-in duration-300">
                                 <RefreshCcw className="h-3 w-3 animate-spin" />
                                 <span>Syncing…</span>
                             </div>
@@ -163,7 +164,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                     <FilterPopover
                         activeFilterCount={activeFilterCount}
                         onReset={handleReset}
-                        title="Patient Filters"
+                        title="Advanced Filters"
                     >
                         <PatientFilters
                             values={filters}
@@ -177,181 +178,260 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="gap-1 text-muted-foreground shrink-0"
+                            className="gap-2 text-muted-foreground hover:text-foreground shrink-0 h-11"
                             onClick={handleReset}
                         >
-                            <X className="h-3.5 w-3.5" /> Clear
+                            <X className="h-4 w-4" /> Clear
                         </Button>
                     )}
                 </div>
 
-                {/* Locked view badge */}
-                {fixedVisitType && (
-                    <Badge
-                        className={cn(
-                            "shrink-0 capitalize text-xs font-semibold px-3 py-1 border",
-                            VISIT_TYPE_COLORS[fixedVisitType]
-                        )}
-                    >
-                        {fixedVisitType.toUpperCase()} View
-                    </Badge>
-                )}
+                <div className="flex items-center gap-3">
+                    {fixedVisitType && (
+                        <Badge
+                            className={cn(
+                                "shrink-0 capitalize text-[10px] font-bold px-3 py-1.5 rounded-full border shadow-sm",
+                                VISIT_TYPE_COLORS[fixedVisitType]
+                            )}
+                        >
+                            {fixedVisitType.toUpperCase()}
+                        </Badge>
+                    )}
 
-                {hasPermission("patient:create") && (
-                    <Button className="gap-2 w-full sm:w-auto shrink-0" onClick={handleAdd}>
-                        <UserPlus className="h-4 w-4" /> Add Patient
-                    </Button>
-                )}
+                    {hasPermission("patient:create") && (
+                        <Button className="gap-2 h-11 px-5 shadow-lg shadow-primary/10" onClick={handleAdd}>
+                            <UserPlus className="h-4 w-4" /> Add Patient
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-md border bg-card overflow-x-auto">
-                <Table className="min-w-[820px]">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Patient Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Age / Gender</TableHead>
-                            <TableHead>Visit Type</TableHead>
-                            <TableHead>District</TableHead>
-                            <TableHead>Registered</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+            {/* Premium Table Layout */}
+            <div className="overflow-x-auto pb-4">
+                <table className="w-full border-separate border-spacing-y-3 min-w-[1000px]">
+                    <thead>
+                        <tr className="text-muted-foreground/80 text-[10px] font-bold uppercase tracking-widest">
+                            <th className="px-6 py-3 text-left font-bold bg-slate-50 dark:bg-slate-800/60 rounded-l-xl border-y border-l border-border/30">Patient Details</th>
+                            <th className="px-6 py-3 text-left font-bold bg-slate-50 dark:bg-slate-800/60 border-y border-border/30">Demographics</th>
+                            <th className="px-6 py-3 text-left font-bold bg-slate-50 dark:bg-slate-800/60 border-y border-border/30">Visit Info</th>
+                            <th className="px-6 py-3 text-left font-bold bg-slate-50 dark:bg-slate-800/60 border-y border-border/30">Department / Status</th>
+                            <th className="px-6 py-3 text-right font-bold bg-slate-50 dark:bg-slate-800/60 rounded-r-xl border-y border-r border-border/30">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {isLoading ? (
-                            Array.from({ length: 6 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                                    <TableCell><Skeleton className="h-6 w-[60px] rounded-full" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                                    <TableCell><Skeleton className="h-4 w-[90px]" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-8 w-8 rounded-md ml-auto" /></TableCell>
-                                </TableRow>
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="bg-card/30 rounded-xl">
+                                    <td className="px-6 py-4 rounded-l-xl"><Skeleton className="h-12 w-12 rounded-full inline-block mr-3" /><div className="inline-block align-middle space-y-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-24" /></div></td>
+                                    <td className="px-6 py-4"><Skeleton className="h-4 w-20 mb-2" /><Skeleton className="h-6 w-12 rounded-md" /></td>
+                                    <td className="px-6 py-4"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-3 w-32" /></td>
+                                    <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-md mb-2" /><Skeleton className="h-4 w-28" /></td>
+                                    <td className="px-6 py-4 rounded-r-xl text-right"><Skeleton className="h-8 w-8 rounded-md ml-auto" /></td>
+                                </tr>
                             ))
                         ) : patients.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                                    {fixedVisitType
-                                        ? `No ${fixedVisitType.toUpperCase()} patients match your filters.`
-                                        : "No patients found."}
-                                </TableCell>
-                            </TableRow>
+                            <tr>
+                                <td colSpan={5} className="py-20 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-3">
+                                        <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center">
+                                            <Search className="h-8 w-8 text-muted-foreground/40" />
+                                        </div>
+                                        <p className="text-muted-foreground text-sm font-medium">
+                                            {fixedVisitType
+                                                ? `No ${fixedVisitType.toUpperCase()} patients match your filters.`
+                                                : "No patients found."}
+                                        </p>
+                                        <Button variant="outline" size="sm" onClick={handleReset}>Reset Filters</Button>
+                                    </div>
+                                </td>
+                            </tr>
                         ) : (
-                            patients.map((patient: any) => (
-                                <TableRow
-                                    key={patient.id}
-                                    className={isFetching ? "opacity-60 transition-opacity" : "transition-opacity"}
-                                >
-                                    <TableCell className="font-medium">
-                                        <div className="flex flex-col">
-                                            <span>{patient.name}</span>
-                                            {patient.nameBangla && (
-                                                <span className="text-[10px] text-muted-foreground">{patient.nameBangla}</span>
-                                            )}
-                                            {patient.patientNumber && (
-                                                <span className="text-[10px] text-muted-foreground font-mono">{patient.patientNumber}</span>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{patient.phone}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-col text-sm">
-                                            <span>{patient.age} yrs</span>
-                                            <span className="text-xs text-muted-foreground capitalize">{patient.gender}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className={cn(
-                                                "capitalize text-xs",
-                                                patient.visitType && VISIT_TYPE_COLORS[patient.visitType]
-                                            )}
-                                        >
-                                            {patient.visitType || "N/A"}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="text-sm text-muted-foreground">{patient.district || "—"}</span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="text-sm">
-                                            {new Date(patient.createdAt).toLocaleDateString()}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem
-                                                    onClick={() => {
-                                                        setPaymentPatient({ id: patient.id, name: patient.name })
-                                                        setIsPaymentOpen(true)
-                                                    }}
-                                                >
-                                                    <CreditCard className="mr-2 h-4 w-4 text-emerald-600" /> Collect Dues
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/sales?patientId=${patient.id}`}>
-                                                        <Eye className="mr-2 h-4 w-4" /> View Sales
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/diagnostic/reports?patientId=${patient.id}`}>
-                                                        <FileText className="mr-2 h-4 w-4" /> Diagnostic Reports
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                                {hasPermission("patient:update") && (
-                                                    <DropdownMenuItem onClick={() => handleEdit(patient)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                            patients.map((patient: any, idx: number) => {
+                                const trimmedName = (patient.name || "").trim();
+                                const initials = trimmedName.split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || "??";
+                                
+                                // Real data only
+                                const visitDate = patient.createdAt;
+                                const doctorName = patient.doctor?.fullName || "—";
+                                const visitType = patient.visitType || "OPD";
+                                
+                                return (
+                                    <tr 
+                                        key={patient.id} 
+                                        className={cn(
+                                            "group transition-all duration-200 bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800/50 border-border/40",
+                                            isFetching && "opacity-50"
+                                        )}
+                                    >
+                                        {/* Patient Details */}
+                                        <td className="px-6 py-5 rounded-l-2xl border-y border-l border-border/40 group-hover:border-primary/30">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-11 w-11 rounded-full flex items-center justify-center text-xs font-bold shadow-inner bg-primary/10 text-primary dark:bg-primary/20 border border-primary/10">
+                                                    {initials}
+                                                </div>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">
+                                                        {patient.name}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                                                        <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                                            {patient.patientNumber || "No ID"}
+                                                        </span>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <LucidePhone className="h-2.5 w-2.5" />
+                                                            {patient.phone || "—"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Demographics */}
+                                        <td className="px-6 py-5 border-y border-border/40 group-hover:border-primary/30">
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                                                    {patient.age}y • {patient.gender === 'male' ? 'M' : patient.gender === 'female' ? 'F' : 'O'}
+                                                </span>
+                                                <Badge className={cn(
+                                                    "w-fit text-[10px] h-5 font-bold shadow-none border",
+                                                    patient.bloodGroup 
+                                                        ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20" 
+                                                        : "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                                                )}>
+                                                    {patient.bloodGroup || "Unknown"}
+                                                </Badge>
+                                            </div>
+                                        </td>
+
+                                        {/* Visit Info */}
+                                        <td className="px-6 py-5 border-y border-border/40 group-hover:border-primary/30">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                                                    {new Date(visitDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                                <span className="text-[11px] text-muted-foreground font-medium">
+                                                    {doctorName}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        {/* Department / Status */}
+                                        <td className="px-6 py-5 border-y border-border/40 group-hover:border-primary/30">
+                                            <div className="flex flex-col gap-2">
+                                                <Badge variant="outline" className="w-fit text-[10px] h-5 font-bold uppercase bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700/50 px-2 rounded">
+                                                    {visitType}
+                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600 shadow-sm" />
+                                                    <span className="text-[11px] font-bold text-muted-foreground">
+                                                        {status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Actions */}
+                                        <td className="px-6 py-5 rounded-r-2xl border-y border-r border-border/40 group-hover:border-primary/30 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-primary/10 hover:text-primary">
+                                                        <MoreHorizontal className="h-5 w-5" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 p-2">
+                                                    <DropdownMenuLabel className="px-2 py-1.5 text-xs text-muted-foreground uppercase tracking-widest font-bold">Options</DropdownMenuLabel>
+                                                    <DropdownMenuItem
+                                                        className="rounded-md"
+                                                        onClick={() => {
+                                                            setPaymentPatient({ id: patient.id, name: patient.name })
+                                                            setIsPaymentOpen(true)
+                                                        }}
+                                                    >
+                                                        <CreditCard className="mr-3 h-4 w-4 text-emerald-500" /> 
+                                                        <span className="font-medium">Collect Dues</span>
                                                     </DropdownMenuItem>
-                                                )}
-                                                <DropdownMenuSeparator />
-                                                {hasPermission("patient:delete") && (
-                                                    <DropdownMenuItem className="text-destructive">
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete Record
+                                                    <DropdownMenuSeparator className="my-1" />
+                                                    <DropdownMenuItem className="rounded-md" asChild>
+                                                        <Link href={`/sales?patientId=${patient.id}`}>
+                                                            <Eye className="mr-3 h-4 w-4" /> 
+                                                            <span className="font-medium">View Sales</span>
+                                                        </Link>
                                                     </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                                                    <DropdownMenuItem className="rounded-md" asChild>
+                                                        <Link href={`/diagnostic/reports?patientId=${patient.id}`}>
+                                                            <FileText className="mr-3 h-4 w-4" /> 
+                                                            <span className="font-medium">Diagnostic Reports</span>
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    {hasPermission("patient:update") && (
+                                                        <DropdownMenuItem className="rounded-md" onClick={() => handleEdit(patient)}>
+                                                            <Edit className="mr-3 h-4 w-4 text-amber-500" /> 
+                                                            <span className="font-medium">Edit Profile</span>
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <DropdownMenuSeparator className="my-1" />
+                                                    {hasPermission("patient:delete") && (
+                                                        <DropdownMenuItem className="rounded-md text-destructive focus:bg-destructive/10">
+                                                            <Trash2 className="mr-3 h-4 w-4" /> 
+                                                            <span className="font-medium">Delete Record</span>
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                )
+                            })
                         )}
-                    </TableBody>
-                </Table>
+                    </tbody>
+                </table>
             </div>
 
-            {/* Pagination */}
+            {/* Premium Pagination */}
             {meta && meta.totalPages > 1 && (
-                <div className="flex items-center justify-between py-2">
-                    <p className="text-xs text-muted-foreground">
-                        Showing {(meta.page - 1) * meta.pageSize + 1}–{Math.min(meta.page * meta.pageSize, meta.totalItems)} of {meta.totalItems} records
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                        Showing <span className="text-foreground">{(meta.page - 1) * meta.pageSize + 1} to {Math.min(meta.page * meta.pageSize, meta.totalItems)}</span> of <span className="text-foreground">{meta.totalItems}</span> records
                     </p>
-                    <div className="flex items-center space-x-2">
+                    
+                    <div className="flex items-center gap-1">
                         <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            className="h-9 px-3 text-xs font-bold text-muted-foreground hover:bg-card border border-transparent hover:border-border/50"
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={!meta.hasPreviousPage}
                         >
                             Previous
                         </Button>
-                        <div className="text-xs font-medium px-4">
-                            Page {meta.page} of {meta.totalPages}
-                        </div>
+
+                        {Array.from({ length: meta.totalPages }).map((_, i) => {
+                            const p = i + 1;
+                            // Show limited pages if many
+                            if (meta.totalPages > 5 && Math.abs(p - meta.page) > 1 && p !== 1 && p !== meta.totalPages) {
+                                if (p === 2 || p === meta.totalPages - 1) return <span key={p} className="px-1 text-muted-foreground/50">...</span>;
+                                return null;
+                            }
+                            
+                            return (
+                                <Button
+                                    key={p}
+                                    variant={p === meta.page ? "default" : "ghost"}
+                                    size="icon"
+                                    className={cn(
+                                        "h-9 w-9 text-xs font-bold rounded-md transition-all",
+                                        p === meta.page ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-card border border-transparent hover:border-border/50"
+                                    )}
+                                    onClick={() => setPage(p)}
+                                >
+                                    {p}
+                                </Button>
+                            )
+                        })}
+
                         <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            className="h-9 px-3 text-xs font-bold text-muted-foreground hover:bg-card border border-transparent hover:border-border/50"
                             onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
                             disabled={!meta.hasNextPage}
                         >

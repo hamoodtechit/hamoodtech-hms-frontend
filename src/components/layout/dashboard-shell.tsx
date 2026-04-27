@@ -40,7 +40,7 @@ export default function DashboardShell({
       {/* Sidebar Wrapper (Fixed) */}
       <div className={cn(
         "hidden md:flex md:flex-col md:fixed md:inset-y-0 z-40 bg-white dark:bg-sidebar border-r border-zinc-200 dark:border-sidebar-border transition-all duration-300",
-        isOpen ? "md:w-72" : "md:w-20"
+        isOpen ? "md:w-60" : "md:w-18"
       )}>
         {sidebar}
       </div>
@@ -48,7 +48,7 @@ export default function DashboardShell({
       {/* Main Content Wrapper (Margin Left) */}
       <main className={cn(
         "transition-all duration-300 min-h-screen bg-background flex flex-col",
-        isOpen ? "md:ml-72" : "md:ml-20"
+        isOpen ? "md:ml-60" : "md:ml-18"
       )}>
         {header}
         {pathname.endsWith("/dashboard") && <NotificationTicker />}

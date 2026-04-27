@@ -2,7 +2,7 @@ import QueryProvider from "@/components/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google"; // Verify if fonts load correctly with relative path or alias
+import { Geist, Geist_Mono, Inter, Outfit } from "next/font/google"; // Verify if fonts load correctly with relative path or alias
 // Standard Next.js fonts usually work fine.
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -16,6 +16,16 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -44,7 +54,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning
       >
         <NextIntlClientProvider messages={messages}>

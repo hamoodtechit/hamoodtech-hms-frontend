@@ -978,7 +978,7 @@ export default function POSPage() {
                             key={product.id} 
                             className={cn(
                                 "cursor-pointer transition-all group overflow-hidden border shadow-sm flex flex-col relative py-0 gap-0 p-0",
-                                viewMode === 'grid' ? "h-[110px] sm:h-32" : "h-16 mb-1.5",
+                                viewMode === 'grid' ? "h-[110px] sm:h-32" : "h-10 mb-1",
                                 quantity > 0 ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.02]' : 
                                 isOutOfStock ? 'bg-muted/50 border-destructive/30 border-dashed opacity-80' :
                                 index === selectedIndex && searchQuery.trim() !== "" ? 'border-primary ring-2 ring-primary/50' : colorClass
@@ -1035,52 +1035,72 @@ export default function POSPage() {
                                         </div>
                                     </CardContent>
                                 </>
-                            ) : (
-                                // LIST VIEW RENDER
-                                <div className={`p-1.5 flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors h-full ${
-                                    quantity > 0 ? 'bg-primary/5' : 
-                                    isOutOfStock ? 'bg-destructive/[0.08] dark:bg-destructive/[0.12]' : ''
-                                }`}>
-                                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border shadow-sm ${colorClass}`}>
-                                        <Pill className="h-5 w-5 text-muted-foreground/70" />
+                            ) : (                                 // LIST VIEW RENDER
+                                <div className={cn(
+                                    "pl-3 pr-3 pt-0 pb-0 flex items-center gap-4 transition-all h-full",
+                                    quantity > 0 ? 'bg-primary/[0.03]' : ''
+                                )}>
+                                    {/* Left: Icon Box */}
+                                    <div className={cn(
+                                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border shadow-sm",
+                                        product.dosageForm?.toLowerCase().includes('tablet') || product.dosageForm?.toLowerCase().includes('cap') 
+                                            ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-500" 
+                                            : "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-500"
+                                    )}>
+                                        <Pill className="h-5 w-5" />
                                     </div>
                                     
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-1.5 leading-none">
-                                            <h3 className="font-bold text-xs truncate group-hover:text-primary transition-colors leading-none">{product.name}</h3>
-                                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium shrink-0">
-                                                {product.dosageForm && <span className="font-bold text-primary uppercase">{product.dosageForm}</span>}
-                                                <span>{product.strength}</span>
+                                    {/* Center-Left: Name & Type */}
+                                    <div className="flex-1 min-w-0 flex items-center gap-3">
+                                        <div className="flex flex-col gap-0.5">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
+                                                    {product.name}
+                                                </h3>
+                                                {product.dosageForm && (
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50">
+                                                        {product.dosageForm}
+                                                    </span>
+                                                )}
+                                                {product.strength && (
+                                                    <span className="text-[10px] text-muted-foreground font-medium">
+                                                        {product.strength}
+                                                    </span>
+                                                )}
                                             </div>
-                                        </div>
-                                        <div className="flex items-center text-[10px] text-muted-foreground mt-1 gap-2">
-                                            <span className="truncate max-w-50 font-bold">{product.genericName}</span>
-                                            {product.stocks && product.stocks.filter(s => Number(s.quantity) > 0).length > 1 && (
-                                                <Badge variant="outline" className="text-[8px] px-1 h-4 border-primary/30 bg-primary/10 text-primary uppercase font-bold leading-none gap-0.5">
-                                                    <Layers className="h-2 w-2" />
-                                                    {product.stocks.filter(s => Number(s.quantity) > 0).length} Batches
-                                                </Badge>
-                                            )}
-                                            {isOutOfStock ? (
-                                                <span className="ml-1.5 text-destructive font-black uppercase text-[8px]">Out of Stock</span>
-                                            ) : getStock(product) <= 10 && (
-                                                <span className="ml-1.5 text-amber-600 font-bold uppercase text-[8px]">{getStock(product)} left</span>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-muted-foreground/80 truncate max-w-[200px]">
+                                                    {product.genericName}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
     
-                                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                                        <div className={`font-bold text-sm leading-none ${isOutOfStock ? 'text-muted-foreground' : 'text-primary'}`}>{formatCurrency(salePrice)}</div>
-                                        <div className={`text-[10px] ${isOutOfStock ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                                            {isOutOfStock ? '0 remaining' : <><span className="font-bold">{getStock(product)}</span> overall</>}
+                                    {/* Right: Stock & Price */}
+                                    <div className="flex items-center gap-8 shrink-0">
+                                        <div className="text-right">
+                                            <span className={cn(
+                                                "text-xs sm:text-sm font-bold",
+                                                isOutOfStock ? "text-destructive" : "text-emerald-500"
+                                            )}>
+                                                {isOutOfStock ? "Out of stock" : `${getStock(product)} in stock`}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                <div className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tabular-nums">
+                                                    {formatCurrency(salePrice)}
+                                                </div>
+                                            </div>
+                                            
+                                            {quantity > 0 && (
+                                                <Badge className="bg-primary text-primary-foreground h-6 min-w-[24px] justify-center text-xs shadow-md border-2 border-background animate-in zoom-in">
+                                                    {quantity}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </div>
-
-                                    {quantity > 0 && (
-                                        <Badge className="bg-primary text-primary-foreground text-[9px] shadow-sm h-4 px-1 min-w-[16px] justify-center ml-1">
-                                            {quantity}
-                                        </Badge>
-                                    )}
                                 </div>
                             )}
                         </Card>

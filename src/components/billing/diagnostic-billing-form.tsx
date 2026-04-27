@@ -423,7 +423,7 @@ export function DiagnosticBillingForm({
                     
 
                     {/* Procedure Inventory & Selection */}
-                    <Card className="border-none shadow-2xl shadow-primary/10 overflow-hidden rounded-[2rem]">
+                    <Card className="border-none  overflow-hidden rounded-[2rem]">
                         <CardHeader className="bg-indigo-500/5 border-b p-5 flex flex-row items-center justify-between">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700 flex items-center gap-2">
                                 <TestTube2 className="w-4 h-4" /> Lab Procedure Queue
@@ -552,7 +552,7 @@ export function DiagnosticBillingForm({
                 </div>
 
                 <div className="lg:col-span-4 self-start sticky top-20">
-                    <Card className="border-none shadow-2xl shadow-primary/20 overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
+                    <Card className="border-none   overflow-hidden rounded-[2rem] bg-background flex flex-col h-[calc(100vh-140px)] transition-all">
                         <CardHeader className="p-5 border-b bg-muted/30 shrink-0">
                             <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
                                 <ShoppingCart className="w-4 h-4" /> Lab Transaction Summary
