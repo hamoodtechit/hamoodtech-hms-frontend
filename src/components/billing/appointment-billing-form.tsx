@@ -30,6 +30,18 @@ import { useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { ReferralSearch } from "@/components/hr/referral-search"
 import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { useAppointments } from "@/hooks/appointment-queries"
+import { 
+    History, 
+    Search, 
+    Filter, 
+    X,
+    Eye,
+    CalendarDays,
+    Users
+} from "lucide-react"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -64,6 +76,22 @@ export function AppointmentBillingForm() {
     const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>("")
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     const [note, setNote] = useState<string>("")
+    
+    // History Modal State
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [modalSearch, setModalSearch] = useState("")
+    const [modalPage, setModalPage] = useState(1)
+    const modalLimit = 10
+
+    const { data: recentAppointmentsRes, isLoading: loadingHistory } = useAppointments({ 
+        branchId: activeStoreId || undefined, 
+        limit: modalLimit, 
+        page: modalPage,
+        search: modalSearch || undefined,
+    })
+
+    const recentAppointments = recentAppointmentsRes?.data || []
+    const historyPagination = recentAppointmentsRes?.meta
     
     // Auto-fill room based on user
     useEffect(() => {
@@ -139,6 +167,15 @@ export function AppointmentBillingForm() {
                         </p>
                     </div>
                 </div>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 h-11 px-6 rounded-2xl border-primary/20 hover:bg-primary/5 shadow-sm font-black text-xs uppercase tracking-widest"
+                    onClick={() => setHistoryOpen(true)}
+                >
+                    <History className="h-4 w-4 text-primary" />
+                    Appointment Logs
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto w-full">
@@ -329,6 +366,156 @@ export function AppointmentBillingForm() {
                     </Card>
                 </div>
             </div>
+
+            {/* History Dialog */}
+            <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+                <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
+                    <DialogHeader className="p-8 border-b bg-muted/30">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
+                                    <History className="h-6 w-6 text-primary" />
+                                    Appointment History
+                                </DialogTitle>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em]">Registry Logs & Previous Schedules</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setHistoryOpen(false)} className="rounded-full h-10 w-10 bg-muted/50">
+                                <X className="h-5 w-5" />
+                            </Button>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-hidden flex flex-col p-8 pt-6 gap-6">
+                        {/* Search Bar */}
+                        <div className="flex items-center gap-4 p-4 bg-muted/10 rounded-3xl border border-border/30">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input 
+                                    placeholder="Search by patient name or ID..." 
+                                    className="pl-10 h-11 bg-background rounded-2xl border-none shadow-sm"
+                                    value={modalSearch}
+                                    onChange={(e) => setModalSearch(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* History Table */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar rounded-[2rem] border bg-background shadow-inner">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
+                                    <tr className="h-14 border-b border-border/50">
+                                        <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Schedule Info</th>
+                                        <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Patient</th>
+                                        <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Specialist</th>
+                                        <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Status</th>
+                                        <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loadingHistory ? (
+                                        <tr>
+                                            <td colSpan={5} className="py-20 text-center">
+                                                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                                                <p className="mt-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">Retrieving Registry...</p>
+                                            </td>
+                                        </tr>
+                                    ) : recentAppointments.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="py-20 text-center">
+                                                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                                                    <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
+                                                </div>
+                                                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">No matching records found</p>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        recentAppointments.map((apt: any) => (
+                                            <tr key={apt.id} className="h-20 border-b border-border/50 hover:bg-muted/20 transition-colors group">
+                                                <td className="px-6">
+                                                    <div className="flex flex-col">
+                                                        <p className="font-black text-sm text-foreground">{format(new Date(apt.date), 'MMM dd, yyyy')}</p>
+                                                        <p className="text-xs font-bold text-primary flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" /> {apt.timeSlot}
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center font-black text-primary">
+                                                            {apt.patient?.name?.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-black text-sm text-foreground">{apt.patient?.name}</p>
+                                                            <p className="text-[10px] font-bold text-muted-foreground">{apt.patient?.phone}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                                            <Users className="h-4 w-4 text-indigo-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-black text-xs text-foreground">{apt.doctor?.name || 'Assigned Doctor'}</p>
+                                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{apt.department?.name || 'General'}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6">
+                                                    <div className="flex justify-center">
+                                                        <Badge className={cn(
+                                                            "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border-none",
+                                                            apt.status === 'completed' ? "bg-emerald-500/10 text-emerald-600" :
+                                                            apt.status === 'cancelled' ? "bg-rose-500/10 text-rose-600" :
+                                                            "bg-amber-500/10 text-amber-600"
+                                                        )}>
+                                                            {apt.status}
+                                                        </Badge>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 text-right">
+                                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination Footer */}
+                        {historyPagination && historyPagination.totalPages > 1 && (
+                            <div className="flex items-center justify-between p-4 bg-muted/5 rounded-2xl border border-border/30 shrink-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    Page {modalPage} of {historyPagination.totalPages} • Total {historyPagination.totalItems} Records
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        disabled={modalPage === 1}
+                                        onClick={() => setModalPage(p => p - 1)}
+                                        className="h-8 rounded-lg font-black text-[10px] uppercase"
+                                    >
+                                        Prev
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        disabled={modalPage === historyPagination.totalPages}
+                                        onClick={() => setModalPage(p => p + 1)}
+                                        className="h-8 rounded-lg font-black text-[10px] uppercase"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
