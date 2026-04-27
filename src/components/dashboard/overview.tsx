@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { usePharmacyGraph, usePharmacyStats, usePharmacySummary, usePurchases } from "@/hooks/pharmacy-queries"
 import { useSales } from "@/hooks/sales-queries"
 import { useAppointments } from "@/hooks/appointment-queries"
-import { useAdmissions } from "@/hooks/patient-queries"
+import { useAdmissions, usePatients } from "@/hooks/patient-queries"
 import { useBeds } from "@/hooks/facility-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -133,14 +133,23 @@ export function Overview() {
     branchId: activeStoreId || undefined,
     limit: 1000 
   })
+  const { data: opdPatientsRes, isLoading: loadingOpd } = usePatients({
+    visitType: 'opd',
+    limit: 1
+  })
 
   const appointments = appointmentsRes?.data || []
   const admissions = admissionsRes?.data || []
   const beds = bedsRes?.data || []
+  const opdCount = opdPatientsRes?.meta?.totalItems || 0
 
   // Derived stats
   const todayAppointmentsCount = appointments.length
   const waitingOpdCount = appointments.filter((a: any) => a.status === 'pending').length
+  const newAppointmentsToday = appointments.filter((a: any) => 
+    format(new Date(a.createdAt || new Date()), 'yyyy-MM-dd') === today
+  ).length
+  
   const totalBeds = beds.length
   const occupiedBeds = beds.filter((b: any) => b.isOccupied || b.status === 'occupied').length
   const bedOccupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0
@@ -149,7 +158,7 @@ export function Overview() {
   const summary = summaryRes?.data
   const allTimeStats = allTimeStatsRes?.data
   const graphData = graphRes?.data || []
-  const loading = loadingStats || loadingGraph || loadingSummary
+  const loading = loadingStats || loadingGraph || loadingSummary || loadingOpd
 
   const chartData = {
     labels: graphData.map(d => new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
@@ -206,10 +215,12 @@ export function Overview() {
                         ) : (
                         <>
                             <div className="text-2xl font-bold">{todayAppointmentsCount}</div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                                <span className="text-emerald-500 mr-1">+5 today</span>
-                                scheduled for {format(new Date(), 'MMM dd')}
-                            </p>
+                            {todayAppointmentsCount > 0 && (
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                    <span className="text-emerald-500 mr-1">+{newAppointmentsToday} today</span>
+                                    scheduled for {format(new Date(), 'MMM dd')}
+                                </p>
+                            )}
                         </>
                         )}
                     </CardContent>
@@ -226,14 +237,14 @@ export function Overview() {
                         <Users className="h-4 w-4 text-teal-500" />
                     </CardHeader>
                     <CardContent>
-                        {loadingAppointments ? (
+                        {loadingOpd ? (
                             <div className="space-y-2">
                                 <Skeleton className="h-8 w-[100px]" />
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
                         <>
-                            <div className="text-2xl font-bold">{todayAppointmentsCount * 3}</div>
+                            <div className="text-2xl font-bold">{opdCount}</div>
                             <p className="text-xs text-muted-foreground flex items-center mt-1">
                                 {waitingOpdCount} waiting to be seen
                             </p>
