@@ -277,16 +277,16 @@ export function Overview() {
                 </Link>
             </PermissionGuard>
 
-            {/* Pharmacy Alerts */}
+            {/* Active Stock */}
             <PermissionGuard permission="stock:read" mode="silent">
                 <Link href="/pharmacy/inventory" className="group">
                     <Card className="hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-orange-500/30">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pharmacy Alerts</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <CardTitle className="text-sm font-medium">Active Stock</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        {loadingStats ? (
+                        {loading ? (
                             <div className="space-y-2">
                                 <Skeleton className="h-8 w-[100px]" />
                                 <Skeleton className="h-3 w-[120px]" />
@@ -294,16 +294,16 @@ export function Overview() {
                         ) : (
                         <div className="flex items-center justify-between gap-2">
                             <div>
-                                <div className="text-2xl font-bold">{(stats?.lowStockCount || 0) + (stats?.expiringIn30Days || 0)} Items</div>
-                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Requires Attention</p>
+                                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Total Medicines</p>
                             </div>
                             <div className="flex gap-4">
                                 <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-rose-600 leading-none">{stats?.lowStockCount || 0}</div>
+                                    <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
                                     <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low Stock</p>
                                 </div>
                                 <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.expiringIn30Days || 0}</div>
+                                    <div className="text-lg font-semibold text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
                                     <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
                                 </div>
                             </div>
