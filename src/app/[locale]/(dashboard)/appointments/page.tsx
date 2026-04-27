@@ -129,7 +129,7 @@ export default function AppointmentsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <{isLoading ? (
+                                {isLoading ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="h-72 text-center">
                                             <div className="flex flex-col items-center gap-3">
