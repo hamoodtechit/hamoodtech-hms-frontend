@@ -123,15 +123,15 @@ export default function AppointmentsPage() {
                                     <TableHead className="pl-6">Appointment / Serial</TableHead>
                                     <TableHead>Patient</TableHead>
                                     <TableHead>Professional</TableHead>
-                                    <TableHead>Purpose</TableHead>
+                                    <TableHead>Notes</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right pr-6">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {isLoading ? (
+                                <{isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-72 text-center">
+                                        <TableCell colSpan={6} className="h-72 text-center">
                                             <div className="flex flex-col items-center gap-3">
                                                 <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                                                 <span className="text-sm font-medium text-muted-foreground">Fetching Appointments...</span>
@@ -140,7 +140,7 @@ export default function AppointmentsPage() {
                                     </TableRow>
                                 ) : appointments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-72 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="h-72 text-center text-muted-foreground">
                                             No appointments found.
                                         </TableCell>
                                     </TableRow>
@@ -179,9 +179,9 @@ export default function AppointmentsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="capitalize text-[10px] font-bold">
-                                                    {apt.purpose || 'Consultation'}
-                                                </Badge>
+                                                <div className="max-w-[150px] truncate text-[11px] text-muted-foreground font-medium" title={apt.note}>
+                                                    {apt.note || '—'}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 {getStatusBadge(apt.status)}
