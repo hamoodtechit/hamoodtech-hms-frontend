@@ -216,12 +216,12 @@ export function Overview() {
                         ) : (
                         <>
                             <div className="text-2xl font-bold">{todayAppointmentsCount}</div>
-                            {todayAppointmentsCount > 0 && (
+                           
                                 <p className="text-[10px] text-muted-foreground mt-1">
                                     <span className="text-emerald-500 mr-1">+{newAppointmentsToday} today</span>
                                     scheduled for {format(new Date(), 'MMM dd')}
                                 </p>
-                            )}
+                            
                         </>
                         )}
                     </CardContent>
