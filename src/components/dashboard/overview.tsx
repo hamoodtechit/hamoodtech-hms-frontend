@@ -5,10 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePharmacyGraph, usePharmacyStats, usePharmacySummary, usePurchases } from "@/hooks/pharmacy-queries"
 import { useSales } from "@/hooks/sales-queries"
+import { useAppointments } from "@/hooks/appointment-queries"
+import { useAdmissions } from "@/hooks/patient-queries"
+import { useBeds } from "@/hooks/facility-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { useStoreContext } from "@/store/use-store-context"
+import { cn } from "@/lib/utils"
 import {
     BarElement,
     CategoryScale,
@@ -23,7 +27,19 @@ import {
 } from 'chart.js'
 
 import { endOfDay, format, formatDistanceToNow, startOfMonth } from "date-fns"
-import { AlertTriangle, CreditCard, DollarSign, Users } from "lucide-react"
+import { 
+    AlertTriangle, 
+    CreditCard, 
+    DollarSign, 
+    Users, 
+    Calendar, 
+    Bed, 
+    Activity, 
+    Clock,
+    Stethoscope,
+    ChevronRight,
+    ArrowUpRight
+} from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Line } from "react-chartjs-2"
 import { DateRange } from "react-day-picker"
@@ -100,6 +116,33 @@ export function Overview() {
     { enabled: canReadPurchases }
   )
 
+  // Clinical Data
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const { data: appointmentsRes, isLoading: loadingAppointments } = useAppointments({ 
+    branchId: activeStoreId || undefined,
+    date: today,
+    limit: 1000 
+  })
+  const { data: admissionsRes, isLoading: loadingAdmissions } = useAdmissions({ 
+    branchId: activeStoreId || undefined,
+    limit: 5 
+  })
+  const { data: bedsRes, isLoading: loadingBeds } = useBeds({ 
+    branchId: activeStoreId || undefined,
+    limit: 1000 
+  })
+
+  const appointments = appointmentsRes?.data || []
+  const admissions = admissionsRes?.data || []
+  const beds = bedsRes?.data || []
+
+  // Derived stats
+  const todayAppointmentsCount = appointments.length
+  const waitingOpdCount = appointments.filter((a: any) => a.status === 'pending').length
+  const totalBeds = beds.length
+  const occupiedBeds = beds.filter((b: any) => b.isOccupied || b.status === 'occupied').length
+  const bedOccupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0
+
   const stats = statsRes?.data
   const summary = summaryRes?.data
   const allTimeStats = allTimeStatsRes?.data
@@ -143,125 +186,112 @@ export function Overview() {
             </div>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {/* Sales Revenue */}
-            <PermissionGuard permission="sale:read" mode="silent">
-                <Link href="/sales" className="group">
-                    <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all cursor-pointer border-2 border-transparent hover:border-emerald-500/30">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Sales Revenue (Gross)</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {/* Today's Appointments */}
+            <Link href="/appointments" className="group">
+                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Calendar className="h-24 w-24 text-emerald-500" />
+                    </div>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                            <Calendar className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <ArrowUpRight className="w-3 h-3" /> +5 today
+                        </Badge>
                     </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-8 w-[100px]" />
-                                <Skeleton className="h-3 w-[120px]" />
-                            </div>
-                        ) : (
-                        <>
-                            <div className="text-2xl font-bold">{formatCurrency(summary?.sales?.totalAmount || 0)}</div>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                            Net: {formatCurrency(summary?.sales?.netSales || 0)} 
-                            <span className="text-emerald-500 ml-1">({summary?.sales?.count || 0} Tx)</span>
-                            </p>
-                        </>
-                        )}
+                    <CardContent className="relative z-10 pt-4">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Today's Appointments</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-4xl font-black tracking-tighter">{todayAppointmentsCount}</h3>
+                            <span className="text-slate-500 font-bold text-sm">Patients</span>
+                        </div>
                     </CardContent>
-                    </Card>
-                </Link>
-            </PermissionGuard>
+                </Card>
+            </Link>
 
-            {/* Returns */}
-            <PermissionGuard permission="sale-return:read" mode="silent">
-                <Link href="/sales/returns" className="group">
-                    <Card className="hover:shadow-lg hover:shadow-rose-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-rose-500/30">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-rose-500" />
+            {/* Patients in OPD */}
+            <Link href="/appointments" className="group">
+                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Users className="h-24 w-24 text-teal-500" />
+                    </div>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                        <div className="h-10 w-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                            <Users className="h-5 w-5 text-teal-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-8 w-[100px]" />
-                                <Skeleton className="h-3 w-[120px]" />
-                            </div>
-                        ) : (
-                        <>
-                            <div className="text-2xl font-bold text-rose-600">{formatCurrency(summary?.returns?.saleReturnAmount || 0)}</div>
-                            <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            {summary?.returns?.saleReturnCount || 0} items returned
-                            </p>
-                        </>
-                        )}
+                    <CardContent className="relative z-10 pt-4">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Patients in OPD</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-4xl font-black tracking-tighter">{todayAppointmentsCount * 3}</h3>
+                            <span className="text-teal-500 font-black text-xs uppercase tracking-widest">Current</span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 mt-2">{waitingOpdCount} waiting to be seen</p>
                     </CardContent>
-                    </Card>
-                </Link>
-            </PermissionGuard>
+                </Card>
+            </Link>
 
-            {/* Purchases */}
-            <PermissionGuard permission="purchase:read" mode="silent">
-                <Link href="/purchases" className="group">
-                    <Card className="hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-indigo-500/30">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+            {/* Available Beds */}
+            <Link href="/facility" className="group">
+                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Bed className="h-24 w-24 text-indigo-500" />
+                    </div>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                        <div className="h-10 w-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                            <Bed className="h-5 w-5 text-indigo-500" />
+                        </div>
+                        <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
+                            {bedOccupancyPercentage}% Occupied
+                        </Badge>
                     </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-8 w-[100px]" />
-                                <Skeleton className="h-3 w-[120px]" />
-                            </div>
-                        ) : (
-                        <>
-                            <div className="text-2xl font-bold">{formatCurrency(summary?.purchases?.totalAmount || 0)}</div>
-                            <p className="text-xs text-muted-foreground flex items-center mt-1">
-                            {summary?.purchases?.count || 0} purchase orders
-                            </p>
-                        </>
-                        )}
+                    <CardContent className="relative z-10 pt-4">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Available Beds</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-4xl font-black tracking-tighter">{totalBeds - occupiedBeds}</h3>
+                            <span className="text-slate-500 font-bold text-sm">/ {totalBeds}</span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 mt-2">Across all wards</p>
                     </CardContent>
-                    </Card>
-                </Link>
-            </PermissionGuard>
+                </Card>
+            </Link>
 
-            {/* Active Stock */}
-            <PermissionGuard permission="stock:read" mode="silent">
-                <Link href="/pharmacy/inventory" className="group">
-                    <Card className="hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-orange-500/30">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Stock</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+            {/* Pharmacy Alerts */}
+            <Link href="/pharmacy/inventory" className="group">
+                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <AlertTriangle className="h-24 w-24 text-orange-500" />
+                    </div>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                        <div className="h-10 w-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                            <AlertTriangle className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <Badge className="bg-orange-500/10 text-orange-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
+                            Action Needed
+                        </Badge>
                     </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-8 w-[100px]" />
-                                <Skeleton className="h-3 w-[120px]" />
-                            </div>
-                        ) : (
-                        <div className="flex items-center justify-between gap-2">
+                    <CardContent className="relative z-10 pt-4">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Pharmacy Alerts</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-4xl font-black tracking-tighter">{(stats?.lowStockCount || 0) + (stats?.expiringIn30Days || 0)}</h3>
+                            <span className="text-slate-500 font-bold text-sm">Items</span>
+                        </div>
+                        <Separator className="my-4 bg-slate-800" />
+                        <div className="flex gap-4">
                             <div>
-                                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
-                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Total Medicines</p>
+                                <p className="text-rose-500 font-black text-sm">{stats?.lowStockCount || 0}</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Low Stock</p>
                             </div>
-                            <div className="flex gap-4">
-                                <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low Stock</p>
-                                </div>
-                                <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
-                                </div>
+                            <div className="pl-4 border-l border-slate-800">
+                                <p className="text-orange-500 font-black text-sm">{stats?.expiringIn30Days || 0}</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expiring</p>
                             </div>
                         </div>
-                        )}
                     </CardContent>
-                    </Card>
-                </Link>
-            </PermissionGuard>
+                </Card>
+            </Link>
           </div>
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
@@ -323,31 +353,34 @@ export function Overview() {
                 </Card>
             </PermissionGuard>
             
-            <PermissionGuard permission={["sale:read", "purchase:read"]} mode="silent">
-                <Card className="col-span-1 md:col-span-2 lg:col-span-3">
-                <CardHeader>
-                    <CardTitle>Recent Sales & Purchases</CardTitle>
-                    <CardDescription>Latest system events.</CardDescription>
+            <PermissionGuard permission="patient:read" mode="silent">
+                <Card className="col-span-1 md:col-span-2 lg:col-span-3 bg-[#111827] border-none text-white shadow-2xl rounded-[2rem] overflow-hidden">
+                <CardHeader className="p-8 pb-4">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl font-black tracking-tight">Recent Admissions</CardTitle>
+                        <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary hover:bg-primary/10 font-black text-xs uppercase tracking-widest px-4">
+                            <Link href="/patients" className="flex items-center gap-1">
+                                View All <ChevronRight className="w-4 h-4" />
+                            </Link>
+                        </Button>
+                    </div>
                 </CardHeader>
-                <CardContent>
-                    {loading || loadingSales || loadingPurchases ? (
-                        <div className="space-y-8">
+                <CardContent className="p-8 pt-4">
+                    {loadingAdmissions ? (
+                        <div className="space-y-6">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="flex items-center">
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-4 w-[150px]" />
-                                        <Skeleton className="h-3 w-[100px]" />
+                                <div key={i} className="flex items-center gap-4">
+                                    <Skeleton className="h-12 w-12 rounded-2xl bg-slate-800" />
+                                    <div className="space-y-2 flex-1">
+                                        <Skeleton className="h-4 w-1/2 bg-slate-800" />
+                                        <Skeleton className="h-3 w-1/3 bg-slate-800" />
                                     </div>
-                                    <Skeleton className="h-4 w-[60px] ml-auto" />
+                                    <Skeleton className="h-6 w-20 rounded-full bg-slate-800" />
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <ActivityFeed 
-                            sales={salesRes?.data?.sales || []} 
-                            purchases={purchasesRes?.data?.purchases || []}
-                            formatCurrency={formatCurrency}
-                        />
+                        <AdmissionsList admissions={admissions} />
                     )}
                 </CardContent>
                 </Card>
@@ -357,46 +390,48 @@ export function Overview() {
     </PermissionGuard>
   )
 }
-function ActivityFeed({ sales, purchases, formatCurrency }: { sales: any[], purchases: any[], formatCurrency: any }) {
-    // Merge and format activities
-    const activities = [
-        ...sales.map(s => ({
-            id: s.id,
-            title: `Sale ${s.invoiceNumber}`,
-            desc: `Sold to ${s.patient?.name || 'Walk-in'}`,
-            time: new Date(s.createdAt),
-            amount: `+${formatCurrency(s.netPrice || s.totalPrice)}`,
-            color: "text-emerald-600"
-        })),
-        ...purchases.map(p => ({
-            id: p.id,
-            title: `Purchase ${p.poNumber || 'Order'}`,
-            desc: `From ${p.supplier?.name || 'Unknown'}`,
-            time: new Date(p.createdAt),
-            amount: `-${formatCurrency(p.netPrice || p.totalPrice)}`,
-            color: "text-orange-600"
-        }))
-    ]
-    .sort((a, b) => b.time.getTime() - a.time.getTime())
-    .slice(0, 5)
-
-    if (activities.length === 0) {
-        return <div className="text-sm text-muted-foreground text-center py-4">No recent activity detected.</div>
+function AdmissionsList({ admissions }: { admissions: any[] }) {
+    if (admissions.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-16 w-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                    <Activity className="h-8 w-8 text-slate-600" />
+                </div>
+                <p className="text-sm font-black text-slate-500 uppercase tracking-widest">No Recent Admissions</p>
+            </div>
+        )
     }
 
     return (
-        <div className="space-y-8">
-            {activities.map((item) => (
-                <div key={item.id} className="flex items-center">
-                    <div className="space-y-1 overflow-hidden">
-                        <p className="text-sm font-medium leading-none truncate">{item.title}</p>
-                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                            {item.desc} • {formatDistanceToNow(item.time, { addSuffix: true })}
+        <div className="space-y-6">
+            {admissions.map((admission) => (
+                <div key={admission.id} className="flex items-center gap-4 group cursor-pointer">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 font-black text-lg group-hover:bg-primary group-hover:text-white transition-all">
+                        {admission.patient?.name?.charAt(0)}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-black text-white truncate group-hover:text-primary transition-colors">
+                            {admission.patient?.name}
                         </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">
+                                {admission.department?.name || 'Emergency'}
+                            </p>
+                            <span className="text-slate-700">•</span>
+                            <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatDistanceToNow(new Date(admission.admissionDate || admission.createdAt), { addSuffix: true })}
+                            </p>
+                        </div>
                     </div>
-                    <div className={`ml-auto font-medium text-sm whitespace-nowrap pl-2 ${item.color || ""}`}>
-                        {item.amount}
-                    </div>
+                    <Badge className={cn(
+                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border-none shrink-0",
+                        admission.status === 'admitted' ? "bg-primary/20 text-primary" :
+                        admission.status === 'transferred' ? "bg-teal-500/20 text-teal-500" :
+                        "bg-emerald-500/20 text-emerald-500"
+                    )}>
+                        {admission.status}
+                    </Badge>
                 </div>
             ))}
         </div>
