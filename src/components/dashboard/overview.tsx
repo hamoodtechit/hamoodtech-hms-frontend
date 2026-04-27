@@ -188,112 +188,131 @@ export function Overview() {
             </div>
           </div>
 
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {/* Today's Appointments */}
-            <Link href="/appointments" className="group">
-                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Calendar className="h-24 w-24 text-emerald-500" />
-                    </div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                            <Calendar className="h-5 w-5 text-emerald-500" />
-                        </div>
-                        <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <ArrowUpRight className="w-3 h-3" /> +5 today
-                        </Badge>
+            <PermissionGuard permission="appointment:read" mode="silent">
+                <Link href="/appointments" className="group">
+                    <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all cursor-pointer border-2 border-transparent hover:border-emerald-500/30">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="relative z-10 pt-4">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Today's Appointments</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-4xl font-black tracking-tighter">{todayAppointmentsCount}</h3>
-                            <span className="text-slate-500 font-bold text-sm">Patients</span>
-                        </div>
+                    <CardContent>
+                        {loadingAppointments ? (
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-3 w-[120px]" />
+                            </div>
+                        ) : (
+                        <>
+                            <div className="text-2xl font-bold">{todayAppointmentsCount}</div>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                                <span className="text-emerald-500 mr-1">+5 today</span>
+                                scheduled for {format(new Date(), 'MMM dd')}
+                            </p>
+                        </>
+                        )}
                     </CardContent>
-                </Card>
-            </Link>
+                    </Card>
+                </Link>
+            </PermissionGuard>
 
             {/* Patients in OPD */}
-            <Link href="/appointments" className="group">
-                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Users className="h-24 w-24 text-teal-500" />
-                    </div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                        <div className="h-10 w-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-teal-500" />
-                        </div>
+            <PermissionGuard permission="appointment:read" mode="silent">
+                <Link href="/appointments" className="group">
+                    <Card className="hover:shadow-lg hover:shadow-teal-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-teal-500/30">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Patients in OPD</CardTitle>
+                        <Users className="h-4 w-4 text-teal-500" />
                     </CardHeader>
-                    <CardContent className="relative z-10 pt-4">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Patients in OPD</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-4xl font-black tracking-tighter">{todayAppointmentsCount * 3}</h3>
-                            <span className="text-teal-500 font-black text-xs uppercase tracking-widest">Current</span>
-                        </div>
-                        <p className="text-xs font-bold text-slate-500 mt-2">{waitingOpdCount} waiting to be seen</p>
+                    <CardContent>
+                        {loadingAppointments ? (
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-3 w-[120px]" />
+                            </div>
+                        ) : (
+                        <>
+                            <div className="text-2xl font-bold">{todayAppointmentsCount * 3}</div>
+                            <p className="text-xs text-muted-foreground flex items-center mt-1">
+                                {waitingOpdCount} waiting to be seen
+                            </p>
+                        </>
+                        )}
                     </CardContent>
-                </Card>
-            </Link>
+                    </Card>
+                </Link>
+            </PermissionGuard>
 
             {/* Available Beds */}
-            <Link href="/facility" className="group">
-                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Bed className="h-24 w-24 text-indigo-500" />
-                    </div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                        <div className="h-10 w-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                            <Bed className="h-5 w-5 text-indigo-500" />
-                        </div>
-                        <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
-                            {bedOccupancyPercentage}% Occupied
-                        </Badge>
+            <PermissionGuard permission="facility:read" mode="silent">
+                <Link href="/facility" className="group">
+                    <Card className="hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-indigo-500/30">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Available Beds</CardTitle>
+                        <Bed className="h-4 w-4 text-indigo-500" />
                     </CardHeader>
-                    <CardContent className="relative z-10 pt-4">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Available Beds</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-4xl font-black tracking-tighter">{totalBeds - occupiedBeds}</h3>
-                            <span className="text-slate-500 font-bold text-sm">/ {totalBeds}</span>
-                        </div>
-                        <p className="text-xs font-bold text-slate-500 mt-2">Across all wards</p>
+                    <CardContent>
+                        {loadingBeds ? (
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-3 w-[120px]" />
+                            </div>
+                        ) : (
+                        <>
+                            <div className="text-2xl font-bold">{totalBeds - occupiedBeds} / {totalBeds}</div>
+                            <p className="text-xs text-muted-foreground flex items-center mt-1">
+                                <span className={cn(
+                                    "font-medium mr-1",
+                                    bedOccupancyPercentage > 80 ? "text-rose-500" : "text-emerald-500"
+                                )}>
+                                    {bedOccupancyPercentage}% Occupied
+                                </span>
+                                across all wards
+                            </p>
+                        </>
+                        )}
                     </CardContent>
-                </Card>
-            </Link>
+                    </Card>
+                </Link>
+            </PermissionGuard>
 
             {/* Pharmacy Alerts */}
-            <Link href="/pharmacy/inventory" className="group">
-                <Card className="bg-[#111827] border-none text-white overflow-hidden relative group transition-all duration-500 hover:scale-[1.02] shadow-2xl">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <AlertTriangle className="h-24 w-24 text-orange-500" />
-                    </div>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                        <div className="h-10 w-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                            <AlertTriangle className="h-5 w-5 text-orange-500" />
-                        </div>
-                        <Badge className="bg-orange-500/10 text-orange-500 border-none font-black text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full">
-                            Action Needed
-                        </Badge>
+            <PermissionGuard permission="stock:read" mode="silent">
+                <Link href="/pharmacy/inventory" className="group">
+                    <Card className="hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer border-2 border-transparent hover:border-orange-500/30">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Pharmacy Alerts</CardTitle>
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
                     </CardHeader>
-                    <CardContent className="relative z-10 pt-4">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Pharmacy Alerts</p>
-                        <div className="flex items-baseline gap-2">
-                            <h3 className="text-4xl font-black tracking-tighter">{(stats?.lowStockCount || 0) + (stats?.expiringIn30Days || 0)}</h3>
-                            <span className="text-slate-500 font-bold text-sm">Items</span>
-                        </div>
-                        <Separator className="my-4 bg-slate-800" />
-                        <div className="flex gap-4">
+                    <CardContent>
+                        {loadingStats ? (
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-[100px]" />
+                                <Skeleton className="h-3 w-[120px]" />
+                            </div>
+                        ) : (
+                        <div className="flex items-center justify-between gap-2">
                             <div>
-                                <p className="text-rose-500 font-black text-sm">{stats?.lowStockCount || 0}</p>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Low Stock</p>
+                                <div className="text-2xl font-bold">{(stats?.lowStockCount || 0) + (stats?.expiringIn30Days || 0)} Items</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Requires Attention</p>
                             </div>
-                            <div className="pl-4 border-l border-slate-800">
-                                <p className="text-orange-500 font-black text-sm">{stats?.expiringIn30Days || 0}</p>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expiring</p>
+                            <div className="flex gap-4">
+                                <div className="text-right border-l pl-4">
+                                    <div className="text-lg font-semibold text-rose-600 leading-none">{stats?.lowStockCount || 0}</div>
+                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low Stock</p>
+                                </div>
+                                <div className="text-right border-l pl-4">
+                                    <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.expiringIn30Days || 0}</div>
+                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
+                                </div>
                             </div>
                         </div>
+                        )}
                     </CardContent>
-                </Card>
-            </Link>
+                    </Card>
+                </Link>
+            </PermissionGuard>
           </div>
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
@@ -356,28 +375,30 @@ export function Overview() {
             </PermissionGuard>
             
             <PermissionGuard permission="patient:read" mode="silent">
-                <Card className="col-span-1 md:col-span-2 lg:col-span-3 bg-[#111827] border-none text-white shadow-2xl rounded-[2rem] overflow-hidden">
-                <CardHeader className="p-8 pb-4">
+                <Card className="col-span-1 md:col-span-2 lg:col-span-3">
+                <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl font-black tracking-tight">Recent Admissions</CardTitle>
-                        <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary hover:bg-primary/10 font-black text-xs uppercase tracking-widest px-4">
+                        <div>
+                            <CardTitle>Recent Admissions</CardTitle>
+                            <CardDescription>Latest patient clinical events.</CardDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild className="text-primary font-medium text-xs">
                             <Link href="/patients" className="flex items-center gap-1">
                                 View All <ChevronRight className="w-4 h-4" />
                             </Link>
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent className="p-8 pt-4">
+                <CardContent>
                     {loadingAdmissions ? (
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="flex items-center gap-4">
-                                    <Skeleton className="h-12 w-12 rounded-2xl bg-slate-800" />
-                                    <div className="space-y-2 flex-1">
-                                        <Skeleton className="h-4 w-1/2 bg-slate-800" />
-                                        <Skeleton className="h-3 w-1/3 bg-slate-800" />
+                                <div key={i} className="flex items-center">
+                                    <div className="space-y-1 flex-1">
+                                        <Skeleton className="h-4 w-1/2" />
+                                        <Skeleton className="h-3 w-1/3" />
                                     </div>
-                                    <Skeleton className="h-6 w-20 rounded-full bg-slate-800" />
+                                    <Skeleton className="h-4 w-[60px] ml-auto" />
                                 </div>
                             ))}
                         </div>
@@ -394,46 +415,29 @@ export function Overview() {
 }
 function AdmissionsList({ admissions }: { admissions: any[] }) {
     if (admissions.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="h-16 w-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-                    <Activity className="h-8 w-8 text-slate-600" />
-                </div>
-                <p className="text-sm font-black text-slate-500 uppercase tracking-widest">No Recent Admissions</p>
-            </div>
-        )
+        return <div className="text-sm text-muted-foreground text-center py-4">No recent admissions detected.</div>
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {admissions.map((admission) => (
-                <div key={admission.id} className="flex items-center gap-4 group cursor-pointer">
-                    <div className="h-12 w-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 font-black text-lg group-hover:bg-primary group-hover:text-white transition-all">
-                        {admission.patient?.name?.charAt(0)}
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-black text-white truncate group-hover:text-primary transition-colors">
-                            {admission.patient?.name}
+                <div key={admission.id} className="flex items-center">
+                    <div className="space-y-1 overflow-hidden">
+                        <p className="text-sm font-medium leading-none truncate">{admission.patient?.name}</p>
+                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                            {admission.department?.name || 'Emergency'} • {formatDistanceToNow(new Date(admission.admissionDate || admission.createdAt), { addSuffix: true })}
                         </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">
-                                {admission.department?.name || 'Emergency'}
-                            </p>
-                            <span className="text-slate-700">•</span>
-                            <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {formatDistanceToNow(new Date(admission.admissionDate || admission.createdAt), { addSuffix: true })}
-                            </p>
-                        </div>
                     </div>
-                    <Badge className={cn(
-                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border-none shrink-0",
-                        admission.status === 'admitted' ? "bg-primary/20 text-primary" :
-                        admission.status === 'transferred' ? "bg-teal-500/20 text-teal-500" :
-                        "bg-emerald-500/20 text-emerald-500"
-                    )}>
-                        {admission.status}
-                    </Badge>
+                    <div className="ml-auto font-medium text-xs whitespace-nowrap pl-2">
+                        <Badge variant="outline" className={cn(
+                            "capitalize text-[10px]",
+                            admission.status === 'admitted' ? "border-emerald-500 text-emerald-600 bg-emerald-50" :
+                            admission.status === 'transferred' ? "border-teal-500 text-teal-600 bg-teal-50" :
+                            "border-slate-500 text-slate-600 bg-slate-50"
+                        )}>
+                            {admission.status}
+                        </Badge>
+                    </div>
                 </div>
             ))}
         </div>
