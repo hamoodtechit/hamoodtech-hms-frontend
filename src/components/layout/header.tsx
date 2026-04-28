@@ -14,19 +14,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { ModeToggle } from "@/components/ui/theme-toggle"
-import { useActiveSession } from "@/hooks/pharmacy-queries"
+import { useActiveCashRegister } from "@/hooks/pharmacy-queries"
 import { Link, usePathname } from "@/i18n/navigation"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Bell, PlayCircle, Search } from "lucide-react"
 import { NotificationDropdown } from "./notification-dropdown"
+import { OpenRegisterDialog } from "@/components/pharmacy/pos/open-register-dialog"
+import { useState } from "react"
 
 export function Header() {
   const pathname = usePathname()
   const paths = pathname.split('/').filter(Boolean)
   const { activeStoreId } = useStoreContext()
-  const { data: sessionResponse } = useActiveSession(activeStoreId || "")
+  const { data: sessionResponse } = useActiveCashRegister(activeStoreId || "")
   const activeSession = sessionResponse?.data
+  const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-slate-900/95">
@@ -75,7 +78,7 @@ export function Header() {
 
         <div className="ml-auto flex items-center gap-2 md:gap-4">
             {/* Session Indicator & Quick POS */}
-            {activeSession && activeSession.status === 'open' && (
+            {activeSession && activeSession.status === 'open' ? (
                 <Link href="/pharmacy/pos">
                     <Button 
                         variant="outline" 
@@ -90,6 +93,23 @@ export function Header() {
                         <PlayCircle className="h-4 w-4 ml-1" />
                     </Button>
                 </Link>
+            ) : (
+                <>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setOpenRegisterOpen(true)}
+                        className="hidden sm:flex items-center gap-2 border-amber-500/50 bg-amber-500/5 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 transition-all animate-in fade-in slide-in-from-right-4 duration-500"
+                    >
+                        <span className="font-semibold tracking-wide">OPEN REGISTER</span>
+                        <PlayCircle className="h-4 w-4 ml-1" />
+                    </Button>
+                    <OpenRegisterDialog 
+                        open={openRegisterOpen}
+                        onOpenChange={setOpenRegisterOpen}
+                        branchId={activeStoreId || ""}
+                    />
+                </>
             )}
 
             {/* Global Search */}
