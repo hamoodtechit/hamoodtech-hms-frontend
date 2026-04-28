@@ -35,7 +35,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { usePermissions } from "@/hooks/use-permissions"
 import { userService } from "@/services/user-service"
 import { User } from "@/types/user"
-import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, User as UserIcon } from "lucide-react"
+import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, User as UserIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { UserDetailsDialog } from "./components/user-details-dialog"
@@ -57,12 +57,15 @@ export default function UsersPage() {
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [passwordChangeUser, setPasswordChangeUser] = useState<User | null>(null)
+  
+  const [page, setPage] = useState(1)
+  const [meta, setMeta] = useState<any>(null)
 
   const loadUsers = async () => {
 
     try {
       setLoading(true)
-      const response = await userService.getUsers({ search: debouncedSearch })
+      const response = await userService.getUsers({ search: debouncedSearch, page, limit: 10 })
       
       // Handle different possible response structures
       const userList = Array.isArray(response.data) 
@@ -72,6 +75,7 @@ export default function UsersPage() {
         : [];
         
       setUsers(userList)
+      setMeta((response as any).meta)
     } catch (error) {
       toast.error("Failed to load users")
     } finally {
@@ -79,9 +83,14 @@ export default function UsersPage() {
     }
   }
 
-  // Effect to load users when search changes
+  // Effect to load users when search or page changes
   useEffect(() => {
     loadUsers()
+  }, [debouncedSearch, page])
+  
+  // Reset page when search term changes
+  useEffect(() => {
+    setPage(1)
   }, [debouncedSearch])
 
   const handleCreate = () => {
@@ -268,6 +277,32 @@ export default function UsersPage() {
                   )}
                 </TableBody>
               </Table>
+              
+              {meta && meta.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-sm text-muted-foreground">
+                    Page {meta.page} of {meta.totalPages}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={meta.page === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                      disabled={meta.page === meta.totalPages}
+                    >
+                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

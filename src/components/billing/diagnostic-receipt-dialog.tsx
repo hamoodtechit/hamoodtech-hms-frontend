@@ -71,6 +71,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   const paidAmount = Number(data?.paidAmount || 0)
   const dueAmount = Number(data?.dueAmount || 0)
   const taxAmount = Number(data?.taxAmount || 0)
+  const discountAmount = Number(data?.discountAmount || data?.discount || 0)
   
   const patient = data?.patient || transaction?.patient || propPatient || {}
   const patientName = patient?.name || data?.customerName || data?.patientName || data?.name || "Walk-in Patient"
@@ -256,6 +257,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                     <span>+ Vat Tk.</span>
                     <span>{taxAmount.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between py-0.5 font-bold">
+                    <span>- Discount Tk.</span>
+                    <span>{discountAmount.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between py-0.5 font-bold text-[14px] border-y border-black border-dashed mt-1 pb-1">
                     <span>Net Payable Tk.</span>
                     <span>{netTotal.toFixed(2)}</span>
@@ -280,7 +285,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
                 <div className="text-right space-y-1">
                     <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
-                    <div>Cashier : {assignedStaffName}</div>
+                    <div>Cashier : {user?.fullName || user?.username || assignedStaffName}</div>
                 </div>
             </div>
             

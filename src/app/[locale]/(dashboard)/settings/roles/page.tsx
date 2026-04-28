@@ -32,7 +32,7 @@ import {
 import { usePermissions } from "@/hooks/use-permissions"
 import { roleService } from "@/services/role-service"
 import { Role } from "@/types/role"
-import { Edit, Loader2, MoreHorizontal, Plus, Shield, Trash2, Users } from "lucide-react"
+import { Edit, Loader2, MoreHorizontal, Plus, Shield, Trash2, Users, ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { RoleDialog } from "./components/role-dialog"
@@ -46,6 +46,8 @@ export default function RolesPage() {
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [deletingRole, setDeletingRole] = useState<Role | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const limit = 10
 
   const loadRoles = async () => {
     try {
@@ -145,7 +147,7 @@ export default function RolesPage() {
                             </TableCell>
                         </TableRow>
                     ) : (
-                        roles.map((role) => (
+                        roles.slice((page - 1) * limit, page * limit).map((role) => (
                         <TableRow key={role.id}>
                             <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
@@ -206,6 +208,32 @@ export default function RolesPage() {
                     )}
                   </TableBody>
                 </Table>
+              )}
+              
+              {!loading && roles.length > limit && (
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-sm text-muted-foreground">
+                    Page {page} of {Math.ceil(roles.length / limit)}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.min(Math.ceil(roles.length / limit), p + 1))}
+                      disabled={page === Math.ceil(roles.length / limit)}
+                    >
+                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
