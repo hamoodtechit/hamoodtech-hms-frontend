@@ -187,7 +187,7 @@ export function Overview() {
     <PermissionGuard permission="dashboard:read">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tighter">Dashboard</h2>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 <DatePickerWithRange date={date} setDate={setDate} />
                 <PermissionGuard permission="sale:create" mode="silent">
@@ -198,7 +198,7 @@ export function Overview() {
             </div>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {/* Today's Appointments */}
             <PermissionGuard permission="appointment:read" mode="silent">
                 <Link href="/appointments" className="group">
@@ -215,7 +215,7 @@ export function Overview() {
                             </div>
                         ) : (
                         <>
-                            <div className="text-2xl font-bold">{todayAppointmentsCount}</div>
+                        <div className="text-xl sm:text-2xl font-bold">{todayAppointmentsCount}</div>
                            
                                 <p className="text-[10px] text-muted-foreground mt-1">
                                     <span className="text-emerald-500 mr-1">+{newAppointmentsToday} today</span>
@@ -245,7 +245,7 @@ export function Overview() {
                             </div>
                         ) : (
                         <>
-                            <div className="text-2xl font-bold">{opdCount}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{opdCount}</div>
                             <p className="text-xs text-muted-foreground flex items-center mt-1">
                                 {waitingOpdCount} waiting to be seen
                             </p>
@@ -272,7 +272,7 @@ export function Overview() {
                             </div>
                         ) : (
                         <>
-                            <div className="text-2xl font-bold">{totalBeds - occupiedBeds} / {totalBeds}</div>
+                            <div className="text-xl sm:text-2xl font-bold">{totalBeds - occupiedBeds} / {totalBeds}</div>
                             <p className="text-xs text-muted-foreground flex items-center mt-1">
                                 <span className={cn(
                                     "font-medium mr-1",
@@ -304,19 +304,19 @@ export function Overview() {
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <div className="text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
-                                <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Total Medicines</p>
+                                <div className="text-xl sm:text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
+
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 sm:gap-6">
                                 <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Low Stock</p>
+                                    <div className="text-base sm:text-lg font-black text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
+                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Low Stock</p>
                                 </div>
                                 <div className="text-right border-l pl-4">
-                                    <div className="text-lg font-semibold text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 text-nowrap">Expiring</p>
+                                    <div className="text-base sm:text-lg font-black text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
+                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Expiring</p>
                                 </div>
                             </div>
                         </div>

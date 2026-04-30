@@ -134,7 +134,17 @@
 
 @layer base {
   html {
-    font-size: 110%;
+    font-size: 90%;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 100%;
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 105%;
+    }
   }
   * {
     @apply border-border;
@@ -145,13 +155,13 @@
     @apply bg-background text-foreground;
   }
   h1 {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+    @apply text-xl sm:text-3xl lg:text-4xl font-black tracking-tighter;
   }
   h2 {
-    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight;
+    @apply text-lg sm:text-2xl lg:text-3xl font-black tracking-tight;
   }
   h3 {
-    @apply text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight;
+    @apply text-base sm:text-xl lg:text-2xl font-black tracking-tight;
   }
   
   .dark h1, .dark h2, .dark h3 {

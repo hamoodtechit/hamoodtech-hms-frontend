@@ -14,6 +14,7 @@ import {
   ChevronRight,
   FlaskConical,
   LayoutDashboard,
+  Megaphone,
   Menu,
   Pill,
   Receipt,
@@ -439,6 +440,18 @@ function SidebarBase() {
               href: "/branches",
               module: "branches",
               permission: "branch:read",
+            },
+            {
+              label: "Audit Logs",
+              href: "/settings/audit-logs",
+              module: "settings",
+              permission: "settings:read",
+            },
+            {
+                label: "Communication",
+                href: "/settings/communication",
+                module: "settings",
+                permission: "settings:read",
             },
             {
               label: "Media Library",

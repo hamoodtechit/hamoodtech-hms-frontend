@@ -16,6 +16,7 @@ import {
     ChevronRight,
     FlaskConical,
     LayoutDashboard,
+    Megaphone,
     Microscope,
     Pill,
     Receipt,
@@ -397,6 +398,12 @@ export function Sidebar() {
               href: "/settings/audit-logs",
               module: "settings",
               permission: "settings:read",
+            },
+            {
+                label: "Communication",
+                href: "/settings/communication",
+                module: "settings",
+                permission: "settings:read",
             },
             {
               label: "Media Library",
