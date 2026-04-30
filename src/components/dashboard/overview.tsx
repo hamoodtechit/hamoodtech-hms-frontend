@@ -304,19 +304,18 @@ export function Overview() {
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                                <div className="text-xl sm:text-2xl font-bold">{allTimeStats?.totalMedicines || 0} Items</div>
-
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xl sm:text-2xl font-black truncate">{allTimeStats?.totalMedicines || 0} Items</div>
                             </div>
-                            <div className="flex gap-4 sm:gap-6">
-                                <div className="text-right border-l pl-4">
+                            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                                <div className="text-right border-l pl-2 sm:pl-4">
                                     <div className="text-base sm:text-lg font-black text-orange-600 leading-none">{stats?.lowStockCount || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Low Stock</p>
+                                    <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest">Low</p>
                                 </div>
-                                <div className="text-right border-l pl-4">
+                                <div className="text-right border-l pl-2 sm:pl-4">
                                     <div className="text-base sm:text-lg font-black text-red-600 leading-none">{stats?.expiringIn30Days || 0}</div>
-                                    <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">Expiring</p>
+                                    <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest">Exp</p>
                                 </div>
                             </div>
                         </div>
