@@ -52,8 +52,8 @@ export const authService = {
   login: async (usernameOrEmail: string, password: string) => {
     const response = await api.post('/auth/login', { usernameOrEmail, password });
     if (response.data.success) {
-        Cookies.set('accessToken', response.data.data.accessToken, { expires: 7 }); // Expires in 7 days
-        Cookies.set('refreshToken', response.data.data.refreshToken, { expires: 30 });
+        Cookies.set('accessToken', response.data.data.accessToken, { expires: 7, path: '/' }); 
+        Cookies.set('refreshToken', response.data.data.refreshToken, { expires: 30, path: '/' });
     }
     return response.data;
   },

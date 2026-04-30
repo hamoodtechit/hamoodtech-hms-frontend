@@ -34,7 +34,8 @@ export function LoginForm() {
       toast.success("Welcome back!", {
         description: "You have successfully logged in.",
       })
-      router.push("/dashboard")
+      router.replace("/dashboard")
+      router.refresh()
     } catch (error) {
       console.error(error)
       const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Invalid credentials. Please try again."
