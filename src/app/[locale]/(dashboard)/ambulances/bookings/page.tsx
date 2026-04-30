@@ -56,8 +56,11 @@ export default function AmbulanceBookingsPage() {
         status: statusFilter === "all" ? undefined : statusFilter,
     })
 
-    const bookings = Array.isArray(bookingRes?.data) ? bookingRes.data : []
-    const pagination = bookingRes?.meta
+    const bookings = Array.isArray(bookingRes?.data) 
+        ? bookingRes.data 
+        : ((bookingRes?.data as any)?.bookings || [])
+    
+    const pagination = bookingRes?.meta || (bookingRes?.data as any)?.pagination
 
     // Actions
     const deleteMutation = useDeleteAmbulanceBooking()
@@ -156,7 +159,7 @@ export default function AmbulanceBookingsPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-primary opacity-70">Total Records</p>
-                                    <p className="text-lg font-black tracking-tight">{pagination?.totalItems || 0} Bookings Found</p>
+                                    <p className="text-lg font-black tracking-tight">{pagination?.totalItems || pagination?.total || 0} Bookings Found</p>
                                 </div>
                             </div>
                         </div>
