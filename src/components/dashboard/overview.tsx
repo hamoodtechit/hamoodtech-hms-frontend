@@ -214,15 +214,16 @@ export function Overview() {
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
-                        <>
-                        <div className="text-xl sm:text-2xl font-bold">{todayAppointmentsCount}</div>
-                           
-                                <p className="text-[10px] text-muted-foreground mt-1">
-                                    <span className="text-emerald-500 mr-1">+{newAppointmentsToday} today</span>
-                                    scheduled for {format(new Date(), 'MMM dd')}
-                                </p>
-                            
-                        </>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xl sm:text-3xl font-black truncate" title={`${todayAppointmentsCount} total appointments scheduled for today`}>{todayAppointmentsCount}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest truncate">Appointments</p>
+                            </div>
+                            <div className="text-right border-l border-border/50 pl-3 sm:pl-4 shrink-0">
+                                <div className="text-base sm:text-lg font-black text-emerald-600 leading-none">+{newAppointmentsToday}</div>
+                                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest">Today</p>
+                            </div>
+                        </div>
                         )}
                     </CardContent>
                     </Card>
@@ -244,12 +245,16 @@ export function Overview() {
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
-                        <>
-                            <div className="text-xl sm:text-2xl font-bold">{opdCount}</div>
-                            <p className="text-xs text-muted-foreground flex items-center mt-1">
-                                {waitingOpdCount} waiting to be seen
-                            </p>
-                        </>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xl sm:text-3xl font-black truncate" title={`${opdCount} total OPD patients in the system`}>{opdCount}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest truncate">Total OPD</p>
+                            </div>
+                            <div className="text-right border-l border-border/50 pl-3 sm:pl-4 shrink-0">
+                                <div className="text-base sm:text-lg font-black text-teal-600 leading-none">{waitingOpdCount}</div>
+                                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest">Waiting</p>
+                            </div>
+                        </div>
                         )}
                     </CardContent>
                     </Card>
@@ -271,18 +276,19 @@ export function Overview() {
                                 <Skeleton className="h-3 w-[120px]" />
                             </div>
                         ) : (
-                        <>
-                            <div className="text-xl sm:text-2xl font-bold">{totalBeds - occupiedBeds} / {totalBeds}</div>
-                            <p className="text-xs text-muted-foreground flex items-center mt-1">
-                                <span className={cn(
-                                    "font-medium mr-1",
-                                    bedOccupancyPercentage > 80 ? "text-rose-500" : "text-emerald-500"
-                                )}>
-                                    {bedOccupancyPercentage}% Occupied
-                                </span>
-                                across all wards
-                            </p>
-                        </>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xl sm:text-3xl font-black truncate" title={`${totalBeds - occupiedBeds} beds available out of ${totalBeds} total beds`}>{totalBeds - occupiedBeds}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest truncate">Available</p>
+                            </div>
+                            <div className="text-right border-l border-border/50 pl-3 sm:pl-4 shrink-0">
+                                <div className={cn(
+                                    "text-base sm:text-lg font-black leading-none",
+                                    bedOccupancyPercentage > 80 ? "text-rose-600" : "text-emerald-600"
+                                )}>{bedOccupancyPercentage}%</div>
+                                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest">Occupied</p>
+                            </div>
+                        </div>
                         )}
                     </CardContent>
                     </Card>
@@ -306,7 +312,8 @@ export function Overview() {
                         ) : (
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                                <div className="text-xl sm:text-2xl font-black truncate">{allTimeStats?.totalMedicines || 0} Items</div>
+                                <div className="text-xl sm:text-3xl font-black truncate" title={`${allTimeStats?.totalMedicines || 0} total medicines in active stock`}>{allTimeStats?.totalMedicines || 0}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-black tracking-widest truncate">Medicines</p>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                                 <div className="text-right border-l pl-2 sm:pl-4">
