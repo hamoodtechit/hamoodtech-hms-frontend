@@ -27,7 +27,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const activeBranch = stores.find(s => s.id === activeStoreId) || stores[0]
   
   const saleId = transaction?.id || transaction?.sale?.id || transaction?.data?.sale?.id
-  const { data: saleRes, isLoading } = useSale(saleId || "", { enabled: !!saleId })
+  const { data: saleRes, isLoading } = useSale(saleId || "")
   
   const fetchedData = saleRes?.data?.data?.sale || saleRes?.data?.sale || saleRes?.data?.data || saleRes?.data
   const data = fetchedData || transaction
