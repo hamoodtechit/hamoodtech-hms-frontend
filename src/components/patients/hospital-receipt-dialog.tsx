@@ -29,7 +29,9 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const saleId = transaction?.id || transaction?.sale?.id || transaction?.data?.sale?.id
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
-  const fetchedData = saleRes?.data?.data?.sale || saleRes?.data?.sale || saleRes?.data?.data || saleRes?.data
+  // saleRes.data is the response from salesService.getSale: { success, message, data: Sale }
+  // So the actual sale object is in saleRes.data.data
+  const fetchedData = saleRes?.data || (saleRes as any)?.sale || (saleRes as any)?.data
   const data = fetchedData || transaction
   const { user } = useAuthStore()
   const printRef = useRef<HTMLDivElement>(null)
