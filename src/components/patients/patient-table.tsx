@@ -44,9 +44,11 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
+import { toast } from "sonner"
 import { PatientDialog } from "./patient-dialog"
 import { PharmacyPaymentDialog } from "@/components/pharmacy/pharmacy-payment-dialog"
 import { useCurrency } from "@/hooks/use-currency"
+import { useDeletePatient } from "@/hooks/patient-queries"
 
 const VISIT_TYPE_COLORS: Record<string, string> = {
     opd: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
@@ -76,6 +78,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
     const [isPaymentOpen, setIsPaymentOpen] = useState(false)
     const [paymentPatient, setPaymentPatient] = useState<{ id: string; name: string } | null>(null)
     const queryClient = useQueryClient()
+    const { mutate: deletePatient } = useDeletePatient()
 
     // Build final API params: fixedVisitType from URL always wins
     const queryParams: PatientQueryParams = {
@@ -129,6 +132,26 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
 
     const handleSuccess = () => {
         queryClient.invalidateQueries({ queryKey: PHARMACY_KEYS.patients(queryParams) })
+    }
+
+    const handleDelete = (patient: Patient) => {
+        if (window.confirm(`Are you sure you want to delete ${patient.name}? This action cannot be undone.`)) {
+            const promise = new Promise((resolve, reject) => {
+                deletePatient(patient.id, {
+                    onSuccess: () => {
+                        handleSuccess()
+                        resolve(true)
+                    },
+                    onError: (error: any) => reject(error)
+                })
+            })
+
+            toast.promise(promise, {
+                loading: 'Deleting patient...',
+                success: 'Patient deleted successfully',
+                error: (err: any) => err?.response?.data?.message || 'Failed to delete patient'
+            })
+        }
     }
 
     return (
@@ -372,7 +395,10 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                                                     )}
                                                     <DropdownMenuSeparator className="my-1" />
                                                     {hasPermission("patient:delete") && (
-                                                        <DropdownMenuItem className="rounded-md text-destructive focus:bg-destructive/10">
+                                                        <DropdownMenuItem 
+                                                            className="rounded-md text-destructive focus:bg-destructive/10"
+                                                            onClick={() => handleDelete(patient)}
+                                                        >
                                                             <Trash2 className="mr-3 h-4 w-4" /> 
                                                             <span className="font-medium">Delete Record</span>
                                                         </DropdownMenuItem>

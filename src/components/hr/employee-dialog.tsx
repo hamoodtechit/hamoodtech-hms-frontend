@@ -67,7 +67,11 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         leavingDate: "",
         status: "active" as "active" | "inactive" | "on_leave" | "terminated",
         chamberOrRoomNumber: "",
-        photoUrl: ""
+        photoUrl: "",
+        visitCharge: 0,
+        repeatVisitCharge: 0,
+        repeatVisitDayGap: 7,
+        reportCharge: 0
     })
 
     const { data: departmentsRes } = useDepartments({ 
@@ -103,7 +107,11 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     leavingDate: employee.leavingDate ? employee.leavingDate.split('T')[0] : "",
                     status: employee.status,
                     chamberOrRoomNumber: employee.chamberOrRoomNumber || "",
-                    photoUrl: employee.photoUrl || ""
+                    photoUrl: employee.photoUrl || "",
+                    visitCharge: Number(employee.visitCharge || 0),
+                    repeatVisitCharge: Number(employee.repeatVisitCharge || 0),
+                    repeatVisitDayGap: Number(employee.repeatVisitDayGap || 7),
+                    reportCharge: Number(employee.reportCharge || 0)
                 })
             } else {
                 setFormData({
@@ -126,7 +134,11 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     leavingDate: "",
                     status: "active",
                     chamberOrRoomNumber: "",
-                    photoUrl: ""
+                    photoUrl: "",
+                    visitCharge: 0,
+                    repeatVisitCharge: 0,
+                    repeatVisitDayGap: 7,
+                    reportCharge: 0
                 })
             }
         }
@@ -404,6 +416,47 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                     />
                                 </div>
                             </div>
+
+                            {formData.employeeType === 'doctor' && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <div className="grid gap-2">
+                                        <Label className="text-xs font-black uppercase text-primary">Visit Charge</Label>
+                                        <SmartNumberInput 
+                                            value={formData.visitCharge}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, visitCharge: val || 0 }))}
+                                            min={0}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label className="text-xs font-black uppercase text-primary">Repeat Visit Charge</Label>
+                                        <SmartNumberInput 
+                                            value={formData.repeatVisitCharge}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, repeatVisitCharge: val || 0 }))}
+                                            min={0}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label className="text-xs font-black uppercase text-primary">Repeat Day Gap</Label>
+                                        <SmartNumberInput 
+                                            value={formData.repeatVisitDayGap}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, repeatVisitDayGap: val || 7 }))}
+                                            min={1}
+                                            placeholder="7"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label className="text-xs font-black uppercase text-primary">Report Charge</Label>
+                                        <SmartNumberInput 
+                                            value={formData.reportCharge}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, reportCharge: val || 0 }))}
+                                            min={0}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </ScrollArea>

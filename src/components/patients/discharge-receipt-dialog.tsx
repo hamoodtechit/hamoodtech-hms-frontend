@@ -20,6 +20,7 @@ interface DischargeReceiptDialogProps {
     data: DischargeInitiateData | null
     finalPaidAmount?: number
     overallDiscount?: number
+    remarks?: string
 }
 
 export function DischargeReceiptDialog({ 
@@ -28,7 +29,8 @@ export function DischargeReceiptDialog({
     admission, 
     data,
     finalPaidAmount = 0,
-    overallDiscount = 0
+    overallDiscount = 0,
+    remarks = ""
 }: DischargeReceiptDialogProps) {
     const { user } = useAuthStore()
     const printRef = useRef<HTMLDivElement>(null)
@@ -39,25 +41,21 @@ export function DischargeReceiptDialog({
     // We already have the snapshot in data.
     // However, the 'finalPaidAmount' and 'overallDiscount' provided is what applies to the Discharge Action itself.
     
-    // Original Totals from Initiate Data
-    const grossHospitalBill = data.hospital.totals.totalBill || data.hospital.totals.totalPrice || data.hospital.totals.netPrice || 0
-    const grossPharmacyBill = data.pharmacy.totals.totalBill || data.pharmacy.totals.totalPrice || data.pharmacy.totals.netPrice || 0
-    const grossTotalBill = data.grandTotal.totalBill || data.grandTotal.totalPrice || data.grandTotal.netPrice || 0
+    // Use values directly from grandTotal as provided in the API response
+    const netPrice = Number(data.grandTotal.netPrice || 0)
+    
+    const prevTotalPaid = Number(data.grandTotal.paidAmount || data.grandTotal.totalPaid || 0)
+    
+    
 
-    // Calculate applied discounts (if any item-level discounts exist, they are reflected in totalBill vs subtotal, but we rely on what's given)
-    // The previous paid amounts BEFORE this discharge:
-    const prevHospitalPaid = data.hospital.totals.totalPaid || data.hospital.totals.paidAmount || 0
-    const prevPharmacyPaid = data.pharmacy.totals.totalPaid || data.pharmacy.totals.paidAmount || 0
-    const prevTotalPaid = data.grandTotal.totalPaid || data.grandTotal.paidAmount || 0
+    // The Net Bill after the global discount applied in the discharge dialog
+    const finalNetPayable = netPrice - overallDiscount
 
-    // The Net Bill after the global discount (which the user says is "outside of items")
-    const netPayable = grossTotalBill - overallDiscount
-
-    // Total Paid is Previous Paid + finalPaidAmount
+    // Total Paid is Previous Paid + finalPaidAmount collected during this discharge
     const totalActuallyPaid = prevTotalPaid + finalPaidAmount
 
-    // Current Due
-    const currentDue = netPayable - totalActuallyPaid
+    // Current Due after all payments and discounts
+    const currentDue = Math.max(0, finalNetPayable - totalActuallyPaid)
 
     const isFullyPaid = currentDue <= 0
 
@@ -137,30 +135,15 @@ export function DischargeReceiptDialog({
                         .mt-8 { margin-top: 32px !important; }
                         .mt-12 { margin-top: 48px !important; }
 
-                        /* Hologram Styles */
-                        .hologram-container {
-                            position: absolute;
-                            inset: 0;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            pointer-events: none;
-                            overflow: hidden;
-                            z-index: 0;
-                            opacity: 0.1 !important;
+                        .remarks-box {
+                            margin-top: 10px;
+                            padding: 10px;
+                            border: 1px dotted black;
+                            background-color: #fafafa;
+                            width: 80%;
+                            margin-left: auto;
+                            margin-right: auto;
                         }
-                        .hologram-text {
-                            font-size: 120px !important;
-                            font-weight: 900 !important;
-                            text-transform: uppercase !important;
-                            transform: rotate(-35deg) !important;
-                            border: 12px solid currentColor !important;
-                            padding: 24px 48px !important;
-                            border-radius: 40px !important;
-                            letter-spacing: 15px !important;
-                        }
-                        .hologram-paid { color: #10b981 !important; }
-                        .hologram-due { color: #f43f5e !important; }
                         
                         .letterhead-spacer { height: 35mm !important; display: block !important; }
                         
@@ -178,6 +161,13 @@ export function DischargeReceiptDialog({
                 <body>
                     <div class="print-container">
                         ${content}
+                        
+                        ${remarks ? `
+                        <div class="remarks-box">
+                            <span class="text-[10px] font-black uppercase opacity-70">Remarks:</span>
+                            <span class="italic font-bold text-[11px] uppercase">${remarks}</span>
+                        </div>
+                        ` : ''}
                     </div>
                 </body>
             </html>
@@ -262,30 +252,70 @@ export function DischargeReceiptDialog({
                             </div>
 
                             {/* Billing Summary Section */}
-                            {/* Billing Summary Section Removed Per Request */}
+                            {data?.hospital?.bills && data.hospital.bills.length > 0 && (
+                                <div className="w-[80%] mx-auto mt-6 relative z-10">
+                                    <h3 className="text-[11px] font-black uppercase border-b border-black pb-1 mb-2">Hospital Bills Breakdown</h3>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1 w-24">Inv. No</th>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1">Particulars</th>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1 text-right w-24">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            {data.hospital.bills.map((bill: any) => (
+                                                <tr key={bill.id}>
+                                                    <td className="border-b border-dashed border-gray-300 py-1.5 text-[11px] font-bold align-top">{bill.invoiceNumber}</td>
+                                                    <td className="border-b border-dashed border-gray-300 py-1.5 align-top">
+                                                        <div className="text-[10px] uppercase font-black text-black">
+                                                            {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type}
+                                                        </div>
+                                                        {bill.saleItems?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-x-2 mt-0.5 opacity-70">
+                                                                {bill.saleItems.map((item: any) => (
+                                                                    <span key={item.id} className="text-[8.5px] font-bold uppercase">{item.itemName} (x{item.quantity})</span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="border-b border-dashed border-gray-300 py-1.5 text-[11px] font-black text-right align-top">{formatCurrency(bill.netPrice)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
 
-                            {/* Final Financial Settlement */}
+                             {/* Final Financial Settlement */}
                             <div className="w-[80%] mx-auto border-t-2 border-black mt-8 pt-4 relative z-10">
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-black uppercase">Gross Total Amount:</span>
-                                    <span className="text-sm font-black">{formatCurrency(grossTotalBill)}</span>
+                                    <span className="text-xs font-black uppercase">Total Bill Amount:</span>
+                                    <span className="text-sm font-black">{formatCurrency(netPrice)}</span>
                                 </div>
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-black uppercase italic">Global Discount (-):</span>
-                                    <span className="text-sm font-bold">{formatCurrency(overallDiscount)}</span>
-                                </div>
+                                {(overallDiscount > 0) && (
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-black uppercase italic">Global Discount (-):</span>
+                                        <span className="text-sm font-bold">{formatCurrency(overallDiscount)}</span>
+                                    </div>
+                                )}
                                 <div className="border-b border-black w-full mb-1"></div>
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-sm font-black uppercase">Net Payable Amount:</span>
-                                    <span className="text-base font-black">{formatCurrency(netPayable)}</span>
+                                    <span className="text-base font-black">{formatCurrency(finalNetPayable)}</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-bold uppercase italic">Previously Paid:</span>
-                                    <span className="text-xs font-bold">{formatCurrency(prevTotalPaid)}</span>
+                                    <span className="text-xs font-bold uppercase italic text-gray-600">Previously Paid:</span>
+                                    <span className="text-xs font-bold text-gray-600">{formatCurrency(prevTotalPaid)}</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-bold uppercase italic">Discharge Collection:</span>
-                                    <span className="text-xs font-bold">{formatCurrency(finalPaidAmount)}</span>
+                                    <span className="text-xs font-bold uppercase italic text-gray-600">Discharge Collection:</span>
+                                    <span className="text-xs font-bold text-gray-600">{formatCurrency(finalPaidAmount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2 mt-1">
+                                    <span className="text-xs font-black uppercase">Total Paid Amount:</span>
+                                    <span className="text-sm font-black">{formatCurrency(prevTotalPaid + finalPaidAmount)}</span>
                                 </div>
                                 <div className="border-b border-black w-full mb-1"></div>
                                 <div className="flex justify-between items-center mt-2">
@@ -302,6 +332,14 @@ export function DischargeReceiptDialog({
                                 </div>
                             )}
 
+                            {/* Remarks Section */}
+                            {remarks && (
+                                <div className="mt-2 p-3 bg-gray-50 border border-black border-dotted flex gap-2 items-start relative z-10 w-[80%] mx-auto">
+                                    <span className="shrink-0 uppercase text-[10px] font-black opacity-70 mt-0.5">Remarks:</span>
+                                    <span className="italic font-bold text-[11px] uppercase leading-tight">{remarks}</span>
+                                </div>
+                            )}
+
                             {/* Signatures */}
                             <div className="mt-16 flex justify-between px-4 relative z-10">
                                 <div className="text-center space-y-1">
@@ -314,16 +352,6 @@ export function DischargeReceiptDialog({
                                     <span className="text-[11px] font-black uppercase">Authorized Signature</span>
                                     <p className="text-[10px] font-bold text-black italic">Hospital Authority</p>
                                 </div>
-                            </div>
-
-                            {/* Hologram */}
-                            {/* Hologram */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-10">
-                                {isFullyPaid ? (
-                                    <div className="text-[120px] font-black uppercase -rotate-[35deg] border-[12px] border-emerald-500 text-emerald-500 px-12 py-6 rounded-[40px] tracking-[15px]">PAID</div>
-                                ) : (
-                                    <div className="text-[120px] font-black uppercase -rotate-[35deg] border-[12px] border-rose-500 text-rose-500 px-12 py-6 rounded-[40px] tracking-[15px]">DUE</div>
-                                )}
                             </div>
                             
                             <div className="mt-8 pt-4 border-t border-black/10 text-[9px] text-gray-500 font-bold flex justify-between uppercase tracking-widest relative z-10">

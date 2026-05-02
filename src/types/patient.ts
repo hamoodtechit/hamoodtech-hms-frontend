@@ -18,7 +18,7 @@ export interface Admission {
   guardianName: string;
   guardianPhone: string;
   guardianRelation: string;
-  fees: number | string;
+  admissionCharge: number | string;
   referralPersonId?: string;
   referralPerson?: any;
   createdAt: string;
@@ -54,7 +54,7 @@ export interface AdmissionPayload {
   guardianName?: string;
   guardianPhone?: string;
   guardianRelation?: string;
-  fees?: number | string;
+  admissionCharge?: number | string;
   referralPersonId?: string;
   referralPerson?: any;
   doctorId?: string;

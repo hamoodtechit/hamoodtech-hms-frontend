@@ -30,7 +30,7 @@ import {
     ClipboardCheck
 } from "lucide-react"
 import { useSales, SALES_KEYS } from "@/hooks/sales-queries"
-import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
+import { HospitalReceiptDialog } from "./hospital-receipt-dialog"
 import { DischargeDialog } from "./discharge-dialog"
 import { DischargeReceiptDialog } from "./discharge-receipt-dialog"
 import { useQueryClient } from "@tanstack/react-query"
@@ -400,10 +400,12 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     }}
                 />
 
-                <ReceiptDialog 
+                <HospitalReceiptDialog 
                     open={receiptDialogOpen}
                     onOpenChange={setReceiptDialogOpen}
                     transaction={selectedSaleForPrint}
+                    patient={admission?.patient}
+                    bed={admission?.bed}
                 />
 
                 <DischargeDialog 

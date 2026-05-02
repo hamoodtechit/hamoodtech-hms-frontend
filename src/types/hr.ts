@@ -64,6 +64,10 @@ export interface Employee {
   createdAt: string;
   updatedAt: string;
   photoUrl?: string;
+  visitCharge?: number;
+  repeatVisitCharge?: number;
+  repeatVisitDayGap?: number;
+  reportCharge?: number;
   department?: Department;
   designation?: Designation;
 }
@@ -90,6 +94,10 @@ export interface EmployeePayload {
   userId?: string;
   chamberOrRoomNumber?: string;
   photoUrl?: string;
+  visitCharge?: number;
+  repeatVisitCharge?: number;
+  repeatVisitDayGap?: number;
+  reportCharge?: number;
 }
 
 export interface HRPaginatedResponse<T> {

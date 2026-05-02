@@ -143,6 +143,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const [receiptOpen, setReceiptOpen] = useState(false)
     // Extra Charge State
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
+    const [isDraftPrint, setIsDraftPrint] = useState(false)
     // Global Discount State
     const [overallDiscountFixed, setOverallDiscountFixed] = useState(0)
     const [overallDiscountPercent, setOverallDiscountPercent] = useState(0)
@@ -169,16 +170,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const hospitalTotals = useMemo(() => {
         const t = data?.hospital?.totals
         return {
-            totalBill: Number(t?.totalBill || t?.totalPrice || t?.netPrice || 0),
-            totalPaid: Number(t?.totalPaid || t?.paidAmount || 0),
-            totalDue: Number(t?.totalDue || t?.dueAmount || 0)
+            totalBill: Number(t?.netPrice || t?.totalBill || t?.totalPrice || 0),
+            totalPaid: Number(t?.paidAmount || t?.totalPaid || 0),
+            totalDue: Number(t?.dueAmount || t?.totalDue || 0)
         }
     }, [data?.hospital?.totals])
 
     // Use grandTotal directly from API (includes both hospital + pharmacy)
-    const grandTotalBill = Number(data?.grandTotal?.totalBill || data?.grandTotal?.totalPrice || data?.grandTotal?.netPrice || (hospitalTotals.totalBill + pharmacyTotals.totalBill))
-    const grandTotalPaid = Number(data?.grandTotal?.totalPaid || data?.grandTotal?.paidAmount || (hospitalTotals.totalPaid + pharmacyTotals.totalPaid))
-    const grandTotalDue = Number(data?.grandTotal?.totalDue || data?.grandTotal?.dueAmount || (hospitalTotals.totalDue + pharmacyTotals.totalDue))
+    const grandTotalBill = Number(data?.grandTotal?.netPrice || data?.grandTotal?.totalBill || data?.grandTotal?.totalPrice || (hospitalTotals.totalBill + pharmacyTotals.totalBill))
+    const grandTotalPaid = Number(data?.grandTotal?.paidAmount || data?.grandTotal?.totalPaid || (hospitalTotals.totalPaid + pharmacyTotals.totalPaid))
+    const grandTotalDue = Number(data?.grandTotal?.dueAmount || data?.grandTotal?.totalDue || (hospitalTotals.totalDue + pharmacyTotals.totalDue))
 
     // Calculate Overall Discount Amount
     const overallDiscountAmount = useMemo(() => {
@@ -239,7 +240,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             onSuccess: (res: any) => {
                 toast.success(res.message || "Patient discharged successfully")
                 onSuccess?.()
-                // Instead of immediately closing, open the receipt
+                setIsDraftPrint(false)
                 setReceiptOpen(true)
             },
             onError: (err: any) => {
@@ -524,15 +525,6 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                         </Select>
                                                     </div>
                                                 </div>
-                                                <div className="space-y-1.5 mt-2">
-                                                    <Label className="text-[10px] font-black text-muted-foreground uppercase">Payment Note (Optional)</Label>
-                                                    <Input 
-                                                        placeholder="Add payment memo..."
-                                                        value={paymentNote}
-                                                        onChange={(e) => setPaymentNote(e.target.value)}
-                                                        className="h-9 bg-background border-primary/5 text-xs font-bold"
-                                                    />
-                                                </div>
                                             </div>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-emerald-500/5 rounded-[2rem] border border-emerald-500/10 space-y-4">
@@ -545,6 +537,16 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                                 </div>
                                             </div>
                                         )}
+                                        
+                                        <div className="space-y-1.5 mt-4">
+                                            <Label className="text-[10px] font-black text-muted-foreground uppercase">Remarks (Optional)</Label>
+                                            <Textarea 
+                                                placeholder="Add remarks..."
+                                                value={paymentNote}
+                                                onChange={(e) => setPaymentNote(e.target.value)}
+                                                className="min-h-[60px] bg-background border-primary/5 text-xs font-bold resize-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -556,14 +558,25 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isCompleting} className="rounded-xl px-6 h-11 font-black uppercase text-xs">
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleComplete} 
-                        disabled={isCompleting || isLoading} 
-                        className="rounded-xl px-8 h-11 font-black uppercase text-xs gap-2 shadow-lg shadow-primary/20"
-                    >
-                        {isCompleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
-                        Finalize & Discharge
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button 
+                            variant="secondary"
+                            onClick={() => { setIsDraftPrint(true); setReceiptOpen(true); }} 
+                            disabled={isCompleting || isLoading} 
+                            className="rounded-xl px-6 h-11 font-black uppercase text-xs gap-2"
+                        >
+                            <Receipt className="h-4 w-4" />
+                            Print Draft Bill
+                        </Button>
+                        <Button 
+                            onClick={handleComplete} 
+                            disabled={isCompleting || isLoading} 
+                            className="rounded-xl px-8 h-11 font-black uppercase text-xs gap-2 shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                            {isCompleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
+                            Finalize & Discharge
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
 
@@ -581,13 +594,17 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             onOpenChange={(v) => {
                 setReceiptOpen(v)
                 if (!v) {
-                    onOpenChange(false)
+                    setIsDraftPrint(false)
+                    if (!isDraftPrint) {
+                        onOpenChange(false)
+                    }
                 }
             }}
             admission={admission}
             data={data || null}
-            finalPaidAmount={paidAmount}
+            finalPaidAmount={isDraftPrint ? 0 : paidAmount}
             overallDiscount={overallDiscountAmount}
+            remarks={paymentNote}
         />
         </>
     )

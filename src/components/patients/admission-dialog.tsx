@@ -81,6 +81,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         doctorId: "",
         refDoctorName: "",
         departmentId: "",
+        admissionCharge: "100",
     })
 
     const [saleItems, setSaleItems] = useState<any[]>([])
@@ -161,6 +162,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     doctorId: admission.doctorId || "",
                     refDoctorName: admission.refDoctorName || "",
                     departmentId: admission.departmentId || "",
+                    admissionCharge: (admission as any).admissionCharge !== undefined ? String((admission as any).admissionCharge) : ((admission as any).fees !== undefined ? String((admission as any).fees) : "100"),
                 })
                 setSelectedPatient(admission.patient || null)
                 setSaleItems([]) // Reset for now
@@ -180,6 +182,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     doctorId: "",
                     refDoctorName: "",
                     departmentId: "",
+                    admissionCharge: "100",
                 })
                 setSelectedPatient(null)
                 setSaleItems([])
@@ -238,7 +241,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     }
 
     // Totals logic
-    const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
+    const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) + Number(formData.admissionCharge || 0)
     const totalItemDiscount = saleItems.reduce((sum, item) => sum + (Number(item.discountAmount) || 0), 0)
     
     const discountedSubtotal = Math.max(0, subtotal - totalItemDiscount)
@@ -292,6 +295,12 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             return
         }
 
+        const finalBranchId = (activeStoreId === "all" ? stores[0]?.id : activeStoreId) || formData.branchId;
+        if (!finalBranchId) {
+            toast.error("Branch ID is required. Please select a valid branch or ensure your store context is loaded.")
+            return
+        }
+
         setLoading(true)
         try {
             // 1. Check if patient data needs updating
@@ -336,7 +345,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     id: admission.id,
                     data: {
                         ...formData,
-                        branchId: activeStoreId || formData.branchId,
+                        admissionCharge: Number(formData.admissionCharge),
+                        branchId: finalBranchId,
                         saleItems: saleItems.map(item => ({
                             ...item,
                             price: Number(item.price),
@@ -361,7 +371,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                 resAdmission = await createMutation.mutateAsync({
                     ...formData,
-                    branchId: activeStoreId || formData.branchId,
+                    admissionCharge: Number(formData.admissionCharge),
+                    branchId: finalBranchId,
                     saleItems: saleItems.map(item => ({
                         ...item,
                         price: Number(item.price),
@@ -417,31 +428,9 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     </DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[80vh] px-6">
+                <ScrollArea className="max-h-[70vh] px-6" type="always">
                     <div className="grid gap-6 py-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label>Active Branch</Label>
-                                <Input value={activeBranchName} disabled className="bg-muted" />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Status</Label>
-                                <Select 
-                                    value={formData.status} 
-                                    onValueChange={(val: any) => setFormData(prev => ({ ...prev, status: val }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="admitted">Admitted</SelectItem>
-                                        <SelectItem value="discharged">Discharged</SelectItem>
-                                        <SelectItem value="transferred">Transferred</SelectItem>
-                                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                        {/* Branch and Status are handled automatically */}
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -476,15 +465,26 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                             {/* Service Selection Section */}
                             <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                                        Admission Charges & Services
-                                    </h4>
-                                    <span className="text-[10px] font-bold text-muted-foreground italic">Add registration fees or initial tests</span>
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <SearchableSelect 
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
+                                            Admission Charge
+                                        </h4>
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Admission Charge (Tk)</Label>
+                                        <Input 
+                                            type="number"
+                                            placeholder="Enter amount..."
+                                            value={formData.admissionCharge}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, admissionCharge: e.target.value }))}
+                                            className="h-10 text-sm font-bold"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
+                                            Services
+                                        </h4>
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Select Additional Services</Label>
+                                        <SearchableSelect 
                                         value=""
                                         onChange={(val) => {
                                             const service = tests.find(t => t.id === val)
@@ -505,6 +505,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                         options={tests.map(t => ({ id: t.id, name: `${t.name} - ${formatCurrency(t.price)}` }))}
                                         placeholder="Search and add service..."
                                     />
+                                </div>
                                 </div>
 
                                 {saleItems.length > 0 && (
