@@ -72,9 +72,6 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                     Register Session Details
                                 </DialogTitle>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="font-mono text-[10px] py-0">
-                                        ID: {session?.id}
-                                    </Badge>
                                     <Badge 
                                         className="capitalize"
                                         variant={session?.status === 'open' ? 'success' : 'warning'}
@@ -119,14 +116,14 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                         label="Total Sales"
                                         value={formatCurrency(Number(session?.salesAmount || 0))}
                                         subValue={`${session?.salesCount || 0} Transactions`}
-                                        className="bg-emerald-50/50 border-emerald-100"
+                                        className="bg-emerald-500/10 border-emerald-500/20"
                                     />
                                     <CardItem 
                                         icon={<Package className="h-5 w-5 text-rose-500" />}
                                         label="Expenses/Purchases"
                                         value={formatCurrency(Number(session?.expensesAmount || 0))}
                                         subValue={`${session?.expensesCount || 0} Records`}
-                                        className="bg-rose-50/50 border-rose-100"
+                                        className="bg-rose-500/10 border-rose-500/20"
                                     />
                                     <CardItem 
                                         icon={<DollarSign className="h-5 w-5 text-primary" />}
@@ -151,7 +148,8 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                             </TabsList>
 
                                             <TabsContent value="sales" className="mt-4 bg-card rounded-3xl border shadow-sm overflow-hidden">
-                                                <Table>
+                                                <ScrollArea className="h-[400px]">
+                                                    <Table>
                                                     <TableHeader className="bg-muted/50">
                                                         <TableRow>
                                                             <TableHead>Invoice</TableHead>
@@ -194,6 +192,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                         )}
                                                     </TableBody>
                                                 </Table>
+                                                </ScrollArea>
                                             </TabsContent>
 
                                             <TabsContent value="info" className="mt-4">
