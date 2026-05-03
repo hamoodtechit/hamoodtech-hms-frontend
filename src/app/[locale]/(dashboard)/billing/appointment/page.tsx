@@ -4,7 +4,7 @@ import { AppointmentDetailsDialog } from "@/components/appointments/appointment-
 import { AppointmentDialog } from "@/components/appointments/appointment-dialog"
 import { AppointmentSaleDialog } from "@/components/appointments/appointment-sale-dialog"
 import { AppointmentPaymentDialog } from "@/components/appointments/appointment-payment-dialog"
-import { HospitalReceiptDialog } from "@/components/patients/hospital-receipt-dialog"
+import { AppointmentReceiptDialog } from "@/components/appointments/appointment-receipt-dialog"
 import { AppointmentFilters, AppointmentFilterValues } from "@/components/appointments/appointment-filters"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { Badge } from "@/components/ui/badge"
@@ -367,7 +367,7 @@ export default function AppointmentHistoryPage() {
                     }}
                 />
 
-                <HospitalReceiptDialog
+                <AppointmentReceiptDialog
                     open={receiptDialogOpen}
                     onOpenChange={setReceiptDialogOpen}
                     transaction={lastCreatedSale}
