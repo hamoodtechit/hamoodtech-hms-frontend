@@ -143,6 +143,7 @@ export default function AppointmentHistoryPage() {
                                     <TableHead>Patient</TableHead>
                                     <TableHead>Professional</TableHead>
                                     <TableHead>Fees</TableHead>
+                                    <TableHead>Paid</TableHead>
                                     <TableHead>Notes</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -151,7 +152,7 @@ export default function AppointmentHistoryPage() {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-72 text-center">
+                                        <TableCell colSpan={7} className="h-72 text-center">
                                             <div className="flex flex-col items-center gap-3">
                                                 <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
                                                 <span className="text-sm font-medium text-muted-foreground">Fetching Appointments...</span>
@@ -160,7 +161,7 @@ export default function AppointmentHistoryPage() {
                                     </TableRow>
                                 ) : appointments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-72 text-center text-muted-foreground">
+                                        <TableCell colSpan={7} className="h-72 text-center text-muted-foreground">
                                             No appointments found.
                                         </TableCell>
                                     </TableRow>
@@ -201,6 +202,11 @@ export default function AppointmentHistoryPage() {
                                             <TableCell>
                                                 <div className="font-bold text-sm text-foreground/80">
                                                     {apt.fees ? formatCurrency(Number(apt.fees)) : '—'}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="font-bold text-sm text-emerald-600">
+                                                    {apt.sale?.paidAmount ? formatCurrency(Number(apt.sale.paidAmount)) : '—'}
                                                 </div>
                                             </TableCell>
                                             <TableCell>

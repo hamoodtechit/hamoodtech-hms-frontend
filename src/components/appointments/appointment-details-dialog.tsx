@@ -53,7 +53,8 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
     const { stores, activeStoreId } = useStoreContext()
     const activeBranch = stores.find(s => s.id === activeStoreId) || stores[0]
     
-    const appointment = response?.data?.appointment
+    const appointment = response?.data?.appointment || response?.data || (response as any)?.appointment
+    const sale = response?.data?.sale || (response as any)?.sale
     const [status, setStatus] = useState<AppointmentStatus>("pending")
     const [note, setNote] = useState("")
     const [isEditing, setIsEditing] = useState(false)
