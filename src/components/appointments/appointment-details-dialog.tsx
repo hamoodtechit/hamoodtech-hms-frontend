@@ -250,8 +250,6 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                 </head>
                 <body>
                     ${printContent}
-                    <div class="page-break"></div>
-                    ${printContent.replace('Appointment Slip', 'Appointment Slip (OFFICE COPY)')}
                 </body>
             </html>
         `)
