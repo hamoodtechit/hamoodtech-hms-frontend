@@ -408,44 +408,46 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             {/* Medical Professional Info */}
                             <DetailSection icon={Stethoscope} title="Medical Info">
                                 <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
-                                <Field label="Department" value={appointment?.department?.name} icon={Building2} />
-                                    <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
-                                    <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} />
-                                {appointment?.referralPerson && (
-                                    <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} />
-                                )}
-                            </DetailSection>
-
-
-                            {/* Additional Info */}
-                            <div className="md:col-span-2 space-y-3 pt-4">
-                                <div className="flex items-center justify-between gap-2 text-primary font-bold text-[11px] uppercase tracking-[0.2em]">
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="h-3.5 w-3.5" />
-                                        <h3>Clinical Notes / Instructions</h3>
+                                <div className="flex gap-4">
+                                    <Field label="Department" value={appointment?.department?.name} icon={Building2} className="flex-1" />
+                                    <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} className="flex-1" />
+                                </div>
+                                <div className="flex gap-4">
+                                    <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} className="flex-1" />
+                                    {appointment?.referralPerson && (
+                                        <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} className="flex-1" />
+                                    )}
+                                </div>
+                                
+                                <div className="space-y-2 pt-3 border-t border-secondary/20">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70">
+                                            <FileText className="h-3 w-3" />
+                                            <span>Clinical Note</span>
+                                        </div>
+                                        {isEditing && (
+                                            <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-black uppercase bg-primary/5 text-primary border-primary/20">Editing</Badge>
+                                        )}
                                     </div>
-                                    {isEditing && (
-                                        <span className="text-[9px] text-muted-foreground animate-pulse">EDITING MODE</span>
-                                    )}
+                                    <div className={cn(
+                                        "transition-all duration-300",
+                                        isEditing ? "bg-background p-3 rounded-xl border-2 border-primary/20 shadow-inner" : ""
+                                    )}>
+                                        {isEditing ? (
+                                            <textarea 
+                                                value={note}
+                                                onChange={(e) => setNote(e.target.value)}
+                                                className="w-full bg-transparent border-none focus:ring-0 text-xs font-bold leading-relaxed min-h-[60px] resize-none"
+                                                placeholder="Update notes..."
+                                            />
+                                        ) : (
+                                            <p className="text-xs font-bold leading-relaxed text-foreground/80">
+                                                {appointment?.note || "No clinical notes provided."}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className={cn(
-                                    "p-6 rounded-2xl transition-all duration-300",
-                                    isEditing ? "bg-background border-2 border-primary/20 shadow-inner" : "bg-secondary/5 border border-dashed border-secondary/40"
-                                )}>
-                                    {isEditing ? (
-                                        <textarea 
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            className="w-full bg-transparent border-none focus:ring-0 text-sm leading-relaxed min-h-[120px] resize-none"
-                                            placeholder="Update clinical notes or special instructions for the patient..."
-                                        />
-                                    ) : (
-                                        <p className="whitespace-pre-wrap text-sm leading-relaxed min-h-[100px]">
-                                            {appointment?.note || "No special clinical notes provided for this appointment."}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                            </DetailSection>
 
                             <Separator className="md:col-span-2 opacity-50" />
 
