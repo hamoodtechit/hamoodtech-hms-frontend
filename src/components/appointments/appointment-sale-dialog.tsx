@@ -167,9 +167,9 @@ export function AppointmentSaleDialog({
                         price: fees,
                         mrp: fees,
                         quantity: 1,
-                        discountPercentage: discountPercentage,
-                        discountAmount: discountAmount,
-                        totalPrice: netAmount
+                        discountPercentage: 0,
+                        discountAmount: 0,
+                        totalPrice: fees
                     },
                 ],
             })
