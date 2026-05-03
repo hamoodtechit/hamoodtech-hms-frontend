@@ -223,7 +223,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                     <div className="space-y-6">
                                         {/* Session Context */}
                                         <div className="p-6 bg-card rounded-3xl border shadow-sm space-y-4">
-                                            <h3 className="font-bold flex items-center gap-2 text-slate-800">
+                                            <h3 className="font-bold flex items-center gap-2 text-foreground">
                                                 <Store className="h-5 w-5 text-primary" />
                                                 Context Details
                                             </h3>
