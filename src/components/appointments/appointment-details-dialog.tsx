@@ -82,9 +82,6 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
     }
 
     const handlePrint = () => {
-        const content = printRef.current?.innerHTML
-        if (!content) return
-
         const iframe = document.createElement('iframe')
         iframe.style.position = 'fixed'
         iframe.style.right = '100%'
@@ -99,90 +96,44 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
 
         const printContent = `
             <div class="receipt-container">
-                <!-- Header -->
                 <div class="header">
                     <img src="${activeBranch?.logoUrl || '/Logo.png'}" alt="Logo" class="hospital-logo" />
                     <h1 class="hospital-name">${activeBranch?.name || 'PATWARY GENERAL HOSPITAL'}</h1>
                     <p class="hospital-info">${activeBranch?.address || ''}</p>
                     <p class="hospital-info">Ph: ${activeBranch?.phone || ''}</p>
-                    
-                    <div class="slip-tag">
-                        Appointment Slip
-                    </div>
+                    <div class="slip-tag">Appointment Slip</div>
                 </div>
-
-                <!-- Info Grid -->
                 <div class="info-grid">
                     <div class="grid-row border-b">
-                        <div class="grid-cell border-r">
-                            <span class="label">Patient Name:</span>
-                            <span class="value uppercase">${appointment?.patient?.name}</span>
-                        </div>
-                        <div class="grid-cell">
-                            <span class="label">Reg. ID:</span>
-                            <span class="value">${appointment?.patient?.patientNumber || 'N/A'}</span>
-                        </div>
+                        <div class="grid-cell border-r"><span class="label">Patient Name:</span><span class="value uppercase">${appointment?.patient?.name}</span></div>
+                        <div class="grid-cell"><span class="label">Reg. ID:</span><span class="value">${appointment?.patient?.patientNumber || 'N/A'}</span></div>
                     </div>
                     <div class="grid-row border-b">
-                        <div class="grid-cell border-r">
-                            <span class="label">Consultant:</span>
-                            <span class="value uppercase">${appointment?.doctor?.fullName || appointment?.doctor?.name || 'N/A'}</span>
-                        </div>
-                        <div class="grid-cell">
-                            <span class="label">Department:</span>
-                            <span class="value uppercase">${appointment?.department?.name || 'N/A'}</span>
-                        </div>
+                        <div class="grid-cell border-r"><span class="label">Consultant:</span><span class="value uppercase">${appointment?.doctor?.fullName || appointment?.doctor?.name || 'N/A'}</span></div>
+                        <div class="grid-cell"><span class="label">Department:</span><span class="value uppercase">${appointment?.department?.name || 'N/A'}</span></div>
                     </div>
                     <div class="grid-row">
-                        <div class="grid-cell border-r">
-                            <span class="label">Appt Date:</span>
-                            <span class="value">${appointment?.date ? format(new Date(appointment.date), "dd/MM/yyyy") : 'N/A'}</span>
-                        </div>
-                        <div class="grid-cell">
-                            <span class="label">Time / Sl:</span>
-                            <span class="value">${appointment?.timeSlot} / ${appointment?.serialNumber?.split('-')?.[1] || appointment?.serialNumber || '—'}</span>
-                        </div>
+                        <div class="grid-cell border-r"><span class="label">Appt Date:</span><span class="value">${appointment?.date ? format(new Date(appointment.date), "dd/MM/yyyy") : 'N/A'}</span></div>
+                        <div class="grid-cell"><span class="label">Time / Sl:</span><span class="value">${appointment?.timeSlot} / ${appointment?.serialNumber?.split('-')?.[1] || appointment?.serialNumber || '—'}</span></div>
                     </div>
                 </div>
-
-                <!-- Main Content Table -->
                 <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th class="text-right">Details</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Description</th><th class="text-right">Details</th></tr></thead>
                     <tbody>
-                        <tr>
-                            <td>Consultation Fee</td>
-                            <td class="text-right font-bold">${(appointment as any)?.fee || '—'}</td>
-                        </tr>
-                        <tr>
-                            <td>Room / Chamber</td>
-                            <td class="text-right">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</td>
-                        </tr>
+                        <tr><td>Consultation Fee</td><td class="text-right font-bold">${(appointment as any)?.fee || '—'}</td></tr>
+                        <tr><td>Room / Chamber</td><td class="text-right">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</td></tr>
                     </tbody>
                 </table>
-
-                <!-- Note Section -->
                 <div class="notes-section">
                     <div class="notes-header">Instructions / Note:</div>
                     <div class="notes-body">${appointment?.note || "Please arrive 15 minutes early."}</div>
                 </div>
-
-                <!-- Footer -->
                 <div class="footer">
-                    <div class="signature-box">
-                        <div class="sig-line"></div>
-                        <div class="sig-label">Authorized Signature</div>
-                    </div>
-                    <div class="print-meta">
-                        Printed on: ${format(new Date(), "dd/MM/yyyy p")}
-                    </div>
+                    <div class="signature-box"><div class="sig-line"></div><div class="sig-label">Authorized Signature</div></div>
+                    <div class="print-meta">Printed on: ${format(new Date(), "dd/MM/yyyy p")}</div>
                 </div>
             </div>
-        `;
+        `
 
         doc.open()
         doc.write(`
@@ -191,35 +142,13 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                     <title>Appointment Slip - ${appointment?.patient?.name}</title>
                     <style>
                         @page { size: A5; margin: 5mm; }
-                        body { 
-                            font-family: 'Segoe UI', Arial, sans-serif; 
-                            color: #000; 
-                            margin: 0; 
-                            padding: 0;
-                            background: white;
-                        }
-                        .receipt-container { 
-                            width: 100%; 
-                            padding: 2mm; 
-                            box-sizing: border-box;
-                        }
+                        body { font-family: 'Segoe UI', Arial, sans-serif; color: #000; margin: 0; padding: 0; background: white; }
+                        .receipt-container { width: 100%; padding: 2mm; box-sizing: border-box; }
                         .header { text-align: center; margin-bottom: 5mm; }
                         .hospital-logo { height: 50px; margin-bottom: 2mm; }
                         .hospital-name { font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1; }
                         .hospital-info { font-size: 10px; font-weight: 700; margin: 2px 0; opacity: 0.8; }
-                        
-                        .slip-tag { 
-                            display: inline-block;
-                            border: 1px solid #000;
-                            padding: 2px 15px;
-                            border-radius: 20px;
-                            font-size: 12px;
-                            font-weight: 900;
-                            text-transform: uppercase;
-                            margin-top: 3mm;
-                            letter-spacing: 1px;
-                        }
-
+                        .slip-tag { display: inline-block; border: 1px solid #000; padding: 2px 15px; border-radius: 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; margin-top: 3mm; letter-spacing: 1px; }
                         .info-grid { border: 1px solid #000; margin-bottom: 5mm; }
                         .grid-row { display: flex; }
                         .grid-cell { flex: 1; padding: 6px 10px; display: flex; align-items: center; gap: 8px; }
@@ -228,29 +157,22 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                         .label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #444; min-width: 65px; }
                         .value { font-size: 11px; font-weight: 700; }
                         .uppercase { text-transform: uppercase; }
-
                         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
                         .items-table th { text-align: left; padding: 4px 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; border-top: 1px solid #000; }
                         .items-table td { padding: 6px 10px; font-size: 11px; font-weight: 600; border-bottom: 1px dashed #eee; }
                         .text-right { text-align: right; }
                         .font-bold { font-weight: 900; }
-
                         .notes-section { border: 1px dotted #000; padding: 3mm; margin-bottom: 10mm; background: #fafafa; }
                         .notes-header { font-size: 9px; font-weight: 900; text-transform: uppercase; margin-bottom: 1mm; opacity: 0.6; }
                         .notes-body { font-size: 10px; font-weight: 600; line-height: 1.4; }
-
                         .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15mm; }
                         .signature-box { text-align: center; width: 45mm; }
                         .sig-line { border-top: 1px solid #000; margin-bottom: 2mm; }
                         .sig-label { font-size: 9px; font-weight: 800; text-transform: uppercase; }
                         .print-meta { font-size: 8px; font-weight: 600; color: #666; font-family: monospace; }
-
-                        .page-break { page-break-after: always; height: 10mm; border-bottom: 1px dashed #ccc; margin: 10mm 0; }
                     </style>
                 </head>
-                <body>
-                    ${printContent}
-                </body>
+                <body>${printContent}</body>
             </html>
         `)
         doc.close()
