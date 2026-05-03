@@ -60,7 +60,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-6xl p-0 overflow-hidden bg-background border-none shadow-2xl">
+            <DialogContent className="w-[95vw] max-w-7xl p-0 overflow-hidden bg-background border-none shadow-2xl">
                 <DialogHeader className="p-6 bg-card border-b sticky top-0 z-10 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
