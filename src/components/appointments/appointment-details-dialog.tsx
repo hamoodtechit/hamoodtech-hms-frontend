@@ -185,10 +185,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         `;
 
         doc.open()
-        doc.write(\`
+        doc.write(`
             <html>
                 <head>
-                    <title>Appointment Slip - \${appointment?.patient?.name}</title>
+                    <title>Appointment Slip - ${appointment?.patient?.name}</title>
                     <style>
                         @page { size: A5; margin: 5mm; }
                         body { 
@@ -249,12 +249,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                     </style>
                 </head>
                 <body>
-                    \${printContent}
-                    <div class="page-break"></div>
-                    \${printContent.replace('Appointment Slip', 'Appointment Slip (OFFICE COPY)')}
+                    ${printContent}
                 </body>
             </html>
-        \`)
+        `)
         doc.close()
 
         setTimeout(() => {
