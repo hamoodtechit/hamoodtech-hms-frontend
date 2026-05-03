@@ -164,8 +164,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
             // Convert time strings (HH:mm) to valid ISO DateTime for backend
             const payload = {
                 ...formData,
-                dutyStartTime: formData.dutyStartTime ? `1970-01-01T${formData.dutyStartTime}:00.000Z` : null,
-                dutyEndTime: formData.dutyEndTime ? `1970-01-01T${formData.dutyEndTime}:00.000Z` : null,
+                dutyStartTime: formData.dutyStartTime ? `1970-01-01T${formData.dutyStartTime}:00.000Z` : undefined,
+                dutyEndTime: formData.dutyEndTime ? `1970-01-01T${formData.dutyEndTime}:00.000Z` : undefined,
             }
 
             if (isEdit && employee) {

@@ -14,6 +14,7 @@ export interface Appointment {
   referralPersonId?: string;
   referralPerson?: any;
   chamberOrRoomNumber?: string;
+  fees?: number | string | null;
   createdAt: string;
   updatedAt: string;
   patient: {
@@ -58,6 +59,7 @@ export interface AppointmentPayload {
   status?: AppointmentStatus;
   referralPersonId?: string;
   chamberOrRoomNumber?: string;
+  fees?: number;
 }
 
 export interface AppointmentPaginatedResponse {

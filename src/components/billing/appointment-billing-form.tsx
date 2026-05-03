@@ -149,6 +149,7 @@ export function AppointmentBillingForm() {
                 status: 'pending',
                 chamberOrRoomNumber: chamberOrRoomNumber || undefined,
                 referralPersonId: selectedReferralPersonId || undefined,
+                fees: appointmentFee || undefined,
             })
 
             toast.success("Appointment successfully scheduled!")

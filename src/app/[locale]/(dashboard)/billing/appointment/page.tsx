@@ -2,6 +2,8 @@
 
 import { AppointmentDetailsDialog } from "@/components/appointments/appointment-details-dialog"
 import { AppointmentDialog } from "@/components/appointments/appointment-dialog"
+import { AppointmentSaleDialog } from "@/components/appointments/appointment-sale-dialog"
+import { AppointmentPaymentDialog } from "@/components/appointments/appointment-payment-dialog"
 import { AppointmentFilters, AppointmentFilterValues } from "@/components/appointments/appointment-filters"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { Badge } from "@/components/ui/badge"
@@ -23,12 +25,14 @@ import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { format } from "date-fns"
-import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, Stethoscope, Trash2 } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, ShoppingCart, Stethoscope, Trash2 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 import Link from "next/link"
+import { useCurrency } from "@/hooks/use-currency"
+import { Sale } from "@/types/sales"
 
 export default function AppointmentHistoryPage() {
     const { hasPermission } = usePermissions()
@@ -39,8 +43,14 @@ export default function AppointmentHistoryPage() {
     const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false)
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
+
+    // Sale & Payment dialogs
+    const [saleDialogOpen, setSaleDialogOpen] = useState(false)
+    const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+    const [lastCreatedSale, setLastCreatedSale] = useState<Sale | null>(null)
     
     const { activeStoreId } = useStoreContext()
+    const { formatCurrency } = useCurrency()
 
     // Fetch Lists
     const { data, isLoading, refetch } = useAppointments({
@@ -130,6 +140,7 @@ export default function AppointmentHistoryPage() {
                                     <TableHead className="pl-6">Appointment / Serial</TableHead>
                                     <TableHead>Patient</TableHead>
                                     <TableHead>Professional</TableHead>
+                                    <TableHead>Fees</TableHead>
                                     <TableHead>Notes</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right pr-6">Actions</TableHead>
@@ -186,6 +197,11 @@ export default function AppointmentHistoryPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
+                                                <div className="font-bold text-sm text-foreground/80">
+                                                    {apt.fees ? formatCurrency(Number(apt.fees)) : '—'}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
                                                 <div className="max-w-[150px] truncate text-[11px] text-muted-foreground font-medium" title={apt.note}>
                                                     {apt.note || '—'}
                                                 </div>
@@ -217,6 +233,20 @@ export default function AppointmentHistoryPage() {
                                                             }}
                                                         >
                                                             <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {hasPermission('sale:create') && apt.fees && Number(apt.fees) > 0 && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-600 text-muted-foreground"
+                                                            onClick={() => {
+                                                                setSelectedAppointment(apt)
+                                                                setSaleDialogOpen(true)
+                                                            }}
+                                                            title="Record Sale"
+                                                        >
+                                                            <ShoppingCart className="h-4 w-4" />
                                                         </Button>
                                                     )}
                                                     {hasPermission('appointment:delete') && (
@@ -279,6 +309,30 @@ export default function AppointmentHistoryPage() {
                     open={detailsDialogOpen}
                     onOpenChange={setDetailsDialogOpen}
                     appointmentId={selectedAppointment?.id || null}
+                />
+
+                <AppointmentSaleDialog
+                    open={saleDialogOpen}
+                    onOpenChange={setSaleDialogOpen}
+                    appointment={selectedAppointment}
+                    onSaleCreated={(sale) => {
+                        setLastCreatedSale(sale)
+                        refetch()
+                        // If there's due, open payment dialog
+                        if (Number(sale.dueAmount) > 0) {
+                            setPaymentDialogOpen(true)
+                        }
+                    }}
+                />
+
+                <AppointmentPaymentDialog
+                    open={paymentDialogOpen}
+                    onOpenChange={setPaymentDialogOpen}
+                    sale={lastCreatedSale}
+                    onPaymentSuccess={() => {
+                        refetch()
+                        setLastCreatedSale(null)
+                    }}
                 />
             </div>
         </PermissionGuard>

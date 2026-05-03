@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -120,7 +120,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                 <table class="items-table">
                     <thead><tr><th>Description</th><th class="text-right">Details</th></tr></thead>
                     <tbody>
-                        <tr><td>Consultation Fee</td><td class="text-right font-bold">${(appointment as any)?.fee || '—'}</td></tr>
+                        <tr><td>Consultation Fee</td><td class="text-right font-bold">${(appointment as any)?.fees ? formatCurrency((appointment as any).fees) : '—'}</td></tr>
                         <tr><td>Room / Chamber</td><td class="text-right">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</td></tr>
                     </tbody>
                 </table>
@@ -341,11 +341,12 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                         <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} className="flex-1" />
                                     </div>
                                     <div className="flex gap-4">
+                                        <Field label="Fees" value={(appointment as any)?.fees ? formatCurrency(Number((appointment as any).fees)) : '—'} className="flex-1" />
                                         <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} className="flex-1" />
-                                        {appointment?.referralPerson && (
-                                            <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} className="flex-1" />
-                                        )}
                                     </div>
+                                    {appointment?.referralPerson && (
+                                        <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} className="mt-4" />
+                                    )}
                                     
                                     <div className="pt-3 border-t border-secondary/20 flex flex-col md:flex-row md:items-start gap-3 md:gap-6">
                                         <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70 shrink-0 md:pt-1">
