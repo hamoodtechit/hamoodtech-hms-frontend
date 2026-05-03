@@ -156,7 +156,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                         <TableRow>
                                                             <TableHead>Invoice</TableHead>
                                                             <TableHead>Patient</TableHead>
-                                                            <TableHead>Method</TableHead>
+                                                            <TableHead>Time</TableHead>
                                                             <TableHead className="text-right">Amount</TableHead>
                                                             <TableHead className="text-center">Status</TableHead>
                                                         </TableRow>
@@ -173,11 +173,8 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                             >
                                                                 <TableCell className="font-bold font-mono text-xs">{sale.invoiceNumber}</TableCell>
                                                                 <TableCell className="text-xs font-semibold">{sale.patientId.split('-')[0]}...</TableCell>
-                                                                <TableCell className="capitalize text-[10px] font-bold">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <CreditCard className="h-3 w-3 text-muted-foreground" />
-                                                                        {sale.paymentMethod || 'cash'}
-                                                                    </div>
+                                                                <TableCell className="text-[10px] font-bold text-muted-foreground uppercase">
+                                                                    {format(new Date(sale.createdAt), "HH:mm")}
                                                                 </TableCell>
                                                                 <TableCell className="text-right font-black text-primary">
                                                                     {formatCurrency(Number(sale.netPrice || sale.totalPrice))}
