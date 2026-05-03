@@ -46,6 +46,14 @@ export interface Appointment {
     id: string;
     name: string;
   };
+  sale?: {
+    id: string;
+    invoiceNumber: string;
+    totalPrice: number | string;
+    paidAmount: number | string;
+    dueAmount: number | string;
+    paymentStatus: string;
+  };
 }
 
 export interface AppointmentPayload {
@@ -82,5 +90,6 @@ export interface AppointmentDetailsResponse {
   message: string;
   data: {
     appointment: Appointment;
+    sale?: any;
   };
 }
