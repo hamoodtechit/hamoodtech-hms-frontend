@@ -2,6 +2,7 @@
 
 import { Appointment } from "@/types/appointment"
 import { PaymentMethod } from "@/types/pharmacy"
+import { useUpdateAppointment } from "@/hooks/appointment-queries"
 import { useCreateSale } from "@/hooks/sales-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useStoreContext } from "@/store/use-store-context"
@@ -55,6 +56,7 @@ export function AppointmentSaleDialog({
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const createSaleMutation = useCreateSale()
+    const updateAppointmentMutation = useUpdateAppointment()
 
     const { data: accountsRes } = useFinanceAccounts({
         branchId: activeStoreId || undefined,
@@ -68,6 +70,8 @@ export function AppointmentSaleDialog({
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
     const [paidAmount, setPaidAmount] = useState<number>(0)
+    const [discountPercentage, setDiscountPercentage] = useState<number>(0)
+    const [discountAmount, setDiscountAmount] = useState<number>(0)
     const [paymentNote, setPaymentNote] = useState("")
 
     // Derived
@@ -76,9 +80,31 @@ export function AppointmentSaleDialog({
         return Number(appointment.fees) || 0
     }, [appointment])
 
+    const netAmount = useMemo(() => {
+        return Math.max(0, fees - discountAmount)
+    }, [fees, discountAmount])
+
+    // Update discount amount when percentage changes
+    const handleDiscountPercentageChange = (p: number) => {
+        setDiscountPercentage(p)
+        const amount = (fees * p) / 100
+        setDiscountAmount(amount)
+        setPaidAmount(fees - amount)
+    }
+
+    // Update discount percentage when amount changes
+    const handleDiscountAmountChange = (a: number) => {
+        setDiscountAmount(a)
+        const percentage = fees > 0 ? (a / fees) * 100 : 0
+        setDiscountPercentage(Number(percentage.toFixed(2)))
+        setPaidAmount(fees - a)
+    }
+
     // Auto-set paid amount to full fee when dialog opens
     useEffect(() => {
         if (open && fees > 0) {
+            setDiscountPercentage(0)
+            setDiscountAmount(0)
             setPaidAmount(fees)
             setSelectedAccountId("")
             setPaymentMethod("cash")
@@ -93,7 +119,7 @@ export function AppointmentSaleDialog({
         }
     }, [accounts, selectedAccountId])
 
-    const dueAmount = Math.max(0, fees - paidAmount)
+    const dueAmount = Math.max(0, netAmount - paidAmount)
 
     const handleRecordSale = async () => {
         if (!appointment || !selectedAccountId) {
@@ -111,17 +137,17 @@ export function AppointmentSaleDialog({
                 branchId: activeStoreId || "",
                 patientId: appointment.patientId,
                 appointmentId: appointment.id,
-                type: "appointment",
+                type: "hospital",
                 doctorId: appointment.doctorId,
                 referralPersonId: appointment.referralPersonId || undefined,
                 chamberOrRoomNumber: appointment.chamberOrRoomNumber || undefined,
-                status: paidAmount >= fees ? "completed" : "pending",
+                status: paidAmount >= netAmount ? "completed" : "pending",
                 paymentMethod: paymentMethod,
-                paymentStatus: paidAmount >= fees ? "paid" : paidAmount > 0 ? "partial" : "due",
+                paymentStatus: paidAmount >= netAmount ? "paid" : paidAmount > 0 ? "partial" : "due",
                 paidAmount: paidAmount,
                 dueAmount: dueAmount,
-                discountPercentage: 0,
-                discountAmount: 0,
+                discountPercentage: discountPercentage,
+                discountAmount: discountAmount,
                 taxPercentage: 0,
                 taxAmount: 0,
                 payments: paidAmount > 0
@@ -141,11 +167,22 @@ export function AppointmentSaleDialog({
                         price: fees,
                         mrp: fees,
                         quantity: 1,
+                        discountPercentage: discountPercentage,
+                        discountAmount: discountAmount,
+                        totalPrice: netAmount
                     },
                 ],
             })
 
-            toast.success("Sale recorded successfully!")
+            // Update appointment status to confirmed
+            await updateAppointmentMutation.mutateAsync({
+                id: appointment.id,
+                data: {
+                    status: 'confirmed'
+                }
+            })
+
+            toast.success("Sale recorded and appointment confirmed!")
             onOpenChange(false)
             onSaleCreated?.(res.data)
         } catch (error: any) {
@@ -208,16 +245,52 @@ export function AppointmentSaleDialog({
                             </div>
                         </div>
 
-                        {/* Fee Display */}
-                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/20">
-                            <div>
-                                <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-0.5">
-                                    Consultation Fee
-                                </p>
-                                <p className="text-2xl font-black text-primary tracking-tighter">
-                                    {formatCurrency(fees)}
-                                </p>
+                        {/* Fee & Discount Display */}
+                        <div className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-0.5">
+                                        Subtotal (Fee)
+                                    </p>
+                                    <p className="text-xl font-black text-foreground tracking-tighter">
+                                        {formatCurrency(fees)}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-0.5">
+                                        Net Amount
+                                    </p>
+                                    <p className="text-2xl font-black text-primary tracking-tighter">
+                                        {formatCurrency(netAmount)}
+                                    </p>
+                                </div>
                             </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-primary/10">
+                                <div className="space-y-1">
+                                    <Label className="text-[8px] font-black uppercase text-muted-foreground/60">Discount (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        min={0} 
+                                        max={100}
+                                        value={discountPercentage}
+                                        onChange={(e) => handleDiscountPercentageChange(Number(e.target.value) || 0)}
+                                        className="h-8 rounded-lg bg-background/50 border-primary/10 font-bold text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[8px] font-black uppercase text-muted-foreground/60">Discount (Fixed)</Label>
+                                    <Input 
+                                        type="number" 
+                                        min={0} 
+                                        max={fees}
+                                        value={discountAmount}
+                                        onChange={(e) => handleDiscountAmountChange(Number(e.target.value) || 0)}
+                                        className="h-8 rounded-lg bg-background/50 border-primary/10 font-bold text-xs"
+                                    />
+                                </div>
+                            </div>
+
                             {fees <= 0 && (
                                 <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold text-[9px] gap-1 pointer-events-none">
                                     <AlertCircle className="h-3 w-3" />
@@ -305,13 +378,13 @@ export function AppointmentSaleDialog({
                                     <Input
                                         type="number"
                                         min={0}
-                                        max={fees}
+                                        max={netAmount}
                                         value={paidAmount}
                                         onChange={(e) =>
                                             setPaidAmount(
                                                 Math.min(
                                                     Number(e.target.value) || 0,
-                                                    fees
+                                                    netAmount
                                                 )
                                             )
                                         }
@@ -356,14 +429,14 @@ export function AppointmentSaleDialog({
                             <span>Status After Sale</span>
                             <Badge
                                 className={`pointer-events-none font-black text-[9px] h-5 px-2 ${
-                                    paidAmount >= fees
+                                    paidAmount >= netAmount
                                         ? "bg-emerald-50 text-emerald-600 border-none"
                                         : paidAmount > 0
                                         ? "bg-amber-50 text-amber-600 border-none"
                                         : "bg-red-50 text-red-600 border-none"
                                 }`}
                             >
-                                {paidAmount >= fees
+                                {paidAmount >= netAmount
                                     ? "PAID"
                                     : paidAmount > 0
                                     ? "PARTIAL"
@@ -385,7 +458,7 @@ export function AppointmentSaleDialog({
                             ) : (
                                 <>
                                     <Wallet className="w-3.5 h-3.5" />
-                                    Confirm Sale — {formatCurrency(fees)}
+                                    Confirm Sale — {formatCurrency(netAmount)}
                                     <CheckCircle2 className="w-3.5 h-3.5 ml-0.5" />
                                 </>
                             )}
