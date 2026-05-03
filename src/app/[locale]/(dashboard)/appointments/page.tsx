@@ -17,7 +17,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useAppointments, useDeleteAppointment } from "@/hooks/appointment-queries"
-import { useDepartments, useEmployees } from "@/hooks/hr-queries"
+import { useDepartments } from "@/hooks/hr-queries"
+import { useUsers } from "@/hooks/user-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
@@ -50,7 +51,7 @@ export default function AppointmentsPage() {
     })
 
     const { data: deptsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: docsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100, employeeType: 'doctor' })
+    const { data: usersRes } = useUsers({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: patsRes } = usePatients({ limit: 100 })
 
     const deleteMutation = useDeleteAppointment()
@@ -110,7 +111,7 @@ export default function AppointmentsPage() {
                                     values={filters}
                                     onChange={setFilters}
                                     departments={deptsRes?.data || []}
-                                    doctors={docsRes?.data || []}
+                                    doctors={usersRes?.data?.filter(u => u.role?.name?.toLowerCase() === 'doctor').map(u => ({ id: u.id, name: u.fullName || u.username })) || []}
                                     patients={patsRes?.data?.map(p => ({ id: p.id, name: p.name })) || []}
                                 />
                             </FilterPopover>

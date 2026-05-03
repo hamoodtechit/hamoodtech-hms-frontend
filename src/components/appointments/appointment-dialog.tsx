@@ -24,7 +24,8 @@ import {
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
-import { useDepartments, useEmployees } from "@/hooks/hr-queries"
+import { useDepartments } from "@/hooks/hr-queries"
+import { useUsers } from "@/hooks/user-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -83,7 +84,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100, employeeType: 'doctor' })
+    const { data: usersRes } = useUsers({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: patientsRes } = usePatients({ limit: 100 })
 
     useEffect(() => {
@@ -121,15 +122,15 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
     // Auto-fill room based on doctor
     useEffect(() => {
         if (formData.doctorId) {
-            const doctor = doctorsRes?.data?.find(d => d.id === formData.doctorId)
+            const user = usersRes?.data?.find(u => u.id === formData.doctorId)
             setFormData(prev => ({ 
                 ...prev, 
-                chamberOrRoomNumber: doctor?.chamberOrRoomNumber || "" 
+                chamberOrRoomNumber: user?.employee?.chamberOrRoomNumber || "" 
             }))
         } else {
             setFormData(prev => ({ ...prev, chamberOrRoomNumber: "" }))
         }
-    }, [formData.doctorId, doctorsRes])
+    }, [formData.doctorId, usersRes])
 
     const handleSave = async () => {
         if (!formData.patientId || !formData.doctorId || !formData.date || !formData.timeSlot) {
@@ -245,7 +246,10 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                         <SearchableSelect 
                                             value={formData.doctorId}
                                             onChange={(val) => setFormData(prev => ({ ...prev, doctorId: val }))}
-                                            options={doctorsRes?.data?.filter(d => !formData.departmentId || d.departmentId === formData.departmentId).map(d => ({ id: d.id, name: d.name })) || []}
+                                            options={usersRes?.data
+                                                ?.filter(u => u.role?.name?.toLowerCase() === 'doctor')
+                                                ?.filter(u => !formData.departmentId || u.employee?.departmentId === formData.departmentId)
+                                                ?.map(u => ({ id: u.id, name: u.fullName || u.username })) || []}
                                             placeholder="Select Doctor"
                                             disabled={!formData.departmentId}
                                         />

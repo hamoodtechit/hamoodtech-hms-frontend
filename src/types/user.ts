@@ -19,6 +19,12 @@ export interface User {
   lastLoginAt?: string;
   branchId?: string | null;
   employeeId?: string | null;
+  employee?: {
+    id: string;
+    departmentId?: string;
+    designationId?: string;
+    chamberOrRoomNumber?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
