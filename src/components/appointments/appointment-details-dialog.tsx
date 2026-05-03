@@ -1,6 +1,26 @@
+"use client"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { useAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
-import { useUpdateAppointment } from "@/hooks/appointment-queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import {
@@ -81,7 +101,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         doc.write(`
             <html>
                 <head>
-                    <title>Appointment Slip - ${appointment?.patient?.name}</title>
+                    <title>Appointment Slip - \${appointment?.patient?.name}</title>
                     <style>
                         @page { size: A5; margin: 0; }
                         body { 
@@ -160,9 +180,9 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                 <body>
                     <div class="print-container">
                         <div class="header">
-                            <h1 class="hospital-name">${activeBranch?.name || 'HOSPITAL MANAGEMENT'}</h1>
-                            <div class="hospital-info">${activeBranch?.address || ''}</div>
-                            <div class="hospital-info">${activeBranch?.phone || ''}</div>
+                            <h1 class="hospital-name">\${activeBranch?.name || 'HOSPITAL MANAGEMENT'}</h1>
+                            <div class="hospital-info">\${activeBranch?.address || ''}</div>
+                            <div class="hospital-info">\${activeBranch?.phone || ''}</div>
                         </div>
 
                         <div class="slip-title">Appointment Slip</div>
@@ -170,11 +190,11 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                         <div class="info-grid">
                             <div class="info-item">
                                 <div class="info-label">Patient Name</div>
-                                <div class="info-value">${appointment?.patient?.name}</div>
+                                <div class="info-value">\${appointment?.patient?.name}</div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Patient ID / Phone</div>
-                                <div class="info-value">${appointment?.patient?.patientNumber || appointment?.patient?.phone}</div>
+                                <div class="info-value">\${appointment?.patient?.patientNumber || appointment?.patient?.phone}</div>
                             </div>
                         </div>
 
@@ -182,15 +202,15 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             <div class="section-tag">Schedule Details</div>
                             <div class="detail-row">
                                 <span class="detail-label">Appointment Date</span>
-                                <span class="detail-value">${appointment?.date ? format(new Date(appointment.date), "MMMM dd, yyyy") : '—'}</span>
+                                <span class="detail-value">\${appointment?.date ? format(new Date(appointment.date), "MMMM dd, yyyy") : '—'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Time Slot</span>
-                                <span class="detail-value">${appointment?.timeSlot}</span>
+                                <span class="detail-value">\${appointment?.timeSlot}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Room / Serial</span>
-                                <span class="detail-value">${appointment?.serialNumber?.replace('-', '/')}</span>
+                                <span class="detail-value">\${appointment?.serialNumber?.replace('-', '/')}</span>
                             </div>
                         </div>
 
@@ -198,21 +218,21 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             <div class="section-tag">Clinical Assignment</div>
                             <div class="detail-row">
                                 <span class="detail-label">Consultant Doctor</span>
-                                <span class="detail-value">${appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username}</span>
+                                <span class="detail-value">\${appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Department</span>
-                                <span class="detail-value">${appointment?.department?.name}</span>
+                                <span class="detail-value">\${appointment?.department?.name}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Chamber No</span>
-                                <span class="detail-value">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</span>
+                                <span class="detail-value">\${appointment?.chamberOrRoomNumber || 'Consultation Room'}</span>
                             </div>
                         </div>
 
                         <div class="notes-box">
                             <div class="notes-label">Patient Instructions</div>
-                            <div class="notes-content">${appointment?.note || "Please arrive 15 minutes before your scheduled time. Bring all previous medical reports and current prescriptions."}</div>
+                            <div class="notes-content">\${appointment?.note || "Please arrive 15 minutes before your scheduled time. Bring all previous medical reports and current prescriptions."}</div>
                         </div>
 
                         <div class="footer">
@@ -221,13 +241,13 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 <div class="sig-text">Authorized Signature</div>
                             </div>
                             <div style="font-size: 8px; font-weight: 700; color: #999; text-transform: uppercase;">
-                                Generated on: ${format(new Date(), "PPP p")}
+                                Generated on: \${format(new Date(), "PPP p")}
                             </div>
                         </div>
                     </div>
                 </body>
             </html>
-        `)
+        \`)
         doc.close()
 
         setTimeout(() => {
@@ -371,6 +391,10 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
+                            <div className="flex flex-col gap-6" ref={printRef}>
+                                {/* This is just for printing ref content if needed, but we used innerHTML of a hidden/different structure above. Actually I'll use a better approach for printRef later if needed, for now the innerHTML trick in handlePrint uses the state data. */}
+                            </div>
+                            
                             {/* Patient Info */}
                             <DetailSection icon={User} title="Patient Information">
                                 <Field label="Full Name" value={appointment?.patient?.name} icon={User} />
@@ -447,4 +471,3 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         </Dialog>
     )
 }
-
