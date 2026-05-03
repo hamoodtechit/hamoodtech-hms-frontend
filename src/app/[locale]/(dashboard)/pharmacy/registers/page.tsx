@@ -23,16 +23,20 @@ import { useCashRegisters, useBranches } from "@/hooks/pharmacy-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
-import { ChevronLeft, ChevronRight, Loader2, RefreshCcw, Search, Store } from "lucide-react"
-import { useState, useEffect } from "react"
+import { ChevronLeft, ChevronRight, Loader2, RefreshCcw, Search, Store, User } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
 import { format } from "date-fns"
 import { RegisterDetailsDialog } from "@/components/pharmacy/registers/register-details-dialog"
+import { FilterPopover } from "@/components/shared/filter-popover"
+import { useEmployees } from "@/hooks/hr-queries"
+import { Label } from "@/components/ui/label"
 
 export default function CashRegisterHistoryPage() {
   const { activeStoreId } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [status, setStatus] = useState<string>("all")
   const [branchId, setBranchId] = useState<string>("all")
+  const [userId, setUserId] = useState<string>("all")
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
   const [page, setPage] = useState(1)
@@ -50,12 +54,31 @@ export default function CashRegisterHistoryPage() {
     page,
     limit: 10,
     branchId: branchId === "all" ? undefined : branchId,
+    userId: userId === "all" ? undefined : userId,
     status: status === "all" ? undefined : status,
     search: debouncedSearch || undefined
   })
 
   const { data: branchesRes } = useBranches({ limit: 100 })
   const branches = branchesRes?.data || []
+
+  const { data: employeesRes } = useEmployees({ limit: 1000 })
+  const employees = employeesRes?.data || []
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (branchId !== "all") count++
+    if (status !== "all") count++
+    if (userId !== "all") count++
+    return count
+  }, [branchId, status, userId])
+
+  const handleReset = () => {
+    setBranchId("all")
+    setStatus("all")
+    setUserId("all")
+    setPage(1)
+  }
 
   const sessions = response?.data || []
   const meta = response?.meta || null
@@ -76,7 +99,7 @@ export default function CashRegisterHistoryPage() {
             <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Search by user name..."
+                    placeholder="Search sessions..."
                     value={search}
                     onChange={(e) => {
                         setSearch(e.target.value)
@@ -86,37 +109,72 @@ export default function CashRegisterHistoryPage() {
                 />
             </div>
 
-            <Select value={branchId} onValueChange={(val: string) => {
-                setBranchId(val)
-                setPage(1)
-            }}>
-                <SelectTrigger className="w-full sm:w-[200px] h-10 rounded-xl bg-background/50 shadow-sm">
-                    <div className="flex items-center gap-2">
-                        <Store className="h-4 w-4 text-primary/70" />
-                        <SelectValue placeholder="All Branches" />
+            <FilterPopover 
+                activeFilterCount={activeFilterCount}
+                onReset={handleReset}
+                title="Advanced Register Filters"
+            >
+                <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Branch Location</Label>
+                        <Select value={branchId} onValueChange={(val: string) => {
+                            setBranchId(val)
+                            setPage(1)
+                        }}>
+                            <SelectTrigger className="w-full h-10 rounded-xl bg-background/50 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <Store className="h-4 w-4 text-primary/70" />
+                                    <SelectValue placeholder="All Branches" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Branches</SelectItem>
+                                {branches.map((b: any) => (
+                                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Branches</SelectItem>
-                    {branches.map((b: any) => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
 
-            <Select value={status} onValueChange={(val: string) => {
-                setStatus(val)
-                setPage(1)
-            }}>
-                <SelectTrigger className="w-full sm:w-[150px] h-10 rounded-xl bg-background/50 shadow-sm">
-                    <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-            </Select>
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cashier / User</Label>
+                        <Select value={userId} onValueChange={(val: string) => {
+                            setUserId(val)
+                            setPage(1)
+                        }}>
+                            <SelectTrigger className="w-full h-10 rounded-xl bg-background/50 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-primary/70" />
+                                    <SelectValue placeholder="All Cashiers" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Cashiers</SelectItem>
+                                {employees.map((e: any) => (
+                                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Session Status</Label>
+                        <Select value={status} onValueChange={(val: string) => {
+                            setStatus(val)
+                            setPage(1)
+                        }}>
+                            <SelectTrigger className="w-full h-10 rounded-xl bg-background/50 shadow-sm">
+                                <SelectValue placeholder="All Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="open">Open</SelectItem>
+                                <SelectItem value="closed">Closed</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </FilterPopover>
 
             <Button 
                 onClick={() => refetch()} 
