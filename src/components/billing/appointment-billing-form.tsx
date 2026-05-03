@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useMemo } from "react"
+import { FilterPopover } from "@/components/shared/filter-popover"
 import { toast } from "sonner"
 import { ReferralSearch } from "@/components/hr/referral-search"
 import { Separator } from "@/components/ui/separator"
@@ -405,8 +406,8 @@ export function AppointmentBillingForm() {
 
                     <div className="flex-1 overflow-hidden flex flex-col p-4 px-6 gap-4">
                         {/* Search & Advanced Filters */}
-                        <div className="flex flex-col gap-4 p-4 bg-muted/10 rounded-2xl border border-border/30 shrink-0">
-                            <div className="relative">
+                        <div className="flex items-center gap-4 p-4 bg-muted/10 rounded-2xl border border-border/30 shrink-0">
+                            <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
                                     placeholder="Quick Search by Patient Name or ID..." 
@@ -416,13 +417,18 @@ export function AppointmentBillingForm() {
                                 />
                             </div>
                             
-                            <AppointmentFilters 
-                                values={modalFilters}
-                                onChange={setModalFilters}
-                                doctors={users.filter((u: any) => u.role?.name?.toLowerCase() === 'doctor').map(u => ({ id: u.id, name: u.fullName || u.username }))}
-                                departments={departments.map(d => ({ id: d.id, name: d.name }))}
-                                patients={patients.map((p: any) => ({ id: p.id, name: p.name }))}
-                            />
+                            <FilterPopover 
+                                activeFilterCount={Object.values(modalFilters).filter(Boolean).length}
+                                onReset={() => setModalFilters({})}
+                            >
+                                <AppointmentFilters 
+                                    values={modalFilters}
+                                    onChange={setModalFilters}
+                                    doctors={users.filter((u: any) => u.role?.name?.toLowerCase() === 'doctor').map(u => ({ id: u.id, name: u.fullName || u.username }))}
+                                    departments={departments.map(d => ({ id: d.id, name: d.name }))}
+                                    patients={patients.map((p: any) => ({ id: p.id, name: p.name }))}
+                                />
+                            </FilterPopover>
                         </div>
 
                         {/* History Table */}
