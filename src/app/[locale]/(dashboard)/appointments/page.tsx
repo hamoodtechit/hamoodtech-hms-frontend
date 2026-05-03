@@ -155,7 +155,7 @@ export default function AppointmentsPage() {
                                                         {format(new Date(apt.date), "dd/MM")}
                                                     </div>
                                                     <div>
-                                                        <div className="font-black text-sm text-foreground">{apt.serialNumber}</div>
+                                                        <div className="font-black text-sm text-foreground">{apt.serialNumber?.replace('-', '/')}</div>
                                                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
                                                             <Clock className="h-3 w-3" /> {apt.timeSlot}
                                                         </div>
@@ -174,7 +174,7 @@ export default function AppointmentsPage() {
                                                         <Stethoscope className="h-3.5 w-3.5" />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-sm text-foreground/80">{apt.doctor.name}</div>
+                                                        <div className="font-bold text-sm text-foreground/80">{apt.doctor.fullName || apt.doctor.name || apt.doctor.username}</div>
                                                         <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{apt.department.name}</div>
                                                     </div>
                                                 </div>

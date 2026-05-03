@@ -127,7 +127,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 </div>
                                 <div className="space-y-1.5">
                                     <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                                        {appointment?.serialNumber}
+                                        {appointment?.patient?.name}
                                     </DialogTitle>
                                     <div className="flex items-center gap-3">
                                         {appointment && getStatusBadge(appointment.status)}
@@ -165,6 +165,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
                                     <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />
+                                    <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} />
                                 {appointment?.referralPerson && (
                                     <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} />
                                 )}
