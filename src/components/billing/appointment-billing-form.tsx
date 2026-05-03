@@ -44,6 +44,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AppointmentDetailsDialog } from "@/components/appointments/appointment-details-dialog"
+import { AppointmentFilters, AppointmentFilterValues } from "@/components/appointments/appointment-filters"
+import { usePatients } from "@/hooks/patient-queries"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -59,9 +61,13 @@ export function AppointmentBillingForm() {
         branchId: activeStoreId || undefined,
         limit: 1000 
     })
+    const { data: patientsRes } = usePatients({ 
+        limit: 1000 
+    })
     
     const departments = departmentsRes?.data || []
     const users = useMemo(() => usersRes?.data || [], [usersRes])
+    const patients = useMemo(() => patientsRes?.data || [], [patientsRes])
 
     const createAppointmentMutation = useCreateAppointment()
     const { appointments: appointmentConfig, fetchSettings } = useSettingsStore()
@@ -82,9 +88,7 @@ export function AppointmentBillingForm() {
     // History Modal State
     const [historyOpen, setHistoryOpen] = useState(false)
     const [modalSearch, setModalSearch] = useState("")
-    const [modalDoctorId, setModalDoctorId] = useState<string>("all")
-    const [modalDepartmentId, setModalDepartmentId] = useState<string>("all")
-    const [modalStatus, setModalStatus] = useState<string>("all")
+    const [modalFilters, setModalFilters] = useState<AppointmentFilterValues>({})
     const [modalPage, setModalPage] = useState(1)
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
@@ -95,9 +99,12 @@ export function AppointmentBillingForm() {
         limit: modalLimit, 
         page: modalPage,
         search: modalSearch || undefined,
-        doctorId: modalDoctorId !== "all" ? modalDoctorId : undefined,
-        departmentId: modalDepartmentId !== "all" ? modalDepartmentId : undefined,
-        status: modalStatus !== "all" ? modalStatus : undefined,
+        doctorId: modalFilters.doctorId,
+        departmentId: modalFilters.departmentId,
+        patientId: modalFilters.patientId,
+        status: modalFilters.status,
+        startDate: modalFilters.startDate,
+        endDate: modalFilters.endDate,
     })
 
     const recentAppointments = recentAppointmentsRes?.data || []
@@ -397,59 +404,25 @@ export function AppointmentBillingForm() {
                     </DialogHeader>
 
                     <div className="flex-1 overflow-hidden flex flex-col p-4 px-6 gap-4">
-                        {/* Search & Filter Bar */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-muted/10 rounded-2xl border border-border/30 shrink-0">
+                        {/* Search & Advanced Filters */}
+                        <div className="flex flex-col gap-4 p-4 bg-muted/10 rounded-2xl border border-border/30 shrink-0">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
-                                    placeholder="Patient Name/ID..." 
-                                    className="pl-10 h-9 bg-background rounded-xl border-none shadow-sm text-xs font-bold"
+                                    placeholder="Quick Search by Patient Name or ID..." 
+                                    className="pl-10 h-10 bg-background rounded-xl border-none shadow-sm font-bold"
                                     value={modalSearch}
                                     onChange={(e) => setModalSearch(e.target.value)}
                                 />
                             </div>
                             
-                            <Select value={modalDoctorId} onValueChange={setModalDoctorId}>
-                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold">
-                                    <SelectValue placeholder="All Doctors" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                    <SelectItem value="all" className="text-[10px] font-bold">All Doctors</SelectItem>
-                                    {users.filter((u: any) => u.role?.name?.toLowerCase() === 'doctor').map(doc => (
-                                        <SelectItem key={doc.id} value={doc.id} className="text-[10px] font-bold">
-                                            {doc.fullName || doc.username}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <Select value={modalDepartmentId} onValueChange={setModalDepartmentId}>
-                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold">
-                                    <SelectValue placeholder="All Dept" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                    <SelectItem value="all" className="text-[10px] font-bold">All Dept</SelectItem>
-                                    {departments.map(dept => (
-                                        <SelectItem key={dept.id} value={dept.id} className="text-[10px] font-bold">
-                                            {dept.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <Select value={modalStatus} onValueChange={setModalStatus}>
-                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold capitalize">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                    <SelectItem value="all" className="text-[10px] font-bold">All Status</SelectItem>
-                                    {['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map(status => (
-                                        <SelectItem key={status} value={status} className="text-[10px] font-bold capitalize">
-                                            {status}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <AppointmentFilters 
+                                values={modalFilters}
+                                onChange={setModalFilters}
+                                doctors={users.filter((u: any) => u.role?.name?.toLowerCase() === 'doctor').map(u => ({ id: u.id, name: u.fullName || u.username }))}
+                                departments={departments.map(d => ({ id: d.id, name: d.name }))}
+                                patients={patients.map((p: any) => ({ id: p.id, name: p.name }))}
+                            />
                         </div>
 
                         {/* History Table */}
