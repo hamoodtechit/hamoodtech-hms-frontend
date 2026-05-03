@@ -71,7 +71,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         visitCharge: 0,
         repeatVisitCharge: 0,
         repeatVisitDayGap: 7,
-        reportCharge: 0
+        reportCharge: 0,
+        commissionPercentage: 0,
+        dutyStartTime: "",
+        dutyEndTime: ""
     })
 
     const { data: departmentsRes } = useDepartments({ 
@@ -111,7 +114,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     visitCharge: Number(employee.visitCharge || 0),
                     repeatVisitCharge: Number(employee.repeatVisitCharge || 0),
                     repeatVisitDayGap: Number(employee.repeatVisitDayGap || 7),
-                    reportCharge: Number(employee.reportCharge || 0)
+                    reportCharge: Number(employee.reportCharge || 0),
+                    commissionPercentage: Number(employee.commissionPercentage || 0),
+                    dutyStartTime: employee.dutyStartTime || "",
+                    dutyEndTime: employee.dutyEndTime || ""
                 })
             } else {
                 setFormData({
@@ -138,7 +144,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     visitCharge: 0,
                     repeatVisitCharge: 0,
                     repeatVisitDayGap: 7,
-                    reportCharge: 0
+                    reportCharge: 0,
+                    commissionPercentage: 0,
+                    dutyStartTime: "",
+                    dutyEndTime: ""
                 })
             }
         }
@@ -217,6 +226,7 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="doctor">Doctor</SelectItem>
+                                            <SelectItem value="guest-doctor">Guest Doctor</SelectItem>
                                             <SelectItem value="nurse">Nurse</SelectItem>
                                             <SelectItem value="staff">Staff</SelectItem>
                                         </SelectContent>
@@ -278,13 +288,33 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>{formData.employeeType === 'doctor' ? 'Chamber Number' : 'Room Number'}</Label>
+                                    <Label>{['doctor', 'guest-doctor'].includes(formData.employeeType) ? 'Chamber Number' : 'Room Number'}</Label>
                                     <Input 
                                         value={formData.chamberOrRoomNumber}
                                         onChange={(e) => setFormData(prev => ({ ...prev, chamberOrRoomNumber: e.target.value }))}
-                                        placeholder={formData.employeeType === 'doctor' ? "e.g. Room 302" : "e.g. 201"}
+                                        placeholder={['doctor', 'guest-doctor'].includes(formData.employeeType) ? "e.g. Room 302" : "e.g. 201"}
                                     />
                                 </div>
+                                {['doctor', 'guest-doctor'].includes(formData.employeeType) && (
+                                    <>
+                                        <div className="grid gap-2">
+                                            <Label>Duty Start Time</Label>
+                                            <Input 
+                                                type="time"
+                                                value={formData.dutyStartTime}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, dutyStartTime: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Duty End Time</Label>
+                                            <Input 
+                                                type="time"
+                                                value={formData.dutyEndTime}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, dutyEndTime: e.target.value }))}
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -417,8 +447,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                 </div>
                             </div>
 
-                            {formData.employeeType === 'doctor' && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                            {['doctor', 'guest-doctor'].includes(formData.employeeType) && (
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
                                     <div className="grid gap-2">
                                         <Label className="text-xs font-black uppercase text-primary">Visit Charge</Label>
                                         <SmartNumberInput 
@@ -429,7 +459,7 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label className="text-xs font-black uppercase text-primary">Repeat Visit Charge</Label>
+                                        <Label className="text-xs font-black uppercase text-primary">Repeat Charge</Label>
                                         <SmartNumberInput 
                                             value={formData.repeatVisitCharge}
                                             onChange={(val) => setFormData(prev => ({ ...prev, repeatVisitCharge: val || 0 }))}
@@ -438,7 +468,7 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label className="text-xs font-black uppercase text-primary">Repeat Day Gap</Label>
+                                        <Label className="text-xs font-black uppercase text-primary">Day Gap</Label>
                                         <SmartNumberInput 
                                             value={formData.repeatVisitDayGap}
                                             onChange={(val) => setFormData(prev => ({ ...prev, repeatVisitDayGap: val || 7 }))}
@@ -452,6 +482,16 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                             value={formData.reportCharge}
                                             onChange={(val) => setFormData(prev => ({ ...prev, reportCharge: val || 0 }))}
                                             min={0}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label className="text-xs font-black uppercase text-primary">Commission %</Label>
+                                        <SmartNumberInput 
+                                            value={formData.commissionPercentage}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, commissionPercentage: val || 0 }))}
+                                            min={0}
+                                            max={100}
                                             placeholder="0.00"
                                         />
                                     </div>

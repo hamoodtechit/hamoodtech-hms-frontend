@@ -158,8 +158,49 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                                         label="Joining Date" 
                                         value={employee?.joiningDate && format(new Date(employee.joiningDate), "PPP")} 
                                     />
+                                    {['doctor', 'guest-doctor'].includes(employee?.employeeType || '') && (
+                                        <>
+                                            <DetailItem 
+                                                icon={Clock} 
+                                                label="Duty Hours" 
+                                                value={employee?.dutyStartTime ? `${employee.dutyStartTime} - ${employee.dutyEndTime || '???'}` : "Not Set"} 
+                                            />
+                                            <DetailItem 
+                                                icon={Briefcase} 
+                                                label="Room/Chamber" 
+                                                value={employee?.chamberOrRoomNumber} 
+                                            />
+                                        </>
+                                    )}
                                 </div>
                             </section>
+
+                            {['doctor', 'guest-doctor'].includes(employee?.employeeType || '') && (
+                                <section className="space-y-4">
+                                    <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                                        <HeartPulse className="h-4 w-4" />
+                                        <h3 className="uppercase tracking-widest">Clinical Charges & Commission</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-5 rounded-xl bg-primary/5 border border-primary/10">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Visit Charge</p>
+                                            <p className="text-lg font-bold text-primary">{employee?.visitCharge ? formatCurrency(employee.visitCharge) : "—"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Commission %</p>
+                                            <p className="text-lg font-bold text-primary">{employee?.commissionPercentage || 0}%</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Report Charge</p>
+                                            <p className="text-lg font-bold text-primary">{employee?.reportCharge ? formatCurrency(employee.reportCharge) : "—"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Repeat Day Gap</p>
+                                            <p className="text-lg font-bold text-primary">{employee?.repeatVisitDayGap || 7} Days</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {/* Personal Information */}

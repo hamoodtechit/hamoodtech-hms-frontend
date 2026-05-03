@@ -68,6 +68,9 @@ export interface Employee {
   repeatVisitCharge?: number;
   repeatVisitDayGap?: number;
   reportCharge?: number;
+  commissionPercentage?: number | string;
+  dutyStartTime?: string;
+  dutyEndTime?: string;
   department?: Department;
   designation?: Designation;
 }
@@ -98,6 +101,9 @@ export interface EmployeePayload {
   repeatVisitCharge?: number;
   repeatVisitDayGap?: number;
   reportCharge?: number;
+  commissionPercentage?: number | string;
+  dutyStartTime?: string;
+  dutyEndTime?: string;
 }
 
 export interface HRPaginatedResponse<T> {
