@@ -60,8 +60,8 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl p-0 overflow-hidden bg-slate-50/50 backdrop-blur-xl border-none shadow-2xl">
-                <DialogHeader className="p-6 bg-white border-b sticky top-0 z-10 shadow-sm">
+            <DialogContent className="max-w-6xl p-0 overflow-hidden bg-background border-none shadow-2xl">
+                <DialogHeader className="p-6 bg-card border-b sticky top-0 z-10 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -141,7 +141,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <div className="lg:col-span-2 space-y-6">
                                         <Tabs defaultValue="sales" className="w-full">
-                                            <TabsList className="bg-white border p-1 rounded-2xl h-12 shadow-sm">
+                                            <TabsList className="bg-card border p-1 rounded-2xl h-12 shadow-sm">
                                                 <TabsTrigger value="sales" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                                                     Sales History
                                                 </TabsTrigger>
@@ -150,9 +150,9 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                 </TabsTrigger>
                                             </TabsList>
 
-                                            <TabsContent value="sales" className="mt-4 bg-white rounded-3xl border shadow-sm overflow-hidden">
+                                            <TabsContent value="sales" className="mt-4 bg-card rounded-3xl border shadow-sm overflow-hidden">
                                                 <Table>
-                                                    <TableHeader className="bg-slate-50">
+                                                    <TableHeader className="bg-muted/50">
                                                         <TableRow>
                                                             <TableHead>Invoice</TableHead>
                                                             <TableHead>Patient</TableHead>
@@ -165,7 +165,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                         {session?.sales?.length ? session.sales.map((sale) => (
                                                             <TableRow 
                                                                 key={sale.id} 
-                                                                className="cursor-pointer hover:bg-slate-50 transition-colors group"
+                                                                className="cursor-pointer hover:bg-muted/50 transition-colors group"
                                                                 onClick={() => {
                                                                     setSelectedSale(sale)
                                                                     setSaleDialogOpen(true)
@@ -198,7 +198,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
 
                                             <TabsContent value="info" className="mt-4">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="p-4 bg-white rounded-2xl border shadow-sm">
+                                                    <div className="p-4 bg-card rounded-2xl border shadow-sm">
                                                         <h4 className="text-xs font-black uppercase text-muted-foreground mb-2 flex items-center gap-2">
                                                             <Info className="h-3 w-3" />
                                                             Opening Note
@@ -207,7 +207,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                             {session?.openingNote || "No opening notes provided."}
                                                         </p>
                                                     </div>
-                                                    <div className="p-4 bg-white rounded-2xl border shadow-sm">
+                                                    <div className="p-4 bg-card rounded-2xl border shadow-sm">
                                                         <h4 className="text-xs font-black uppercase text-muted-foreground mb-2 flex items-center gap-2">
                                                             <Info className="h-3 w-3" />
                                                             Closing Note
@@ -223,7 +223,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
 
                                     <div className="space-y-6">
                                         {/* Session Context */}
-                                        <div className="p-6 bg-white rounded-3xl border shadow-sm space-y-4">
+                                        <div className="p-6 bg-card rounded-3xl border shadow-sm space-y-4">
                                             <h3 className="font-bold flex items-center gap-2 text-slate-800">
                                                 <Store className="h-5 w-5 text-primary" />
                                                 Context Details
@@ -289,7 +289,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
 
 function CardItem({ icon, label, value, subValue, className }: any) {
     return (
-        <div className={`p-4 rounded-3xl border bg-white shadow-sm hover:shadow-md transition-all ${className}`}>
+        <div className={`p-4 rounded-3xl border bg-card shadow-sm hover:shadow-md transition-all ${className}`}>
             <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-xl bg-background border shadow-sm">
                     {icon}
@@ -309,7 +309,7 @@ function InfoItem({ icon, label, value }: any) {
                 {icon}
                 {label}
             </div>
-            <div className="text-sm font-black text-slate-700">{value}</div>
+            <div className="text-sm font-black text-foreground">{value}</div>
         </div>
     )
 }
