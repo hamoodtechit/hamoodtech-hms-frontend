@@ -43,6 +43,7 @@ import {
     Users
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AppointmentDetailsDialog } from "@/components/appointments/appointment-details-dialog"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
@@ -82,6 +83,8 @@ export function AppointmentBillingForm() {
     const [historyOpen, setHistoryOpen] = useState(false)
     const [modalSearch, setModalSearch] = useState("")
     const [modalPage, setModalPage] = useState(1)
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState(false)
     const modalLimit = 10
 
     const { data: recentAppointmentsRes, isLoading: loadingHistory, refetch: refetchHistory } = useAppointments({ 
@@ -335,7 +338,7 @@ export function AppointmentBillingForm() {
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Specialist</p>
                                         <p className="font-black text-foreground">
-                                            {users.find(u => u.id === selectedDoctorId)?.fullName || 'Specialist not assigned'}
+                                            {users.find(u => u.id === selectedDoctorId)?.fullName || users.find(u => u.id === selectedDoctorId)?.username || 'Specialist not assigned'}
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">
                                             {(users.find(u => u.id === selectedDoctorId) as any)?.employee?.designation?.name || 
@@ -372,29 +375,29 @@ export function AppointmentBillingForm() {
             {/* History Dialog */}
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                 <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
-                    <DialogHeader className="p-8 border-b bg-muted/30">
+                    <DialogHeader className="p-6 border-b bg-muted/30">
                         <div className="flex items-center justify-between gap-4">
-                            <div className="space-y-1">
-                                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
-                                    <History className="h-6 w-6 text-primary" />
+                            <div className="space-y-0.5">
+                                <DialogTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                                    <History className="h-5 w-5 text-primary" />
                                     Appointment History
                                 </DialogTitle>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em]">Registry Logs & Previous Schedules</p>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.25em]">Registry Logs & Previous Schedules</p>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setHistoryOpen(false)} className="rounded-full h-10 w-10 bg-muted/50">
-                                <X className="h-5 w-5" />
+                            <Button variant="ghost" size="icon" onClick={() => setHistoryOpen(false)} className="rounded-full h-8 w-8 bg-muted/50">
+                                <X className="h-4 w-4" />
                             </Button>
                         </div>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-hidden flex flex-col p-8 pt-6 gap-6">
+                    <div className="flex-1 overflow-hidden flex flex-col p-6 pt-4 gap-4">
                         {/* Search Bar */}
-                        <div className="flex items-center gap-4 p-4 bg-muted/10 rounded-3xl border border-border/30">
+                        <div className="flex items-center gap-4 p-3 bg-muted/10 rounded-2xl border border-border/30">
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
                                     placeholder="Search by patient name or ID..." 
-                                    className="pl-10 h-11 bg-background rounded-2xl border-none shadow-sm"
+                                    className="pl-10 h-10 bg-background rounded-xl border-none shadow-sm"
                                     value={modalSearch}
                                     onChange={(e) => setModalSearch(e.target.value)}
                                 />
@@ -458,7 +461,7 @@ export function AppointmentBillingForm() {
                                                             <Users className="h-4 w-4 text-indigo-600" />
                                                         </div>
                                                         <div>
-                                                            <p className="font-black text-xs text-foreground">{apt.doctor?.name || 'Assigned Doctor'}</p>
+                                                            <p className="font-black text-xs text-foreground">{apt.doctor?.fullName || apt.doctor?.name || apt.doctor?.username || 'Assigned Doctor'}</p>
                                                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{apt.department?.name || 'General'}</p>
                                                         </div>
                                                     </div>
@@ -476,7 +479,15 @@ export function AppointmentBillingForm() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 text-right">
-                                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                                                        onClick={() => {
+                                                            setSelectedAppointmentId(apt.id)
+                                                            setDetailsOpen(true)
+                                                        }}
+                                                    >
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                 </td>
@@ -518,6 +529,12 @@ export function AppointmentBillingForm() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <AppointmentDetailsDialog 
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                appointmentId={selectedAppointmentId}
+            />
         </div>
     )
 }
