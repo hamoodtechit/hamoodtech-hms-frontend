@@ -223,6 +223,11 @@ function SidebarBase() {
               permission: "sale:read",
             },
             {
+              label: "Cash Registers",
+              href: "/pharmacy/registers",
+              permission: "cash-register:read",
+            },
+            {
               label: "Returns",
               href: "/sales/returns?type=pos",
               permission: "sale-return:read",
