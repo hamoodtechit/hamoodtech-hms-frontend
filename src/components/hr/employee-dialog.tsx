@@ -116,8 +116,8 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     repeatVisitDayGap: Number(employee.repeatVisitDayGap || 7),
                     reportCharge: Number(employee.reportCharge || 0),
                     commissionPercentage: Number(employee.commissionPercentage || 0),
-                    dutyStartTime: employee.dutyStartTime || "",
-                    dutyEndTime: employee.dutyEndTime || ""
+                    dutyStartTime: employee.dutyStartTime ? new Date(employee.dutyStartTime).toISOString().slice(11, 16) : "",
+                    dutyEndTime: employee.dutyEndTime ? new Date(employee.dutyEndTime).toISOString().slice(11, 16) : ""
                 })
             } else {
                 setFormData({
@@ -161,14 +161,21 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
 
         setLoading(true)
         try {
+            // Convert time strings (HH:mm) to valid ISO DateTime for backend
+            const payload = {
+                ...formData,
+                dutyStartTime: formData.dutyStartTime ? `1970-01-01T${formData.dutyStartTime}:00.000Z` : null,
+                dutyEndTime: formData.dutyEndTime ? `1970-01-01T${formData.dutyEndTime}:00.000Z` : null,
+            }
+
             if (isEdit && employee) {
                 await updateMutation.mutateAsync({
                     id: employee.id,
-                    data: formData
+                    data: payload
                 })
                 toast.success("Employee updated successfully")
             } else {
-                await createMutation.mutateAsync(formData)
+                await createMutation.mutateAsync(payload)
                 toast.success("Employee created successfully")
             }
             onSuccess?.()

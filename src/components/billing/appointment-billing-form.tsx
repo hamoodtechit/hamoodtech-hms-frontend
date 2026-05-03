@@ -18,6 +18,7 @@ import { format } from "date-fns"
 import { 
     Calendar, 
     Clock, 
+    DollarSign,
     History,
     LayoutGrid, 
     Stethoscope, 
@@ -33,11 +34,14 @@ import { ReferralSearch } from "@/components/hr/referral-search"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useCurrency } from "@/hooks/use-currency"
+import { usePatients } from "@/hooks/patient-queries"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
+    const { formatCurrency } = useCurrency()
 
     // Permission check
     const canCreateAppointment = hasPermission('appointment:create')
@@ -71,6 +75,7 @@ export function AppointmentBillingForm() {
     const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>("")
     const [chamberOrRoomNumber, setChamberOrRoomNumber] = useState<string>("")
     const [note, setNote] = useState<string>("")
+    const [visitType, setVisitType] = useState<'new' | 'repeat' | 'report'>('new')
     
     // Auto-fill room and duty times based on selected doctor
     const [doctorStartTime, setDoctorStartTime] = useState<string>("")
@@ -90,8 +95,39 @@ export function AppointmentBillingForm() {
     }, [selectedDoctorId, users])
 
     // Use doctor's duty time if available, otherwise fall back to system config
-    const effectiveStartTime = doctorStartTime || appointmentConfig?.startTime || "08:00"
-    const effectiveEndTime = doctorEndTime || appointmentConfig?.endTime || "21:00"
+    const effectiveStartTime = useMemo(() => {
+        if (doctorStartTime) {
+            // If it looks like an ISO date, extract HH:mm
+            if (doctorStartTime.includes('T')) {
+                return new Date(doctorStartTime).toISOString().slice(11, 16)
+            }
+            return doctorStartTime
+        }
+        return appointmentConfig?.startTime || "08:00"
+    }, [doctorStartTime, appointmentConfig])
+
+    const effectiveEndTime = useMemo(() => {
+        if (doctorEndTime) {
+            if (doctorEndTime.includes('T')) {
+                return new Date(doctorEndTime).toISOString().slice(11, 16)
+            }
+            return doctorEndTime
+        }
+        return appointmentConfig?.endTime || "21:00"
+    }, [doctorEndTime, appointmentConfig])
+
+    // Compute fee based on visit type and selected doctor
+    const selectedDoctor: any = useMemo(() => users.find((u: any) => u.id === selectedDoctorId), [users, selectedDoctorId])
+    const appointmentFee = useMemo(() => {
+        if (!selectedDoctor?.employee) return 0
+        const emp = selectedDoctor.employee
+        switch (visitType) {
+            case 'new': return Number(emp.visitCharge || 0)
+            case 'repeat': return Number(emp.repeatVisitCharge || 0)
+            case 'report': return Number(emp.reportCharge || 0)
+            default: return 0
+        }
+    }, [selectedDoctor, visitType])
 
     const handleCreateAppointment = async () => {
         if (!selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot) {
@@ -223,6 +259,47 @@ export function AppointmentBillingForm() {
                                 </div>
                             </div>
 
+                            {/* Visit Type */}
+                            {selectedDoctorId && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Visit Type *</Label>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[
+                                            { key: 'new' as const, label: 'New Visit', desc: 'First consultation', charge: Number(selectedDoctor?.employee?.visitCharge || 0) },
+                                            { key: 'repeat' as const, label: 'Repeat Visit', desc: `Within ${selectedDoctor?.employee?.repeatVisitDayGap || 7} days`, charge: Number(selectedDoctor?.employee?.repeatVisitCharge || 0) },
+                                            { key: 'report' as const, label: 'Report', desc: 'Report collection', charge: Number(selectedDoctor?.employee?.reportCharge || 0) },
+                                        ].map((vt) => (
+                                            <button
+                                                key={vt.key}
+                                                type="button"
+                                                onClick={() => setVisitType(vt.key)}
+                                                className={cn(
+                                                    "relative flex flex-col items-center gap-1 p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer",
+                                                    visitType === vt.key
+                                                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 scale-[1.02]"
+                                                        : "border-muted/50 bg-muted/10 hover:border-primary/30 hover:bg-primary/[0.02]"
+                                                )}
+                                            >
+                                                <span className={cn(
+                                                    "text-xs font-black uppercase tracking-wider",
+                                                    visitType === vt.key ? "text-primary" : "text-muted-foreground"
+                                                )}>{vt.label}</span>
+                                                <span className="text-[10px] font-medium text-muted-foreground/60">{vt.desc}</span>
+                                                <span className={cn(
+                                                    "text-lg font-black mt-1",
+                                                    visitType === vt.key ? "text-primary" : "text-foreground/70"
+                                                )}>{formatCurrency(vt.charge)}</span>
+                                                {visitType === vt.key && (
+                                                    <div className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                                                        <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Date & Time */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
@@ -339,6 +416,22 @@ export function AppointmentBillingForm() {
                                 </div>
                             </div>
 
+                            {/* Fee Summary */}
+                            <div className="flex items-start gap-4">
+                                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                    <DollarSign className="w-5 h-5 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Consultation Fee</p>
+                                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">
+                                        {selectedDoctorId ? formatCurrency(appointmentFee) : '—'}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-muted-foreground capitalize">
+                                        {visitType === 'new' ? 'New Visit' : visitType === 'repeat' ? 'Repeat Visit' : 'Report Collection'}
+                                    </p>
+                                </div>
+                            </div>
+
                             <Button 
                                 className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-2xl   transition-all active:scale-[0.98] group"
                                 onClick={handleCreateAppointment}
@@ -360,6 +453,7 @@ export function AppointmentBillingForm() {
                         </CardContent>
                     </Card>
                 </div>
+            </div>
         </div>
     )
 }
