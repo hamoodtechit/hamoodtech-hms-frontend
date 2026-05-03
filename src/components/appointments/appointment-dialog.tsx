@@ -83,7 +83,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
 
     // Data Fetching
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
-    const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: doctorsRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 100, employeeType: 'doctor' })
     const { data: patientsRes } = usePatients({ limit: 100 })
 
     useEffect(() => {

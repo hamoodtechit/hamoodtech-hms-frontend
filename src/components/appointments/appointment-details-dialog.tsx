@@ -161,7 +161,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             </DetailSection>
 
                             {/* Medical Professional Info */}
-                            <DetailSection icon={Stethoscope} title="Medical Context">
+                            <DetailSection icon={Stethoscope} title="Medical Info">
                                 <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
                                 <Field label="Department" value={appointment?.department?.name} icon={Building2} />
                                     <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} />

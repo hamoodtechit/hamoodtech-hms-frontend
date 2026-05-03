@@ -30,7 +30,7 @@ export const HR_KEYS = {
   all: ["hr"] as const,
   departments: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "departments", params] as const : [...HR_KEYS.all, "departments"] as const,
   designations: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "designations", params] as const : [...HR_KEYS.all, "designations"] as const,
-  employees: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "employees", params] as const : [...HR_KEYS.all, "employees"] as const,
+  employees: (params?: { page?: number; limit?: number; search?: string; branchId?: string; employeeType?: string }) => params ? [...HR_KEYS.all, "employees", params] as const : [...HR_KEYS.all, "employees"] as const,
   employee: (id: string) => [...HR_KEYS.all, "employee", id] as const,
   referrals: (params?: { page?: number; limit?: number; search?: string; branchId?: string }) => params ? [...HR_KEYS.all, "referrals", params] as const : [...HR_KEYS.all, "referrals"] as const,
   referral: (id: string) => [...HR_KEYS.all, "referral", id] as const,
@@ -224,7 +224,7 @@ export function useDeleteDesignation() {
 }
 
 // Employee Hooks
-export function useEmployees(params?: { page?: number; limit?: number; search?: string; branchId?: string }, options: { enabled?: boolean } = {}) {
+export function useEmployees(params?: { page?: number; limit?: number; search?: string; branchId?: string; employeeType?: string }, options: { enabled?: boolean } = {}) {
   const { hasPermission } = usePermissions();
   return useQuery({
     queryKey: HR_KEYS.employees(params),
