@@ -97,157 +97,164 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
         const doc = iframe.contentWindow?.document
         if (!doc) return
 
+        const printContent = `
+            <div class="receipt-container">
+                <!-- Header -->
+                <div class="header">
+                    <img src="${activeBranch?.logoUrl || '/Logo.png'}" alt="Logo" class="hospital-logo" />
+                    <h1 class="hospital-name">${activeBranch?.name || 'PATWARY GENERAL HOSPITAL'}</h1>
+                    <p class="hospital-info">${activeBranch?.address || ''}</p>
+                    <p class="hospital-info">Ph: ${activeBranch?.phone || ''}</p>
+                    
+                    <div class="slip-tag">
+                        Appointment Slip
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="info-grid">
+                    <div class="grid-row border-b">
+                        <div class="grid-cell border-r">
+                            <span class="label">Patient Name:</span>
+                            <span class="value uppercase">${appointment?.patient?.name}</span>
+                        </div>
+                        <div class="grid-cell">
+                            <span class="label">Reg. ID:</span>
+                            <span class="value">${appointment?.patient?.patientNumber || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="grid-row border-b">
+                        <div class="grid-cell border-r">
+                            <span class="label">Consultant:</span>
+                            <span class="value uppercase">${appointment?.doctor?.fullName || appointment?.doctor?.name || 'N/A'}</span>
+                        </div>
+                        <div class="grid-cell">
+                            <span class="label">Department:</span>
+                            <span class="value uppercase">${appointment?.department?.name || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="grid-row">
+                        <div class="grid-cell border-r">
+                            <span class="label">Appt Date:</span>
+                            <span class="value">${appointment?.date ? format(new Date(appointment.date), "dd/MM/yyyy") : 'N/A'}</span>
+                        </div>
+                        <div class="grid-cell">
+                            <span class="label">Time / Sl:</span>
+                            <span class="value">${appointment?.timeSlot} / ${appointment?.serialNumber?.split('-')?.[1] || appointment?.serialNumber || '—'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Table -->
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-right">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Consultation Fee</td>
+                            <td class="text-right font-bold">${appointment?.fee || '—'}</td>
+                        </tr>
+                        <tr>
+                            <td>Room / Chamber</td>
+                            <td class="text-right">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Note Section -->
+                <div class="notes-section">
+                    <div class="notes-header">Instructions / Note:</div>
+                    <div class="notes-body">${appointment?.note || "Please arrive 15 minutes early."}</div>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    <div class="signature-box">
+                        <div class="sig-line"></div>
+                        <div class="sig-label">Authorized Signature</div>
+                    </div>
+                    <div class="print-meta">
+                        Printed on: ${format(new Date(), "dd/MM/yyyy p")}
+                    </div>
+                </div>
+            </div>
+        `;
+
         doc.open()
-        doc.write(`
+        doc.write(\`
             <html>
                 <head>
-                    <title>Appointment Slip - ${appointment?.patient?.name}</title>
+                    <title>Appointment Slip - \${appointment?.patient?.name}</title>
                     <style>
-                        @page { size: A5; margin: 0; }
+                        @page { size: A5; margin: 5mm; }
                         body { 
-                            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+                            font-family: 'Segoe UI', Arial, sans-serif; 
                             color: #000; 
-                            line-height: 1.4; 
-                            padding: 0; 
                             margin: 0; 
+                            padding: 0;
                             background: white;
-                            -webkit-print-color-adjust: exact;
                         }
-                        .print-container { 
-                            width: 148mm; 
-                            height: 210mm;
-                            margin: 0 auto; 
-                            background: white; 
-                            padding: 10mm; 
-                            box-sizing: border-box; 
-                            display: flex;
-                            flex-direction: column;
+                        .receipt-container { 
+                            width: 100%; 
+                            padding: 2mm; 
+                            box-sizing: border-box;
                         }
-                        .header { text-align: center; margin-bottom: 8mm; border-bottom: 2px solid #000; padding-bottom: 4mm; }
-                        .hospital-name { font-size: 24px; font-weight: 900; text-transform: uppercase; margin: 0; }
-                        .hospital-info { font-size: 10px; font-weight: 600; color: #444; margin-top: 2px; }
+                        .header { text-align: center; margin-bottom: 5mm; }
+                        .hospital-logo { height: 50px; margin-bottom: 2mm; }
+                        .hospital-name { font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1; }
+                        .hospital-info { font-size: 10px; font-weight: 700; margin: 2px 0; opacity: 0.8; }
                         
-                        .slip-title { 
-                            background: #000; 
-                            color: #fff; 
-                            text-align: center; 
-                            padding: 4px; 
-                            font-weight: 900; 
-                            text-transform: uppercase; 
-                            letter-spacing: 2px;
-                            font-size: 14px;
-                            margin: 6mm 0;
+                        .slip-tag { 
+                            display: inline-block;
+                            border: 1px solid #000;
+                            padding: 2px 15px;
+                            border-radius: 20px;
+                            font-size: 12px;
+                            font-weight: 900;
+                            text-transform: uppercase;
+                            margin-top: 3mm;
+                            letter-spacing: 1px;
                         }
 
-                        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 8mm; }
-                        .info-item { border: 1px solid #eee; padding: 3mm; border-radius: 4px; }
-                        .info-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #666; margin-bottom: 1mm; }
-                        .info-value { font-size: 13px; font-weight: 700; color: #000; }
+                        .info-grid { border: 1px solid #000; margin-bottom: 5mm; }
+                        .grid-row { display: flex; }
+                        .grid-cell { flex: 1; padding: 6px 10px; display: flex; align-items: center; gap: 8px; }
+                        .border-b { border-bottom: 1px dashed #000; }
+                        .border-r { border-right: 1px dashed #000; }
+                        .label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #444; min-width: 65px; }
+                        .value { font-size: 11px; font-weight: 700; }
+                        .uppercase { text-transform: uppercase; }
 
-                        .main-section { border: 2px solid #000; padding: 6mm; border-radius: 8px; margin-bottom: 8mm; position: relative; }
-                        .section-tag { 
-                            position: absolute; 
-                            top: -10px; 
-                            left: 20px; 
-                            background: white; 
-                            padding: 0 10px; 
-                            font-size: 10px; 
-                            font-weight: 900; 
-                            text-transform: uppercase; 
-                        }
+                        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+                        .items-table th { text-align: left; padding: 4px 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #000; border-top: 1px solid #000; }
+                        .items-table td { padding: 6px 10px; font-size: 11px; font-weight: 600; border-bottom: 1px dashed #eee; }
+                        .text-right { text-align: right; }
+                        .font-bold { font-weight: 900; }
 
-                        .detail-row { display: flex; justify-content: space-between; padding: 3mm 0; border-bottom: 1px dashed #ddd; }
-                        .detail-row:last-child { border-bottom: none; }
-                        .detail-label { font-size: 11px; font-weight: 700; color: #555; }
-                        .detail-value { font-size: 12px; font-weight: 900; }
+                        .notes-section { border: 1px dotted #000; padding: 3mm; margin-bottom: 10mm; background: #fafafa; }
+                        .notes-header { font-size: 9px; font-weight: 900; text-transform: uppercase; margin-bottom: 1mm; opacity: 0.6; }
+                        .notes-body { font-size: 10px; font-weight: 600; line-height: 1.4; }
 
-                        .notes-box { background: #f9f9f9; padding: 4mm; border-radius: 4px; border-left: 4px solid #000; margin-top: 4mm; }
-                        .notes-label { font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 1mm; }
-                        .notes-content { font-size: 11px; font-weight: 600; line-height: 1.5; }
-
-                        .footer { margin-top: auto; padding-top: 10mm; display: flex; justify-content: space-between; align-items: flex-end; }
-                        .signature { text-align: center; width: 40mm; }
+                        .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15mm; }
+                        .signature-box { text-align: center; width: 45mm; }
                         .sig-line { border-top: 1px solid #000; margin-bottom: 2mm; }
-                        .sig-text { font-size: 9px; font-weight: 800; text-transform: uppercase; }
+                        .sig-label { font-size: 9px; font-weight: 800; text-transform: uppercase; }
+                        .print-meta { font-size: 8px; font-weight: 600; color: #666; font-family: monospace; }
 
-                        .qr-space { width: 25mm; height: 25mm; background: #eee; border-radius: 4px; }
-                        
-                        @media print {
-                            .no-print { display: none; }
-                        }
+                        .page-break { page-break-after: always; height: 10mm; border-bottom: 1px dashed #ccc; margin: 10mm 0; }
                     </style>
                 </head>
                 <body>
-                    <div class="print-container">
-                        <div class="header">
-                            <h1 class="hospital-name">${activeBranch?.name || 'HOSPITAL MANAGEMENT'}</h1>
-                            <div class="hospital-info">${activeBranch?.address || ''}</div>
-                            <div class="hospital-info">${activeBranch?.phone || ''}</div>
-                        </div>
-
-                        <div class="slip-title">Appointment Slip</div>
-
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-label">Patient Name</div>
-                                <div class="info-value">${appointment?.patient?.name}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Patient ID / Phone</div>
-                                <div class="info-value">${appointment?.patient?.patientNumber || appointment?.patient?.phone}</div>
-                            </div>
-                        </div>
-
-                        <div class="main-section">
-                            <div class="section-tag">Schedule Details</div>
-                            <div class="detail-row">
-                                <span class="detail-label">Appointment Date</span>
-                                <span class="detail-value">${appointment?.date ? format(new Date(appointment.date), "MMMM dd, yyyy") : '—'}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Time Slot</span>
-                                <span class="detail-value">${appointment?.timeSlot}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Room / Serial</span>
-                                <span class="detail-value">${appointment?.serialNumber?.replace('-', '/')}</span>
-                            </div>
-                        </div>
-
-                        <div class="main-section">
-                            <div class="section-tag">Clinical Assignment</div>
-                            <div class="detail-row">
-                                <span class="detail-label">Consultant Doctor</span>
-                                <span class="detail-value">${appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Department</span>
-                                <span class="detail-value">${appointment?.department?.name}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Chamber No</span>
-                                <span class="detail-value">${appointment?.chamberOrRoomNumber || 'Consultation Room'}</span>
-                            </div>
-                        </div>
-
-                        <div class="notes-box">
-                            <div class="notes-label">Patient Instructions</div>
-                            <div class="notes-content">${appointment?.note || "Please arrive 15 minutes before your scheduled time. Bring all previous medical reports and current prescriptions."}</div>
-                        </div>
-
-                        <div class="footer">
-                            <div class="signature">
-                                <div class="sig-line"></div>
-                                <div class="sig-text">Authorized Signature</div>
-                            </div>
-                            <div style="font-size: 8px; font-weight: 700; color: #999; text-transform: uppercase;">
-                                Generated on: ${format(new Date(), "PPP p")}
-                            </div>
-                        </div>
-                    </div>
+                    \${printContent}
+                    <div class="page-break"></div>
+                    \${printContent.replace('Appointment Slip', 'Appointment Slip (OFFICE COPY)')}
                 </body>
             </html>
-        `)
+        \`)
         doc.close()
 
         setTimeout(() => {
@@ -390,71 +397,71 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             <Loader2 className="h-10 w-10 animate-spin text-primary/40" />
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
-                            <div className="flex flex-col gap-6" ref={printRef}>
-                                {/* This is just for printing ref content if needed, but we used innerHTML of a hidden/different structure above. Actually I'll use a better approach for printRef later if needed, for now the innerHTML trick in handlePrint uses the state data. */}
+                        <div className="flex flex-col md:flex-row gap-6 pb-8">
+                            <div className="flex-1 flex flex-col gap-6" ref={printRef}>
+                                {/* Patient Info */}
+                                <DetailSection icon={User} title="Patient Information">
+                                    <Field label="Full Name" value={appointment?.patient?.name} icon={User} />
+                                    <div className="flex gap-4">
+                                        <Field label="Phone" value={appointment?.patient?.phone} icon={Phone} className="flex-1" />
+                                        <Field label="Patient ID" value={appointment?.patient?.patientNumber} className="flex-1" />
+                                    </div>
+                                    <Field label="Address" value={appointment?.patient?.address} icon={MapPin} />
+                                </DetailSection>
                             </div>
                             
-                            {/* Patient Info */}
-                            <DetailSection icon={User} title="Patient Information">
-                                <Field label="Full Name" value={appointment?.patient?.name} icon={User} />
-                                <div className="flex gap-4">
-                                    <Field label="Phone" value={appointment?.patient?.phone} icon={Phone} className="flex-1" />
-                                    <Field label="Patient ID" value={appointment?.patient?.patientNumber} className="flex-1" />
-                                </div>
-                                <Field label="Address" value={appointment?.patient?.address} icon={MapPin} />
-                            </DetailSection>
-
-                            {/* Medical Professional Info */}
-                            <DetailSection icon={Stethoscope} title="Medical Info">
-                                <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
-                                <div className="flex gap-4">
-                                    <Field label="Department" value={appointment?.department?.name} icon={Building2} className="flex-1" />
-                                    <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} className="flex-1" />
-                                </div>
-                                <div className="flex gap-4">
-                                    <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} className="flex-1" />
-                                    {appointment?.referralPerson && (
-                                        <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} className="flex-1" />
-                                    )}
-                                </div>
-                                
-                                <div className="pt-3 border-t border-secondary/20 flex flex-col md:flex-row md:items-start gap-3 md:gap-6">
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70 shrink-0 md:pt-1">
-                                        <FileText className="h-3 w-3 text-primary/60" />
-                                        <span>Clinical Note:</span>
+                            <div className="flex-1 flex flex-col gap-6">
+                                {/* Medical Professional Info */}
+                                <DetailSection icon={Stethoscope} title="Medical Info">
+                                    <Field label="Treating Doctor" value={appointment?.doctor?.fullName || appointment?.doctor?.name || appointment?.doctor?.username} icon={User} />
+                                    <div className="flex gap-4">
+                                        <Field label="Department" value={appointment?.department?.name} icon={Building2} className="flex-1" />
+                                        <Field label="Time Slot" value={appointment?.timeSlot} icon={Clock} className="flex-1" />
                                     </div>
-                                    <div className={cn(
-                                        "flex-1 transition-all duration-300",
-                                        isEditing ? "bg-background p-3 rounded-xl border-2 border-primary/20 shadow-inner" : ""
-                                    )}>
-                                        {isEditing ? (
-                                            <textarea 
-                                                value={note}
-                                                onChange={(e) => setNote(e.target.value)}
-                                                className="w-full bg-transparent border-none focus:ring-0 text-xs font-bold leading-relaxed min-h-[40px] resize-none"
-                                                placeholder="Update clinical notes..."
-                                            />
-                                        ) : (
-                                            <p className="text-xs font-bold leading-relaxed text-foreground/80">
-                                                {appointment?.note || "—"}
-                                            </p>
+                                    <div className="flex gap-4">
+                                        <Field label="Room / Serial" value={appointment?.serialNumber?.replace('-', '/')} icon={Building2} className="flex-1" />
+                                        {appointment?.referralPerson && (
+                                            <Field label="Referral Source" value={appointment.referralPerson.name} icon={User} className="flex-1" />
                                         )}
                                     </div>
-                                    {isEditing && (
-                                        <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-black uppercase bg-primary/5 text-primary border-primary/20 shrink-0">Editing</Badge>
-                                    )}
-                                </div>
-                            </DetailSection>
-
-                            <Separator className="md:col-span-2 opacity-50" />
-
-                            <div className="md:col-span-2 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-                                <span>CREATED: {appointment?.createdAt && format(new Date(appointment.createdAt), "PPP p")}</span>
-                                <span>LAST UPDATED: {appointment?.updatedAt && format(new Date(appointment.updatedAt), "PPP p")}</span>
+                                    
+                                    <div className="pt-3 border-t border-secondary/20 flex flex-col md:flex-row md:items-start gap-3 md:gap-6">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70 shrink-0 md:pt-1">
+                                            <FileText className="h-3 w-3 text-primary/60" />
+                                            <span>Clinical Note:</span>
+                                        </div>
+                                        <div className={cn(
+                                            "flex-1 transition-all duration-300",
+                                            isEditing ? "bg-background p-3 rounded-xl border-2 border-primary/20 shadow-inner" : ""
+                                        )}>
+                                            {isEditing ? (
+                                                <textarea 
+                                                    value={note}
+                                                    onChange={(e) => setNote(e.target.value)}
+                                                    className="w-full bg-transparent border-none focus:ring-0 text-xs font-bold leading-relaxed min-h-[40px] resize-none"
+                                                    placeholder="Update clinical notes..."
+                                                />
+                                            ) : (
+                                                <p className="text-xs font-bold leading-relaxed text-foreground/80">
+                                                    {appointment?.note || "—"}
+                                                </p>
+                                            )}
+                                        </div>
+                                        {isEditing && (
+                                            <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-black uppercase bg-primary/5 text-primary border-primary/20 shrink-0">Editing</Badge>
+                                        )}
+                                    </div>
+                                </DetailSection>
                             </div>
                         </div>
                     )}
+                    
+                    <Separator className="opacity-50 my-6" />
+
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono pb-4">
+                        <span>CREATED: {appointment?.createdAt && format(new Date(appointment.createdAt), "PPP p")}</span>
+                        <span>LAST UPDATED: {appointment?.updatedAt && format(new Date(appointment.updatedAt), "PPP p")}</span>
+                    </div>
                 </ScrollArea>
                 
                 <div className="p-6 bg-secondary/5 border-t border-secondary/10 flex justify-end gap-3">
