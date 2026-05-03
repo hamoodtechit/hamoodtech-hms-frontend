@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCashRegister } from "@/hooks/pharmacy-queries"
+import { useSale } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { format } from "date-fns"
 import { 
@@ -48,8 +49,11 @@ interface RegisterDetailsDialogProps {
 export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetailsDialogProps) {
     const { data: response, isLoading } = useCashRegister(id || "")
     const { formatCurrency } = useCurrency()
-    const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null)
+    const [selectedSale, setSelectedSale] = useState<any | null>(null)
     const [saleDialogOpen, setSaleDialogOpen] = useState(false)
+
+    const { data: fullSaleRes } = useSale(selectedSale?.id || "")
+    const fullSale = fullSaleRes?.data || selectedSale
 
     const session = response?.data
     if (!session && !isLoading) return null
@@ -163,7 +167,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                                 key={sale.id} 
                                                                 className="cursor-pointer hover:bg-slate-50 transition-colors group"
                                                                 onClick={() => {
-                                                                    setSelectedSaleId(sale.id)
+                                                                    setSelectedSale(sale)
                                                                     setSaleDialogOpen(true)
                                                                 }}
                                                             >
@@ -278,7 +282,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
             </DialogContent>
 
             <SaleDetailsDialog 
-                id={selectedSaleId}
+                sale={fullSale}
                 open={saleDialogOpen}
                 onOpenChange={setSaleDialogOpen}
             />
