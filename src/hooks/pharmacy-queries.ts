@@ -22,6 +22,7 @@ export const PHARMACY_KEYS = {
   purchase: (id: string) => [...PHARMACY_KEYS.all, "purchase", id] as const,
   reports: (params: any) => [...PHARMACY_KEYS.all, "reports", params] as const,
   cashRegisters: (params: any) => [...PHARMACY_KEYS.all, "cash-registers", params] as const,
+  cashRegister: (id: string) => [...PHARMACY_KEYS.all, "cash-register", id] as const,
   branches: (params: any) => [...PHARMACY_KEYS.all, "branches", params] as const,
 };
 
@@ -30,6 +31,14 @@ export function useCashRegisters(params: any = {}) {
     queryKey: PHARMACY_KEYS.cashRegisters(params),
     queryFn: () => pharmacyService.getCashRegisters(params),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCashRegister(id: string) {
+  return useQuery({
+    queryKey: PHARMACY_KEYS.cashRegister(id),
+    queryFn: () => pharmacyService.getCashRegister(id),
+    enabled: !!id,
   });
 }
 

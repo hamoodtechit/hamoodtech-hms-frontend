@@ -26,6 +26,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { ChevronLeft, ChevronRight, Loader2, RefreshCcw, Search, Store } from "lucide-react"
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
+import { RegisterDetailsDialog } from "@/components/pharmacy/registers/register-details-dialog"
 
 export default function CashRegisterHistoryPage() {
   const { activeStoreId } = useStoreContext()
@@ -35,6 +36,8 @@ export default function CashRegisterHistoryPage() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 500)
   const [page, setPage] = useState(1)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
 
   // Sync with global store context initially or when it changes
   useEffect(() => {
@@ -164,7 +167,14 @@ export default function CashRegisterHistoryPage() {
                 </TableHeader>
                 <TableBody>
                   {sessions.map((session: any) => (
-                    <TableRow key={session.id} className="hover:bg-primary/5 transition-colors group">
+                    <TableRow 
+                        key={session.id} 
+                        className="hover:bg-primary/5 transition-colors group cursor-pointer"
+                        onClick={() => {
+                            setSelectedId(session.id)
+                            setDetailsOpen(true)
+                        }}
+                    >
                       <TableCell className="font-bold text-foreground/80">
                         <div className="flex flex-col">
                             <span>{session.user?.name || "System User"}</span>
@@ -231,6 +241,12 @@ export default function CashRegisterHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <RegisterDetailsDialog 
+        id={selectedId}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   )
 }
