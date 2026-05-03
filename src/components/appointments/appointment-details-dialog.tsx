@@ -172,7 +172,9 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                         .print-meta { font-size: 8px; font-weight: 600; color: #666; font-family: monospace; }
                     </style>
                 </head>
-                <body>${printContent}</body>
+                <body>
+                    ${printContent}
+                </body>
             </html>
         `)
         doc.close()
