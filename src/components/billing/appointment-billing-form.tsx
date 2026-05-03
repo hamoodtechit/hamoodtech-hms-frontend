@@ -82,6 +82,9 @@ export function AppointmentBillingForm() {
     // History Modal State
     const [historyOpen, setHistoryOpen] = useState(false)
     const [modalSearch, setModalSearch] = useState("")
+    const [modalDoctorId, setModalDoctorId] = useState<string>("all")
+    const [modalDepartmentId, setModalDepartmentId] = useState<string>("all")
+    const [modalStatus, setModalStatus] = useState<string>("all")
     const [modalPage, setModalPage] = useState(1)
     const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
     const [detailsOpen, setDetailsOpen] = useState(false)
@@ -92,6 +95,9 @@ export function AppointmentBillingForm() {
         limit: modalLimit, 
         page: modalPage,
         search: modalSearch || undefined,
+        doctorId: modalDoctorId !== "all" ? modalDoctorId : undefined,
+        departmentId: modalDepartmentId !== "all" ? modalDepartmentId : undefined,
+        status: modalStatus !== "all" ? modalStatus : undefined,
     })
 
     const recentAppointments = recentAppointmentsRes?.data || []
@@ -375,10 +381,10 @@ export function AppointmentBillingForm() {
             {/* History Dialog */}
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
                 <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
-                    <DialogHeader className="p-6 border-b bg-muted/30">
+                    <DialogHeader className="p-4 px-6 border-b bg-muted/30 shrink-0">
                         <div className="flex items-center justify-between gap-4">
                             <div className="space-y-0.5">
-                                <DialogTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                                <DialogTitle className="text-lg font-black tracking-tight flex items-center gap-2">
                                     <History className="h-5 w-5 text-primary" />
                                     Appointment History
                                 </DialogTitle>
@@ -390,25 +396,67 @@ export function AppointmentBillingForm() {
                         </div>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-hidden flex flex-col p-6 pt-4 gap-4">
-                        {/* Search Bar */}
-                        <div className="flex items-center gap-4 p-3 bg-muted/10 rounded-2xl border border-border/30">
-                            <div className="relative flex-1">
+                    <div className="flex-1 overflow-hidden flex flex-col p-4 px-6 gap-4">
+                        {/* Search & Filter Bar */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-muted/10 rounded-2xl border border-border/30 shrink-0">
+                            <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
-                                    placeholder="Search by patient name or ID..." 
-                                    className="pl-10 h-10 bg-background rounded-xl border-none shadow-sm"
+                                    placeholder="Patient Name/ID..." 
+                                    className="pl-10 h-9 bg-background rounded-xl border-none shadow-sm text-xs font-bold"
                                     value={modalSearch}
                                     onChange={(e) => setModalSearch(e.target.value)}
                                 />
                             </div>
+                            
+                            <Select value={modalDoctorId} onValueChange={setModalDoctorId}>
+                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold">
+                                    <SelectValue placeholder="All Doctors" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="text-[10px] font-bold">All Doctors</SelectItem>
+                                    {users.filter((u: any) => u.role?.name?.toLowerCase() === 'doctor').map(doc => (
+                                        <SelectItem key={doc.id} value={doc.id} className="text-[10px] font-bold">
+                                            {doc.fullName || doc.username}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={modalDepartmentId} onValueChange={setModalDepartmentId}>
+                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold">
+                                    <SelectValue placeholder="All Dept" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="text-[10px] font-bold">All Dept</SelectItem>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id} className="text-[10px] font-bold">
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={modalStatus} onValueChange={setModalStatus}>
+                                <SelectTrigger className="h-9 bg-background rounded-xl border-none shadow-sm text-[10px] font-bold capitalize">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-none shadow-2xl">
+                                    <SelectItem value="all" className="text-[10px] font-bold">All Status</SelectItem>
+                                    {['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map(status => (
+                                        <SelectItem key={status} value={status} className="text-[10px] font-bold capitalize">
+                                            {status}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {/* History Table */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar rounded-[2rem] border bg-background shadow-inner">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
-                                    <tr className="h-14 border-b border-border/50">
+                                    <tr className="h-10 border-b border-border/50">
                                         <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Schedule Info</th>
                                         <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Patient</th>
                                         <th className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Specialist</th>
@@ -435,7 +483,7 @@ export function AppointmentBillingForm() {
                                         </tr>
                                     ) : (
                                         recentAppointments.map((apt: any) => (
-                                            <tr key={apt.id} className="h-20 border-b border-border/50 hover:bg-muted/20 transition-colors group">
+                                            <tr key={apt.id} className="h-14 border-b border-border/50 hover:bg-muted/20 transition-colors group">
                                                 <td className="px-6">
                                                     <div className="flex flex-col">
                                                         <p className="font-black text-sm text-foreground">{format(new Date(apt.date), 'MMM dd, yyyy')}</p>
