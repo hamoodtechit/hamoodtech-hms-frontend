@@ -15,6 +15,7 @@ import { format } from "date-fns"
 import {
     Briefcase,
     Calendar,
+    Clock,
     Contact,
     CreditCard,
     Fingerprint,

@@ -174,7 +174,7 @@ function SidebarBase() {
               permission: "patient:read",
             },
             {
-              label: "Appointments",
+              label: "Book Appointment",
               href: "/appointments",
               permission: "appointment:read",
             }
@@ -317,7 +317,7 @@ function SidebarBase() {
               permission: ["sale:read", "sale:create"],
             },
             {
-              label: "Appointment Billing",
+              label: "Appointment History",
               href: "/billing/appointment",
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
