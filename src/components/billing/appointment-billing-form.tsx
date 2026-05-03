@@ -488,9 +488,6 @@ export function AppointmentBillingForm() {
                                                             <Users className="h-4 w-4 text-indigo-600" />
                                                         </div>
                                                         <div>
-<<<<<<< HEAD
-                                                            <p className="font-black text-xs text-foreground">{apt.doctor?.fullName || apt.doctor?.name || apt.doctor?.username || 'Assigned Doctor'}</p>
-=======
                                                             <p className="font-black text-xs text-foreground">
                                                                 {(() => {
                                                                     const doctorId = apt.doctorId;

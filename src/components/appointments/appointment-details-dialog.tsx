@@ -156,7 +156,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                     <tbody>
                         <tr>
                             <td>Consultation Fee</td>
-                            <td class="text-right font-bold">${appointment?.fee || '—'}</td>
+                            <td class="text-right font-bold">${(appointment as any)?.fee || '—'}</td>
                         </tr>
                         <tr>
                             <td>Room / Chamber</td>
