@@ -4,6 +4,7 @@ import { AppointmentDetailsDialog } from "@/components/appointments/appointment-
 import { AppointmentDialog } from "@/components/appointments/appointment-dialog"
 import { AppointmentSaleDialog } from "@/components/appointments/appointment-sale-dialog"
 import { AppointmentPaymentDialog } from "@/components/appointments/appointment-payment-dialog"
+import { HospitalReceiptDialog } from "@/components/patients/hospital-receipt-dialog"
 import { AppointmentFilters, AppointmentFilterValues } from "@/components/appointments/appointment-filters"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { Badge } from "@/components/ui/badge"
@@ -25,7 +26,7 @@ import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { format } from "date-fns"
-import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, ShoppingCart, Stethoscope, Trash2 } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, ShoppingCart, Stethoscope, Trash2, Printer, Wallet } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -47,7 +48,8 @@ export default function AppointmentHistoryPage() {
     // Sale & Payment dialogs
     const [saleDialogOpen, setSaleDialogOpen] = useState(false)
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
-    const [lastCreatedSale, setLastCreatedSale] = useState<Sale | null>(null)
+    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
+    const [lastCreatedSale, setLastCreatedSale] = useState<Sale | any | null>(null)
     
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
@@ -235,7 +237,7 @@ export default function AppointmentHistoryPage() {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     )}
-                                                    {hasPermission('sale:create') && apt.fees && Number(apt.fees) > 0 && (
+                                                    {hasPermission('sale:create') && apt.fees && Number(apt.fees) > 0 && !apt.sale && (
                                                         <Button 
                                                             variant="ghost" 
                                                             size="icon"
@@ -248,6 +250,36 @@ export default function AppointmentHistoryPage() {
                                                         >
                                                             <ShoppingCart className="h-4 w-4" />
                                                         </Button>
+                                                    )}
+                                                    {apt.sale && (
+                                                        <>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 rounded-lg hover:bg-blue-500/10 hover:text-blue-600 text-muted-foreground"
+                                                                onClick={() => {
+                                                                    setLastCreatedSale(apt.sale)
+                                                                    setReceiptDialogOpen(true)
+                                                                }}
+                                                                title="Print Receipt"
+                                                            >
+                                                                <Printer className="h-4 w-4" />
+                                                            </Button>
+                                                            {hasPermission('sale:create') && apt.sale.paymentStatus !== 'paid' && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 rounded-lg hover:bg-amber-500/10 hover:text-amber-600 text-muted-foreground"
+                                                                    onClick={() => {
+                                                                        setLastCreatedSale(apt.sale)
+                                                                        setPaymentDialogOpen(true)
+                                                                    }}
+                                                                    title="Record Payment"
+                                                                >
+                                                                    <Wallet className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </>
                                                     )}
                                                     {hasPermission('appointment:delete') && (
                                                         <Button 
@@ -333,6 +365,12 @@ export default function AppointmentHistoryPage() {
                         refetch()
                         setLastCreatedSale(null)
                     }}
+                />
+
+                <HospitalReceiptDialog
+                    open={receiptDialogOpen}
+                    onOpenChange={setReceiptDialogOpen}
+                    transaction={lastCreatedSale}
                 />
             </div>
         </PermissionGuard>

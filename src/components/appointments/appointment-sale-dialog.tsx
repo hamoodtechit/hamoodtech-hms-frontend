@@ -36,10 +36,7 @@ import {
     Loader2,
     CheckCircle2,
     AlertCircle,
-    Percent,
-    DollarSign,
 } from "lucide-react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useMemo, useEffect } from "react"
 import { toast } from "sonner"
 
@@ -73,35 +70,34 @@ export function AppointmentSaleDialog({
     const [selectedAccountId, setSelectedAccountId] = useState<string>("")
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
     const [paidAmount, setPaidAmount] = useState<number>(0)
-    const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
     const [discountPercentage, setDiscountPercentage] = useState<number>(0)
     const [discountAmount, setDiscountAmount] = useState<number>(0)
     const [paymentNote, setPaymentNote] = useState("")
 
     // Derived
-    const netAmount = useMemo(() => {
-        return Math.max(0, fees - discountAmount)
-    }, [fees, discountAmount])
+    const fees = useMemo(() => {
+        if (!appointment?.fees) return 0
+        return Number(appointment.fees) || 0
+    }, [appointment])
 
-    // Update discount logic
+    const netAmount = useMemo(() => {
+        const discountVal = discountAmount > 0 ? discountAmount : (fees * discountPercentage) / 100
+        return Math.max(0, fees - discountVal)
+    }, [fees, discountAmount, discountPercentage])
+
+    // Update discount amount when percentage changes
     const handleDiscountPercentageChange = (p: number) => {
         setDiscountPercentage(p)
+        setDiscountAmount(0)
         const amount = (fees * p) / 100
-        setDiscountAmount(amount)
-        setPaidAmount(fees - amount)
+        setPaidAmount(Math.max(0, fees - amount))
     }
 
+    // Update discount percentage when amount changes
     const handleDiscountAmountChange = (a: number) => {
         setDiscountAmount(a)
-        const percentage = fees > 0 ? (a / fees) * 100 : 0
-        setDiscountPercentage(Number(percentage.toFixed(2)))
-        setPaidAmount(fees - a)
-    }
-
-    const toggleDiscountType = (type: "percentage" | "fixed") => {
-        setDiscountType(type)
-        // Optionally reset values here, but keeping them synchronized for now as requested by "flexible" logic
-        // If the user wants only ONE field to be passed, we handle that in the payload.
+        setDiscountPercentage(0)
+        setPaidAmount(Math.max(0, fees - a))
     }
 
     // Auto-set paid amount to full fee when dialog opens
@@ -150,8 +146,8 @@ export function AppointmentSaleDialog({
                 paymentStatus: paidAmount >= netAmount ? "paid" : paidAmount > 0 ? "partial" : "due",
                 paidAmount: paidAmount,
                 dueAmount: dueAmount,
-                discountPercentage: discountType === "percentage" ? discountPercentage : 0,
-                discountAmount: discountType === "fixed" ? discountAmount : 0,
+                discountPercentage: discountPercentage,
+                discountAmount: discountAmount,
                 taxPercentage: 0,
                 taxAmount: 0,
                 payments: paidAmount > 0
@@ -270,44 +266,29 @@ export function AppointmentSaleDialog({
                                 </div>
                             </div>
 
-                            <div className="space-y-3 pt-2 border-t border-primary/10">
-                                <Tabs value={discountType} onValueChange={(v) => toggleDiscountType(v as any)} className="w-full">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <Label className="text-[8px] font-black uppercase text-muted-foreground/60">Discount Method</Label>
-                                        <TabsList className="h-7 bg-muted/20 p-0.5 rounded-lg">
-                                            <TabsTrigger value="percentage" className="h-6 px-3 rounded-md text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Percentage</TabsTrigger>
-                                            <TabsTrigger value="fixed" className="h-6 px-3 rounded-md text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Fixed</TabsTrigger>
-                                        </TabsList>
-                                    </div>
-
-                                    {discountType === "percentage" ? (
-                                        <div className="relative">
-                                            <Input 
-                                                type="number" 
-                                                min={0} 
-                                                max={100}
-                                                value={discountPercentage}
-                                                onChange={(e) => handleDiscountPercentageChange(Number(e.target.value) || 0)}
-                                                className="h-10 pl-9 rounded-lg bg-background/50 border-primary/10 font-bold text-sm"
-                                                placeholder="Enter percentage..."
-                                            />
-                                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
-                                        </div>
-                                    ) : (
-                                        <div className="relative">
-                                            <Input 
-                                                type="number" 
-                                                min={0} 
-                                                max={fees}
-                                                value={discountAmount}
-                                                onChange={(e) => handleDiscountAmountChange(Number(e.target.value) || 0)}
-                                                className="h-10 pl-9 rounded-lg bg-background/50 border-primary/10 font-bold text-sm"
-                                                placeholder="Enter fixed amount..."
-                                            />
-                                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
-                                        </div>
-                                    )}
-                                </Tabs>
+                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-primary/10">
+                                <div className="space-y-1">
+                                    <Label className="text-[8px] font-black uppercase text-muted-foreground/60">Discount (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        min={0} 
+                                        max={100}
+                                        value={discountPercentage}
+                                        onChange={(e) => handleDiscountPercentageChange(Number(e.target.value) || 0)}
+                                        className="h-8 rounded-lg bg-background/50 border-primary/10 font-bold text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[8px] font-black uppercase text-muted-foreground/60">Discount (Fixed)</Label>
+                                    <Input 
+                                        type="number" 
+                                        min={0} 
+                                        max={fees}
+                                        value={discountAmount}
+                                        onChange={(e) => handleDiscountAmountChange(Number(e.target.value) || 0)}
+                                        className="h-8 rounded-lg bg-background/50 border-primary/10 font-bold text-xs"
+                                    />
+                                </div>
                             </div>
 
                             {fees <= 0 && (
