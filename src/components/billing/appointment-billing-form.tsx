@@ -493,8 +493,13 @@ export function AppointmentBillingForm() {
 =======
                                                             <p className="font-black text-xs text-foreground">
                                                                 {(() => {
-                                                                    const matchedUser = users.find((u: any) => u.id === apt.doctorId || (u.employeeId && u.employeeId === apt.doctorId));
-                                                                    return matchedUser?.fullName || matchedUser?.username || apt.doctor?.fullName || apt.doctor?.name || apt.doctor?.username || 'Assigned Doctor';
+                                                                    const doctorId = apt.doctorId;
+                                                                    const matchedUser = users.find((u: any) => 
+                                                                        u.id === doctorId || 
+                                                                        u.employeeId === doctorId || 
+                                                                        u.employee?.id === doctorId
+                                                                    );
+                                                                    return matchedUser?.fullName || matchedUser?.username || apt.doctor?.fullName || apt.doctor?.name || apt.doctor?.username || 'Specialist Doctor';
                                                                 })()}
                                                             </p>
                                                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{apt.department?.name || 'General'}</p>
