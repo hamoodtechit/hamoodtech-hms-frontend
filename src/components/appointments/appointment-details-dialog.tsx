@@ -419,33 +419,31 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                     )}
                                 </div>
                                 
-                                <div className="space-y-2 pt-3 border-t border-secondary/20">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70">
-                                            <FileText className="h-3 w-3" />
-                                            <span>Clinical Note</span>
-                                        </div>
-                                        {isEditing && (
-                                            <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-black uppercase bg-primary/5 text-primary border-primary/20">Editing</Badge>
-                                        )}
+                                <div className="pt-3 border-t border-secondary/20 flex flex-col md:flex-row md:items-start gap-3 md:gap-6">
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-70 shrink-0 md:pt-1">
+                                        <FileText className="h-3 w-3 text-primary/60" />
+                                        <span>Clinical Note:</span>
                                     </div>
                                     <div className={cn(
-                                        "transition-all duration-300",
+                                        "flex-1 transition-all duration-300",
                                         isEditing ? "bg-background p-3 rounded-xl border-2 border-primary/20 shadow-inner" : ""
                                     )}>
                                         {isEditing ? (
                                             <textarea 
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}
-                                                className="w-full bg-transparent border-none focus:ring-0 text-xs font-bold leading-relaxed min-h-[60px] resize-none"
-                                                placeholder="Update notes..."
+                                                className="w-full bg-transparent border-none focus:ring-0 text-xs font-bold leading-relaxed min-h-[40px] resize-none"
+                                                placeholder="Update clinical notes..."
                                             />
                                         ) : (
                                             <p className="text-xs font-bold leading-relaxed text-foreground/80">
-                                                {appointment?.note || "No clinical notes provided."}
+                                                {appointment?.note || "—"}
                                             </p>
                                         )}
                                     </div>
+                                    {isEditing && (
+                                        <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-black uppercase bg-primary/5 text-primary border-primary/20 shrink-0">Editing</Badge>
+                                    )}
                                 </div>
                             </DetailSection>
 
