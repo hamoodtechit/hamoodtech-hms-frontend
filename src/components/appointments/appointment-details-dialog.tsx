@@ -284,7 +284,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                 <Icon className="h-3.5 w-3.5" />
                 <h3>{title}</h3>
             </div>
-            <div className="p-5 rounded-2xl bg-secondary/10 border border-secondary/20 backdrop-blur-sm grid gap-4">
+            <div className="p-5 rounded-2xl bg-secondary/10 border border-secondary/20 backdrop-blur-sm flex flex-col gap-4">
                 {children}
             </div>
         </section>
@@ -398,9 +398,9 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                             {/* Patient Info */}
                             <DetailSection icon={User} title="Patient Information">
                                 <Field label="Full Name" value={appointment?.patient?.name} icon={User} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Field label="Phone" value={appointment?.patient?.phone} icon={Phone} />
-                                    <Field label="Patient ID" value={appointment?.patient?.patientNumber} />
+                                <div className="flex gap-4">
+                                    <Field label="Phone" value={appointment?.patient?.phone} icon={Phone} className="flex-1" />
+                                    <Field label="Patient ID" value={appointment?.patient?.patientNumber} className="flex-1" />
                                 </div>
                                 <Field label="Address" value={appointment?.patient?.address} icon={MapPin} />
                             </DetailSection>
