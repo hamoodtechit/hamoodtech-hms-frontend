@@ -27,10 +27,13 @@ import { ChevronLeft, ChevronRight, Eye, Loader2, Search, Printer } from "lucide
 import { useState, useMemo } from "react"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { useSettingsStore } from "@/store/use-settings-store"
 import { useUsers } from "@/hooks/user-queries"
 
 export function DoctorPaymentHistory() {
-    const { activeStoreId } = useStoreContext()
+    const { activeStoreId, stores } = useStoreContext()
+    const activeStore = stores.find(s => s.id === activeStoreId)
+    const { general } = useSettingsStore()
     const { formatCurrency } = useCurrency()
 
     const [page, setPage] = useState(1)
@@ -60,6 +63,7 @@ export function DoctorPaymentHistory() {
     console.log("Payment History API Response:", data)
 
     const { data: detailRes, isLoading: detailLoading } = useConsultationPayment(detailId)
+    console.log("Payment Detail API Response:", detailRes)
     const detailPayment = detailRes?.data
 
     const payments: ConsultationPayment[] = data?.data || []
@@ -76,7 +80,7 @@ export function DoctorPaymentHistory() {
     }
 
     const handlePrint = () => {
-        const printContent = document.getElementById('payment-detail-content')?.innerHTML;
+        const printContent = document.getElementById('receipt-print-content')?.innerHTML;
         if (!printContent) return;
 
         const iframe = document.createElement('iframe');
@@ -94,16 +98,15 @@ export function DoctorPaymentHistory() {
                         <title>Payment Voucher - ${detailPayment?.paymentNumber || ''}</title>
                         ${Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(el => el.outerHTML).join('\n')}
                         <style>
-                            @page { size: A4; margin: 15mm; }
-                            body { background: white !important; margin: 0; padding: 0; }
+                            @page { size: A4; margin: 0; }
+                            body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
+                            .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
                         </style>
                     </head>
-                    <body class="p-8">
-                        <div class="mb-6 pb-6 border-b-2 border-black/10">
-                            <h1 class="text-2xl font-black uppercase tracking-tight">Payment Voucher</h1>
-                            <p class="text-muted-foreground font-bold">Voucher No: ${detailPayment?.paymentNumber || ''}</p>
+                    <body>
+                        <div class="print-container">
+                            ${printContent}
                         </div>
-                        ${printContent}
                     </body>
                 </html>
             `);
@@ -286,6 +289,86 @@ export function DoctorPaymentHistory() {
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : detailPayment ? (
+                        <>
+                        {/* Hidden Print Layout matching other vouchers */}
+                        <div className="hidden">
+                            <div id="receipt-print-content" className="w-full text-black bg-white">
+                                <div className="text-center mb-4 pb-2 border-b-2 border-black">
+                                    <div className="flex justify-center mb-1">
+                                        <img src={activeStore?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto' }} />
+                                    </div>
+                                    <h1 className="text-2xl font-black uppercase leading-tight m-0">{general?.hospitalName || activeStore?.name || "HOSPITAL NAME"}</h1>
+                                    <p className="text-xs font-bold leading-tight m-0">{general?.address || activeStore?.address || "Address"}</p>
+                                    <p className="text-xs font-bold leading-tight m-0">Ph: {general?.phone || activeStore?.phone || "Phone"}</p>
+                                    <div className="mt-4 inline-block border-2 border-black rounded-full px-6 py-1 font-black tracking-widest text-sm uppercase">
+                                        DOCTOR PAYMENT VOUCHER
+                                    </div>
+                                </div>
+
+                                <div className="border-2 border-black mb-4 flex flex-col font-bold text-sm">
+                                    <div className="grid grid-cols-2 border-b border-black">
+                                        <div className="p-2 border-r border-black">
+                                            Voucher No: {detailPayment?.paymentNumber || ""}
+                                        </div>
+                                        <div className="p-2">
+                                            Date: {format(new Date(detailPayment.createdAt), "dd MMM yyyy, hh:mm a")}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2">
+                                        <div className="p-2 border-r border-black flex items-center">
+                                            Doctor: <span className="ml-2 uppercase">{detailPayment.doctor?.fullName || detailPayment.doctor?.name || "—"}</span>
+                                        </div>
+                                        <div className="p-2 flex items-center">
+                                            Method: <span className="ml-2 uppercase">{methodLabel(detailPayment.paymentMethod)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <table className="w-full text-left border-collapse border-2 border-black font-bold text-xs mb-8">
+                                    <thead>
+                                        <tr className="border-b-2 border-black bg-gray-100">
+                                            <th className="p-2 border-r border-black w-12 text-center">SL</th>
+                                            <th className="p-2 border-r border-black">Sale / Appointment</th>
+                                            <th className="p-2 border-r border-black text-right w-24">Total</th>
+                                            <th className="p-2 border-r border-black text-right w-16">Comm %</th>
+                                            <th className="p-2 text-right w-28">Payable</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {detailPayment.charges && detailPayment.charges.length > 0 ? (
+                                            detailPayment.charges.map((ch: any, idx: number) => (
+                                                <tr key={ch.id} className="border-b border-black">
+                                                    <td className="p-2 border-r border-black text-center">{idx + 1}</td>
+                                                    <td className="p-2 border-r border-black">{ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}</td>
+                                                    <td className="p-2 border-r border-black text-right">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</td>
+                                                    <td className="p-2 border-r border-black text-right">{Number(ch.commissionPercentage || 0)}%</td>
+                                                    <td className="p-2 text-right">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={5} className="p-4 text-center">No charges found.</td>
+                                            </tr>
+                                        )}
+                                        <tr className="border-t-2 border-black bg-gray-100">
+                                            <td colSpan={4} className="p-2 border-r border-black text-right uppercase tracking-wider">Total Paid</td>
+                                            <td className="p-2 text-right text-sm">{formatCurrency(Number(detailPayment.totalAmount || 0))}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div className="flex justify-between mt-24 pt-2 font-bold text-sm">
+                                    <div className="w-48 text-center border-t border-black pt-1">
+                                        Receiver's Signature
+                                    </div>
+                                    <div className="w-48 text-center border-t border-black pt-1">
+                                        Authorized Signature
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Visible Dialog Content */}
                         <div id="payment-detail-content" className="space-y-6">
                             {/* Summary */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -342,6 +425,7 @@ export function DoctorPaymentHistory() {
                                 </div>
                             )}
                         </div>
+                        </>
                     ) : (
                         <p className="text-center text-muted-foreground py-8">Payment not found.</p>
                     )}
