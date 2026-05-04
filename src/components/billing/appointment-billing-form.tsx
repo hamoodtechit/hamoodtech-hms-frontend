@@ -232,9 +232,9 @@ export function AppointmentBillingForm() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-6xl mx-auto w-full">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-6xl mx-auto w-full">
                 {/* Left Side - Appointment Form */}
-                <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="xl:col-span-8 flex flex-col gap-6">
                     <Card className="border-none  overflow-hidden rounded-[2rem]">
                         <CardHeader className="bg-primary/5 border-b p-6">
                             <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
@@ -394,7 +394,7 @@ export function AppointmentBillingForm() {
                 </div>
 
                 {/* Right Side - Summary & Action */}
-                <div className="lg:col-span-4">
+                <div className="xl:col-span-4">
                     <Card className="border-none   overflow-hidden rounded-[2rem] sticky top-24">
                         <CardHeader className="bg-primary/5 border-b p-6">
                             <CardTitle className="text-xs font-black uppercase tracking-[0.25em] text-primary flex items-center gap-2">
@@ -462,7 +462,7 @@ export function AppointmentBillingForm() {
                             </div>
 
                             <Button 
-                                className="w-full h-16 text-lg font-black uppercase tracking-[0.2em] rounded-2xl   transition-all active:scale-[0.98] group"
+                                className="w-full h-16 text-base font-black uppercase tracking-widest rounded-2xl transition-all active:scale-[0.98] group"
                                 onClick={handleCreateAppointment}
                                 disabled={createAppointmentMutation.isPending || !selectedCustomer || !selectedDoctorId || !appointmentDate || !timeSlot}
                             >
