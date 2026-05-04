@@ -42,7 +42,7 @@ interface AppointmentDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     appointment?: Appointment | null
-    onSuccess?: () => void
+    onSuccess?: (createdAppointment?: any) => void
 }
 
 export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }: AppointmentDialogProps) {
@@ -166,6 +166,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                     data: formData
                 })
                 toast.success("Appointment updated successfully")
+                onSuccess?.()
             } else {
                 const res: any = await createMutation.mutateAsync({
                     ...formData,
@@ -173,11 +174,13 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                 })
 
                 toast.success("Appointment scheduled successfully")
+                onSuccess?.(res?.data || res)
             }
-            onSuccess?.()
             onOpenChange(false)
-        } catch (error) {
-            toast.error(isEdit ? "Failed to update appointment" : "Failed to schedule appointment")
+        } catch (error: any) {
+            if (!error?.response?.data?.message) {
+                toast.error(isEdit ? "Failed to update appointment" : "Failed to schedule appointment")
+            }
         } finally {
             setLoading(false)
         }

@@ -166,7 +166,7 @@ export function PrintReport({ report }: PrintReportProps) {
                     key={gIdx} 
                     className={cn(
                         "mx-auto relative overflow-hidden bg-white",
-                        gIdx > 0 && "print:break-before-page pt-[35mm]" // Page break for subsequent groups
+                        gIdx > 0 && "print:break-before-page" // Page break for subsequent groups
                     )}
                     style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
                 >

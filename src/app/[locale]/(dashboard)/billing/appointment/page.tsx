@@ -340,7 +340,16 @@ export default function AppointmentHistoryPage() {
                     open={appointmentDialogOpen}
                     onOpenChange={setAppointmentDialogOpen}
                     appointment={selectedAppointment}
-                    onSuccess={refetch}
+                    onSuccess={(createdAppointment?: any) => {
+                        refetch()
+                        // After creating a new appointment, auto-open the sale dialog
+                        if (createdAppointment && !selectedAppointment) {
+                            setSelectedAppointment(createdAppointment)
+                            setTimeout(() => {
+                                setSaleDialogOpen(true)
+                            }, 300)
+                        }
+                    }}
                 />
 
                 <AppointmentDetailsDialog 
