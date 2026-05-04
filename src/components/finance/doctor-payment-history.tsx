@@ -24,7 +24,10 @@ import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationPayment } from "@/types/finance"
 import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, Eye, Loader2, Search } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { FilterPopover } from "@/components/shared/filter-popover"
+import { SearchableSelect } from "@/components/shared/searchable-select"
+import { useUsers } from "@/hooks/user-queries"
 
 export function DoctorPaymentHistory() {
     const { activeStoreId } = useStoreContext()
@@ -32,14 +35,26 @@ export function DoctorPaymentHistory() {
 
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState("")
+    const [doctorFilter, setDoctorFilter] = useState("")
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
     const [detailId, setDetailId] = useState("")
     const [detailOpen, setDetailOpen] = useState(false)
+
+    const { data: usersRes } = useUsers({ branchId: activeStoreId || undefined, limit: 1000 })
+    const doctors = useMemo(() =>
+        (usersRes?.data || []).filter((u: any) => u.role?.name?.toLowerCase() === 'doctor'),
+        [usersRes]
+    )
 
     const { data, isLoading } = useConsultationPayments({
         page,
         limit: 20,
         branchId: activeStoreId || undefined,
         search: search || undefined,
+        doctorId: doctorFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
     })
 
     const { data: detailRes, isLoading: detailLoading } = useConsultationPayment(detailId)
@@ -58,6 +73,8 @@ export function DoctorPaymentHistory() {
         }
     }
 
+    const activeFilterCount = [doctorFilter, startDate, endDate].filter(Boolean).length
+
     return (
         <>
             <Card className="border-none shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -72,6 +89,47 @@ export function DoctorPaymentHistory() {
                                 onChange={(e) => setSearch(e.target.value)}
                             />
                         </div>
+                        <FilterPopover
+                            activeFilterCount={activeFilterCount}
+                            onReset={() => {
+                                setDoctorFilter("")
+                                setStartDate("")
+                                setEndDate("")
+                            }}
+                        >
+                            <div className="space-y-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Doctor</label>
+                                    <SearchableSelect
+                                        value={doctorFilter}
+                                        onChange={setDoctorFilter}
+                                        options={doctors.map((d: any) => ({
+                                            id: d.employeeId || d.id,
+                                            name: d.fullName || d.username,
+                                        }))}
+                                        placeholder="All Doctors"
+                                        allLabel="All Doctors"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Date Range</label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="h-9 text-xs"
+                                        />
+                                        <Input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="h-9 text-xs"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </FilterPopover>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">

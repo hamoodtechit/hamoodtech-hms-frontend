@@ -32,6 +32,8 @@ export function DoctorPaymentList() {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState("")
     const [doctorFilter, setDoctorFilter] = useState("")
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
     const [payDialogOpen, setPayDialogOpen] = useState(false)
 
@@ -48,6 +50,8 @@ export function DoctorPaymentList() {
         isPaid: false,
         search: search || undefined,
         doctorId: doctorFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
     })
 
     const charges: ConsultationCharge[] = data?.data || []
@@ -81,7 +85,7 @@ export function DoctorPaymentList() {
 
     const selectedTotal = selectedCharges.reduce((sum, c) => sum + Number(c.chargeAmount || 0), 0)
 
-    const activeFilterCount = [doctorFilter].filter(Boolean).length
+    const activeFilterCount = [doctorFilter, startDate, endDate].filter(Boolean).length
 
     return (
         <>
@@ -99,7 +103,11 @@ export function DoctorPaymentList() {
                         </div>
                         <FilterPopover
                             activeFilterCount={activeFilterCount}
-                            onReset={() => setDoctorFilter("")}
+                            onReset={() => {
+                                setDoctorFilter("")
+                                setStartDate("")
+                                setEndDate("")
+                            }}
                         >
                             <div className="space-y-3">
                                 <div className="space-y-1.5">
@@ -114,6 +122,23 @@ export function DoctorPaymentList() {
                                         placeholder="All Doctors"
                                         allLabel="All Doctors"
                                     />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold uppercase text-muted-foreground">Date Range</label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="h-9 text-xs"
+                                        />
+                                        <Input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="h-9 text-xs"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </FilterPopover>
