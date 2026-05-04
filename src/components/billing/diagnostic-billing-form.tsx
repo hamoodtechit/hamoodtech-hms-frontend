@@ -131,7 +131,7 @@ export function DiagnosticBillingForm({
     const { data: testsRes } = useDiagnosticTests({ 
         branchId: activeStoreId || undefined, 
         limit: 1000,
-        type: type === 'emergency' ? 'emergency' : undefined,
+        serviceType: type === 'emergency' ? 'emergency' : undefined,
     })
     const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
         branchId: activeStoreId || undefined,

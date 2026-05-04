@@ -143,6 +143,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         machineName: "",
         machineDescription: "",
         refCommissionsPercentage: 0,
+        serviceType: undefined,
     })
 
     useEffect(() => {
@@ -165,6 +166,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     machineName: test.machineName || "",
                     machineDescription: test.machineDescription || "",
                     refCommissionsPercentage: test.refCommissionsPercentage || 0,
+                    serviceType: test.serviceType || undefined,
                 })
             } else {
                 setFormData({
@@ -184,6 +186,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     machineName: "",
                     machineDescription: "",
                     refCommissionsPercentage: 0,
+                    serviceType: undefined,
                 })
             }
         }
@@ -345,8 +348,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                     </div>
                                     <Switch 
                                         id="serviceType" 
-                                        checked={formData.type === 'emergency'} 
-                                        onCheckedChange={(val) => setFormData(prev => ({ ...prev, type: val ? 'emergency' : 'pathology' }))}
+                                        checked={formData.serviceType === 'emergency'} 
+                                        onCheckedChange={(val) => setFormData(prev => ({ ...prev, serviceType: val ? 'emergency' : undefined }))}
                                         className="data-[state=checked]:bg-red-600 scale-110"
                                     />
                                 </div>
