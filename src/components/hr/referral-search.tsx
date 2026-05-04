@@ -18,6 +18,7 @@ import { hrService } from "@/services/hr-service"
 import { ReferralPerson } from "@/types/hr"
 import { Check, ChevronsUpDown, Plus, UserCircle } from "lucide-react"
 import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
 import { useDebounce } from "use-debounce"
 import { ReferralPersonDialog } from "./referral-person-dialog"
 import { useStoreContext } from "@/store/use-store-context"
@@ -25,9 +26,10 @@ import { useStoreContext } from "@/store/use-store-context"
 interface ReferralSearchProps {
   selectedReferralId: string | null
   onSelect: (referral: ReferralPerson | null) => void
+  className?: string
 }
 
-export function ReferralSearch({ selectedReferralId, onSelect }: ReferralSearchProps) {
+export function ReferralSearch({ selectedReferralId, onSelect, className }: ReferralSearchProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [debouncedQuery] = useDebounce(query, 500)
@@ -71,7 +73,7 @@ export function ReferralSearch({ selectedReferralId, onSelect }: ReferralSearchP
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-9 text-xs font-medium"
+          className={cn("w-full justify-between h-9 text-xs font-medium", className)}
         >
           {selectedReferral ? (
               <div className="flex items-center text-left">
