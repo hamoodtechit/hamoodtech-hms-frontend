@@ -38,6 +38,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { usePatients } from "@/hooks/patient-queries"
 import { AppointmentSaleDialog } from "@/components/appointments/appointment-sale-dialog"
 import { AppointmentPaymentDialog } from "@/components/appointments/appointment-payment-dialog"
+import { AppointmentReceiptDialog } from "@/components/appointments/appointment-receipt-dialog"
 import { Appointment } from "@/types/appointment"
 import { Sale } from "@/types/sales"
 
@@ -50,6 +51,7 @@ export function AppointmentBillingForm() {
     // Sale & Payment dialog state for auto-open after appointment creation
     const [saleDialogOpen, setSaleDialogOpen] = useState(false)
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     const [createdAppointment, setCreatedAppointment] = useState<Appointment | null>(null)
     const [lastCreatedSale, setLastCreatedSale] = useState<Sale | any | null>(null)
 
@@ -524,6 +526,9 @@ export function AppointmentBillingForm() {
                     // If there's due, open payment dialog
                     if (Number(sale.dueAmount) > 0) {
                         setPaymentDialogOpen(true)
+                    } else {
+                        // Fully paid initially
+                        setReceiptDialogOpen(true)
                     }
                     setCreatedAppointment(null)
                 }}
@@ -534,8 +539,20 @@ export function AppointmentBillingForm() {
                 onOpenChange={setPaymentDialogOpen}
                 sale={lastCreatedSale}
                 onPaymentSuccess={() => {
-                    setLastCreatedSale(null)
+                    // Open receipt after successful payment
+                    setReceiptDialogOpen(true)
                 }}
+            />
+
+            <AppointmentReceiptDialog
+                open={receiptDialogOpen}
+                onOpenChange={(open) => {
+                    setReceiptDialogOpen(open)
+                    if (!open) {
+                        setLastCreatedSale(null)
+                    }
+                }}
+                transaction={lastCreatedSale}
             />
         </div>
     )

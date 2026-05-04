@@ -25,6 +25,7 @@ import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useCreateSale, useAddSalePayment } from "@/hooks/sales-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { AppointmentReceiptDialog } from "@/components/appointments/appointment-receipt-dialog"
 import { Admission } from "@/types/patient"
 import { SalePayload } from "@/types/sales"
 import { PaymentMethod } from "@/types/pharmacy"
@@ -60,6 +61,9 @@ export function AddAdmissionServiceDialog({
     const { formatCurrency } = useCurrency()
     const { mutateAsync: createSale, isPending: isSaving } = useCreateSale()
     const addPaymentMutation = useAddSalePayment()
+
+    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
+    const [lastCreatedSale, setLastCreatedSale] = useState<any>(null)
 
     // Cart State
     const [cart, setCart] = useState<CartItem[]>([])
@@ -214,6 +218,12 @@ export function AddAdmissionServiceDialog({
                 }
             } else {
                 toast.success("Services added to hospital bill successfully")
+            }
+
+            // Capture the sale data to pass to the receipt dialog
+            if (saleId) {
+                setLastCreatedSale(saleRes.data || saleRes)
+                setReceiptDialogOpen(true)
             }
 
             resetForm()
@@ -509,5 +519,15 @@ export function AddAdmissionServiceDialog({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <AppointmentReceiptDialog
+            open={receiptDialogOpen}
+            onOpenChange={(open) => {
+                setReceiptDialogOpen(open)
+                if (!open) setLastCreatedSale(null)
+            }}
+            transaction={lastCreatedSale}
+        />
+        </>
     )
 }
