@@ -269,7 +269,7 @@ export function Sidebar() {
               permission: ["sale:read", "sale:create"],
             },
             {
-              label: "Appointment History",
+              label: "Appointment Billing",
               href: "/billing/appointment",
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
@@ -290,6 +290,12 @@ export function Sidebar() {
             {
               label: "General Ledger",
               href: "/finance",
+              module: "finance",
+              permission: "account:read",
+            },
+            {
+              label: "Doctor Payment",
+              href: "/finance/doctor-payment",
               module: "finance",
               permission: "account:read",
             }

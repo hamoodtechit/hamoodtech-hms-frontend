@@ -1,5 +1,5 @@
 import { financeService } from "@/services/finance-service";
-import { CreateAccountPayload, FundTransferPayload, UpdateAccountPayload } from "@/types/finance";
+import { CreateAccountPayload, FundTransferPayload, PayConsultationChargesPayload, UpdateAccountPayload } from "@/types/finance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const FINANCE_KEYS = {
@@ -8,6 +8,9 @@ export const FINANCE_KEYS = {
     account: (id: string) => [...FINANCE_KEYS.all, "account", id] as const,
     transactions: (params?: any) => [...FINANCE_KEYS.all, "transactions", params] as const,
     transaction: (id: string) => [...FINANCE_KEYS.all, "transaction", id] as const,
+    consultationCharges: (params?: any) => [...FINANCE_KEYS.all, "consultation-charges", params] as const,
+    consultationPayments: (params?: any) => [...FINANCE_KEYS.all, "consultation-payments", params] as const,
+    consultationPayment: (id: string) => [...FINANCE_KEYS.all, "consultation-payment", id] as const,
 };
 
 export function useFinanceAccounts(params?: any, options: { enabled?: boolean } = {}) {
@@ -90,6 +93,40 @@ export function useTransferFunds() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data: FundTransferPayload) => financeService.transferFunds(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.all });
+        },
+    });
+}
+
+// ── Consultation Charges ────────────────────────────────────
+
+export function useConsultationCharges(params?: any) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.consultationCharges(params),
+        queryFn: () => financeService.getConsultationCharges(params),
+    });
+}
+
+export function useConsultationPayments(params?: any) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.consultationPayments(params),
+        queryFn: () => financeService.getConsultationPayments(params),
+    });
+}
+
+export function useConsultationPayment(id: string) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.consultationPayment(id),
+        queryFn: () => financeService.getConsultationPayment(id),
+        enabled: !!id,
+    });
+}
+
+export function usePayConsultationCharges() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: PayConsultationChargesPayload) => financeService.payConsultationCharges(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: FINANCE_KEYS.all });
         },

@@ -122,3 +122,93 @@ export interface FinanceTransactionListResponse {
         hasPreviousPage: boolean;
     };
 }
+
+// ── Doctor Consultation Charges ─────────────────────────────────
+
+export interface ConsultationCharge {
+    id: string;
+    saleId: string;
+    appointmentId?: string;
+    doctorId: string;
+    branchId: string;
+    serviceAmount: string;
+    commissionPercentage: string;
+    chargeAmount: string;
+    isPaid: boolean;
+    paidAt?: string;
+    paymentId?: string;
+    createdAt: string;
+    updatedAt: string;
+    doctor?: {
+        id: string;
+        name: string;
+        user?: { fullName?: string; username?: string };
+    };
+    sale?: {
+        id: string;
+        invoiceNumber?: string;
+        customer?: { name: string; phone?: string };
+    };
+    appointment?: {
+        id: string;
+        serialNumber?: string;
+        patient?: { name: string };
+    };
+}
+
+export interface ConsultationChargeListResponse {
+    success: boolean;
+    message: string;
+    data: ConsultationCharge[];
+    meta: {
+        page: number;
+        pageSize: number;
+        totalPages: number;
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
+}
+
+export interface ConsultationPayment {
+    id: string;
+    paymentNumber: string;
+    doctorId: string;
+    branchId: string;
+    accountId: string;
+    totalAmount: string;
+    paymentMethod: string;
+    note?: string;
+    createdAt: string;
+    updatedAt: string;
+    doctor?: {
+        id: string;
+        name: string;
+        user?: { fullName?: string; username?: string };
+    };
+    account?: FinanceAccount;
+    charges?: ConsultationCharge[];
+}
+
+export interface ConsultationPaymentListResponse {
+    success: boolean;
+    message: string;
+    data: ConsultationPayment[];
+    meta: {
+        page: number;
+        pageSize: number;
+        totalPages: number;
+        totalItems: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+    };
+}
+
+export interface PayConsultationChargesPayload {
+    branchId: string;
+    doctorId: string;
+    chargeIds: string[];
+    accountId: string;
+    paymentMethod: string;
+    note?: string;
+}

@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { AccountDetailResponse, AccountListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, FundTransferPayload, FundTransferResponse, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
+import { AccountDetailResponse, AccountListResponse, ConsultationChargeListResponse, ConsultationPaymentListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, FundTransferPayload, FundTransferResponse, PayConsultationChargesPayload, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
 
 export const financeService = {
     getAccounts: async (params?: { page?: number; limit?: number; type?: string; group?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
@@ -50,5 +50,27 @@ export const financeService = {
     updateTransaction: async (id: string, data: { note?: string; paymentMethod?: string }): Promise<FinanceTransaction> => {
         const response = await api.patch<FinanceTransaction>(`/finance/transactions/${id}`, data);
         return response.data;
-    }
+    },
+
+    // ── Consultation Charges ────────────────────────────────────
+
+    getConsultationCharges: async (params?: { page?: number; limit?: number; doctorId?: string; branchId?: string; isPaid?: string; search?: string; startDate?: string; endDate?: string }): Promise<ConsultationChargeListResponse> => {
+        const response = await api.get<ConsultationChargeListResponse>("/finance/consultation-charges/charges", { params });
+        return response.data;
+    },
+
+    payConsultationCharges: async (data: PayConsultationChargesPayload): Promise<any> => {
+        const response = await api.post("/finance/consultation-charges/pay", data);
+        return response.data;
+    },
+
+    getConsultationPayments: async (params?: { page?: number; limit?: number; doctorId?: string; branchId?: string; search?: string; startDate?: string; endDate?: string }): Promise<ConsultationPaymentListResponse> => {
+        const response = await api.get<ConsultationPaymentListResponse>("/finance/consultation-charges/payments", { params });
+        return response.data;
+    },
+
+    getConsultationPayment: async (id: string): Promise<any> => {
+        const response = await api.get(`/finance/consultation-charges/payments/${id}`);
+        return response.data;
+    },
 };
