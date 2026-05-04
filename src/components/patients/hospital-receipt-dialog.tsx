@@ -85,8 +85,8 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const amountInWords = numberToWords(netTotal) + " TAKA ONLY"
 
   const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
-    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[5mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
-        <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
+    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0 text-black">
+        <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
 
         {/* PAID Hologram */}
         {isFullyPaid && (
@@ -231,7 +231,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
             </div>
         </div>
         
-        <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-gray-500 font-bold flex justify-between uppercase tracking-widest relative z-10">
+        <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
             <span>* System Generated Hospital Bill</span>
             <span>Printed: {new Date().toLocaleString('en-GB')}</span>
         </div>
@@ -240,10 +240,8 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   )
 
   const handlePrint = () => {
-        const el = printRef.current
-        if (!el) return
-
-        const printContent = el.innerHTML
+        const printContent = document.getElementById('hospital-receipt-content')?.innerHTML;
+        if (!printContent) return
 
         const iframe = document.createElement('iframe')
         iframe.style.position = 'fixed'
@@ -263,7 +261,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                 <head>
                     <title>Hospital Bill - ${patient?.name || invoiceNumber}</title>
                     <style>
-                        @page { size: A4; margin: 5mm; }
+                        @page { size: A4; margin: 0; }
                         body { 
                             font-family: Arial, sans-serif; 
                             -webkit-print-color-adjust: exact; 
@@ -427,16 +425,13 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
             </div>
         </div>
         
-        <div className="p-4 overflow-y-auto bg-zinc-200/50 max-h-[85vh]" ref={printRef}>
+        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white text-black" id="hospital-receipt-content" style={{ width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-40 gap-4">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                    <span className="text-sm font-black uppercase tracking-widest text-muted-foreground animate-pulse">Loading Bill...</span>
+                <div className="h-40 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
                 </div>
             ) : (
-                <div className="bg-white shadow-2xl mx-auto w-[210mm]">
-                    <ReceiptContent copyTitle="HOSPITAL BILL — ORIGINAL COPY" />
-                </div>
+                <ReceiptContent copyTitle="HOSPITAL BILL — ORIGINAL COPY" />
             )}
         </div>
       </DialogContent>
