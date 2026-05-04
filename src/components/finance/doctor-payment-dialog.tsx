@@ -25,7 +25,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationCharge } from "@/types/finance"
 import { Loader2, Wallet } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 
 interface DoctorPaymentDialogProps {
@@ -54,6 +54,16 @@ export function DoctorPaymentDialog({
     const [accountId, setAccountId] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("cash")
     const [note, setNote] = useState("")
+
+    useEffect(() => {
+        if (open && accounts.length > 0 && !accountId) {
+            const activeAccounts = accounts.filter((a: any) => a.isActive)
+            const defaultAccount = activeAccounts.find((a: any) => a.name?.toLowerCase().includes('hospital')) || activeAccounts[0]
+            if (defaultAccount) {
+                setAccountId(defaultAccount.id)
+            }
+        }
+    }, [open, accounts, accountId])
 
     const totalPayable = charges.reduce((sum, c) => sum + Number(c.commissionAmount || (c as any).chargeAmount || 0), 0)
 
