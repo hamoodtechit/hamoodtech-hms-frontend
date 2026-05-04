@@ -207,7 +207,7 @@ export function SaleDetailsDialog({
             ...item,
             price: newPrice,
             mrp: newPrice,
-            totalPrice: newPrice * (item.quantity || 1),
+            totalPrice: newPrice * (Number(item.quantity) || 1),
           }
         }
         return item
