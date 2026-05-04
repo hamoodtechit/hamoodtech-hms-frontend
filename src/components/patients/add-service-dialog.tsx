@@ -78,7 +78,7 @@ export function AddAdmissionServiceDialog({
     const [manualItemPrice, setManualItemPrice] = useState(0)
 
     // Mode
-    const [activeTab, setActiveTab] = useState("catalog")
+    const [activeTab, setActiveTab] = useState("labtest")
 
     // Discount State
     const [discountPercentage, setDiscountPercentage] = useState(0)
@@ -89,12 +89,20 @@ export function AddAdmissionServiceDialog({
     const [selectedAccountId, setSelectedAccountId] = useState("")
     const [paidAmount, setPaidAmount] = useState(0)
 
-    const { data: servicesRes, isLoading: isLoadingServices } = useDiagnosticTests({
+    const { data: labServicesRes, isLoading: isLoadingLabServices } = useDiagnosticTests({
         branchId: activeStoreId || undefined,
         limit: 1000,
-    }, { enabled: open && activeTab === "catalog" })
+        isDiagnosticTest: true,
+    }, { enabled: open && activeTab === "labtest" })
 
-    const services = servicesRes?.data || []
+    const { data: hospitalServicesRes, isLoading: isLoadingHospitalServices } = useDiagnosticTests({
+        branchId: activeStoreId || undefined,
+        limit: 1000,
+        isDiagnosticTest: false,
+    }, { enabled: open && activeTab === "hospitalbill" })
+
+    const labServices = labServicesRes?.data || []
+    const hospitalServices = hospitalServicesRes?.data || []
 
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
     const accounts = accountsRes?.data || []
@@ -108,8 +116,8 @@ export function AddAdmissionServiceDialog({
     }, [open, accounts, selectedAccountId])
 
     const handleAddToCart = () => {
-        if (activeTab === "catalog") {
-            const service = services.find(s => s.id === selectedServiceId)
+        if (activeTab === "labtest") {
+            const service = labServices.find(s => s.id === selectedServiceId)
             if (!service) {
                 toast.error("Please select a service from the list")
                 return
@@ -127,20 +135,26 @@ export function AddAdmissionServiceDialog({
             setQuantity(1)
             setPrice(0)
         } else {
-            if (!manualItemName || manualItemPrice <= 0) {
-                toast.error("Please provide valid item name and price")
+            // Hospital Bill tab — select from non-lab services with editable price
+            const service = hospitalServices.find(s => s.id === selectedServiceId)
+            if (!service) {
+                toast.error("Please select a service from the list")
                 return
             }
+            const finalPrice = manualItemPrice > 0 ? manualItemPrice : Number(service.price)
             const item: CartItem = {
                 id: Math.random().toString(36).substring(7),
-                name: manualItemName,
-                price: manualItemPrice,
-                quantity: quantity
+                name: service.name,
+                price: finalPrice,
+                quantity: quantity,
+                serviceId: service.id,
+                isDiagnosticTest: false
             }
             setCart(prev => [...prev, item])
-            setManualItemName("")
+            setSelectedServiceId("")
             setManualItemPrice(0)
             setQuantity(1)
+            setPrice(0)
         }
     }
 
@@ -273,30 +287,30 @@ export function AddAdmissionServiceDialog({
                     <div className="bg-muted/10 border border-muted-foreground/10 rounded-2xl p-4 space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 rounded-xl h-10">
-                                <TabsTrigger value="catalog" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
-                                    <Search className="h-3.5 w-3.5" /> Catalog
+                                <TabsTrigger value="labtest" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
+                                    <Search className="h-3.5 w-3.5" /> Lab Test
                                 </TabsTrigger>
-                                <TabsTrigger value="manual" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
-                                    <FileText className="h-3.5 w-3.5" /> Manual
+                                <TabsTrigger value="hospitalbill" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
+                                    <FileText className="h-3.5 w-3.5" /> Hospital Bill
                                 </TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="catalog" className="space-y-4 pt-3 mt-0 border-none outline-none">
+                            <TabsContent value="labtest" className="space-y-4 pt-3 mt-0 border-none outline-none">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select Service</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select Lab Test</Label>
                                     <SearchableSelect
                                         value={selectedServiceId}
                                         onChange={(val) => {
                                             setSelectedServiceId(val)
-                                            const service = services.find(s => s.id === val)
+                                            const service = labServices.find(s => s.id === val)
                                             if (service) setPrice(Number(service.price))
                                         }}
-                                        options={services.map(s => ({
+                                        options={labServices.map(s => ({
                                             id: s.id,
                                             name: `${s.name} - ${formatCurrency(Number(s.price))}`
                                         }))}
-                                        placeholder="Search catalog..."
-                                        loading={isLoadingServices}
+                                        placeholder="Search lab tests..."
+                                        loading={isLoadingLabServices}
                                     />
                                 </div>
 
@@ -329,14 +343,25 @@ export function AddAdmissionServiceDialog({
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="manual" className="space-y-4 pt-3 mt-0 border-none outline-none">
+                            <TabsContent value="hospitalbill" className="space-y-4 pt-3 mt-0 border-none outline-none">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Custom Service Name</Label>
-                                    <Input
-                                        placeholder="e.g. Special Nursing"
-                                        value={manualItemName}
-                                        onChange={(e) => setManualItemName(e.target.value)}
-                                        className="h-10 rounded-xl bg-background border-muted font-bold text-xs"
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select Service</Label>
+                                    <SearchableSelect
+                                        value={selectedServiceId}
+                                        onChange={(val) => {
+                                            setSelectedServiceId(val)
+                                            const service = hospitalServices.find(s => s.id === val)
+                                            if (service) {
+                                                setPrice(Number(service.price))
+                                                setManualItemPrice(Number(service.price))
+                                            }
+                                        }}
+                                        options={hospitalServices.map(s => ({
+                                            id: s.id,
+                                            name: `${s.name} - ${formatCurrency(Number(s.price))}`
+                                        }))}
+                                        placeholder="Search hospital services..."
+                                        loading={isLoadingHospitalServices}
                                     />
                                 </div>
 
@@ -351,18 +376,24 @@ export function AddAdmissionServiceDialog({
                                             className="h-10 rounded-xl bg-background border-muted font-bold text-xs"
                                         />
                                     </div>
-                                    <div className="space-y-1.5 col-span-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Unit Price</Label>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Price</Label>
+                                        <SmartNumberInput
+                                            value={manualItemPrice}
+                                            onChange={(val) => setManualItemPrice(val || 0)}
+                                            min={0}
+                                            className="h-10 rounded-xl bg-amber-50 border-amber-200 font-bold text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Subtotal</Label>
                                         <div className="flex gap-2">
-                                            <SmartNumberInput
-                                                placeholder="0.00"
-                                                value={manualItemPrice}
-                                                onChange={(val) => setManualItemPrice(val || 0)}
-                                                className="h-10 rounded-xl bg-background border-muted font-bold text-xs flex-1"
-                                            />
+                                            <div className="h-10 flex-1 flex items-center px-3 rounded-xl bg-background border border-muted text-sm font-black tabular-nums">
+                                                {formatCurrency((manualItemPrice || price) * quantity)}
+                                            </div>
                                             <Button 
                                                 onClick={handleAddToCart}
-                                                disabled={!manualItemName || manualItemPrice <= 0}
+                                                disabled={!selectedServiceId}
                                                 className="h-10 px-4 rounded-xl font-black uppercase text-[10px] gap-2 tracking-widest shrink-0"
                                             >
                                                 <Plus className="h-3.5 w-3.5" /> Add
