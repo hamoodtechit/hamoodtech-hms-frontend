@@ -385,7 +385,7 @@ export function SaleDetailsDialog({
                       <TableCell className="text-right">
                         {formatCurrency(
                           editedItemPrices[item.id] !== undefined
-                            ? editedItemPrices[item.id] * (item.quantity || 1)
+                            ? editedItemPrices[item.id] * (Number(item.quantity) || 1)
                             : item.totalPrice
                         )}
                       </TableCell>
