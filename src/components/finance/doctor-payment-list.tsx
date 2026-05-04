@@ -54,6 +54,8 @@ export function DoctorPaymentList() {
         endDate: endDate || undefined,
     })
 
+    console.log("Consultation Charges API Response:", data)
+
     const charges: ConsultationCharge[] = data?.data || []
     const totalPages = data?.meta?.totalPages || 1
 
