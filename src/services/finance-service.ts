@@ -54,7 +54,7 @@ export const financeService = {
 
     // ── Consultation Charges ────────────────────────────────────
 
-    getConsultationCharges: async (params?: { page?: number; limit?: number; doctorId?: string; branchId?: string; isPaid?: string; search?: string; startDate?: string; endDate?: string }): Promise<ConsultationChargeListResponse> => {
+    getConsultationCharges: async (params?: { page?: number; limit?: number; doctorId?: string; branchId?: string; isPaid?: boolean; search?: string; startDate?: string; endDate?: string }): Promise<ConsultationChargeListResponse> => {
         const response = await api.get<ConsultationChargeListResponse>("/finance/consultation-charges/charges", { params });
         return response.data;
     },

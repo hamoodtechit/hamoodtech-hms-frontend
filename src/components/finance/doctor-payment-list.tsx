@@ -45,7 +45,7 @@ export function DoctorPaymentList() {
         page,
         limit: 20,
         branchId: activeStoreId || undefined,
-        isPaid: "false",
+        isPaid: false,
         search: search || undefined,
         doctorId: doctorFilter || undefined,
     })
