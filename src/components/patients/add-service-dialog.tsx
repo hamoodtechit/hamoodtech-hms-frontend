@@ -134,7 +134,7 @@ export function AddAdmissionServiceDialog({
             setSelectedServiceId("")
             setQuantity(1)
             setPrice(0)
-        } else {
+        } else if (activeTab === "hospitalbill") {
             // Hospital Bill tab — select from non-lab services with editable price
             const service = hospitalServices.find(s => s.id === selectedServiceId)
             if (!service) {
@@ -155,6 +155,22 @@ export function AddAdmissionServiceDialog({
             setManualItemPrice(0)
             setQuantity(1)
             setPrice(0)
+        } else if (activeTab === "manual") {
+            if (!manualItemName.trim() || manualItemPrice <= 0) {
+                toast.error("Please enter a valid item name and price")
+                return
+            }
+            const item: CartItem = {
+                id: Math.random().toString(36).substring(7),
+                name: manualItemName,
+                price: manualItemPrice,
+                quantity: quantity,
+                isDiagnosticTest: false
+            }
+            setCart(prev => [...prev, item])
+            setManualItemName("")
+            setManualItemPrice(0)
+            setQuantity(1)
         }
     }
 
@@ -271,7 +287,7 @@ export function AddAdmissionServiceDialog({
             if (!val) resetForm()
             onOpenChange(val)
         }}>
-            <DialogContent className="sm:max-w-[700px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[900px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-4 bg-primary/5 border-b border-primary/10">
                     <DialogTitle className="text-xl font-black tracking-tight text-primary flex items-center gap-3">
                         <Plus className="h-6 w-6" />
@@ -286,12 +302,15 @@ export function AddAdmissionServiceDialog({
                     {/* Add Item Section */}
                     <div className="bg-muted/10 border border-muted-foreground/10 rounded-2xl p-4 space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 rounded-xl h-10">
+                            <TabsList className="grid w-full grid-cols-3 p-1 bg-muted/40 rounded-xl h-10">
                                 <TabsTrigger value="labtest" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
                                     <Search className="h-3.5 w-3.5" /> Lab Test
                                 </TabsTrigger>
                                 <TabsTrigger value="hospitalbill" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
                                     <FileText className="h-3.5 w-3.5" /> Hospital Bill
+                                </TabsTrigger>
+                                <TabsTrigger value="manual" className="rounded-lg text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary gap-2">
+                                    <Activity className="h-3.5 w-3.5" /> Manual Bill
                                 </TabsTrigger>
                             </TabsList>
 
@@ -400,6 +419,51 @@ export function AddAdmissionServiceDialog({
                                             </Button>
                                         </div>
                                     </div>
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="manual" className="space-y-4 pt-3 mt-0 border-none outline-none">
+                                <div className="grid grid-cols-4 gap-3">
+                                    <div className="space-y-1.5 col-span-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name</Label>
+                                        <Input
+                                            value={manualItemName}
+                                            onChange={(e) => setManualItemName(e.target.value)}
+                                            placeholder="Enter service or item name..."
+                                            className="h-10 rounded-xl bg-background border-muted font-bold text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Price</Label>
+                                        <SmartNumberInput
+                                            value={manualItemPrice}
+                                            onChange={(val) => setManualItemPrice(val || 0)}
+                                            min={0}
+                                            className="h-10 rounded-xl bg-amber-50 border-amber-200 font-bold text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Qty</Label>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(Number(e.target.value))}
+                                            className="h-10 rounded-xl bg-background border-muted font-bold text-xs"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="h-10 flex-1 flex items-center px-3 rounded-xl bg-background border border-muted text-sm font-black tabular-nums">
+                                        Subtotal: {formatCurrency((manualItemPrice || 0) * quantity)}
+                                    </div>
+                                    <Button 
+                                        onClick={handleAddToCart}
+                                        disabled={!manualItemName.trim() || manualItemPrice <= 0}
+                                        className="h-10 px-6 rounded-xl font-black uppercase text-[10px] gap-2 tracking-widest shrink-0"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Add
+                                    </Button>
                                 </div>
                             </TabsContent>
                         </Tabs>
