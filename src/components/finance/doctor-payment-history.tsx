@@ -179,7 +179,7 @@ export function DoctorPaymentHistory() {
                     ) : detailPayment ? (
                         <div className="space-y-6">
                             {/* Summary */}
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-muted-foreground text-xs font-bold uppercase">Doctor</p>
                                     <p className="font-bold">{detailPayment.doctor?.user?.fullName || detailPayment.doctor?.name || "—"}</p>
