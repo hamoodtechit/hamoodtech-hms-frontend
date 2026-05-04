@@ -300,33 +300,33 @@ function SidebarBase() {
           roles: ["Super Admin", "Admin", "Receptionist", "Accountant"],
           children: [
             {
-              label: "OPD Billing",
-              href: "/billing/opd",
-              module: "sales",
-              permission: ["pathology:create", "sale:create"],
+              label: "Emergency",
+              href: "/billing/emergency",
+              permission: ["sale:create"],
             },
             {
-              label: "IPD Billing & Ledgers",
-              href: "/billing/ipd",
-              module: "patients",
-              permission: ["patient:read", "sale:create"],
-            },
-            {
-              label: "All Invoices / Receipts",
-              href: "/sales",
-              permission: ["sale:read", "sale:create"],
-            },
-            {
-              label: "Appointment Billing",
+              label: "Appointment",
               href: "/billing/appointment",
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
             },
             {
-              label: "Emergency Billing",
-              href: "/billing/emergency",
-              permission: ["sale:create"],
+              label: "OPD",
+              href: "/billing/opd",
+              module: "sales",
+              permission: ["pathology:create", "sale:create"],
             },
+            {
+              label: "IPD",
+              href: "/billing/ipd",
+              module: "patients",
+              permission: ["patient:read", "sale:create"],
+            },
+            {
+              label: "All Invoices & Receipts",
+              href: "/sales",
+              permission: ["sale:read", "sale:create"],
+            }
           ]
         },
         {
