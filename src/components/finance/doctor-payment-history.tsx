@@ -23,7 +23,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationPayment } from "@/types/finance"
 import { format, startOfDay, endOfDay } from "date-fns"
-import { ChevronLeft, ChevronRight, Eye, Loader2, Search } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, Loader2, Search, Printer } from "lucide-react"
 import { useState, useMemo } from "react"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { SearchableSelect } from "@/components/shared/searchable-select"
@@ -57,6 +57,8 @@ export function DoctorPaymentHistory() {
         endDate: endDate ? endOfDay(new Date(endDate)).toISOString() : undefined,
     })
 
+    console.log("Payment History API Response:", data)
+
     const { data: detailRes, isLoading: detailLoading } = useConsultationPayment(detailId)
     const detailPayment = detailRes?.data
 
@@ -70,6 +72,50 @@ export function DoctorPaymentHistory() {
             case "cheque": return "Cheque"
             case "mfs": return "Mobile Banking"
             default: return m
+        }
+    }
+
+    const handlePrint = () => {
+        const printContent = document.getElementById('payment-detail-content')?.innerHTML;
+        if (!printContent) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentWindow?.document;
+        if (iframeDoc) {
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Payment Voucher - ${detailPayment?.paymentNumber || ''}</title>
+                        ${Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(el => el.outerHTML).join('\n')}
+                        <style>
+                            @page { size: A4; margin: 15mm; }
+                            body { background: white !important; margin: 0; padding: 0; }
+                        </style>
+                    </head>
+                    <body class="p-8">
+                        <div class="mb-6 pb-6 border-b-2 border-black/10">
+                            <h1 class="text-2xl font-black uppercase tracking-tight">Payment Voucher</h1>
+                            <p class="text-muted-foreground font-bold">Voucher No: ${detailPayment?.paymentNumber || ''}</p>
+                        </div>
+                        ${printContent}
+                    </body>
+                </html>
+            `);
+            iframeDoc.close();
+
+            setTimeout(() => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            }, 500);
         }
     }
 
@@ -224,10 +270,15 @@ export function DoctorPaymentHistory() {
             {/* Detail Dialog */}
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
                 <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
+                    <DialogHeader className="flex flex-row items-center justify-between">
                         <DialogTitle className="flex items-center gap-2">
                             Payment Details — {detailPayment?.paymentNumber || ""}
                         </DialogTitle>
+                        {detailPayment && (
+                            <Button size="sm" variant="outline" className="gap-2 shrink-0 h-8 mr-6" onClick={handlePrint}>
+                                <Printer className="h-4 w-4" /> Print
+                            </Button>
+                        )}
                     </DialogHeader>
 
                     {detailLoading ? (
@@ -235,7 +286,7 @@ export function DoctorPaymentHistory() {
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : detailPayment ? (
-                        <div className="space-y-6">
+                        <div id="payment-detail-content" className="space-y-6">
                             {/* Summary */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
