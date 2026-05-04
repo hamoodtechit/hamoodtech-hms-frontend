@@ -411,8 +411,12 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             }
             onSuccess?.(resAdmission.data)
             onOpenChange(false)
-        } catch (error) {
-            toast.error(admission?.id ? "Failed to update admission" : "Failed to admit patient")
+        } catch (error: any) {
+            // Backend error message is shown automatically by the global API interceptor
+            // Only show a fallback if there's no backend message
+            if (!error?.response?.data?.message) {
+                toast.error(admission?.id ? "Failed to update admission" : "Failed to admit patient")
+            }
         } finally {
             setLoading(false)
         }
