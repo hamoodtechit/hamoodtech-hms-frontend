@@ -252,6 +252,7 @@ export function AddAdmissionServiceDialog({
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
     return (
+        <>
         <Dialog open={open} onOpenChange={(val) => {
             if (!val) resetForm()
             onOpenChange(val)
