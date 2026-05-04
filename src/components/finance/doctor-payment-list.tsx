@@ -19,7 +19,7 @@ import { useUsers } from "@/hooks/user-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationCharge } from "@/types/finance"
-import { format } from "date-fns"
+import { format, startOfDay, endOfDay } from "date-fns"
 import { ChevronLeft, ChevronRight, Loader2, Search, Wallet } from "lucide-react"
 import { useMemo, useState } from "react"
 import { DoctorPaymentDialog } from "./doctor-payment-dialog"
@@ -50,8 +50,8 @@ export function DoctorPaymentList() {
         isPaid: false,
         search: search || undefined,
         doctorId: doctorFilter || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: startDate ? startOfDay(new Date(startDate)).toISOString() : undefined,
+        endDate: endDate ? endOfDay(new Date(endDate)).toISOString() : undefined,
     })
 
     console.log("Consultation Charges API Response:", data)

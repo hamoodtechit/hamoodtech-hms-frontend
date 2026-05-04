@@ -22,7 +22,7 @@ import { useConsultationPayments, useConsultationPayment } from "@/hooks/finance
 import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationPayment } from "@/types/finance"
-import { format } from "date-fns"
+import { format, startOfDay, endOfDay } from "date-fns"
 import { ChevronLeft, ChevronRight, Eye, Loader2, Search } from "lucide-react"
 import { useState, useMemo } from "react"
 import { FilterPopover } from "@/components/shared/filter-popover"
@@ -53,8 +53,8 @@ export function DoctorPaymentHistory() {
         branchId: activeStoreId || undefined,
         search: search || undefined,
         doctorId: doctorFilter || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: startDate ? startOfDay(new Date(startDate)).toISOString() : undefined,
+        endDate: endDate ? endOfDay(new Date(endDate)).toISOString() : undefined,
     })
 
     const { data: detailRes, isLoading: detailLoading } = useConsultationPayment(detailId)
