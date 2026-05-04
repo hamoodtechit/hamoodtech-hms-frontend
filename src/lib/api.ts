@@ -33,14 +33,23 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      if (error.response.status === 401) {
+      const status = error.response.status;
+      const backendMessage = error.response.data?.message;
+
+      if (status === 401) {
         // Token might be invalid or expired. Clear storage.
         Cookies.remove('accessToken');
         Cookies.remove('refreshToken');
-      } else if (error.response.status === 403) {
+      } else if (status === 403) {
         // Permission denied
-        toast.error("You do not have permission to perform this action.");
+        toast.error(backendMessage || "You do not have permission to perform this action.");
+      } else if (backendMessage && [400, 404, 409, 422, 500].includes(status)) {
+        // Show the backend's descriptive error message to the user
+        toast.error(backendMessage);
       }
+    } else if (error.request) {
+      // Network error — request was made but no response received
+      toast.error("Network error. Please check your connection.");
     }
     return Promise.reject(error);
   }
