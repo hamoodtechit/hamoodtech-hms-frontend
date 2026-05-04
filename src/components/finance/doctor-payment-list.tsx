@@ -176,20 +176,19 @@ export function DoctorPaymentList() {
                                 <TableHead>Doctor</TableHead>
                                 <TableHead>Sale / Appointment</TableHead>
                                 <TableHead className="text-right">Total Amt</TableHead>
-                                <TableHead className="text-right">Commission %</TableHead>
                                 <TableHead className="text-right">Payable</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-32 text-center">
+                                    <TableCell colSpan={6} className="h-32 text-center">
                                         <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                                     </TableCell>
                                 </TableRow>
                             ) : charges.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-32 text-center text-muted-foreground font-medium">
+                                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground font-medium">
                                         No pending commissions found.
                                     </TableCell>
                                 </TableRow>
@@ -219,11 +218,6 @@ export function DoctorPaymentList() {
                                         </TableCell>
                                         <TableCell className="text-right font-medium text-sm">
                                             {formatCurrency(Number(charge.totalAmount || charge.serviceAmount || 0))}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge variant="outline" className="text-[10px]">
-                                                {Number(charge.commissionPercentage || 0)}%
-                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-right font-black text-primary text-sm">
                                             {formatCurrency(Number(charge.commissionAmount || (charge as any).chargeAmount || 0))}
