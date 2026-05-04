@@ -221,18 +221,15 @@ export function SaleDetailsDialog({
         id: sale.id,
         data: {
           saleItems: updatedItems.map(item => ({
-            id: item.id,
             itemName: item.itemName,
+            unit: item.unit || 'service',
             price: Number(item.price),
             mrp: Number(item.price),
             quantity: Number(item.quantity),
-            totalPrice: Number(item.totalPrice),
-            unit: item.unit,
-            serviceId: item.serviceId,
-            isDiagnosticTest: item.isDiagnosticTest,
-            discountPercentage: item.discountPercentage,
-            discountAmount: item.discountAmount,
+            discountPercentage: Number(item.discountPercentage) || 0,
+            discountAmount: Number(item.discountAmount) || 0,
           })),
+          paidAmount: Number(sale.paidAmount || 0),
           dueAmount: newDue,
         } as any
       }, {
