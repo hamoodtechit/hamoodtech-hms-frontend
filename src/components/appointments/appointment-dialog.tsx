@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
-import { useCreateAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
+import { useCreateAppointment, useUpdateAppointment, useAppointments } from "@/hooks/appointment-queries"
 import { useDepartments } from "@/hooks/hr-queries"
 import { useUsers } from "@/hooks/user-queries"
 import { usePatients } from "@/hooks/patient-queries"
@@ -131,6 +131,26 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
             setFormData(prev => ({ ...prev, chamberOrRoomNumber: "" }))
         }
     }, [formData.doctorId, usersRes])
+
+    // Doctor duty times
+    const selectedDoctor: any = usersRes?.data?.find(u => u.id === formData.doctorId)
+    const doctorStartRaw = (selectedDoctor?.employee as any)?.dutyStartTime || ""
+    const doctorEndRaw = (selectedDoctor?.employee as any)?.dutyEndTime || ""
+    const effectiveStart = doctorStartRaw?.includes('T') ? new Date(doctorStartRaw).toISOString().slice(11, 16) : (doctorStartRaw || appointmentConfig?.startTime || "08:00")
+    const effectiveEnd = doctorEndRaw?.includes('T') ? new Date(doctorEndRaw).toISOString().slice(11, 16) : (doctorEndRaw || appointmentConfig?.endTime || "21:00")
+
+    // Fetch booked slots for doctor+date
+    const doctorEmpId = selectedDoctor?.employeeId || formData.doctorId
+    const { data: existingRes, isLoading: loadingSlots } = useAppointments({
+        doctorId: doctorEmpId || undefined,
+        startDate: formData.date || undefined,
+        endDate: formData.date || undefined,
+        limit: 200,
+    })
+    const bookedSlots = (existingRes?.data || [])
+        .filter((a: any) => a.status !== 'cancelled' && (!appointment || a.id !== appointment.id))
+        .map((a: any) => a.timeSlot)
+        .filter(Boolean)
 
     const handleSave = async () => {
         if (!formData.patientId || !formData.doctorId || !formData.date || !formData.timeSlot) {
@@ -269,9 +289,12 @@ export function AppointmentDialog({ open, onOpenChange, appointment, onSuccess }
                                     <TimeSlotPicker 
                                         value={formData.timeSlot}
                                         onChange={(time) => setFormData(prev => ({ ...prev, timeSlot: time }))}
-                                        startTime={appointmentConfig?.startTime}
-                                        endTime={appointmentConfig?.endTime}
+                                        startTime={effectiveStart}
+                                        endTime={effectiveEnd}
                                         duration={appointmentConfig?.slotDuration}
+                                        bookedSlots={bookedSlots}
+                                        autoSelect={!!formData.doctorId && !isEdit}
+                                        loading={loadingSlots && !!formData.doctorId}
                                     />
                                 </div>
 

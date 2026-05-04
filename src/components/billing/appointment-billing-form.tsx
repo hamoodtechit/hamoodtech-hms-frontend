@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useCreateAppointment } from "@/hooks/appointment-queries"
+import { useCreateAppointment, useAppointments } from "@/hooks/appointment-queries"
 import { useDepartments } from "@/hooks/hr-queries"
 import { useUsers } from "@/hooks/user-queries"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -81,18 +81,43 @@ export function AppointmentBillingForm() {
     const [doctorStartTime, setDoctorStartTime] = useState<string>("")
     const [doctorEndTime, setDoctorEndTime] = useState<string>("")
 
+    // Fetch existing appointments for this doctor+date to find booked slots
+    const selectedUser: any = useMemo(() => users.find((u: any) => u.id === selectedDoctorId), [users, selectedDoctorId])
+    const doctorEmployeeId = selectedUser?.employeeId || selectedDoctorId
+    const { data: existingApptsRes, isLoading: loadingExistingAppts } = useAppointments({
+        doctorId: doctorEmployeeId || undefined,
+        startDate: appointmentDate || undefined,
+        endDate: appointmentDate || undefined,
+        limit: 200,
+    })
+
+    const bookedSlots = useMemo(() => {
+        if (!existingApptsRes?.data) return []
+        return existingApptsRes.data
+            .filter((a: any) => a.status !== 'cancelled')
+            .map((a: any) => a.timeSlot)
+            .filter(Boolean)
+    }, [existingApptsRes])
+
     useEffect(() => {
         if (selectedDoctorId) {
             const user: any = users.find((u: any) => u.id === selectedDoctorId)
             setChamberOrRoomNumber(user?.employee?.chamberOrRoomNumber || "")
             setDoctorStartTime(user?.employee?.dutyStartTime || "")
             setDoctorEndTime(user?.employee?.dutyEndTime || "")
+            setTimeSlot("") // Reset so auto-select picks next available
         } else {
             setChamberOrRoomNumber("")
             setDoctorStartTime("")
             setDoctorEndTime("")
+            setTimeSlot("")
         }
     }, [selectedDoctorId, users])
+
+    // Reset time slot when date changes
+    useEffect(() => {
+        setTimeSlot("")
+    }, [appointmentDate])
 
     // Use doctor's duty time if available, otherwise fall back to system config
     const effectiveStartTime = useMemo(() => {
@@ -117,7 +142,7 @@ export function AppointmentBillingForm() {
     }, [doctorEndTime, appointmentConfig])
 
     // Compute fee based on visit type and selected doctor
-    const selectedDoctor: any = useMemo(() => users.find((u: any) => u.id === selectedDoctorId), [users, selectedDoctorId])
+    const selectedDoctor = selectedUser
     const appointmentFee = useMemo(() => {
         if (!selectedDoctor?.employee) return 0
         const emp = selectedDoctor.employee
@@ -264,7 +289,7 @@ export function AppointmentBillingForm() {
                             {selectedDoctorId && (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Visit Type *</Label>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         {[
                                             { key: 'new' as const, label: 'New Visit', desc: 'First consultation', charge: Number(selectedDoctor?.employee?.visitCharge || 0) },
                                             { key: 'repeat' as const, label: 'Repeat Visit', desc: `Within ${selectedDoctor?.employee?.repeatVisitDayGap || 7} days`, charge: Number(selectedDoctor?.employee?.repeatVisitCharge || 0) },
@@ -327,9 +352,9 @@ export function AppointmentBillingForm() {
                             </div>
 
                             <div className="space-y-4 pt-2">
-                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Time Slot *</Label>
+                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Time Slot</Label>
                                 {doctorStartTime && (
-                                    <p className="text-[10px] font-bold text-primary/60">Using doctor duty hours: {doctorStartTime} — {doctorEndTime}</p>
+                                    <p className="text-[10px] font-bold text-primary/60">Doctor duty hours: {effectiveStartTime} — {effectiveEndTime} • Slot: {appointmentConfig?.slotDuration || 30} min</p>
                                 )}
                                 <TimeSlotPicker 
                                     value={timeSlot}
@@ -337,6 +362,9 @@ export function AppointmentBillingForm() {
                                     startTime={effectiveStartTime}
                                     endTime={effectiveEndTime}
                                     duration={appointmentConfig?.slotDuration}
+                                    bookedSlots={bookedSlots}
+                                    autoSelect={!!selectedDoctorId}
+                                    loading={loadingExistingAppts && !!selectedDoctorId}
                                 />
                             </div>
 
