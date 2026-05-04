@@ -319,7 +319,7 @@ export function DoctorPaymentHistory() {
                                             Doctor: <span className="ml-2 uppercase">{detailPayment.doctor?.fullName || detailPayment.doctor?.name || "—"}</span>
                                         </div>
                                         <div className="p-2 flex items-center">
-                                            Method: <span className="ml-2 uppercase">{methodLabel(detailPayment.paymentMethod)}</span>
+                                            Method / Acc: <span className="ml-2 uppercase">{methodLabel(detailPayment.paymentMethod)}{detailPayment.account?.name ? ` - ${detailPayment.account.name}` : ''}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -381,8 +381,8 @@ export function DoctorPaymentHistory() {
                                     <p className="font-bold">{format(new Date(detailPayment.createdAt), "dd MMM yyyy, hh:mm a")}</p>
                                 </div>
                                 <div>
-                                    <p className="text-muted-foreground text-xs font-bold uppercase">Method</p>
-                                    <p className="font-bold capitalize">{methodLabel(detailPayment.paymentMethod)}</p>
+                                    <p className="text-muted-foreground text-xs font-bold uppercase">Method / Account</p>
+                                    <p className="font-bold"><span className="capitalize">{methodLabel(detailPayment.paymentMethod)}</span>{detailPayment.account?.name ? ` — ${detailPayment.account.name}` : ''}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground text-xs font-bold uppercase">Total Paid</p>
