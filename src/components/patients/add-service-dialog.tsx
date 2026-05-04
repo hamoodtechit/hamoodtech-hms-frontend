@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
@@ -13,15 +13,25 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
-import { useCreateSale } from "@/hooks/sales-queries"
+import { useCreateSale, useAddSalePayment } from "@/hooks/sales-queries"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { SearchableSelect } from "@/components/shared/searchable-select"
 import { Admission } from "@/types/patient"
 import { SalePayload } from "@/types/sales"
+import { PaymentMethod } from "@/types/pharmacy"
 import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { toast } from "sonner"
-import { Loader2, Plus, Search, FileText, Activity, Trash2 } from "lucide-react"
+import { Loader2, Plus, Search, FileText, Activity, Trash2, Wallet } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AddAdmissionServiceDialogProps {
@@ -49,6 +59,7 @@ export function AddAdmissionServiceDialog({
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const { mutateAsync: createSale, isPending: isSaving } = useCreateSale()
+    const addPaymentMutation = useAddSalePayment()
 
     // Cart State
     const [cart, setCart] = useState<CartItem[]>([])
@@ -65,12 +76,32 @@ export function AddAdmissionServiceDialog({
     // Mode
     const [activeTab, setActiveTab] = useState("catalog")
 
+    // Discount State
+    const [discountPercentage, setDiscountPercentage] = useState(0)
+    const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
+
+    // Payment State
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+    const [selectedAccountId, setSelectedAccountId] = useState("")
+    const [paidAmount, setPaidAmount] = useState(0)
+
     const { data: servicesRes, isLoading: isLoadingServices } = useDiagnosticTests({
         branchId: activeStoreId || undefined,
         limit: 1000,
     }, { enabled: open && activeTab === "catalog" })
 
     const services = servicesRes?.data || []
+
+    const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
+    const accounts = accountsRes?.data || []
+
+    // Auto-select first account
+    useEffect(() => {
+        if (open && accounts.length > 0 && !selectedAccountId) {
+            const defaultAccount = accounts.find((a: any) => a.name?.toLowerCase().includes('hospital')) || accounts[0]
+            if (defaultAccount) setSelectedAccountId(defaultAccount.id)
+        }
+    }, [open, accounts, selectedAccountId])
 
     const handleAddToCart = () => {
         if (activeTab === "catalog") {
@@ -113,22 +144,36 @@ export function AddAdmissionServiceDialog({
         setCart(prev => prev.filter(c => c.id !== id))
     }
 
-    const totalBill = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    // Totals
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const discountAmount = discountFixedAmount > 0 ? discountFixedAmount : (subtotal * discountPercentage) / 100
+    const totalBill = Math.max(0, subtotal - discountAmount)
+    const dueAmount = Math.max(0, totalBill - paidAmount)
+
+    // Sync paid amount when total changes
+    useEffect(() => {
+        setPaidAmount(totalBill)
+    }, [totalBill])
 
     const handleFinalizeBill = async () => {
         if (!admission || cart.length === 0) return
+
+        if (paidAmount > 0 && !selectedAccountId) {
+            toast.error("Please select a payment account")
+            return
+        }
 
         const payload: SalePayload = {
             branchId: activeStoreId || "",
             patientId: admission.patientId,
             patientAdmissionId: admission.id,
             type: "hospital",
-            status: "pending",
-            paymentMethod: "cash",
-            paidAmount: 0,
-            dueAmount: Number(totalBill),
-            discountPercentage: 0,
-            discountAmount: 0,
+            status: dueAmount > 0 ? "pending" : "completed",
+            paymentMethod: paymentMethod,
+            paidAmount: paidAmount,
+            dueAmount: dueAmount,
+            discountPercentage: discountPercentage,
+            discountAmount: discountAmount,
             taxPercentage: 0,
             taxAmount: 0,
             isIndoorSale: true,
@@ -145,13 +190,39 @@ export function AddAdmissionServiceDialog({
         }
 
         try {
-            await createSale(payload)
-            toast.success("Services added to hospital bill successfully")
+            const saleRes = await createSale(payload)
+            const saleId = saleRes?.data?.id
+
+            // Process payment if there's a paid amount
+            if (saleId && paidAmount > 0 && selectedAccountId) {
+                try {
+                    await addPaymentMutation.mutateAsync({
+                        id: saleId,
+                        data: {
+                            accountId: selectedAccountId,
+                            amount: paidAmount,
+                            paymentMethod: paymentMethod,
+                        }
+                    })
+                    toast.success(dueAmount > 0 
+                        ? `Bill created with ${formatCurrency(paidAmount)} paid, ${formatCurrency(dueAmount)} due`
+                        : "Services added and payment processed!"
+                    )
+                } catch (pError) {
+                    console.error("Payment failed:", pError)
+                    toast.warning("Bill created, but payment recording failed. Please collect manually.")
+                }
+            } else {
+                toast.success("Services added to hospital bill successfully")
+            }
+
             resetForm()
             onSuccess?.()
             onOpenChange(false)
-        } catch (error) {
-            toast.error("Failed to submit bill")
+        } catch (error: any) {
+            if (!error?.response?.data?.message) {
+                toast.error("Failed to submit bill")
+            }
         }
     }
 
@@ -162,14 +233,20 @@ export function AddAdmissionServiceDialog({
         setPrice(0)
         setManualItemName("")
         setManualItemPrice(0)
+        setDiscountPercentage(0)
+        setDiscountFixedAmount(0)
+        setPaidAmount(0)
+        setSelectedAccountId("")
     }
+
+    const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
     return (
         <Dialog open={open} onOpenChange={(val) => {
             if (!val) resetForm()
             onOpenChange(val)
         }}>
-            <DialogContent className="sm:max-w-[550px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[700px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-4 bg-primary/5 border-b border-primary/10">
                     <DialogTitle className="text-xl font-black tracking-tight text-primary flex items-center gap-3">
                         <Plus className="h-6 w-6" />
@@ -180,7 +257,7 @@ export function AddAdmissionServiceDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
                     {/* Add Item Section */}
                     <div className="bg-muted/10 border border-muted-foreground/10 rounded-2xl p-4 space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -309,9 +386,106 @@ export function AddAdmissionServiceDialog({
                         </div>
                     )}
 
+                    {/* Discount & Payment Section — only visible when cart has items */}
+                    {cart.length > 0 && (
+                        <>
+                            <Separator />
+                            {/* Discount */}
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Discount</Label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Subtotal</Label>
+                                        <div className="h-9 flex items-center px-3 rounded-lg bg-muted/30 border text-sm font-black tabular-nums">
+                                            {formatCurrency(subtotal)}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Disc %</Label>
+                                        <SmartNumberInput
+                                            value={discountPercentage}
+                                            onChange={(v) => {
+                                                setDiscountPercentage(v || 0)
+                                                setDiscountFixedAmount(0)
+                                            }}
+                                            className="h-9 text-xs font-bold rounded-lg"
+                                            min={0}
+                                            max={100}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Disc Amt</Label>
+                                        <SmartNumberInput
+                                            value={discountFixedAmount || (subtotal * discountPercentage) / 100}
+                                            onChange={(v) => {
+                                                setDiscountFixedAmount(v || 0)
+                                                setDiscountPercentage(0)
+                                            }}
+                                            className="h-9 text-xs font-bold rounded-lg"
+                                            min={0}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment */}
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Wallet className="h-4 w-4 text-primary" />
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Payment</Label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Account *</Label>
+                                        <SearchableSelect
+                                            value={selectedAccountId}
+                                            onChange={setSelectedAccountId}
+                                            options={accounts.filter((a: any) => a.isActive).map((a: any) => ({
+                                                id: a.id,
+                                                name: `${a.name} (${formatCurrency(Number(a.currentBalance))})`
+                                            }))}
+                                            placeholder="Select account..."
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Method</Label>
+                                        <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                            <SelectTrigger className="h-9 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {paymentMethods.map(m => (
+                                                    <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Paid Amount</Label>
+                                        <SmartNumberInput
+                                            value={paidAmount}
+                                            onChange={(v) => setPaidAmount(v || 0)}
+                                            className="h-9 text-xs font-bold rounded-lg"
+                                            min={0}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-bold text-muted-foreground ml-1">Due Amount</Label>
+                                        <div className={`h-9 flex items-center px-3 rounded-lg border text-sm font-black tabular-nums ${dueAmount > 0 ? 'text-rose-500 bg-rose-50/50 border-rose-200' : 'text-emerald-600 bg-emerald-50/50 border-emerald-200'}`}>
+                                            {formatCurrency(dueAmount)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Bill Total */}
                     <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex justify-between items-center group">
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">Estimated Bill Total</span>
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">Net Bill Total</span>
                             <span className="text-2xl font-black text-primary tabular-nums group-hover:scale-105 transition-transform origin-left">
                                 {formatCurrency(totalBill)}
                             </span>

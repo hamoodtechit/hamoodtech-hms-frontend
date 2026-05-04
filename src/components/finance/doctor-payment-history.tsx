@@ -329,6 +329,7 @@ export function DoctorPaymentHistory() {
                                         <tr className="border-b-2 border-black bg-gray-100">
                                             <th className="p-2 border-r border-black w-12 text-center">SL</th>
                                             <th className="p-2 border-r border-black">Sale / Appointment</th>
+                                            <th className="p-2 border-r border-black">Patient</th>
                                             <th className="p-2 border-r border-black text-right w-24">Total</th>
                                             <th className="p-2 text-right w-28">Payable</th>
                                         </tr>
@@ -339,6 +340,7 @@ export function DoctorPaymentHistory() {
                                                 <tr key={ch.id} className="border-b border-black">
                                                     <td className="p-2 border-r border-black text-center">{idx + 1}</td>
                                                     <td className="p-2 border-r border-black">{ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}</td>
+                                                    <td className="p-2 border-r border-black">{ch.sale?.patient?.name || ch.appointment?.patient?.name || "—"}</td>
                                                     <td className="p-2 border-r border-black text-right">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</td>
                                                     <td className="p-2 text-right">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</td>
                                                 </tr>
@@ -349,7 +351,7 @@ export function DoctorPaymentHistory() {
                                             </tr>
                                         )}
                                         <tr className="border-t-2 border-black bg-gray-100">
-                                            <td colSpan={3} className="p-2 border-r border-black text-right uppercase tracking-wider">Total Paid</td>
+                                            <td colSpan={4} className="p-2 border-r border-black text-right uppercase tracking-wider">Total Paid</td>
                                             <td className="p-2 text-right text-sm">{formatCurrency(Number(detailPayment.totalAmount || 0))}</td>
                                         </tr>
                                     </tbody>
@@ -402,6 +404,7 @@ export function DoctorPaymentHistory() {
                                         <TableHeader>
                                             <TableRow className="text-[10px] uppercase">
                                                 <TableHead>Sale / Appointment</TableHead>
+                                                <TableHead>Patient</TableHead>
                                                 <TableHead className="text-right">Total</TableHead>
                                                 <TableHead className="text-right">Payable</TableHead>
                                             </TableRow>
@@ -411,6 +414,9 @@ export function DoctorPaymentHistory() {
                                                 <TableRow key={ch.id}>
                                                     <TableCell className="text-xs">
                                                         {ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {ch.sale?.patient?.name || ch.appointment?.patient?.name || "—"}
                                                     </TableCell>
                                                     <TableCell className="text-right text-xs">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</TableCell>
                                                     <TableCell className="text-right text-xs font-bold">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</TableCell>

@@ -20,13 +20,16 @@ import { useStoreContext } from "@/store/use-store-context"
 import { useCurrency } from "@/hooks/use-currency"
 import { ConsultationCharge } from "@/types/finance"
 import { format, startOfDay, endOfDay } from "date-fns"
-import { ChevronLeft, ChevronRight, Loader2, Search, Wallet } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, Search, Wallet, Printer } from "lucide-react"
 import { useMemo, useState } from "react"
 import { DoctorPaymentDialog } from "./doctor-payment-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
+import { useSettingsStore } from "@/store/use-settings-store"
 
 export function DoctorPaymentList() {
-    const { activeStoreId } = useStoreContext()
+    const { activeStoreId, stores } = useStoreContext()
+    const activeStore = stores.find(s => s.id === activeStoreId)
+    const { general } = useSettingsStore()
     const { formatCurrency } = useCurrency()
 
     const [page, setPage] = useState(1)
@@ -88,6 +91,56 @@ export function DoctorPaymentList() {
     const selectedTotal = selectedCharges.reduce((sum, c) => sum + Number(c.commissionAmount || 0), 0)
 
     const activeFilterCount = [doctorFilter, startDate, endDate].filter(Boolean).length
+
+    // Get the doctor name for the print report
+    const filteredDoctorName = doctorFilter 
+        ? (doctors.find((d: any) => (d.employeeId || d.id) === doctorFilter)?.fullName || "Doctor")
+        : ""
+
+    const grandTotal = charges.reduce((sum, c) => sum + Number(c.commissionAmount || 0), 0)
+
+    const handlePrintPending = () => {
+        const printContent = document.getElementById('pending-print-content')?.innerHTML;
+        if (!printContent) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentWindow?.document;
+        if (iframeDoc) {
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Pending Commission Report</title>
+                        ${Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(el => el.outerHTML).join('\n')}
+                        <style>
+                            @page { size: A4; margin: 0; }
+                            body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
+                            .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            ${printContent}
+                        </div>
+                    </body>
+                </html>
+            `);
+            iframeDoc.close();
+
+            setTimeout(() => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            }, 500);
+        }
+    }
 
     return (
         <>
@@ -153,6 +206,18 @@ export function DoctorPaymentList() {
                             >
                                 <Wallet className="h-4 w-4" />
                                 Pay {formatCurrency(selectedTotal)} ({selectedCharges.length})
+                            </Button>
+                        )}
+
+                        {/* Print Report Button */}
+                        {charges.length > 0 && (
+                            <Button
+                                variant="outline"
+                                onClick={handlePrintPending}
+                                className="gap-2 h-10 px-4 rounded-xl font-bold text-xs uppercase tracking-wider"
+                            >
+                                <Printer className="h-4 w-4" />
+                                Print Report
                             </Button>
                         )}
                     </div>
@@ -258,6 +323,85 @@ export function DoctorPaymentList() {
                     refetch()
                 }}
             />
+
+            {/* Hidden Print Layout for Pending Commissions */}
+            <div className="hidden">
+                <div id="pending-print-content" className="w-full text-black bg-white">
+                    <div className="text-center mb-4 pb-2 border-b-2 border-black">
+                        <div className="flex justify-center mb-1">
+                            <img src={activeStore?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto' }} />
+                        </div>
+                        <h1 className="text-2xl font-black uppercase leading-tight m-0">{general?.hospitalName || activeStore?.name || "HOSPITAL NAME"}</h1>
+                        <p className="text-xs font-bold leading-tight m-0">{general?.address || activeStore?.address || "Address"}</p>
+                        <p className="text-xs font-bold leading-tight m-0">Ph: {general?.phone || activeStore?.phone || "Phone"}</p>
+                        <div className="mt-4 inline-block border-2 border-black rounded-full px-6 py-1 font-black tracking-widest text-sm uppercase">
+                            DOCTOR PENDING COMMISSION REPORT
+                        </div>
+                    </div>
+
+                    <div className="border-2 border-black mb-4 flex flex-col font-bold text-sm">
+                        <div className="grid grid-cols-2 border-b border-black">
+                            <div className="p-2 border-r border-black">
+                                Doctor: {filteredDoctorName || "All Doctors"}
+                            </div>
+                            <div className="p-2">
+                                Date: {startDate && endDate 
+                                    ? `${format(new Date(startDate), 'dd MMM yyyy')} - ${format(new Date(endDate), 'dd MMM yyyy')}`
+                                    : startDate ? `From ${format(new Date(startDate), 'dd MMM yyyy')}`
+                                    : endDate ? `Until ${format(new Date(endDate), 'dd MMM yyyy')}`
+                                    : 'All Dates'
+                                }
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2">
+                            <div className="p-2 border-r border-black">
+                                Total Records: {charges.length}
+                            </div>
+                            <div className="p-2">
+                                Report Generated: {format(new Date(), 'dd MMM yyyy, hh:mm a')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <table className="w-full text-left border-collapse border-2 border-black font-bold text-xs mb-8">
+                        <thead>
+                            <tr className="border-b-2 border-black bg-gray-100">
+                                <th className="p-2 border-r border-black w-10 text-center">SL</th>
+                                <th className="p-2 border-r border-black">Date</th>
+                                <th className="p-2 border-r border-black">Doctor</th>
+                                <th className="p-2 border-r border-black">Sale / Appointment</th>
+                                <th className="p-2 border-r border-black text-right w-24">Total</th>
+                                <th className="p-2 text-right w-24">Payable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {charges.map((ch, idx) => (
+                                <tr key={ch.id} className="border-b border-black">
+                                    <td className="p-2 border-r border-black text-center">{idx + 1}</td>
+                                    <td className="p-2 border-r border-black">{format(new Date(ch.createdAt), 'dd MMM yyyy')}</td>
+                                    <td className="p-2 border-r border-black">{ch.doctor?.fullName || ch.doctor?.name || '—'}</td>
+                                    <td className="p-2 border-r border-black">{ch.sale?.invoiceNumber || ch.appointment?.serialNumber || '—'}</td>
+                                    <td className="p-2 border-r border-black text-right">{formatCurrency(Number(ch.totalAmount || 0))}</td>
+                                    <td className="p-2 text-right">{formatCurrency(Number(ch.commissionAmount || 0))}</td>
+                                </tr>
+                            ))}
+                            <tr className="border-t-2 border-black bg-gray-100">
+                                <td colSpan={5} className="p-2 border-r border-black text-right uppercase tracking-wider">Grand Total Payable</td>
+                                <td className="p-2 text-right text-sm">{formatCurrency(grandTotal)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div className="flex justify-between mt-24 pt-2 font-bold text-sm">
+                        <div className="w-48 text-center border-t border-black pt-1">
+                            Prepared By
+                        </div>
+                        <div className="w-48 text-center border-t border-black pt-1">
+                            Authorized Signature
+                        </div>
+                    </div>
+                </div>
+            </div>
         </>
     )
 }
