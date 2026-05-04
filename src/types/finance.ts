@@ -184,8 +184,8 @@ export interface ConsultationPayment {
     updatedAt: string;
     doctor?: {
         id: string;
-        name: string;
-        user?: { fullName?: string; username?: string };
+        fullName?: string;
+        name?: string;
     };
     account?: FinanceAccount;
     charges?: ConsultationCharge[];
