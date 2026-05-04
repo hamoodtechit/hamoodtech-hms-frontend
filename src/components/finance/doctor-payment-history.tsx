@@ -60,10 +60,10 @@ export function DoctorPaymentHistory() {
         endDate: endDate ? endOfDay(new Date(endDate)).toISOString() : undefined,
     })
 
-    console.log("Payment History API Response:", data)
+  
 
     const { data: detailRes, isLoading: detailLoading } = useConsultationPayment(detailId)
-    console.log("Payment Detail API Response:", detailRes)
+    
     const detailPayment = detailRes?.data
 
     const payments: ConsultationPayment[] = data?.data || []

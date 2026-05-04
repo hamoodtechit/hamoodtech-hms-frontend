@@ -68,7 +68,7 @@ export default function AuditLogsPage() {
         startDate: dateRange?.from ? new Date(`${format(dateRange.from, 'yyyy-MM-dd')}T00:00:00.000Z`).toISOString() : undefined,
         endDate: dateRange?.to ? new Date(`${format(dateRange.to, 'yyyy-MM-dd')}T23:59:59.999Z`).toISOString() : undefined,
     })
-    console.log("response", response);
+    
     const logs = response?.data || []
     const meta = response?.meta
 

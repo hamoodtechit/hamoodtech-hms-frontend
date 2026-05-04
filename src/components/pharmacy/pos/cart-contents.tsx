@@ -117,7 +117,7 @@ export function CartContents({
     const total = discountedSubtotal + tax
 
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
-    console.log('availableAccounts', availableAccounts)
+    
     return (
         <div className="flex flex-col h-full bg-card overflow-hidden">
             {/* Header - Compact */}

@@ -21,12 +21,10 @@ export const useNotificationSocket = () => {
             transports: ['websocket'],
         });
 
-        socket.on('connect', () => {
-            console.log('Connected to Notification Server:', socket.id);
-        });
+        
 
         socket.on('notification:received', (notification) => {
-            console.log('New Notification Received:', notification);
+            
             addNotification(notification);
             
             // Show toast
@@ -49,9 +47,7 @@ export const useNotificationSocket = () => {
             console.error('Socket error:', error);
         });
 
-        socket.on('disconnect', (reason) => {
-            console.log('Disconnected from Notification Server:', reason);
-        });
+       
 
         socketRef.current = socket;
 
