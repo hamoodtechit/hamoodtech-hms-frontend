@@ -36,12 +36,22 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useCurrency } from "@/hooks/use-currency"
 import { usePatients } from "@/hooks/patient-queries"
+import { AppointmentSaleDialog } from "@/components/appointments/appointment-sale-dialog"
+import { AppointmentPaymentDialog } from "@/components/appointments/appointment-payment-dialog"
+import { Appointment } from "@/types/appointment"
+import { Sale } from "@/types/sales"
 
 export function AppointmentBillingForm() {
     const router = useRouter()
     const { hasPermission } = usePermissions()
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
+
+    // Sale & Payment dialog state for auto-open after appointment creation
+    const [saleDialogOpen, setSaleDialogOpen] = useState(false)
+    const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+    const [createdAppointment, setCreatedAppointment] = useState<Appointment | null>(null)
+    const [lastCreatedSale, setLastCreatedSale] = useState<Sale | any | null>(null)
 
     // Permission check
     const canCreateAppointment = hasPermission('appointment:create')
@@ -163,7 +173,7 @@ export function AppointmentBillingForm() {
         const selectedUser: any = users.find(u => u.id === selectedDoctorId)
 
         try {
-            await createAppointmentMutation.mutateAsync({
+            const res: any = await createAppointmentMutation.mutateAsync({
                 branchId: activeStoreId || "",
                 patientId: selectedCustomer.id,
                 departmentId: selectedUser?.employee?.departmentId || "",
@@ -179,15 +189,34 @@ export function AppointmentBillingForm() {
 
             toast.success("Appointment successfully scheduled!")
             
-            // Reset
+            // Capture the created appointment and auto-open sale dialog for payment
+            const appointmentData = res?.data || res
+            if (appointmentData?.id && appointmentFee > 0) {
+                // Merge patient and doctor data for the sale dialog
+                const enrichedAppointment = {
+                    ...appointmentData,
+                    fees: appointmentData.fees || appointmentFee,
+                    patient: selectedCustomer,
+                    doctor: selectedUser?.employee || selectedUser,
+                    department: departments.find(d => d.id === (selectedUser?.employee?.departmentId || '')),
+                }
+                setCreatedAppointment(enrichedAppointment as any)
+                setTimeout(() => {
+                    setSaleDialogOpen(true)
+                }, 300)
+            }
+
+            // Reset form
             setSelectedCustomer(null)
             setSelectedDoctorId("")
             setTimeSlot("")
             setChamberOrRoomNumber("")
             setNote("")
             setSelectedReferralPersonId("")
-        } catch (error) {
-            toast.error("Failed to schedule appointment")
+        } catch (error: any) {
+            if (!error?.response?.data?.message) {
+                toast.error("Failed to schedule appointment")
+            }
         }
     }
 
@@ -484,6 +513,30 @@ export function AppointmentBillingForm() {
                     </Card>
                 </div>
             </div>
+
+            {/* Auto-open Sale Dialog after Appointment Creation */}
+            <AppointmentSaleDialog
+                open={saleDialogOpen}
+                onOpenChange={setSaleDialogOpen}
+                appointment={createdAppointment}
+                onSaleCreated={(sale) => {
+                    setLastCreatedSale(sale)
+                    // If there's due, open payment dialog
+                    if (Number(sale.dueAmount) > 0) {
+                        setPaymentDialogOpen(true)
+                    }
+                    setCreatedAppointment(null)
+                }}
+            />
+
+            <AppointmentPaymentDialog
+                open={paymentDialogOpen}
+                onOpenChange={setPaymentDialogOpen}
+                sale={lastCreatedSale}
+                onPaymentSuccess={() => {
+                    setLastCreatedSale(null)
+                }}
+            />
         </div>
     )
 }
