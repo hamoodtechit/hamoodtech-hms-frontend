@@ -69,6 +69,7 @@ export function AppointmentBillingForm() {
 
     // Form State
     const [selectedCustomer, setSelectedCustomer] = useState<Patient | null>(null)
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("")
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("")
     const [appointmentDate, setAppointmentDate] = useState<string>(new Date().toISOString().split('T')[0])
     const [timeSlot, setTimeSlot] = useState<string>("")
@@ -268,12 +269,29 @@ export function AppointmentBillingForm() {
                             {/* Clinical Assignment */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
+                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Department</Label>
+                                    <SearchableSelect 
+                                        value={selectedDepartmentId}
+                                        onChange={(val) => {
+                                            setSelectedDepartmentId(val)
+                                            setSelectedDoctorId("") // Reset doctor when department changes
+                                        }}
+                                        options={departments.map((d: any) => ({ 
+                                            id: d.id, 
+                                            name: d.name 
+                                        }))}
+                                        placeholder="All Departments"
+                                        allLabel="All Departments"
+                                    />
+                                </div>
+                                <div className="space-y-4">
                                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Specialist Doctor *</Label>
                                     <SearchableSelect 
                                         value={selectedDoctorId}
                                         onChange={setSelectedDoctorId}
                                         options={users
                                             .filter((u: any) => u.role?.name?.toLowerCase() === 'doctor')
+                                            .filter((u: any) => !selectedDepartmentId || u.employee?.departmentId === selectedDepartmentId)
                                             .map((u: any) => ({ 
                                                 id: u.id, 
                                                 name: u.fullName || u.username 
