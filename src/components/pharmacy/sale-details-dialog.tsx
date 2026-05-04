@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import {
   Select,
   SelectContent,
@@ -70,6 +71,10 @@ export function SaleDetailsDialog({
   const [saleReturns, setSaleReturns] = useState<SaleReturn[]>([])
   const [fetchingReturns, setFetchingReturns] = useState(false)
 
+  // Editable item prices for unpaid bills
+  const [editedItemPrices, setEditedItemPrices] = useState<Record<string, number>>({})
+  const [savingItemPrices, setSavingItemPrices] = useState(false)
+
   // Payment UI state
   const [isAddingPayment, setIsAddingPayment] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState<number>(0)
@@ -104,6 +109,7 @@ export function SaleDetailsDialog({
       } else {
         setIsAddingPayment(false)
       }
+      setEditedItemPrices({})
     }
   }, [sale, initialAddPayment])
 
@@ -186,6 +192,61 @@ export function SaleDetailsDialog({
   }
 
   if (!sale) return null
+
+  const isUnpaid = sale.paymentStatus === 'due' || sale.paymentStatus === 'partial' || Number(sale.dueAmount) > 0
+  const hasEditedPrices = Object.keys(editedItemPrices).length > 0
+
+  const handleSaveItemPrices = async () => {
+    if (!sale || !hasEditedPrices) return
+    setSavingItemPrices(true)
+    try {
+      const updatedItems = (sale.saleItems || []).map(item => {
+        const newPrice = editedItemPrices[item.id]
+        if (newPrice !== undefined) {
+          return {
+            ...item,
+            price: newPrice,
+            mrp: newPrice,
+            totalPrice: newPrice * (item.quantity || 1),
+          }
+        }
+        return item
+      })
+      const newSubtotal = updatedItems.reduce((sum, item) => sum + Number(item.totalPrice), 0)
+      const disc = Number(sale.discountAmount) || (newSubtotal * Number(sale.discountPercentage || 0)) / 100
+      const newTotal = Math.max(0, newSubtotal - disc)
+      const newDue = Math.max(0, newTotal - Number(sale.paidAmount || 0))
+
+      updateSale({
+        id: sale.id,
+        data: {
+          saleItems: updatedItems.map(item => ({
+            id: item.id,
+            itemName: item.itemName,
+            price: Number(item.price),
+            mrp: Number(item.price),
+            quantity: Number(item.quantity),
+            totalPrice: Number(item.totalPrice),
+            unit: item.unit,
+            serviceId: item.serviceId,
+            isDiagnosticTest: item.isDiagnosticTest,
+            discountPercentage: item.discountPercentage,
+            discountAmount: item.discountAmount,
+          })),
+          dueAmount: newDue,
+        } as any
+      }, {
+        onSuccess: () => {
+          setEditedItemPrices({})
+          onSuccess?.()
+        }
+      })
+    } catch (error: any) {
+      toast.error('Failed to update item prices')
+    } finally {
+      setSavingItemPrices(false)
+    }
+  }
   
   // Use existing netPrice/totalPrice if available, or calculate from items if they exist
   const items = sale?.saleItems || []
@@ -307,14 +368,49 @@ export function SaleDetailsDialog({
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="text-right">
+                        {isUnpaid && !item.saleReturnId ? (
+                          <SmartNumberInput
+                            value={editedItemPrices[item.id] !== undefined ? editedItemPrices[item.id] : Number(item.price)}
+                            onChange={(val) => {
+                              if (val !== undefined) {
+                                setEditedItemPrices(prev => ({ ...prev, [item.id]: val }))
+                              }
+                            }}
+                            min={0}
+                            className="h-8 w-24 text-xs font-bold text-right bg-amber-50 border-amber-200 rounded-lg ml-auto"
+                          />
+                        ) : (
+                          formatCurrency(item.price)
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.totalPrice)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          editedItemPrices[item.id] !== undefined
+                            ? editedItemPrices[item.id] * (item.quantity || 1)
+                            : item.totalPrice
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
+            {hasEditedPrices && (
+              <div className="flex justify-end mt-3">
+                <Button 
+                  size="sm" 
+                  onClick={handleSaveItemPrices}
+                  disabled={savingItemPrices}
+                  className="gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-lg"
+                >
+                  {savingItemPrices && <Loader2 className="h-3 w-3 animate-spin" />}
+                  <Save className="h-3 w-3" />
+                  Save Price Changes
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator />

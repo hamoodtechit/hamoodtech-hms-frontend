@@ -142,7 +142,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         templateDescription: "",
         machineName: "",
         machineDescription: "",
-        refCommissionsPercentage: 0
+        refCommissionsPercentage: 0,
+        serviceType: undefined,
     })
 
     useEffect(() => {
@@ -164,7 +165,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     templateDescription: test.templateDescription || "",
                     machineName: test.machineName || "",
                     machineDescription: test.machineDescription || "",
-                    refCommissionsPercentage: test.refCommissionsPercentage || 0
+                    refCommissionsPercentage: test.refCommissionsPercentage || 0,
+                    serviceType: test.serviceType || undefined,
                 })
             } else {
                 setFormData({
@@ -183,7 +185,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     templateDescription: "",
                     machineName: "",
                     machineDescription: "",
-                    refCommissionsPercentage: 0
+                    refCommissionsPercentage: 0,
+                    serviceType: undefined,
                 })
             }
         }
@@ -329,6 +332,25 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                         options={testGroupsRes?.data?.map(g => ({ id: g.id, name: g.name })) || []}
                                         placeholder="Choose Category..."
                                         showAll={false}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Emergency Service Toggle */}
+                            <div className="col-span-1 md:col-span-2">
+                                <div className="flex items-center justify-between bg-red-500/5 p-4 rounded-2xl border border-red-500/10 shadow-sm transition-all hover:bg-red-500/10">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                                            <Label htmlFor="serviceType" className="text-sm font-black text-red-700 tracking-tight">Emergency Service</Label>
+                                        </div>
+                                        <p className="text-xs text-red-600/70 font-medium pl-4">Mark this service as emergency to show it in Emergency Billing.</p>
+                                    </div>
+                                    <Switch 
+                                        id="serviceType" 
+                                        checked={formData.serviceType === 'emergency'} 
+                                        onCheckedChange={(val) => setFormData(prev => ({ ...prev, serviceType: val ? 'emergency' : undefined }))}
+                                        className="data-[state=checked]:bg-red-600 scale-110"
                                     />
                                 </div>
                             </div>

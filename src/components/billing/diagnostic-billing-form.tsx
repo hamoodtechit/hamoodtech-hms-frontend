@@ -84,7 +84,7 @@ import { ReferralSearch } from "@/components/hr/referral-search"
 import { DiagnosticReceiptDialog } from "./diagnostic-receipt-dialog"
 
 interface DiagnosticBillingFormProps {
-    type?: 'pathology' | 'radiology' | 'opd'
+    type?: 'pathology' | 'radiology' | 'opd' | 'emergency'
     title?: string
     description?: string
 }
@@ -131,6 +131,7 @@ export function DiagnosticBillingForm({
     const { data: testsRes } = useDiagnosticTests({ 
         branchId: activeStoreId || undefined, 
         limit: 1000,
+        serviceType: type === 'emergency' ? 'emergency' : undefined,
     })
     const { data: usersRes, isLoading: loadingUsers } = useUsers({ 
         branchId: activeStoreId || undefined,
@@ -281,6 +282,10 @@ export function DiagnosticBillingForm({
             }
             return item
         }))
+    }
+
+    const updateItemPrice = (id: string, newPrice: number) => {
+        setCart(cart.map(item => item.id === id ? { ...item, price: newPrice } : item))
     }
 
     const updateItemDeliveryDate = (id: string, val: string) => {
@@ -492,7 +497,16 @@ export function DiagnosticBillingForm({
                                                         />
                                                     </TableCell>
                                                     <TableCell className="text-right px-6 text-xs font-black text-muted-foreground/80 tabular-nums">
-                                                        {formatCurrency(item.price)}
+                                                        {type === 'emergency' ? (
+                                                            <SmartNumberInput
+                                                                value={item.price}
+                                                                onChange={(val) => updateItemPrice(item.id, val || 0)}
+                                                                min={0}
+                                                                className="h-9 w-24 text-[11px] font-black text-right bg-amber-50 border-amber-200 rounded-lg ml-auto"
+                                                            />
+                                                        ) : (
+                                                            formatCurrency(item.price)
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="px-6">
                                                         <div className="flex items-center gap-1 bg-secondary/10 rounded-xl p-1 border border-border/50 w-fit">

@@ -14,6 +14,7 @@ export interface DiagnosticTest {
   templateType: 'table' | 'narrative';
   templateDescription?: string;
   type: string;
+  serviceType?: string;
   machineName?: string;
   machineDescription?: string;
   refCommissionsPercentage?: number;
@@ -46,6 +47,7 @@ export interface DiagnosticTestPayload {
   templateType?: 'table' | 'narrative';
   templateDescription?: string;
   type?: string;
+  serviceType?: string;
   unit?: string;
   branchId?: string;
   machineName?: string;
@@ -271,6 +273,7 @@ export interface DiagnosticTestParams {
   departmentId?: string;
   testGroupId?: string;
   type?: string;
+  serviceType?: string;
   isDiagnosticTest?: boolean;
   branchId?: string;
   isActive?: boolean;

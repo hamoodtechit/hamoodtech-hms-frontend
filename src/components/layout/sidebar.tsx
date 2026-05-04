@@ -274,6 +274,11 @@ export function Sidebar() {
               module: "appointment",
               permission: ["appointment:create", "sale:create"],
             },
+            {
+              label: "Emergency Billing",
+              href: "/billing/emergency",
+              permission: ["sale:create"],
+            },
           ]
         },
         {
