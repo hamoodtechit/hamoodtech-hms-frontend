@@ -83,9 +83,9 @@ export function DoctorPaymentList() {
     const selectedDoctorIds = new Set(selectedCharges.map(c => c.doctorId))
     const isSameDoctor = selectedDoctorIds.size <= 1
     const selectedDoctorId = selectedCharges[0]?.doctorId || ""
-    const selectedDoctorName = selectedCharges[0]?.doctor?.user?.fullName || selectedCharges[0]?.doctor?.name || "Doctor"
+    const selectedDoctorName = selectedCharges[0]?.doctor?.fullName || selectedCharges[0]?.doctor?.name || "Doctor"
 
-    const selectedTotal = selectedCharges.reduce((sum, c) => sum + Number(c.chargeAmount || 0), 0)
+    const selectedTotal = selectedCharges.reduce((sum, c) => sum + Number(c.commissionAmount || 0), 0)
 
     const activeFilterCount = [doctorFilter, startDate, endDate].filter(Boolean).length
 
@@ -174,8 +174,8 @@ export function DoctorPaymentList() {
                                 </TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Doctor</TableHead>
-                                <TableHead>Patient / Invoice</TableHead>
-                                <TableHead className="text-right">Service Amt</TableHead>
+                                <TableHead>Sale / Appointment</TableHead>
+                                <TableHead className="text-right">Total Amt</TableHead>
                                 <TableHead className="text-right">Commission %</TableHead>
                                 <TableHead className="text-right">Payable</TableHead>
                             </TableRow>
@@ -207,21 +207,18 @@ export function DoctorPaymentList() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="font-bold text-sm">
-                                                {charge.doctor?.user?.fullName || charge.doctor?.name || "—"}
+                                                {charge.doctor?.fullName || charge.doctor?.name || "—"}
                                             </span>
                                         </TableCell>
                                         <TableCell>
                                             <div className="space-y-0.5">
                                                 <p className="text-xs font-medium">
-                                                    {charge.sale?.customer?.name || charge.appointment?.patient?.name || "—"}
-                                                </p>
-                                                <p className="text-[10px] text-muted-foreground">
                                                     {charge.sale?.invoiceNumber || charge.appointment?.serialNumber || "—"}
                                                 </p>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right font-medium text-sm">
-                                            {formatCurrency(Number(charge.serviceAmount || 0))}
+                                            {formatCurrency(Number(charge.totalAmount || charge.serviceAmount || 0))}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Badge variant="outline" className="text-[10px]">
@@ -229,7 +226,7 @@ export function DoctorPaymentList() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right font-black text-primary text-sm">
-                                            {formatCurrency(Number(charge.chargeAmount || 0))}
+                                            {formatCurrency(Number(charge.commissionAmount || (charge as any).chargeAmount || 0))}
                                         </TableCell>
                                     </TableRow>
                                 ))

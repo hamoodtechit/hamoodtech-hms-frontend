@@ -170,7 +170,7 @@ export function DoctorPaymentHistory() {
                                             {format(new Date(payment.createdAt), "dd MMM yyyy")}
                                         </TableCell>
                                         <TableCell className="font-bold text-sm">
-                                            {payment.doctor?.user?.fullName || payment.doctor?.name || "—"}
+                                            {payment.doctor?.fullName || payment.doctor?.name || "—"}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="secondary" className="text-[10px] capitalize">
@@ -240,7 +240,7 @@ export function DoctorPaymentHistory() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-muted-foreground text-xs font-bold uppercase">Doctor</p>
-                                    <p className="font-bold">{detailPayment.doctor?.user?.fullName || detailPayment.doctor?.name || "—"}</p>
+                                    <p className="font-bold">{detailPayment.doctor?.fullName || detailPayment.doctor?.name || "—"}</p>
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground text-xs font-bold uppercase">Date</p>
@@ -269,8 +269,8 @@ export function DoctorPaymentHistory() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="text-[10px] uppercase">
-                                                <TableHead>Patient / Invoice</TableHead>
-                                                <TableHead className="text-right">Service</TableHead>
+                                                <TableHead>Sale / Appointment</TableHead>
+                                                <TableHead className="text-right">Total</TableHead>
                                                 <TableHead className="text-right">%</TableHead>
                                                 <TableHead className="text-right">Payable</TableHead>
                                             </TableRow>
@@ -279,13 +279,11 @@ export function DoctorPaymentHistory() {
                                             {detailPayment.charges.map((ch: any) => (
                                                 <TableRow key={ch.id}>
                                                     <TableCell className="text-xs">
-                                                        {ch.sale?.customer?.name || ch.appointment?.patient?.name || "—"}
-                                                        <br />
-                                                        <span className="text-[10px] text-muted-foreground">{ch.sale?.invoiceNumber || ""}</span>
+                                                        {ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}
                                                     </TableCell>
-                                                    <TableCell className="text-right text-xs">{formatCurrency(Number(ch.serviceAmount || 0))}</TableCell>
+                                                    <TableCell className="text-right text-xs">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</TableCell>
                                                     <TableCell className="text-right text-xs">{Number(ch.commissionPercentage || 0)}%</TableCell>
-                                                    <TableCell className="text-right text-xs font-bold">{formatCurrency(Number(ch.chargeAmount || 0))}</TableCell>
+                                                    <TableCell className="text-right text-xs font-bold">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>

@@ -131,9 +131,10 @@ export interface ConsultationCharge {
     appointmentId?: string;
     doctorId: string;
     branchId: string;
-    serviceAmount: string;
+    serviceAmount?: string; // Kept for compatibility if used elsewhere, but API sends totalAmount
+    totalAmount: string;
     commissionPercentage: string;
-    chargeAmount: string;
+    commissionAmount: string;
     isPaid: boolean;
     paidAt?: string;
     paymentId?: string;
@@ -141,13 +142,13 @@ export interface ConsultationCharge {
     updatedAt: string;
     doctor?: {
         id: string;
-        name: string;
-        user?: { fullName?: string; username?: string };
+        fullName?: string;
+        name?: string;
     };
     sale?: {
         id: string;
         invoiceNumber?: string;
-        customer?: { name: string; phone?: string };
+        createdAt?: string;
     };
     appointment?: {
         id: string;

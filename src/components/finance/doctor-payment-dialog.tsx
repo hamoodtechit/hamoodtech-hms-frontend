@@ -55,7 +55,7 @@ export function DoctorPaymentDialog({
     const [paymentMethod, setPaymentMethod] = useState("cash")
     const [note, setNote] = useState("")
 
-    const totalPayable = charges.reduce((sum, c) => sum + Number(c.chargeAmount || 0), 0)
+    const totalPayable = charges.reduce((sum, c) => sum + Number(c.commissionAmount || (c as any).chargeAmount || 0), 0)
 
     const handleSubmit = async () => {
         if (!accountId) {
