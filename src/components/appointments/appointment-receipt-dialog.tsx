@@ -128,14 +128,18 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
         <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
 
-        {/* PAID Hologram */}
-        {isFullPaid && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.08]">
-                <div className="text-[150px] font-black uppercase text-red-600 -rotate-[35deg] border-[12px] border-red-600 px-12 py-6 rounded-[40px] tracking-[15px]">
+        {/* PAID/DUE Stamps */}
+        <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
+            {isFullPaid ? (
+                <div className="text-[80px] font-black uppercase text-green-600 -rotate-[25deg] border-[8px] border-green-600 px-8 py-2 rounded-[20px] tracking-[10px]">
                     PAID
                 </div>
-            </div>
-        )}
+            ) : (
+                <div className="text-[80px] font-black uppercase text-red-600 -rotate-[25deg] border-[8px] border-red-600 px-8 py-2 rounded-[20px] tracking-[10px]">
+                    DUE
+                </div>
+            )}
+        </div>
 
         {/* Header */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
@@ -158,59 +162,57 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
         </div>
 
         {/* Info Table Box */}
-        <div className="border border-black border-dashed mb-4 relative z-10">
+        <div className="border border-black mb-2 relative z-10 text-[13px]">
             {/* Row 1 */}
-            <div className="grid grid-cols-2 border-b border-black border-dashed">
-                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[40px] flex items-center">
+            <div className="grid grid-cols-2 border-b border-black">
+                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
                     UHID : {patientId}
                 </div>
-                <div className="p-2 px-3 flex flex-col justify-center min-h-[40px]">
-                    <div className="font-bold">Bill No. : {invoiceNumber}</div>
-                    <div className="font-bold">Apt. Serial: {aptSerial}</div>
+                <div className="p-1 px-3 flex items-center justify-between font-bold">
+                    <span>Bill No. : {invoiceNumber}</span>
+                    <span className="text-[11px]">Lab No. : {data.labNumber || "N/A"}</span>
                 </div>
             </div>
             {/* Row 2 */}
-            <div className="grid grid-cols-2 border-b border-black border-dashed">
-                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[30px] flex items-center">
+            <div className="grid grid-cols-2 border-b border-black">
+                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
                     Name <span className="mx-2">:</span> {patientName}
                 </div>
-                <div className="p-2 px-3 font-bold flex items-center min-h-[30px]">
+                <div className="p-1 px-3 font-bold flex items-center">
                     <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                 </div>
             </div>
             {/* Row 3 */}
-            <div className="grid grid-cols-2 border-b border-black border-dashed">
-                <div className="p-2 px-3 border-r border-black border-dashed font-bold flex gap-6 items-center min-h-[30px]">
+            <div className="grid grid-cols-1 border-b border-black">
+                <div className="p-1 px-3 font-bold flex gap-8 items-center">
                     <span>Age <span className="mx-1">:</span> {patientAge}</span>
                     <span>Sex : {patientSex}</span>
-                </div>
-                <div className="p-2 px-3 font-bold min-h-[30px] flex items-center">
-                    Contact No. : {patientPhone}
+                    <span>Contact No. : {patientPhone}</span>
                 </div>
             </div>
             {/* Row 4 */}
-            <div className="grid grid-cols-2 border-b border-black border-dashed font-sans">
-                <div className="p-2 px-3 border-r border-black border-dashed font-bold min-h-[45px] flex items-start gap-1">
+            <div className="grid grid-cols-2 font-sans">
+                <div className="p-1 px-3 border-r border-black font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
-                    <div className="flex flex-col leading-none pt-0.5">
-                        <span className="uppercase text-[11px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "N/A"}</span>
+                    <div className="flex flex-wrap items-baseline gap-1 pt-0.5">
+                        <span className="uppercase text-[12px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "N/A"}</span>
                         {(data.doctor?.designation || propDoctor?.designation) && (
-                            <span className="text-[9px] font-medium italic mt-0.5">
+                            <span className="text-[10px] font-medium italic">
                                 ({data.doctor?.designation || propDoctor?.designation})
                             </span>
                         )}
                     </div>
                 </div>
-                <div className="p-2 px-3 font-bold min-h-[45px] flex items-center">
+                <div className="p-1 px-3 font-bold flex items-center">
                     RefBy : {agentName}
                 </div>
             </div>
         </div>
 
         {/* Items Table */}
-        <table className="w-full text-left border-collapse mb-2 max-w-full relative z-10">
+        <table className="w-full text-left border-collapse mb-2 max-w-full relative z-10 text-[13px]">
             <thead>
-                <tr className="border-y border-black border-dashed font-bold">
+                <tr className="border-y border-black font-black">
                     <th className="py-1 px-1 w-12">SL No</th>
                     <th className="py-1 px-1">Description</th>
                     <th className="py-1 px-1 text-right w-24">Unit Price</th>
@@ -237,31 +239,40 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
         </table>
 
         {/* Totals Section */}
-        <div className="flex justify-between items-start mt-4 mb-6 relative z-10">
+        <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
             <div className="pt-2 pl-4">
+                {isFullPaid ? (
+                    <div className="border-4 border-green-600 text-green-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                        Full Paid
+                    </div>
+                ) : (
+                    <div className="border-4 border-red-600 text-red-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                        Due
+                    </div>
+                )}
             </div>
             <div className="w-[250px]">
-                <div className="flex justify-between py-0.5 font-bold">
+                <div className="flex justify-between py-0.5 font-black">
                     <span>Sub Total Tk.</span>
                     <span>{grossTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-bold">
+                <div className="flex justify-between py-0.5 font-black">
                     <span>+ Vat Tk.</span>
                     <span>{taxAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-bold">
+                <div className="flex justify-between py-0.5 font-black">
                     <span>- Discount Tk.</span>
                     <span>{discountAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-bold text-[14px] border-y border-black border-dashed mt-1 pb-1">
+                <div className="flex justify-between py-0.5 font-black text-[16px] border-y border-black mt-1 pb-1">
                     <span>Net Payable Tk.</span>
                     <span>{netTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-bold">
+                <div className="flex justify-between py-0.5 font-black">
                     <span>Advanced Tk.</span>
                     <span>{paidAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-bold">
+                <div className="flex justify-between py-0.5 font-black text-red-600">
                     <span>Due Tk.</span>
                     <span>{dueAmount.toFixed(2)}</span>
                 </div>
@@ -269,7 +280,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
         </div>
 
         {/* Footer Info */}
-        <div className="border-t border-black border-dashed pt-2 font-bold text-[11px] relative z-10 flex flex-col gap-1">
+        <div className="border-t border-black pt-2 font-black text-[12px] relative z-10 flex flex-col gap-1">
             <div className="grid grid-cols-2">
                 <div className="space-y-1">
                     <div>In Word : {amountInWords}</div>
@@ -289,12 +300,12 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
             )}
         </div>
 
-        <div className="flex justify-between items-end mt-8 pt-8 font-bold text-xs relative z-10">
+        <div className="flex justify-between items-end mt-4 pt-4 font-black text-sm relative z-10">
             <div className="italic">
                 যে সকল রুমে যাবেনঃ {data?.roomNumber || data?.chamberOrRoomNumber || "N/A"}
             </div>
             <div className="text-center">
-                <div className="border-t border-black border-dashed w-40 mb-1"></div>
+                <div className="border-t border-black w-48 mb-1"></div>
                 Authorized Signature
             </div>
         </div>
@@ -417,7 +428,8 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   .w-12 { width: 3rem !important; }
                                   .w-24 { width: 6rem !important; }
                                   .w-48 { width: 12rem !important; }
-                                  .w-\\[250px\\]                                   .w-full { width: 100% !important; }
+                                  .w-\\[250px\\] { width: 250px !important; }
+                                  .w-full { width: 100% !important; }
                                   .m-0 { margin: 0 !important; }
                                   .p-0 { padding: 0 !important; }
                                   .mb-0 { margin-bottom: 0 !important; }
@@ -428,6 +440,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   .leading-none { line-height: 1 !important; }
                                   .leading-tight { line-height: 1.1 !important; }
                                   .gap-0 { gap: 0 !important; }
+                                  .gap-8 { gap: 2rem !important; }
                                   .min-h-\\[30px\\] { min-height: 30px !important; }
                                   .min-h-\\[40px\\] { min-height: 40px !important; }
                                   .min-h-\\[500px\\] { min-height: 500px !important; }
@@ -435,13 +448,16 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   .text-right { text-align: right !important; }
                                   .text-gray-400 { color: #9ca3af !important; }
                                   .text-gray-500 { color: #6b7280 !important; }
+                                  .text-green-600 { color: #16a34a !important; }
                                   .text-red-600 { color: #dc2626 !important; }
                                   .text-\\[10px\\] { font-size: 10px !important; }
                                   .text-\\[11px\\] { font-size: 11px !important; }
                                   .text-\\[12px\\] { font-size: 12px !important; }
                                   .text-\\[13px\\] { font-size: 13px !important; }
+                                  .text-\\[16px\\] { font-size: 16px !important; }
                                   .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
                                   .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                                  .text-\\[80px\\] { font-size: 80px !important; }
                                   .text-\\[150px\\] { font-size: 150px !important; }
                                   .font-bold { font-weight: 700 !important; }
                                   .font-black { font-weight: 900 !important; }
@@ -449,25 +465,34 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   .uppercase { text-transform: uppercase !important; }
                                   .tracking-wider { letter-spacing: 0.05em !important; }
                                   .tracking-widest { letter-spacing: 0.1em !important; }
+                                  .tracking-\\[10px\\] { letter-spacing: 10px !important; }
                                   .tracking-\\[15px\\] { letter-spacing: 15px !important; }
                                   .border-collapse { border-collapse: collapse !important; }
                                   .rounded-full { border-radius: 9999px !important; }
+                                  .rounded-\\[20px\\] { border-radius: 20px !important; }
                                   .rounded-\\[30px\\] { border-radius: 30px !important; }
                                   .rounded-\\[40px\\] { border-radius: 40px !important; }
+                                  .border-4 { border-width: 4px !important; }
+                                  .border-8 { border-width: 8px !important; }
                                   .border-2 { border-width: 2px !important; }
                                   .border-\\[12px\\] { border-width: 12px !important; }
                                   .inline-block { display: inline-block !important; }
                                   .opacity-\\[0\\.08\\] { opacity: 0.08 !important; }
+                                  .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
                                   .z-0 { z-index: 0 !important; }
                                   .z-10 { z-index: 10 !important; }
                                   .inset-0 { top: 0; right: 0; bottom: 0; left: 0 !important; }
+                                  .top-\\[20\\%\\] { top: 20% !important; }
+                                  .right-\\[10\\%\\] { right: 10% !important; }
                                   .relative { position: relative !important; }
                                   .absolute { position: absolute !important; }
                                   .pointer-events-none { pointer-events: none !important; }
                                   .overflow-hidden { overflow: hidden !important; }
                                   .-left-6 { left: -1.5rem !important; }
                                   .top-1\\/2 { top: 50% !important; }
-                                  .-translate-y-1\\/2 { transform: translateY(-50%) rotate(-90deg) !important; }
+                                  .-translate-y-1\\/2 { transform: translateY(-50) rotate(-90deg) !important; }
+                                  .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
+                                  .-rotate-\\[5deg\\] { transform: rotate(-5deg) !important; }
                                   .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
                                   .whitespace-nowrap { white-space: nowrap !important; }
                                   .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
