@@ -401,63 +401,73 @@ export function PrintReport({ report }: PrintReportProps) {
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
+                                // Data from the result payload (saved in ResultEntryDialog)
+                                const res = result as any;
+                                const checkedByName = res?.checkedByName || "";
+                                const checkedByDesignation = res?.checkedByDesignation || "";
+                                const authorizedDoctorName = res?.authorizedDoctorName || doctor?.fullName || "";
+                                const authorizedDoctorDegrees = res?.doctorDegrees || res?.authorizedDoctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name || "";
+
                                 if (isNarrativeGroup) {
                                     return (
                                         <div className="flex justify-between items-end font-serif px-2 text-black">
-                                        {/* Left Side: Prepared By (Standard Mode - Matches Professional Style) */}
-                                        <div className="text-left w-[40%]">
-                                            <div className="flex flex-col items-start gap-1">
-                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
-                                                <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
-                                                <p className="font-black text-[14pt] leading-tight uppercase tracking-tight">
-                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                            {/* Left Side: Prepared By */}
+                                            <div className="text-left w-[45%]">
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                                    <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
+                                                    <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                                    </p>
+                                                    <p className="text-[10pt] font-bold italic opacity-80">
+                                                        {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation || ""}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Right Side: Reporting Doctor (Authorized By) */}
+                                            <div className="text-right w-[50%]">
+                                                <div className="ml-auto mb-1 w-52 h-[1.5px] bg-black" />
+                                                <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
+                                                    {authorizedDoctorName}
                                                 </p>
-                                                <p className="text-[10pt] font-bold italic opacity-80">
-                                                    {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation || ""}
+                                                <p className="text-[11pt] font-bold italic inline-block max-w-full">
+                                                    {authorizedDoctorDegrees}
                                                 </p>
                                             </div>
                                         </div>
-
-                                        {/* Right Side: Authorized Doctor (Standard Mode - Matches Patwary Style) */}
-                                        <div className="text-right w-[50%]">
-                                            <div className="ml-auto mb-1 w-48 h-[1.5px] bg-black" />
-                                            <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
-                                                {doctor?.fullName || ""}
-                                            </p>
-                                            <p className="text-[11pt] font-bold italic inline-block">
-                                                {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    )
+                                    );
                                 }
 
+                                // Table Mode (Standard)
                                 return (
                                     <div className="flex justify-between items-end font-serif px-2 text-black">
-                                        {/* Left Side: Prepared By (Standard Mode - Matches Professional Style) */}
-                                        <div className="text-left w-[40%]">
+                                        {/* Left Side: Checked By & Prepared By */}
+                                        <div className="text-left w-[100%] flex justify-start gap-32">
+                                            {/* Checked By */}
                                             <div className="flex flex-col items-start gap-1">
                                                 <div className="w-48 h-[1.5px] bg-black mb-1" />
-                                                <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
-                                                <p className="font-black text-[14pt] leading-tight uppercase tracking-tight">
-                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                                <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
+                                                <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                    {checkedByName || "—"}
                                                 </p>
                                                 <p className="text-[10pt] font-bold italic opacity-80">
-                                                    {(detail as any)?.medicalTechnologist?.designation?.name || (detail as any)?.medicalTechnologist?.designation || ""}
+                                                    {checkedByDesignation || ""}
+                                                </p>
+                                            </div>
+
+                                            {/* Prepared By */}
+                                            <div className="flex flex-col items-start gap-1">
+                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                                <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
+                                                <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
                                                 </p>
                                             </div>
                                         </div>
-
-                                        {/* Right Side: Authorized Doctor (Standard Mode - Matches Patwary Style) */}
-                                        <div className="text-right w-[50%]">
-                                            <div className="ml-auto mb-1 w-48 h-[1.5px] bg-black" />
-                                            <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
-                                                {doctor?.fullName || ""}
-                                            </p>
-                                            <p className="text-[11pt] font-bold italic inline-block">
-                                                {result?.doctorDegrees || (detail as any)?.doctor?.designation || doctor?.designation?.name || "MBBS, CMU(Ultra)."}
-                                            </p>
-                                        </div>
+                                        
+                                        {/* Right Side: EMPTY as per request for table mode */}
+                                        <div className="w-0" />
                                     </div>
                                 );
                             })()}
