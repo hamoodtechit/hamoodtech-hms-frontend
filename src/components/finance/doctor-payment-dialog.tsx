@@ -67,6 +67,13 @@ export function DoctorPaymentDialog({
 
     const totalPayable = charges.reduce((sum, c) => sum + Number(c.commissionAmount || (c as any).chargeAmount || 0), 0)
 
+    useEffect(() => {
+        if (open) {
+            console.log("Payment Details — Charges:", charges);
+            console.log("Payment Details — Total Payable:", totalPayable);
+        }
+    }, [open, charges, totalPayable]);
+
     const handleSubmit = async () => {
         if (!accountId) {
             toast.error("Please select a payment account")
@@ -74,14 +81,17 @@ export function DoctorPaymentDialog({
         }
 
         try {
-            await payMutation.mutateAsync({
+            const payload = {
                 branchId: activeStoreId || "",
                 doctorId,
                 chargeIds: charges.map(c => c.id),
                 accountId,
                 paymentMethod,
                 note: note || undefined,
-            })
+            };
+            console.log("Payment Details — Submission Payload:", payload);
+
+            await payMutation.mutateAsync(payload)
             toast.success(`${charges.length} consultation charges paid successfully`)
             onOpenChange(false)
             setAccountId("")

@@ -86,6 +86,13 @@ export function AppointmentPaymentDialog({
         }
     }, [accounts, selectedAccountId])
 
+    useEffect(() => {
+        if (open && sale) {
+            console.log("Appointment Payment Dialog — Sale Data:", sale);
+            console.log("Appointment Payment Dialog — Due Amount:", dueAmount);
+        }
+    }, [open, sale, dueAmount]);
+
     const handleAddPayment = async () => {
         if (!sale || !selectedAccountId || amount <= 0) {
             toast.error("Please fill in all required fields")
@@ -93,7 +100,7 @@ export function AppointmentPaymentDialog({
         }
 
         try {
-            await addPaymentMutation.mutateAsync({
+            const payload = {
                 id: sale.id,
                 data: {
                     accountId: selectedAccountId,
@@ -101,7 +108,10 @@ export function AppointmentPaymentDialog({
                     paymentMethod: paymentMethod,
                     note: note || undefined,
                 },
-            })
+            };
+            console.log("Appointment Payment Dialog — Submission Payload:", payload);
+
+            await addPaymentMutation.mutateAsync(payload)
 
             toast.success("Payment recorded successfully!")
             onOpenChange(false)
