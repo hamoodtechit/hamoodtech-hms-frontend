@@ -375,12 +375,12 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                       justify-content: center;
                                       background: #f5f5f5;
                                   }
+                                  * { box-sizing: border-box !important; }
                                   .print-container {
-                                      width: 190mm;
+                                      width: 185mm;
                                       background: white;
                                       padding: 0;
                                       margin: 0 auto;
-                                      box-sizing: border-box;
                                       display: block;
                                   }
                                   /* Reset/normalize some Tailwind styles for absolute consistency */
