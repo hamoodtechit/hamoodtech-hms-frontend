@@ -14,6 +14,7 @@ import { useAuthStore } from "@/store/use-auth-store"
 import { Printer, X, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 import { Commission, ReferralPerson } from "@/types/hr"
+import { useEffect } from "react"
 
 // Simple number to words converter (Indian numbering system format)
 function numberToWords(num: number): string {
@@ -50,6 +51,12 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     const { general } = useSettingsStore()
     const { formatCurrency } = useCurrency()
     const { user } = useAuthStore()
+
+    useEffect(() => {
+        if (open && payoutData) {
+            console.log("Commission Payout Receipt — Payout Data:", payoutData);
+        }
+    }, [open, payoutData]);
 
     if (!payoutData) return null
 
@@ -217,7 +224,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
 
             <div className="mt-12 text-center border-t border-gray-100 pt-4">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                    This is an electronically generated document. No physical stamp required.
+                    *Powered By HamoodTech
                 </p>
             </div>
         </div>
