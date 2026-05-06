@@ -377,22 +377,26 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   }
                                   .print-container {
                                       width: 190mm;
-                                      min-height: 297mm;
                                       background: white;
                                       padding: 0;
                                       margin: 0 auto;
                                       box-sizing: border-box;
-                                      position: relative;
-                                      display: flex;
-                                      flex-direction: column;
+                                      display: block;
                                   }
                                   /* Reset/normalize some Tailwind styles for absolute consistency */
                                   .border { border: 1px solid black !important; }
                                   .border-dashed { border-style: solid !important; border-width: 1px !important; }
                                   .border-dotted { border-style: solid !important; }
                                   .border-black { border-color: black !important; }
+                                  .page-break { 
+                                      page-break-after: always !important; 
+                                      break-after: page !important;
+                                      height: 0 !important;
+                                      margin: 0 !important;
+                                      padding: 0 !important;
+                                      display: block !important;
+                                  }
                                   
-                                  /* Prevent double borders */
                                   .border-t-0 { border-top-width: 0 !important; }
                                   .border-b-0 { border-bottom-width: 0 !important; }
                                   .border-r-0 { border-right-width: 0 !important; }
@@ -404,111 +408,91 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   .border-y { border-top-width: 1px !important; border-bottom-width: 1px !important; }
                                   
                                   .grid { display: grid !important; }
+                                  .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
                                   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+                                  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
                                   .flex { display: flex !important; }
+                                  .flex-wrap { flex-wrap: wrap !important; }
                                   .flex-col { flex-direction: column !important; }
                                   .justify-center { justify-content: center !important; }
                                   .justify-between { justify-content: space-between !important; }
                                   .items-center { align-items: center !important; }
                                   .items-start { align-items: flex-start !important; }
                                   .items-end { align-items: flex-end !important; }
+                                  .gap-1 { gap: 0.25rem !important; }
+                                  .gap-2 { gap: 0.5rem !important; }
+                                  .gap-3 { gap: 0.75rem !important; }
                                   .gap-4 { gap: 1rem !important; }
                                   .gap-6 { gap: 1.5rem !important; }
+                                  .gap-8 { gap: 2rem !important; }
+                                  .p-1 { padding: 0.25rem !important; }
                                   .p-2 { padding: 0.5rem !important; }
                                   .p-4 { padding: 1rem !important; }
                                   .p-8 { padding: 2rem !important; }
                                   .px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
                                   .px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
                                   .px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
-                                  .py-0\\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
                                   .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
                                   .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
                                   .pt-2 { padding-top: 0.5rem !important; }
+                                  .mb-0 { margin-bottom: 0 !important; }
                                   .mb-1 { margin-bottom: 0.25rem !important; }
                                   .mb-2 { margin-bottom: 0.5rem !important; }
-                                  .mb-4 { margin-bottom: 1rem !important; }
-                                  .mb-6 { margin-bottom: 1.5rem !important; }
                                   .mt-1 { margin-top: 0.25rem !important; }
-                                  .mt-3 { margin-top: 0.75rem !important; }
+                                  .mt-2 { margin-top: 0.5rem !important; }
                                   .mt-4 { margin-top: 1rem !important; }
-                                  .mt-16 { margin-top: 4rem !important; }
+                                  .mt-12 { margin-top: 3rem !important; }
+                                  .mx-1 { margin-left: 0.25rem !important; margin-right: 0.25rem !important; }
                                   .mx-2 { margin-left: 0.5rem !important; margin-right: 0.5rem !important; }
+                                  .mx-8 { margin-left: 2rem !important; margin-right: 2rem !important; }
+                                  .mr-2 { margin-right: 0.5rem !important; }
+                                  .mr-8 { margin-right: 2rem !important; }
                                   .w-12 { width: 3rem !important; }
                                   .w-24 { width: 6rem !important; }
                                   .w-48 { width: 12rem !important; }
-                                  .w-\\[250px\\] { width: 250px !important; }
                                   .w-full { width: 100% !important; }
-                                  .m-0 { margin: 0 !important; }
-                                  .p-0 { padding: 0 !important; }
-                                  .mb-0 { margin-bottom: 0 !important; }
-                                  .mb-1 { margin-bottom: 4px !important; }
-                                  .mb-2 { margin-bottom: 8px !important; }
-                                  .mt-0 { margin-top: 0 !important; }
-                                  .mt-4 { margin-top: 16px !important; }
-                                  .leading-none { line-height: 1 !important; }
-                                  .leading-tight { line-height: 1.1 !important; }
-                                  .gap-0 { gap: 0 !important; }
-                                  .gap-8 { gap: 2rem !important; }
-                                  .min-h-\\[30px\\] { min-height: 30px !important; }
-                                  .min-h-\\[40px\\] { min-height: 40px !important; }
-                                  .min-h-\\[500px\\] { min-height: 500px !important; }
+                                  .flex-1 { flex: 1 1 0% !important; }
+                                  .shrink-0 { flex-shrink: 0 !important; }
                                   .text-center { text-align: center !important; }
                                   .text-right { text-align: right !important; }
-                                  .text-gray-400 { color: #9ca3af !important; }
-                                  .text-gray-500 { color: #6b7280 !important; }
                                   .text-green-600 { color: #16a34a !important; }
                                   .text-red-600 { color: #dc2626 !important; }
+                                  .text-\\[8px\\] { font-size: 8px !important; }
                                   .text-\\[10px\\] { font-size: 10px !important; }
                                   .text-\\[11px\\] { font-size: 11px !important; }
                                   .text-\\[12px\\] { font-size: 12px !important; }
                                   .text-\\[13px\\] { font-size: 13px !important; }
-                                  .text-\\[16px\\] { font-size: 16px !important; }
-                                  .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
-                                  .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                                  .text-\\[22px\\] { font-size: 22px !important; }
                                   .text-\\[80px\\] { font-size: 80px !important; }
-                                  .text-\\[150px\\] { font-size: 150px !important; }
+                                  .text-sm { font-size: 0.875rem !important; }
                                   .font-bold { font-weight: 700 !important; }
                                   .font-black { font-weight: 900 !important; }
                                   .font-medium { font-weight: 500 !important; }
                                   .uppercase { text-transform: uppercase !important; }
-                                  .tracking-wider { letter-spacing: 0.05em !important; }
+                                  .italic { font-style: italic !important; }
                                   .tracking-widest { letter-spacing: 0.1em !important; }
                                   .tracking-\\[10px\\] { letter-spacing: 10px !important; }
-                                  .tracking-\\[15px\\] { letter-spacing: 15px !important; }
-                                  .border-collapse { border-collapse: collapse !important; }
                                   .rounded-full { border-radius: 9999px !important; }
                                   .rounded-\\[20px\\] { border-radius: 20px !important; }
-                                  .rounded-\\[30px\\] { border-radius: 30px !important; }
-                                  .rounded-\\[40px\\] { border-radius: 40px !important; }
-                                  .border-4 { border-width: 4px !important; }
-                                  .border-8 { border-width: 8px !important; }
                                   .border-2 { border-width: 2px !important; }
-                                  .border-\\[12px\\] { border-width: 12px !important; }
-                                  .inline-block { display: inline-block !important; }
-                                  .opacity-\\[0\\.08\\] { opacity: 0.08 !important; }
+                                  .border-8 { border-width: 8px !important; }
                                   .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
+                                  .opacity-70 { opacity: 0.7 !important; }
                                   .z-0 { z-index: 0 !important; }
                                   .z-10 { z-index: 10 !important; }
-                                  .inset-0 { top: 0; right: 0; bottom: 0; left: 0 !important; }
                                   .top-\\[20\\%\\] { top: 20% !important; }
                                   .right-\\[10\\%\\] { right: 10% !important; }
                                   .relative { position: relative !important; }
                                   .absolute { position: absolute !important; }
-                                  .pointer-events-none { pointer-events: none !important; }
-                                  .overflow-hidden { overflow: hidden !important; }
-                                  .-left-6 { left: -1.5rem !important; }
-                                  .top-1\\/2 { top: 50% !important; }
-                                  .-translate-y-1\\/2 { transform: translateY(-50) rotate(-90deg) !important; }
                                   .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
-                                  .-rotate-\\[5deg\\] { transform: rotate(-5deg) !important; }
-                                  .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
-                                  .whitespace-nowrap { white-space: nowrap !important; }
-                                  .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                                  .page-break { page-break-after: always !important; }
+                                  .bg-gray-50 { background-color: #f9fafb !important; }
+                                  .bg-white { background-color: #ffffff !important; }
+                                  
                                   body { margin: 0 !important; padding: 0 !important; }
                                   @page { margin: 5mm !important; }
+                                  .whitespace-nowrap { white-space: nowrap !important; }
+                                  .print-container { width: 190mm !important; margin: 0 auto !important; padding: 0 !important; display: block !important; }
                                 </style>
-                    </style>
                           </head>
                           <body>
                               <div class="print-container">

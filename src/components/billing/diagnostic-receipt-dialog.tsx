@@ -386,31 +386,42 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   }
                                   .print-container {
                                       width: 190mm;
-                                      min-height: 297mm;
                                       background: white;
                                       padding: 0;
                                       margin: 0 auto;
                                       box-sizing: border-box;
-                                      position: relative;
-                                      display: flex;
-                                      flex-direction: column;
+                                      display: block;
                                   }
                                   /* Reset/normalize some Tailwind styles for absolute consistency */
                                   .border { border: 1px solid black !important; }
                                   .border-dashed { border-style: solid !important; border-width: 1px !important; }
                                   .border-dotted { border-style: solid !important; }
                                   .border-black { border-color: black !important; }
+                                  .page-break { 
+                                      page-break-after: always !important; 
+                                      break-after: page !important;
+                                      height: 0 !important;
+                                      margin: 0 !important;
+                                      padding: 0 !important;
+                                      display: block !important;
+                                  }
+                                  
                                   .border-t-0 { border-top-width: 0 !important; }
                                   .border-b-0 { border-bottom-width: 0 !important; }
                                   .border-r-0 { border-right-width: 0 !important; }
                                   .border-l-0 { border-left-width: 0 !important; }
+                                  
                                   .border-b { border-bottom-width: 1px !important; }
                                   .border-r { border-right-width: 1px !important; }
                                   .border-t { border-top-width: 1px !important; }
                                   .border-y { border-top-width: 1px !important; border-bottom-width: 1px !important; }
+                                  
                                   .grid { display: grid !important; }
+                                  .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
                                   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+                                  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
                                   .flex { display: flex !important; }
+                                  .flex-wrap { flex-wrap: wrap !important; }
                                   .flex-col { flex-direction: column !important; }
                                   .justify-center { justify-content: center !important; }
                                   .justify-between { justify-content: space-between !important; }
@@ -418,6 +429,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .items-start { align-items: flex-start !important; }
                                   .items-end { align-items: flex-end !important; }
                                   .gap-1 { gap: 0.25rem !important; }
+                                  .gap-2 { gap: 0.5rem !important; }
                                   .gap-3 { gap: 0.75rem !important; }
                                   .gap-4 { gap: 1rem !important; }
                                   .gap-6 { gap: 1.5rem !important; }
@@ -432,12 +444,14 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
                                   .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
                                   .pt-2 { padding-top: 0.5rem !important; }
+                                  .mb-0 { margin-bottom: 0 !important; }
                                   .mb-1 { margin-bottom: 0.25rem !important; }
                                   .mb-2 { margin-bottom: 0.5rem !important; }
                                   .mt-1 { margin-top: 0.25rem !important; }
                                   .mt-2 { margin-top: 0.5rem !important; }
                                   .mt-4 { margin-top: 1rem !important; }
                                   .mt-12 { margin-top: 3rem !important; }
+                                  .mx-1 { margin-left: 0.25rem !important; margin-right: 0.25rem !important; }
                                   .mx-2 { margin-left: 0.5rem !important; margin-right: 0.5rem !important; }
                                   .mx-8 { margin-left: 2rem !important; margin-right: 2rem !important; }
                                   .mr-2 { margin-right: 0.5rem !important; }
@@ -469,9 +483,6 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .tracking-\\[10px\\] { letter-spacing: 10px !important; }
                                   .rounded-full { border-radius: 9999px !important; }
                                   .rounded-\\[20px\\] { border-radius: 20px !important; }
-                                  .border-b { border-bottom-width: 1px !important; }
-                                  .border-r { border-right-width: 1px !important; }
-                                  .border-t { border-top-width: 1px !important; }
                                   .border-2 { border-width: 2px !important; }
                                   .border-8 { border-width: 8px !important; }
                                   .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
@@ -484,11 +495,10 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                                   .absolute { position: absolute !important; }
                                   .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
                                   .bg-gray-50 { background-color: #f9fafb !important; }
-                                  .bg-gray-100\\/50 { background-color: rgba(243, 244, 246, 0.5) !important; }
                                   .bg-white { background-color: #ffffff !important; }
                                   
                                   body { margin: 0 !important; padding: 0 !important; }
-                                  @page { margin: 0 !important; }
+                                  @page { margin: 0; }
                                 </style>
                     </style>
                           </head>

@@ -447,13 +447,17 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
             </div>
         </div>
         
-        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white text-black" id="hospital-receipt-content" style={{ width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
+        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 bg-white text-black" id="hospital-receipt-content" style={{ width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
             {isLoading ? (
                 <div className="h-40 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
                 </div>
             ) : (
-                <ReceiptContent copyTitle="HOSPITAL BILL — ORIGINAL COPY" />
+                <>
+                    <ReceiptContent copyTitle="HOSPITAL BILL — OFFICE COPY" />
+                    <div className="page-break" />
+                    <ReceiptContent copyTitle="HOSPITAL BILL — CUSTOMER COPY" />
+                </>
             )}
         </div>
       </DialogContent>
