@@ -417,6 +417,8 @@ export function PrintReport({ report }: PrintReportProps) {
                                                 <div className="h-[40px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
+                                                {/* Empty line to match the 2-line height of other columns for line alignment */}
+                                                <p className="text-[10pt] leading-tight">&nbsp;</p>
                                             </div>
                                         </div>
 
