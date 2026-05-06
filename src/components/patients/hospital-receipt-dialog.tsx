@@ -85,8 +85,8 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const amountInWords = numberToWords(netTotal) + " TAKA ONLY"
 
   const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
-    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0 text-black">
-        <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
+    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
+        <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
 
         {/* PAID/DUE Stamps */}
         <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
@@ -257,7 +257,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         </div>
         
         <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
-            <span>*Powered by Hamood Tech</span>
+            <span>*Powered by HamoodTech</span>
             <span>Printed: {new Date().toLocaleString('en-GB')}</span>
         </div>
         </div>
@@ -296,12 +296,12 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                             display: flex;
                             justify-content: center;
                             background: #f5f5f5;
-                        }
-                        .print-container {
-                            width: 210mm;
+                                        .print-container {
+                            width: 190mm;
                             min-height: 297mm;
                             background: white;
-                            padding: 5mm;
+                            padding: 0;
+                            margin: 0 auto;
                             box-sizing: border-box;
                             position: relative;
                             display: flex;
@@ -309,8 +309,8 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         }
                         /* Reset/normalize some Tailwind styles for absolute consistency */
                         .border { border: 1px solid black !important; }
-                        .border-dashed { border-style: dashed !important; border-width: 1px !important; }
-                        .border-dotted { border-style: dotted !important; }
+                        .border-dashed { border-style: solid !important; border-width: 1px !important; }
+                        .border-dotted { border-style: solid !important; }
                         .border-black { border-color: black !important; }
                         .border-t-0 { border-top-width: 0 !important; }
                         .border-b-0 { border-bottom-width: 0 !important; }
@@ -329,102 +329,78 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         .items-center { align-items: center !important; }
                         .items-start { align-items: flex-start !important; }
                         .items-end { align-items: flex-end !important; }
+                        .gap-1 { gap: 0.25rem !important; }
+                        .gap-3 { gap: 0.75rem !important; }
                         .gap-4 { gap: 1rem !important; }
                         .gap-6 { gap: 1.5rem !important; }
+                        .gap-8 { gap: 2rem !important; }
+                        .p-1 { padding: 0.25rem !important; }
                         .p-2 { padding: 0.5rem !important; }
                         .p-4 { padding: 1rem !important; }
                         .p-8 { padding: 2rem !important; }
                         .px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
                         .px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
                         .px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
-                        .py-0\\.5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
                         .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
                         .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
                         .pt-2 { padding-top: 0.5rem !important; }
                         .mb-1 { margin-bottom: 0.25rem !important; }
                         .mb-2 { margin-bottom: 0.5rem !important; }
-                        .mb-4 { margin-bottom: 1rem !important; }
-                        .mb-6 { margin-bottom: 1.5rem !important; }
                         .mt-1 { margin-top: 0.25rem !important; }
                         .mt-2 { margin-top: 0.5rem !important; }
-                        .mt-3 { margin-top: 0.75rem !important; }
                         .mt-4 { margin-top: 1rem !important; }
-                        .mt-16 { margin-top: 4rem !important; }
+                        .mt-12 { margin-top: 3rem !important; }
                         .mx-2 { margin-left: 0.5rem !important; margin-right: 0.5rem !important; }
                         .mx-8 { margin-left: 2rem !important; margin-right: 2rem !important; }
+                        .mr-2 { margin-right: 0.5rem !important; }
+                        .mr-8 { margin-right: 2rem !important; }
                         .w-12 { width: 3rem !important; }
                         .w-24 { width: 6rem !important; }
-                        .w-\\[250px\\] { width: 250px !important; }
+                        .w-48 { width: 12rem !important; }
                         .w-full { width: 100% !important; }
-                        .m-0 { margin: 0 !important; }
-                        .p-0 { padding: 0 !important; }
-                        .mb-0 { margin-bottom: 0 !important; }
-                        .mb-1 { margin-bottom: 4px !important; }
-                        .mb-2 { margin-bottom: 8px !important; }
-                        .mt-0 { margin-top: 0 !important; }
-                        .mt-2 { margin-top: 8px !important; }
-                        .mt-4 { margin-top: 16px !important; }
-                        .mt-12 { margin-top: 3rem !important; }
-                        .leading-none { line-height: 1 !important; }
-                        .leading-tight { line-height: 1.1 !important; }
-                        .gap-0 { gap: 0 !important; }
-                        .gap-8 { gap: 2rem !important; }
-                        .min-h-\\[30px\\] { min-height: 30px !important; }
-                        .min-h-\\[40px\\] { min-height: 40px !important; }
+                        .flex-1 { flex: 1 1 0% !important; }
+                        .shrink-0 { flex-shrink: 0 !important; }
                         .text-center { text-align: center !important; }
                         .text-right { text-align: right !important; }
-                        .text-gray-400 { color: #9ca3af !important; }
-                        .text-gray-500 { color: #6b7280 !important; }
                         .text-green-600 { color: #16a34a !important; }
                         .text-red-600 { color: #dc2626 !important; }
+                        .text-\\[8px\\] { font-size: 8px !important; }
                         .text-\\[10px\\] { font-size: 10px !important; }
                         .text-\\[11px\\] { font-size: 11px !important; }
                         .text-\\[12px\\] { font-size: 12px !important; }
                         .text-\\[13px\\] { font-size: 13px !important; }
-                        .text-\\[16px\\] { font-size: 16px !important; }
-                        .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
-                        .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                        .text-\\[22px\\] { font-size: 22px !important; }
                         .text-\\[80px\\] { font-size: 80px !important; }
-                        .text-\\[150px\\] { font-size: 150px !important; }
+                        .text-sm { font-size: 0.875rem !important; }
                         .font-bold { font-weight: 700 !important; }
                         .font-black { font-weight: 900 !important; }
                         .font-medium { font-weight: 500 !important; }
                         .uppercase { text-transform: uppercase !important; }
                         .italic { font-style: italic !important; }
-                        .tracking-wider { letter-spacing: 0.05em !important; }
                         .tracking-widest { letter-spacing: 0.1em !important; }
                         .tracking-\\[10px\\] { letter-spacing: 10px !important; }
-                        .tracking-\\[15px\\] { letter-spacing: 15px !important; }
-                        .border-collapse { border-collapse: collapse !important; }
                         .rounded-full { border-radius: 9999px !important; }
                         .rounded-\\[20px\\] { border-radius: 20px !important; }
-                        .rounded-\\[40px\\] { border-radius: 40px !important; }
-                        .border-4 { border-width: 4px !important; }
-                        .border-8 { border-width: 8px !important; }
+                        .border-b { border-bottom-width: 1px !important; }
+                        .border-r { border-right-width: 1px !important; }
+                        .border-t { border-top-width: 1px !important; }
                         .border-2 { border-width: 2px !important; }
-                        .border-\\[12px\\] { border-width: 12px !important; }
-                        .inline-block { display: inline-block !important; }
-                        .opacity-\\[0\\.08\\] { opacity: 0.08 !important; }
+                        .border-8 { border-width: 8px !important; }
                         .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
+                        .opacity-70 { opacity: 0.7 !important; }
                         .z-0 { z-index: 0 !important; }
                         .z-10 { z-index: 10 !important; }
-                        .inset-0 { top: 0; right: 0; bottom: 0; left: 0 !important; }
                         .top-\\[20\\%\\] { top: 20% !important; }
                         .right-\\[10\\%\\] { right: 10% !important; }
                         .relative { position: relative !important; }
                         .absolute { position: absolute !important; }
-                        .pointer-events-none { pointer-events: none !important; }
-                        .overflow-hidden { overflow: hidden !important; }
                         .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
-                        .-rotate-\\[5deg\\] { transform: rotate(-5deg) !important; }
-                        .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
-                        .whitespace-nowrap { white-space: nowrap !important; }
-                        .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-                        .page-break { page-break-after: always !important; }
-                        .border-t-2 { border-top: 2px solid black !important; }
-                        .space-y-1 > * + * { margin-top: 0.25rem !important; }
+                        .bg-gray-50 { background-color: #f9fafb !important; }
+                        .bg-gray-100\\/50 { background-color: rgba(243, 244, 246, 0.5) !important; }
+                        .bg-white { background-color: #ffffff !important; }
+                        
                         body { margin: 0 !important; padding: 0 !important; }
-                        @page { margin: 5mm !important; }
+                        @page { margin: 0 !important; }portant; }
                         .whitespace-nowrap { white-space: nowrap !important; }
                         .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
                         .page-break { page-break-after: always !important; }
