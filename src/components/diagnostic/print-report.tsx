@@ -414,39 +414,43 @@ export function PrintReport({ report }: PrintReportProps) {
                                         {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
                                         <div className="text-left">
                                             <div className="flex flex-col items-start gap-0">
+                                                <div className="h-[40px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
-                                                {/* Left side has no name/designation as per request */}
-                                                <div className="h-[40px]" /> {/* Space for signature */}
                                             </div>
                                         </div>
 
                                         {/* COLUMN 2: MIDDLE - Narrative: Doctor, Table: Checked By Name */}
                                         <div className="text-center">
-                                            {isNarrativeGroup ? (
-                                                <div className="flex flex-col items-center gap-0">
-                                                    <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
-                                                        {authorizedDoctorName}
-                                                    </p>
-                                                    <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
-                                                        {authorizedDoctorDegrees}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center gap-0">
-                                                    <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
-                                                        {checkedByName || "—"}
-                                                    </p>
-                                                    <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
-                                                        {checkedByDesignation || ""}
-                                                    </p>
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col items-center gap-0">
+                                                <div className="h-[40px]" /> {/* Space for signature */}
+                                                <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
+                                                {isNarrativeGroup ? (
+                                                    <>
+                                                        <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                            {authorizedDoctorName}
+                                                        </p>
+                                                        <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
+                                                            {authorizedDoctorDegrees}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                            {checkedByName || "—"}
+                                                        </p>
+                                                        <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
+                                                            {checkedByDesignation || ""}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* COLUMN 3: RIGHT - Always PREPARED BY label + name (no designation) */}
                                         <div className="text-right">
                                             <div className="flex flex-col items-end gap-0">
+                                                <div className="h-[40px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
                                                 <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
