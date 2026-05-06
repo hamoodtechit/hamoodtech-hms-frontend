@@ -88,14 +88,18 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0 text-black">
         <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
 
-        {/* PAID Hologram */}
-        {isFullyPaid && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.08]">
-                <div className="text-[150px] font-black uppercase text-red-600 -rotate-[35deg] border-[12px] border-red-600 px-12 py-6 rounded-[40px] tracking-[15px]">
+        {/* PAID/DUE Stamps */}
+        <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
+            {isFullyPaid ? (
+                <div className="text-[80px] font-black uppercase text-green-600 -rotate-[25deg] border-[8px] border-green-600 px-8 py-2 rounded-[20px] tracking-[10px]">
                     PAID
                 </div>
-            </div>
-        )}
+            ) : (
+                <div className="text-[80px] font-black uppercase text-red-600 -rotate-[25deg] border-[8px] border-red-600 px-8 py-2 rounded-[20px] tracking-[10px]">
+                    DUE
+                </div>
+            )}
+        </div>
 
         {/* Header */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
@@ -118,43 +122,47 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         </div>
 
         {/* Info Table Box */}
-        <div className="border border-black flex flex-col mb-2 bg-white relative z-10 mt-2">
-            <div className="grid grid-cols-2 border-b border-black min-h-[30px]">
-                <div className="p-2 border-r border-black flex items-center">
-                    <span className="w-24 text-[10px] font-black uppercase">Inv. No:</span>
-                    <span className="font-bold text-[12px]">{invoiceNumber}</span>
+        <div className="border border-black mb-2 relative z-10 mt-2 text-[13px]">
+            <div className="grid grid-cols-2 border-b border-black">
+                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
+                    UHID : {patient?.uhid || patient?.patientNumber || 'N/A'}
                 </div>
-                <div className="p-2 flex items-center">
-                    <span className="w-24 text-[10px] font-black uppercase">Date:</span>
-                    <span className="font-bold text-[12px]">{new Date(date).toLocaleString('en-GB')}</span>
+                <div className="p-1 px-3 flex items-center justify-between font-bold">
+                    <span>Bill No. : {invoiceNumber}</span>
+                    <span className="text-[11px]">Lab No. : {data.labNumber || "N/A"}</span>
                 </div>
             </div>
-            <div className="grid grid-cols-2 border-b border-black min-h-[30px]">
-                <div className="p-2 border-r border-black flex items-center">
-                    <span className="w-24 text-[10px] font-black uppercase">Patient:</span>
-                    <span className="font-bold text-[12px] uppercase">{patient?.name || 'N/A'}</span>
+            <div className="grid grid-cols-2 border-b border-black">
+                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
+                    Name <span className="mx-2">:</span> {patient?.name || 'N/A'}
                 </div>
-                <div className="p-2 flex items-center">
-                    <span className="w-24 text-[10px] font-black uppercase">Reg. ID:</span>
-                    <span className="font-bold text-[12px]">{patient?.uhid || patient?.patientNumber || 'N/A'}</span>
+                <div className="p-1 px-3 font-bold flex items-center">
+                    <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                </div>
+            </div>
+            <div className="grid grid-cols-1 border-b border-black">
+                <div className="p-1 px-3 font-bold flex gap-8 items-center">
+                    <span>Age <span className="mx-1">:</span> {patient?.age || 'N/A'}Y</span>
+                    <span>Sex : {patient?.gender || 'N/A'}</span>
+                    <span>Contact No. : {patient?.phone || 'N/A'}</span>
                 </div>
             </div>
             {bed && (
-            <div className="p-2 flex items-center min-h-[30px]">
-                <span className="w-24 text-[10px] font-black uppercase">Ward/Bed:</span>
-                <span className="font-bold text-[12px]">{bed?.section?.name} - {bed?.bedNumber}</span>
+            <div className="p-1 px-3 font-bold flex items-center border-b border-black">
+                <span className="w-24 uppercase">Ward/Bed:</span>
+                <span>{bed?.section?.name} - {bed?.bedNumber}</span>
             </div>
             )}
         </div>
 
         {/* Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2">
+        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2 text-[13px]">
             <thead>
-                <tr style={{ borderBottom: '2px solid black' }}>
-                    <th style={{ textAlign: 'left', padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.05em' }}>Service / Item</th>
-                    <th style={{ textAlign: 'center', padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.05em' }}>Qty</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.05em' }}>Rate</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.05em' }}>Total</th>
+                <tr style={{ borderBottom: '2px solid black' }} className="font-black">
+                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Service / Item</th>
+                    <th style={{ textAlign: 'center', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qty</th>
+                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rate</th>
+                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -175,38 +183,49 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         </table>
 
         {/* Financial Settlement */}
-        <div className="border-t-2 border-black mt-2 pt-2 relative z-10 px-8">
-            <div className="flex justify-between items-center py-0.5">
-                <span className="text-[11px] font-black uppercase">Gross Total:</span>
-                <span className="text-[12px] font-black">{grossTotal.toFixed(2)} ৳</span>
+        <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
+            <div className="pt-2 pl-4">
+                {isFullyPaid ? (
+                    <div className="border-4 border-green-600 text-green-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                        Full Paid
+                    </div>
+                ) : (
+                    <div className="border-4 border-red-600 text-red-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                        Due
+                    </div>
+                )}
             </div>
-            {(totalItemDiscount > 0 || discountAmount > 0) && (
-            <div className="flex justify-between items-center py-0.5">
-                <span className="text-[10px] font-black uppercase italic">Discount (-):</span>
-                <span className="text-[11px] font-bold">{(totalItemDiscount + discountAmount).toFixed(2)} ৳</span>
-            </div>
-            )}
-            <div className="border-b border-black w-full mb-1"></div>
-            <div className="flex justify-between items-center py-0.5">
-                <span className="text-[12px] font-black uppercase">Net Payable:</span>
-                <span className="text-[14px] font-black">{netTotal.toFixed(2)} ৳</span>
-            </div>
-            <div className="flex justify-between items-center py-0.5">
-                <span className="text-[11px] font-bold uppercase italic">Paid Amount:</span>
-                <span className="text-[11px] font-bold">{paidAmount.toFixed(2)} ৳</span>
-            </div>
-            <div className="border-b border-black w-full mb-1"></div>
-            <div className="flex justify-between items-center py-0.5">
-                <span className="text-[12px] font-black uppercase">{dueAmount > 0 ? 'Total Due:' : 'Return:'}</span>
-                <span className="text-[14px] font-black">{dueAmount > 0 ? dueAmount.toFixed(2) : Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</span>
+            <div className="w-[250px]">
+                <div className="flex justify-between py-0.5 font-black">
+                    <span>Gross Total:</span>
+                    <span>{grossTotal.toFixed(2)} ৳</span>
+                </div>
+                {(totalItemDiscount > 0 || discountAmount > 0) && (
+                <div className="flex justify-between py-0.5 font-black italic">
+                    <span>Discount (-):</span>
+                    <span>{(totalItemDiscount + discountAmount).toFixed(2)} ৳</span>
+                </div>
+                )}
+                <div className="flex justify-between py-0.5 font-black text-[16px] border-y border-black mt-1 pb-1">
+                    <span>Net Payable:</span>
+                    <span>{netTotal.toFixed(2)} ৳</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-black">
+                    <span>Paid Amount:</span>
+                    <span>{paidAmount.toFixed(2)} ৳</span>
+                </div>
+                <div className="flex justify-between py-0.5 font-black text-red-600">
+                    <span>Total Due:</span>
+                    <span>{dueAmount.toFixed(2)} ৳</span>
+                </div>
             </div>
         </div>
 
         {/* In Words */}
         <div className="mt-2 px-8 relative z-10">
-            <div className="border border-black border-dashed p-2 bg-gray-50/50">
-                <span className="text-[9px] font-black uppercase opacity-50">In Words: </span>
-                <span className="text-[10px] font-black uppercase">{amountInWords}</span>
+            <div className="border border-black p-2 bg-gray-50/50 font-black text-[12px]">
+                <span className="uppercase opacity-50">In Words: </span>
+                <span className="uppercase">{amountInWords}</span>
             </div>
         </div>
 
@@ -219,15 +238,15 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         )}
 
         {/* Signature */}
-        <div className="mt-16 flex justify-between px-8 relative z-10">
+        <div className="mt-12 flex justify-between px-8 relative z-10">
             <div className="text-center space-y-1">
-                <div className="border-t border-black w-32 mx-auto"></div>
-                <span className="text-[10px] font-black uppercase">Prepared By</span>
-                <p className="text-[9px] font-bold text-black italic">{user?.fullName || 'Staff'}</p>
+                <div className="border-t border-black w-48 mx-auto"></div>
+                <span className="text-[12px] font-black uppercase">Prepared By</span>
+                <p className="text-[10px] font-bold text-black italic">{user?.fullName || 'Staff'}</p>
             </div>
             <div className="text-center space-y-1">
-                <div className="border-t border-black w-32 mx-auto"></div>
-                <span className="text-[10px] font-black uppercase">Authorized By</span>
+                <div className="border-t border-black w-48 mx-auto"></div>
+                <span className="text-[12px] font-black uppercase">Authorized By</span>
             </div>
         </div>
         
@@ -329,32 +348,37 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         .mx-8 { margin-left: 2rem !important; margin-right: 2rem !important; }
                         .w-12 { width: 3rem !important; }
                         .w-24 { width: 6rem !important; }
-                        .w-32 { width: 8rem !important; }
-                        .w-48 { width: 12rem !important; }
+                        .w-\\[250px\\] { width: 250px !important; }
                         .w-full { width: 100% !important; }
                         .m-0 { margin: 0 !important; }
                         .p-0 { padding: 0 !important; }
                         .mb-0 { margin-bottom: 0 !important; }
+                        .mb-1 { margin-bottom: 4px !important; }
+                        .mb-2 { margin-bottom: 8px !important; }
                         .mt-0 { margin-top: 0 !important; }
+                        .mt-2 { margin-top: 8px !important; }
+                        .mt-4 { margin-top: 16px !important; }
+                        .mt-12 { margin-top: 3rem !important; }
                         .leading-none { line-height: 1 !important; }
                         .leading-tight { line-height: 1.1 !important; }
                         .gap-0 { gap: 0 !important; }
+                        .gap-8 { gap: 2rem !important; }
                         .min-h-\\[30px\\] { min-height: 30px !important; }
                         .min-h-\\[40px\\] { min-height: 40px !important; }
                         .text-center { text-align: center !important; }
                         .text-right { text-align: right !important; }
                         .text-gray-400 { color: #9ca3af !important; }
                         .text-gray-500 { color: #6b7280 !important; }
+                        .text-green-600 { color: #16a34a !important; }
                         .text-red-600 { color: #dc2626 !important; }
-                        .text-\\[8px\\] { font-size: 8px !important; }
-                        .text-\\[9px\\] { font-size: 9px !important; }
                         .text-\\[10px\\] { font-size: 10px !important; }
                         .text-\\[11px\\] { font-size: 11px !important; }
                         .text-\\[12px\\] { font-size: 12px !important; }
                         .text-\\[13px\\] { font-size: 13px !important; }
-                        .text-\\[14px\\] { font-size: 14px !important; }
+                        .text-\\[16px\\] { font-size: 16px !important; }
                         .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
                         .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                        .text-\\[80px\\] { font-size: 80px !important; }
                         .text-\\[150px\\] { font-size: 150px !important; }
                         .font-bold { font-weight: 700 !important; }
                         .font-black { font-weight: 900 !important; }
@@ -363,22 +387,38 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         .italic { font-style: italic !important; }
                         .tracking-wider { letter-spacing: 0.05em !important; }
                         .tracking-widest { letter-spacing: 0.1em !important; }
+                        .tracking-\\[10px\\] { letter-spacing: 10px !important; }
                         .tracking-\\[15px\\] { letter-spacing: 15px !important; }
                         .border-collapse { border-collapse: collapse !important; }
                         .rounded-full { border-radius: 9999px !important; }
+                        .rounded-\\[20px\\] { border-radius: 20px !important; }
                         .rounded-\\[40px\\] { border-radius: 40px !important; }
+                        .border-4 { border-width: 4px !important; }
+                        .border-8 { border-width: 8px !important; }
                         .border-2 { border-width: 2px !important; }
                         .border-\\[12px\\] { border-width: 12px !important; }
                         .inline-block { display: inline-block !important; }
                         .opacity-\\[0\\.08\\] { opacity: 0.08 !important; }
+                        .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
                         .z-0 { z-index: 0 !important; }
                         .z-10 { z-index: 10 !important; }
                         .inset-0 { top: 0; right: 0; bottom: 0; left: 0 !important; }
+                        .top-\\[20\\%\\] { top: 20% !important; }
+                        .right-\\[10\\%\\] { right: 10% !important; }
                         .relative { position: relative !important; }
                         .absolute { position: absolute !important; }
                         .pointer-events-none { pointer-events: none !important; }
                         .overflow-hidden { overflow: hidden !important; }
+                        .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
+                        .-rotate-\\[5deg\\] { transform: rotate(-5deg) !important; }
                         .-rotate-\\[35deg\\] { transform: rotate(-35deg) !important; }
+                        .whitespace-nowrap { white-space: nowrap !important; }
+                        .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+                        .page-break { page-break-after: always !important; }
+                        .border-t-2 { border-top: 2px solid black !important; }
+                        .space-y-1 > * + * { margin-top: 0.25rem !important; }
+                        body { margin: 0 !important; padding: 0 !important; }
+                        @page { margin: 5mm !important; }
                         .whitespace-nowrap { white-space: nowrap !important; }
                         .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
                         .page-break { page-break-after: always !important; }
