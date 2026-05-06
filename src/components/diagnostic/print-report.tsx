@@ -391,13 +391,12 @@ export function PrintReport({ report }: PrintReportProps) {
                                             />
                                         </div>
                                     );
-                                }
                                 return null;
                             })}
                         </div>
 
-                        {/* Footer Section */}
-                        <div className="mt-auto pt-16">
+                        {/* Footer */}
+                        <div className="mt-auto pt-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
@@ -407,82 +406,59 @@ export function PrintReport({ report }: PrintReportProps) {
                                 const checkedByDesignation = res?.checkedByDesignation || "";
                                 const authorizedDoctorName = res?.authorizedDoctorName || doctor?.fullName || "";
                                 const authorizedDoctorDegrees = res?.doctorDegrees || res?.authorizedDoctorDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name || "";
+                                const preparedByName = result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—";
 
-                                if (isNarrativeGroup) {
-                                    return (
-                                        <div className="flex justify-between items-end font-serif px-2 text-black">
-                                            {/* Left Side: Checked By & Prepared By */}
-                                            <div className="text-left w-[50%] flex flex-col gap-4">
-                                                {/* Checked By */}
-                                                <div className="flex flex-col items-start gap-0">
-                                                    <div className="w-48 h-[1.5px] bg-black mb-1" />
-                                                    <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
-                                                    <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
+                                return (
+                                    <div className="grid grid-cols-3 items-end font-serif px-2 text-black gap-4">
+                                        {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
+                                        <div className="text-left">
+                                            <div className="flex flex-col items-start gap-0">
+                                                <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
+                                                <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
+                                                {/* Left side has no name/designation as per request */}
+                                                <div className="h-[40px]" /> {/* Space for signature */}
+                                            </div>
+                                        </div>
+
+                                        {/* COLUMN 2: MIDDLE - Narrative: Doctor, Table: Checked By Name */}
+                                        <div className="text-center">
+                                            {isNarrativeGroup ? (
+                                                <div className="flex flex-col items-center gap-0">
+                                                    <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                        {authorizedDoctorName}
+                                                    </p>
+                                                    <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
+                                                        {authorizedDoctorDegrees}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-0">
+                                                    <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
                                                         {checkedByName || "—"}
                                                     </p>
-                                                    <p className="text-[10pt] font-bold italic opacity-80 leading-none">
+                                                    <p className="text-[10pt] font-bold italic opacity-80 leading-tight">
                                                         {checkedByDesignation || ""}
                                                     </p>
                                                 </div>
-
-                                                {/* Prepared By */}
-                                                <div className="flex flex-col items-start gap-0">
-                                                    <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
-                                                    <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
-                                                        {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Right Side: Reporting Doctor (Authorized By) */}
-                                            <div className="text-right w-[50%]">
-                                                <div className="ml-auto mb-1 w-52 h-[1.5px] bg-black" />
-                                                <p className="font-black text-[16pt] leading-tight uppercase tracking-tight">
-                                                    {authorizedDoctorName}
-                                                </p>
-                                                <p className="text-[11pt] font-bold italic inline-block max-w-full">
-                                                    {authorizedDoctorDegrees}
-                                                </p>
-                                            </div>
+                                            )}
                                         </div>
-                                    );
-                                }
 
-                                // Table Mode (Standard)
-                                return (
-                                    <div className="flex justify-between items-end font-serif px-2 text-black">
-                                        {/* Left Side: Checked By & Prepared By (Stacked Vertically) */}
-                                        <div className="text-left w-[100%] flex flex-col gap-4">
-                                            {/* Checked By */}
-                                            <div className="flex flex-col items-start gap-0">
-                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
-                                                <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
-                                                <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
-                                                    {checkedByName || "—"}
-                                                </p>
-                                                <p className="text-[10pt] font-bold italic opacity-80 leading-none">
-                                                    {checkedByDesignation || ""}
-                                                </p>
-                                            </div>
-
-                                            {/* Prepared By */}
-                                            <div className="flex flex-col items-start gap-0">
+                                        {/* COLUMN 3: RIGHT - Always PREPARED BY label + name (no designation) */}
+                                        <div className="text-right">
+                                            <div className="flex flex-col items-end gap-0">
+                                                <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
                                                 <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
-                                                    {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
+                                                    {preparedByName}
                                                 </p>
                                             </div>
                                         </div>
-                                        
-                                        {/* Right Side: EMPTY as per request for table mode */}
-                                        <div className="w-0" />
                                     </div>
                                 );
                             })()}
                             
-                            <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2">
+                            <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2 border-t border-dashed border-black/20">
                                 <p>REPORT ID: {barcode.toUpperCase()}</p>
-                                
                                 <p className="italic">*Powered by HamoodTech</p>
                             </div>
                         </div>
