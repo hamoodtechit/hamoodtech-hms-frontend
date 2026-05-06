@@ -60,6 +60,7 @@ import { groupTestsByGroup } from "@/lib/diagnostic-grouping"
 import { useQueries } from "@tanstack/react-query"
 import { diagnosticService } from "@/services/diagnostic-service"
 import { useAuthStore } from "@/store/use-auth-store"
+import { useEmployees } from "@/hooks/hr-queries"
 import { Textarea as UITextarea } from "@/components/ui/textarea"
 
 function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
@@ -160,7 +161,17 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const [reportHeader, setReportHeader] = useState("DIAGNOSTIC REPORT")
     const [reportNotes, setReportNotes] = useState("")
     const [machineInfo, setMachineInfo] = useState("")
+    const [checkedBy, setCheckedBy] = useState<string>("")
+    const [authorizedDoctor, setAuthorizedDoctor] = useState<string>("")
     const [lastLoadedId, setLastLoadedId] = useState<string | null>(null)
+
+    // Fetch employees for "Checked By" and "Doctor" selection
+    const { data: employeesRes } = useEmployees({ limit: 1000 }, { enabled: open });
+    const employees = employeesRes?.data || [];
+    
+    // Group employees by type for better UX
+    const doctors = employees.filter(e => e.employeeType?.toLowerCase() === 'doctor' || e.designation?.name?.toLowerCase().includes('doctor'));
+    const technologists = employees.filter(e => !doctors.includes(e));
 
     // Parallel fetch service details for full templates
     const testIdsMissingData = useMemo(() => {
@@ -241,6 +252,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 setReportHeader(result.reportHeader || "DIAGNOSTIC REPORT");
                 setReportNotes(report.note || "");
                 setMachineInfo(result.machineInfo || "");
+                setCheckedBy((result as any).checkedById || "");
+                setAuthorizedDoctor((result as any).authorizedDoctorId || "");
             } else {
                 setResultsState({});
             }
@@ -395,12 +408,23 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             });
         });
 
+        // Get selected employee details
+        const selectedCheckedBy = employees?.find(e => e.id === checkedBy);
+        const selectedDoctor = employees?.find(e => e.id === authorizedDoctor);
+
         const payload = { 
             reportHeader, 
             blocks, 
             testResults: resultsState, 
             machineInfo, 
-            preparedBy: user.fullName 
+            preparedBy: user.fullName,
+            checkedById: checkedBy,
+            checkedByName: selectedCheckedBy?.fullName || "",
+            checkedByDesignation: selectedCheckedBy?.designation?.name || selectedCheckedBy?.designation || "",
+            authorizedDoctorId: authorizedDoctor,
+            authorizedDoctorName: selectedDoctor?.fullName || "",
+            authorizedDoctorDesignation: selectedDoctor?.designation?.name || selectedDoctor?.designation || "",
+            doctorDegrees: (selectedDoctor as any)?.degrees || (selectedDoctor as any)?.qualifications || ""
         }
 
         try {
@@ -705,6 +729,45 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                     className="h-11 min-h-[44px] rounded-2xl bg-muted/40 border-border text-xs font-medium resize-none py-3 focus-visible:ring-primary/20 shadow-inner px-5"
                                     placeholder="Additional observations..."
                                 />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5 pt-5 border-t border-border/30">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                    <UserCog className="h-3.5 w-3.5" />
+                                    <span>Checked By (Technologist/Manager)</span>
+                                </div>
+                                <Select value={checkedBy} onValueChange={setCheckedBy}>
+                                    <SelectTrigger className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus:ring-primary/20 shadow-inner px-5">
+                                        <SelectValue placeholder="Select who checked the report..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl shadow-2xl">
+                                        {technologists.map(emp => (
+                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
+                                                {emp.fullName} ({emp.designation?.name || emp.designation || "Staff"})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                    <Activity className="h-3.5 w-3.5" />
+                                    <span>Reporting Doctor (Authorized By)</span>
+                                </div>
+                                <Select value={authorizedDoctor} onValueChange={setAuthorizedDoctor}>
+                                    <SelectTrigger className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus:ring-primary/20 shadow-inner px-5">
+                                        <SelectValue placeholder="Select authorized reporting doctor..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl shadow-2xl">
+                                        {doctors.map(emp => (
+                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
+                                                {emp.fullName} ({emp.designation?.name || emp.designation || "Doctor"})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
