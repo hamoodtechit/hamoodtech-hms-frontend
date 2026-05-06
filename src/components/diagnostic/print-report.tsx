@@ -391,6 +391,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                             />
                                         </div>
                                     );
+                                }
                                 return null;
                             })}
                         </div>
