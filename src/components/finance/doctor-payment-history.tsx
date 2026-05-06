@@ -342,15 +342,18 @@ export function DoctorPaymentHistory() {
                                     </thead>
                                     <tbody>
                                         {detailPayment.charges && detailPayment.charges.length > 0 ? (
-                                            detailPayment.charges.map((ch: any, idx: number) => (
-                                                <tr key={ch.id} className="border-b border-black">
-                                                    <td className="p-2 border-r border-black text-center">{idx + 1}</td>
-                                                    <td className="p-2 border-r border-black">{ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}</td>
-                                                    <td className="p-2 border-r border-black">{ch.sale?.patient?.name || ch.appointment?.patient?.name || "—"}</td>
-                                                    <td className="p-2 border-r border-black text-right">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</td>
-                                                    <td className="p-2 text-right">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</td>
-                                                </tr>
-                                            ))
+                                            detailPayment.charges.map((ch: any, idx: number) => {
+                                                const patientName = ch.sale?.patient?.name || ch.appointment?.patient?.name || ch.sale?.patientName || ch.patientName || "—";
+                                                return (
+                                                    <tr key={ch.id} className="border-b border-black">
+                                                        <td className="p-2 border-r border-black text-center">{idx + 1}</td>
+                                                        <td className="p-2 border-r border-black">{ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}</td>
+                                                        <td className="p-2 border-r border-black">{patientName}</td>
+                                                        <td className="p-2 border-r border-black text-right">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</td>
+                                                        <td className="p-2 text-right">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</td>
+                                                    </tr>
+                                                );
+                                            })
                                         ) : (
                                             <tr>
                                                 <td colSpan={5} className="p-4 text-center">No charges found.</td>
@@ -416,18 +419,22 @@ export function DoctorPaymentHistory() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {detailPayment.charges.map((ch: any) => (
-                                                <TableRow key={ch.id}>
-                                                    <TableCell className="text-xs">
-                                                        {ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs">
-                                                        {ch.sale?.patient?.name || ch.appointment?.patient?.name || "—"}
-                                                    </TableCell>
-                                                    <TableCell className="text-right text-xs">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</TableCell>
-                                                    <TableCell className="text-right text-xs font-bold">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    {detailPayment.charges.map((ch: any) => {
+                                                                        // Log individual charge to see structure if needed
+                                                                        const patientName = ch.sale?.patient?.name || ch.appointment?.patient?.name || ch.sale?.patientName || ch.patientName || "—";
+                                                                        return (
+                                                                            <TableRow key={ch.id}>
+                                                                                <TableCell className="text-xs">
+                                                                                    {ch.sale?.invoiceNumber || ch.appointment?.serialNumber || "—"}
+                                                                                </TableCell>
+                                                                                <TableCell className="text-xs">
+                                                                                    {patientName}
+                                                                                </TableCell>
+                                                                                <TableCell className="text-right text-xs">{formatCurrency(Number(ch.totalAmount || ch.serviceAmount || 0))}</TableCell>
+                                                                                <TableCell className="text-right text-xs font-bold">{formatCurrency(Number(ch.commissionAmount || ch.chargeAmount || 0))}</TableCell>
+                                                                            </TableRow>
+                                                                        );
+                                                                    })}
                                         </TableBody>
                                     </Table>
                                 </div>
