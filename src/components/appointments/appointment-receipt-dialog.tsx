@@ -184,15 +184,20 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
             </div>
             {/* Row 3 */}
             <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex gap-8 items-center">
-                    <span>Age <span className="mx-1">:</span> {patientAge}</span>
-                    <span>Sex : {patientSex}</span>
-                    <span>Contact No. : {patientPhone}</span>
+                <div className="p-1 px-3 font-bold flex flex-wrap items-center">
+                    <div className="flex gap-3 mr-8">
+                        <span>Age : {patientAge}</span>
+                        <span>Sex : {patientSex}</span>
+                        <span>Contact : {patientPhone}</span>
+                    </div>
+                    <div className="flex-1">
+                        RefBy : {agentName}
+                    </div>
                 </div>
             </div>
             {/* Row 4 */}
-            <div className="grid grid-cols-2 font-sans">
-                <div className="p-1 px-3 border-r border-black font-bold flex items-start gap-1">
+            <div className="grid grid-cols-1 font-sans">
+                <div className="p-1 px-3 font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
                     <div className="flex flex-wrap items-baseline gap-1 pt-0.5">
                         <span className="uppercase text-[12px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "N/A"}</span>
@@ -202,9 +207,6 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                             </span>
                         )}
                     </div>
-                </div>
-                <div className="p-1 px-3 font-bold flex items-center">
-                    RefBy : {agentName}
                 </div>
             </div>
         </div>
