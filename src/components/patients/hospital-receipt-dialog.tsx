@@ -141,10 +141,11 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                 </div>
             </div>
             <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex gap-8 items-center">
+                <div className="p-1 px-3 font-bold flex flex-wrap gap-x-8 gap-y-1 items-center">
                     <span>Age <span className="mx-1">:</span> {patient?.age || 'N/A'}Y</span>
                     <span>Sex : {patient?.gender || 'N/A'}</span>
                     <span>Contact No. : {patient?.phone || 'N/A'}</span>
+                    <span>RefBy : {data.referredByName || data.consultantName || 'N/A'}</span>
                 </div>
             </div>
             {bed && (
