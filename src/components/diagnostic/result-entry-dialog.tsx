@@ -217,6 +217,14 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
         return map;
     }, [templateQueries, report]);
 
+    // Check if report is narrative only (to hide Checked By)
+    const isNarrativeOnly = useMemo(() => {
+        return report?.diagnosticTests?.every(test => {
+            const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service;
+            return serviceData?.templateType === 'narrative';
+        });
+    }, [report, templatesMap]);
+
     // Separate effect for decoding/sanitizing templates
     const decodeTemplate = (raw: string) => {
         if (!raw) return "";
@@ -419,11 +427,11 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             machineInfo, 
             preparedBy: user.fullName,
             checkedById: checkedBy,
-            checkedByName: selectedCheckedBy?.fullName || "",
-            checkedByDesignation: selectedCheckedBy?.designation?.name || selectedCheckedBy?.designation || "",
+            checkedByName: (selectedCheckedBy as any)?.name || "",
+            checkedByDesignation: (selectedCheckedBy as any)?.designation?.name || (selectedCheckedBy as any)?.designation || "",
             authorizedDoctorId: authorizedDoctor,
-            authorizedDoctorName: selectedDoctor?.fullName || "",
-            authorizedDoctorDesignation: selectedDoctor?.designation?.name || selectedDoctor?.designation || "",
+            authorizedDoctorName: (selectedDoctor as any)?.name || "",
+            authorizedDoctorDesignation: (selectedDoctor as any)?.designation?.name || (selectedDoctor as any)?.designation || "",
             doctorDegrees: (selectedDoctor as any)?.degrees || (selectedDoctor as any)?.qualifications || ""
         }
 
@@ -704,9 +712,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
                 {/* Footer: Clinical Documentation & Actions (Fixed at bottom) */}
                 <footer className="shrink-0 bg-card border-t border-border shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] backdrop-blur-3xl">
-                    <div className="px-10 py-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
-                            <div className="space-y-2">
+                    <div className="px-10 py-2.5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 mb-2">
+                            <div className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
                                     <Microscope className="h-3.5 w-3.5" />
                                     <span>Methodology & Equipment</span>
@@ -714,11 +722,11 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                 <Input 
                                     value={machineInfo} 
                                     onChange={e => setMachineInfo(e.target.value)}
-                                    className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus-visible:ring-primary/20 shadow-inner px-5"
+                                    className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus-visible:ring-primary/20 shadow-inner px-4"
                                     placeholder="e.g. Automated Analyzer..."
                                 />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
                                     <Activity className="h-3.5 w-3.5" />
                                     <span>Clinical Interpretation</span>
@@ -726,44 +734,43 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                 <Textarea 
                                     value={reportNotes} 
                                     onChange={e => setReportNotes(e.target.value)}
-                                    className="h-11 min-h-[44px] rounded-2xl bg-muted/40 border-border text-xs font-medium resize-none py-3 focus-visible:ring-primary/20 shadow-inner px-5"
+                                    className="h-9 min-h-[36px] rounded-xl bg-muted/40 border-border text-[11px] font-medium resize-none py-2 focus-visible:ring-primary/20 shadow-inner px-4"
                                     placeholder="Additional observations..."
                                 />
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5 pt-5 border-t border-border/30">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
-                                    <UserCog className="h-3.5 w-3.5" />
-                                    <span>Checked By (Technologist/Manager)</span>
+                            {!isNarrativeOnly && (
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                        <UserCog className="h-3.5 w-3.5" />
+                                        <span>Checked By (Technologist/Manager)</span>
+                                    </div>
+                                    <Select value={checkedBy} onValueChange={setCheckedBy}>
+                                        <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
+                                            <SelectValue placeholder="Select who checked the report..." />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl shadow-2xl">
+                                            {technologists.map(emp => (
+                                                <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
+                                                    {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Staff"})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <Select value={checkedBy} onValueChange={setCheckedBy}>
-                                    <SelectTrigger className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus:ring-primary/20 shadow-inner px-5">
-                                        <SelectValue placeholder="Select who checked the report..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl shadow-2xl">
-                                        {technologists.map(emp => (
-                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
-                                                {emp.fullName} ({emp.designation?.name || emp.designation || "Staff"})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
+                            )}
+                            <div className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
                                     <Activity className="h-3.5 w-3.5" />
                                     <span>Reporting Doctor (Authorized By)</span>
                                 </div>
                                 <Select value={authorizedDoctor} onValueChange={setAuthorizedDoctor}>
-                                    <SelectTrigger className="h-11 rounded-2xl bg-muted/40 border-border text-xs font-bold focus:ring-primary/20 shadow-inner px-5">
+                                    <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
                                         <SelectValue placeholder="Select authorized reporting doctor..." />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl shadow-2xl">
                                         {doctors.map(emp => (
                                             <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
-                                                {emp.fullName} ({emp.designation?.name || emp.designation || "Doctor"})
+                                                {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Doctor"})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -771,7 +778,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center py-3 border-t border-border/50">
+                        <div className="flex justify-between items-center py-2 border-t border-border/50">
                             <p className="text-[9px] font-black uppercase text-muted-foreground max-w-[400px] tracking-tight leading-relaxed opacity-70">
                                 * Diagnostic integrity verified. Laboratory parameters validated by technologist.
                             </p>
