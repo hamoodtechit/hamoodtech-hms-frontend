@@ -410,7 +410,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 const preparedByName = result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—";
 
                                 return (
-                                    <div className="grid grid-cols-3 items-end font-serif text-black gap-4">
+                                    <div className="grid grid-cols-3 items-start font-serif text-black gap-4">
                                         {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
                                         <div className="text-left">
                                             <div className="flex flex-col items-start gap-0">
