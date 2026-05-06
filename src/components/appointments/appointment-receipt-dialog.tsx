@@ -184,11 +184,15 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
             </div>
             {/* Row 3 */}
             <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex flex-wrap gap-x-8 gap-y-1 items-center">
-                    <span>Age <span className="mx-1">:</span> {patientAge}</span>
-                    <span>Sex : {patientSex}</span>
-                    <span>Contact No. : {patientPhone}</span>
-                    <span>RefBy : {agentName}</span>
+                <div className="p-1 px-3 font-bold flex flex-wrap items-center">
+                    <div className="flex gap-3 mr-8">
+                        <span>Age : {patientAge}</span>
+                        <span>Sex : {patientSex}</span>
+                        <span>Contact : {patientPhone}</span>
+                    </div>
+                    <div className="flex-1">
+                        RefBy : {agentName}
+                    </div>
                 </div>
             </div>
             {/* Row 4 */}
