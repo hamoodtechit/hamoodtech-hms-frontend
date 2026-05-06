@@ -125,8 +125,8 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
   const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => {
     const { user } = useAuthStore()
     return (
-    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 border-b border-black border-dashed pb-8 print:border-b-0 print:mb-0 print:pb-0">
-        <div className="relative border border-black border-dashed p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
+    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0">
+        <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white">
 
         {/* PAID/DUE Stamps */}
         <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
@@ -296,7 +296,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
             
             {/* Payment Note Section */}
             {(data?.note || data?.payments?.[0]?.note) && (
-                <div className="mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start">
+                <div className="mt-1 p-1 bg-gray-50 border border-black flex gap-1.5 items-start">
                     <span className="shrink-0 uppercase text-[9px] opacity-70 mt-0.5">Note:</span>
                     <span className="italic font-medium text-[10px] uppercase leading-tight">{data?.note || data?.payments?.[0]?.note}</span>
                 </div>
@@ -313,7 +313,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
             </div>
         </div>
         <div className="mt-4 pt-2 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
-            <span>Powered by Hamood Tech</span>
+            <span>*Powered by HamoodTech</span>
             <span>Printed: {new Date().toLocaleString('en-GB')}</span>
         </div>
     </div>
@@ -376,10 +376,11 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                       background: #f5f5f5;
                                   }
                                   .print-container {
-                                      width: 210mm;
+                                      width: 190mm;
                                       min-height: 297mm;
                                       background: white;
-                                      padding: 5mm;
+                                      padding: 0;
+                                      margin: 0 auto;
                                       box-sizing: border-box;
                                       position: relative;
                                       display: flex;
@@ -387,8 +388,8 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                                   }
                                   /* Reset/normalize some Tailwind styles for absolute consistency */
                                   .border { border: 1px solid black !important; }
-                                  .border-dashed { border-style: dashed !important; border-width: 1px !important; }
-                                  .border-dotted { border-style: dotted !important; }
+                                  .border-dashed { border-style: solid !important; border-width: 1px !important; }
+                                  .border-dotted { border-style: solid !important; }
                                   .border-black { border-color: black !important; }
                                   
                                   /* Prevent double borders */

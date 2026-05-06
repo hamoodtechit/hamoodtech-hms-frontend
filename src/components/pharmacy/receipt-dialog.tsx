@@ -192,7 +192,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
             <p className="font-bold tracking-wider">THANK YOU FOR VISITING!</p>
             <p className="font-semibold leading-tight px-4 text-center">Medicines once sold cannot be<br />returned without the receipt.</p>
-            <p className={`${isPrinting ? 'text-[6.5px] pt-1' : 'text-[10px] pt-2'} font-semibold lowercase opacity-50`}>Powered by Hamood Tech.</p>
+            <p className={`${isPrinting ? 'text-[6.5px] pt-1' : 'text-[10px] pt-2'} font-semibold lowercase opacity-50`}>*Powered by HamoodTech.</p>
         </div>
     </div>
   )}
@@ -360,7 +360,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         <div class="footer">
                             <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>
                             <p style="font-weight: bold; line-height: 1.4;">Medicines once sold cannot be<br>returned without the receipt.</p>
-                            <p style="margin-top: 10px; opacity: 0.6; text-transform: lowercase;">Powered by Hamood Tech.</p>
+                            <p style="margin-top: 10px; opacity: 0.6; text-transform: lowercase;">*Powered by HamoodTech.</p>
                         </div>
                     </div>
                 </body>
