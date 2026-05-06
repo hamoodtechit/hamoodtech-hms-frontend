@@ -137,7 +137,7 @@ export default function CashRegisterHistoryPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cashier / User</Label>
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Billing By</Label>
                         <Select value={userId} onValueChange={(val: string) => {
                             setUserId(val)
                             setPage(1)
@@ -214,7 +214,7 @@ export default function CashRegisterHistoryPage() {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead className="font-bold">Cashier / User</TableHead>
+                    <TableHead className="font-bold">Billing By</TableHead>
                     <TableHead className="font-bold">Branch Location</TableHead>
                     <TableHead className="font-bold">Opened At</TableHead>
                     <TableHead className="font-bold">Status</TableHead>

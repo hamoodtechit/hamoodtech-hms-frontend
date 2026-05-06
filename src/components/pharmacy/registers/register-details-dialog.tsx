@@ -230,7 +230,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                             <div className="space-y-3">
                                                 <InfoItem 
                                                     icon={<User className="h-4 w-4" />}
-                                                    label="Cashier"
+                                                    label="Billing By"
                                                     value={session?.user?.name || "System User"}
                                                 />
                                                 <InfoItem 

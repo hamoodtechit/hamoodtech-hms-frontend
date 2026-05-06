@@ -257,7 +257,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         </div>
         
         <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
-            <span>* System Generated Hospital Bill</span>
+            <span>*Powered by Hamood Tech</span>
             <span>Printed: {new Date().toLocaleString('en-GB')}</span>
         </div>
         </div>

@@ -107,7 +107,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
   }
 
   // Find assigned staff
-  let assignedStaffName = "User/Cashier"
+  let assignedStaffName = "Billing By"
   if (data?.staffId && staffs.length > 0) {
       const staff = staffs.find(s => s.id === data.staffId)
       if (staff) assignedStaffName = staff.name
@@ -290,7 +290,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                 </div>
                 <div className="text-right space-y-1">
                     <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
-                    <div>Cashier : {user?.fullName || user?.username || assignedStaffName}</div>
+                    <div>Billing By : {user?.fullName || user?.username || assignedStaffName}</div>
                 </div>
             </div>
             
@@ -311,6 +311,10 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                 <div className="border-t border-black w-48 mb-1"></div>
                 Authorized Signature
             </div>
+        </div>
+        <div className="mt-4 pt-2 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
+            <span>Powered by Hamood Tech</span>
+            <span>Printed: {new Date().toLocaleString('en-GB')}</span>
         </div>
     </div>
     </div>
