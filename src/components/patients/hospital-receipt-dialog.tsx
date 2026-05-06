@@ -110,6 +110,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
             <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || data.branch?.name || "HOSPITAL"}</h1>
             <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || data.branch?.address || "Hospital Address"}</p>
             <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || data.branch?.phone || "Hospital Phone"}</p>
+            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {general?.email || data.branch?.email || "N/A"}</p>
             
             <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
                 {(data.branch?.licenseNumber || activeBranch?.licenseNumber) && <span>License No: {data.branch?.licenseNumber || activeBranch?.licenseNumber}</span>}
