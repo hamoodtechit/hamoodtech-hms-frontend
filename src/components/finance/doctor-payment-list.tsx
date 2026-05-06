@@ -25,6 +25,7 @@ import { useMemo, useState } from "react"
 import { DoctorPaymentDialog } from "./doctor-payment-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { useSettingsStore } from "@/store/use-settings-store"
+import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export function DoctorPaymentList() {
     const { activeStoreId, stores } = useStoreContext()
@@ -206,16 +207,18 @@ export function DoctorPaymentList() {
                             </div>
                         </FilterPopover>
 
-                        {selectedCharges.length > 0 && (
-                            <Button
-                                onClick={() => setPayDialogOpen(true)}
-                                disabled={!isSameDoctor}
-                                className="gap-2 h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20"
-                            >
-                                <Wallet className="h-4 w-4" />
-                                Pay {formatCurrency(selectedTotal)} ({selectedCharges.length})
-                            </Button>
-                        )}
+                        <PermissionGuard permission="transaction:update">
+                            {selectedCharges.length > 0 && (
+                                <Button
+                                    onClick={() => setPayDialogOpen(true)}
+                                    disabled={!isSameDoctor}
+                                    className="gap-2 h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20"
+                                >
+                                    <Wallet className="h-4 w-4" />
+                                    Pay {formatCurrency(selectedTotal)} ({selectedCharges.length})
+                                </Button>
+                            )}
+                        </PermissionGuard>
 
                         {/* Print Report Button */}
                         {charges.length > 0 && (

@@ -28,7 +28,7 @@ export default function DoctorPaymentPage() {
     }
 
     return (
-        <PermissionGuard permission="account:read">
+        <PermissionGuard permission="consultation-charge:read">
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Doctor Payment</h1>
