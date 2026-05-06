@@ -168,10 +168,10 @@ export function PrintReport({ report }: PrintReportProps) {
                         "mx-auto relative overflow-hidden bg-white",
                         gIdx > 0 && "print:break-before-page" // Page break for subsequent groups
                     )}
-                    style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
+                    style={{ width: "210mm", height: "297mm", padding: "0" }}
                 >
 
-                    <div className="px-10 py-6 pt-[15mm] relative z-10 min-h-[290mm] flex flex-col">
+                    <div className="px-10 py-6 pt-[20mm] pb-[60mm] relative z-10 h-full flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
@@ -396,8 +396,8 @@ export function PrintReport({ report }: PrintReportProps) {
                             })}
                         </div>
 
-                        {/* Footer */}
-                        <div className="mt-auto pt-10">
+                        {/* Fixed Positioning Footer to align with Pre-printed pads */}
+                        <div className="absolute bottom-[45mm] left-10 right-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
@@ -410,7 +410,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 const preparedByName = result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—";
 
                                 return (
-                                    <div className="grid grid-cols-3 items-end font-serif px-2 text-black gap-4">
+                                    <div className="grid grid-cols-3 items-end font-serif text-black gap-4">
                                         {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
                                         <div className="text-left">
                                             <div className="flex flex-col items-start gap-0">
