@@ -414,7 +414,6 @@ export function PrintReport({ report }: PrintReportProps) {
                                             {/* Left Side: Prepared By */}
                                             <div className="text-left w-[45%]">
                                                 <div className="flex flex-col items-start gap-1">
-                                                    <div className="w-48 h-[1.5px] bg-black mb-1" />
                                                     <p className="font-bold text-[11pt] italic leading-none">Prepared By</p>
                                                     <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
                                                         {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
@@ -442,25 +441,24 @@ export function PrintReport({ report }: PrintReportProps) {
                                 // Table Mode (Standard)
                                 return (
                                     <div className="flex justify-between items-end font-serif px-2 text-black">
-                                        {/* Left Side: Checked By & Prepared By */}
-                                        <div className="text-left w-[100%] flex justify-start gap-32">
+                                        {/* Left Side: Checked By & Prepared By (Stacked Vertically) */}
+                                        <div className="text-left w-[100%] flex flex-col gap-4">
                                             {/* Checked By */}
-                                            <div className="flex flex-col items-start gap-1">
+                                            <div className="flex flex-col items-start gap-0">
                                                 <div className="w-48 h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
-                                                <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
                                                     {checkedByName || "—"}
                                                 </p>
-                                                <p className="text-[10pt] font-bold italic opacity-80">
+                                                <p className="text-[10pt] font-bold italic opacity-80 leading-none">
                                                     {checkedByDesignation || ""}
                                                 </p>
                                             </div>
 
                                             {/* Prepared By */}
-                                            <div className="flex flex-col items-start gap-1">
-                                                <div className="w-48 h-[1.5px] bg-black mb-1" />
+                                            <div className="flex flex-col items-start gap-0">
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
-                                                <p className="font-black text-[13pt] leading-tight uppercase tracking-tight">
+                                                <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
                                                     {result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—"}
                                                 </p>
                                             </div>
@@ -475,7 +473,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2">
                                 <p>REPORT ID: {barcode.toUpperCase()}</p>
                                 
-                                <p className="italic">Printed by HamoodTech HMS</p>
+                                <p className="italic">*Powered by HamoodTech</p>
                             </div>
                         </div>
                     </div>
