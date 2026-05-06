@@ -738,26 +738,24 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                     placeholder="Additional observations..."
                                 />
                             </div>
-                            {!isNarrativeOnly && (
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
-                                        <UserCog className="h-3.5 w-3.5" />
-                                        <span>Checked By (Technologist/Manager)</span>
-                                    </div>
-                                    <Select value={checkedBy} onValueChange={setCheckedBy}>
-                                        <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
-                                            <SelectValue placeholder="Select who checked the report..." />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl shadow-2xl">
-                                            {technologists.map(emp => (
-                                                <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
-                                                    {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Staff"})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
+                                    <UserCog className="h-3.5 w-3.5" />
+                                    <span>Checked By (Technologist/Manager)</span>
                                 </div>
-                            )}
+                                <Select value={checkedBy} onValueChange={setCheckedBy}>
+                                    <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
+                                        <SelectValue placeholder="Select who checked the report..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl shadow-2xl">
+                                        {technologists.map(emp => (
+                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
+                                                {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Staff"})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
                                     <Activity className="h-3.5 w-3.5" />
