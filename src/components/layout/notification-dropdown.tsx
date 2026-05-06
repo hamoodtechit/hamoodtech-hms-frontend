@@ -1,4 +1,5 @@
 "use client"
+import React from "react";
 
 import { Bell, Check, Loader2, Mail, MailOpen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,12 @@ import { Badge } from "@/components/ui/badge";
 import { useNoticeStore } from "@/store/use-notice-store";
 
 export function NotificationDropdown() {
+    const [mounted, setMounted] = React.useState(false);
+    
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const { openNotice } = useNoticeStore();
     const { 
         notifications, 
@@ -26,6 +33,14 @@ export function NotificationDropdown() {
         markAsRead, 
         markAllAsRead 
     } = useNotificationStore();
+
+    if (!mounted) {
+        return (
+            <Button variant="ghost" size="icon" className="relative text-muted-foreground transition-colors">
+                <Bell className="h-5 w-5" />
+            </Button>
+        );
+    }
 
     const handleNotificationClick = (notification: any) => {
         if (!notification.isRead) {
