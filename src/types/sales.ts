@@ -15,6 +15,7 @@ export interface SaleItem {
   batchNumber?: string;
   expiryDate?: string;
   dosageForm?: string;
+  strength?: string;
   deliveryDate?: string;
   testBy?: string;
   isDiagnosticTest?: boolean;

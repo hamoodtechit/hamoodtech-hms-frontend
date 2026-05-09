@@ -483,7 +483,8 @@ export default function POSPage() {
                           discountAmount: (Number(item.discountAmount || 0) / item.quantity) * alloc.quantity,
                           batchNumber: alloc.batchNumber || "BATCH-N/A",
                           expiryDate: alloc.expiryDate || new Date().toISOString(),
-                          dosageForm: item.dosageForm
+                          dosageForm: item.dosageForm,
+                          strength: item.strength
                       }));
                   }
                   
@@ -499,7 +500,8 @@ export default function POSPage() {
                       discountAmount: item.discountAmount || 0,
                       batchNumber: item.batchNumber || "BATCH-N/A",
                       expiryDate: item.expiryDate || new Date().toISOString(),
-                      dosageForm: item.dosageForm
+                      dosageForm: item.dosageForm,
+                      strength: item.strength
                   }];
               }),
               payments: [{
