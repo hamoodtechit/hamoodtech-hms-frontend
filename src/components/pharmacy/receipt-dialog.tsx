@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -31,39 +32,23 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
   const fetchedData = (saleRes?.data as any)?.data?.sale || (saleRes?.data as any)?.sale || (saleRes?.data as any)?.data || saleRes?.data
-  
-  // Merge transaction and fetchedData, preferring transaction for raw fields like paidAmount
-  // if they appear more complete (e.g. during a fresh POS session)
   const data = fetchedData || transaction
-  
+
   if (!transaction && !isLoading) return null
   if (!data && !isLoading) return null
 
   const items = (data as any)?.saleItems || (data as any)?.items || []
-  const additionalData = (data as any)?.additionalData || {}
-  
-  // LOGIC FIX: Metadata might be on root or items. We merge them for robust lookup.
-  const rootAdditional = (data as any)?.additionalData || {}
-  const firstItemAdditional = items[0]?.additionalData || {}
-  const mergedMeta = { ...rootAdditional, ...firstItemAdditional }
-  
-  const normalizedItems = items.map((item: any, idx: number) => {
-    // Fallback to local transaction items for metadata during active POS session
-    const localItem = (transaction as any)?.items?.[idx] || {}
-    const additional = item.additionalData || {}
-    
-    return {
-      name: item.itemName || item.name || localItem.name || "Unknown Item",
-      quantity: Number(item.quantity || 0),
-      price: Number(item.price || 0),
-      dosageForm: item.dosageForm || additional.dosageForm || item.medicine?.dosageForm || localItem.dosageForm || "",
-      strength: item.strength || additional.strength || item.medicine?.strength || localItem.strength || "",
-      genericName: item.genericName || additional.genericName || item.medicine?.genericName || localItem.genericName || "",
-      batchNumber: item.batchNumber || localItem.batchNumber,
-      discountAmount: Number(item.discountAmount || 0),
-      discountPercentage: Number(item.discountPercentage || 0)
-    }
-  })
+  const normalizedItems = items.map((item: any) => ({
+    name: item.itemName || item.name || "Unknown Item",
+    quantity: Number(item.quantity || 0),
+    price: Number(item.price || 0),
+    dosageForm: item.dosageForm || item.medicine?.dosageForm || "",
+    strength: item.strength || item.medicine?.strength || "",
+    genericName: item.genericName || item.medicine?.genericName || "",
+    batchNumber: item.batchNumber,
+    discountAmount: Number(item.discountAmount || 0),
+    discountPercentage: Number(item.discountPercentage || 0)
+  }))
 
   const grossTotal = normalizedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
   const totalItemDiscount = normalizedItems.reduce((sum: number, item: any) => {
@@ -72,18 +57,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   }, 0)
 
   const netTotal = Number((data as any)?.netPrice || (data as any)?.total || 0)
-  
-  // SOURCES OF TRUTH FOR PAYMENT:
-  // 1. Metadata (Merged from root and items)
-  // 2. Local transaction (Live state)
-  // 3. API field (Often capped to netTotal)
-  const apiPaid = Number((data as any)?.paidAmount || 0)
-  const localPaid = Number((transaction as any)?.paidAmount || 0)
-  const metaPaid = Number(mergedMeta.customerPaidAmount || 0)
-  
-  const finalPaidAmount = Math.max(apiPaid, localPaid, metaPaid)
-  const changeReturnFromData = Number(mergedMeta.changeReturn || Math.max(0, finalPaidAmount - netTotal))
-  
+  const paidAmount = Number((data as any)?.paidAmount || 0)
   const dueAmount = Number((data as any)?.dueAmount || 0)
   const taxAmount = Number((data as any)?.taxAmount || (data as any)?.tax || 0)
   const discountAmount = Number((data as any)?.discountAmount || (data as any)?.discount || 0)
@@ -108,9 +82,6 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {general?.phone || branch?.phone || "Phone"}</p>
-                {(general?.email || branch?.email) && (
-                    <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {general?.email || branch?.email}</p>
-                )}
             </div>
         </div>
 
@@ -147,9 +118,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
                             <span className="block font-black text-black">{item.name}</span>
+                            {(item.strength || item.dosageForm) && (
+                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
+                                    {[item.strength, item.dosageForm].filter(Boolean).join(' | ')}
+                                </span>
+                            )}
                         </div>
-                        <div className="col-span-2 text-center font-semibold">{item.quantity}</div>
-                        <div className="col-span-2 text-right font-semibold">{item.price.toFixed(2)}</div>
+                        <div className="col-span-2 text-center font-black text-black">{item.quantity}</div>
+                        <div className="col-span-2 text-right font-black text-black">{item.price.toFixed(2)}</div>
                         <div className="col-span-2 text-right font-black text-black">
                             {netItemTotal.toFixed(2)}
                         </div>
@@ -186,7 +162,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
              <div className="flex">
                  <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
                  <span className="w-4">:</span>
-                 <span className="flex-1 text-right">{(finalPaidAmount).toFixed(2)} ৳</span>
+                 <span className="flex-1 text-right">{(paidAmount).toFixed(2)} ৳</span>
              </div>
              
              {dueAmount > 0 && (
@@ -196,11 +172,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
              )}
-             {(finalPaidAmount >= netTotal || changeReturnFromData > 0) && (
+             {paidAmount >= netTotal && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
                       <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{(changeReturnFromData || Math.max(0, finalPaidAmount - netTotal)).toFixed(2)} ৳</span>
+                      <span className="flex-1 text-right">{(paidAmount - netTotal).toFixed(2)} ৳</span>
                   </div>
              )}
         </div>
@@ -367,7 +343,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             <tr>
                                 <td class="label-col">Paid Amount</td>
                                 <td class="colon-col">:</td>
-                                <td class="value-col">${finalPaidAmount.toFixed(2)} ৳</td>
+                                <td class="value-col">${paidAmount.toFixed(2)} ৳</td>
                             </tr>
                             ${dueAmount > 0 ? `
                             <tr>
@@ -375,11 +351,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <td class="colon-col">:</td>
                                 <td class="value-col">${dueAmount.toFixed(2)} ৳</td>
                             </tr>` : ''}
-                            ${(finalPaidAmount >= netTotal || changeReturnFromData > 0) ? `
+                            ${paidAmount >= netTotal ? `
                             <tr>
                                 <td class="label-col">Change Return</td>
                                 <td class="colon-col">:</td>
-                                <td class="value-col">${(changeReturnFromData || Math.max(0, finalPaidAmount - netTotal)).toFixed(2)} ৳</td>
+                                <td class="value-col">${(paidAmount - netTotal).toFixed(2)} ৳</td>
                             </tr>` : ''}
                         </table>
 
