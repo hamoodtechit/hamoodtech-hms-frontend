@@ -212,13 +212,21 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                 })
                 toast.success("Employee updated successfully")
             } else {
-                const newEmployee = await createMutation.mutateAsync(payload)
+                const response: any = await createMutation.mutateAsync(payload)
+                console.log("Create Employee Response:", response)
+                
+                const newEmployee = response.data || response
+                const employeeId = newEmployee?.id
+                
                 toast.success("Employee created successfully")
 
                 // Handle User Account Creation
-                if (createUserAccount && newEmployee?.id) {
+                console.log("Create User Account Toggle:", createUserAccount)
+                console.log("Detected Employee ID:", employeeId)
+
+                if (createUserAccount && employeeId) {
                     try {
-                        await userService.createUser({
+                        const userPayload = {
                             username: formData.username,
                             password: formData.password,
                             email: formData.email || `${formData.username}@system.local`,
@@ -227,14 +235,18 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                             phone: formData.phone,
                             roleId: formData.roleId,
                             branchId: formData.branchId,
-                            employeeId: newEmployee.id,
-                            designation: formData.designationId // Optional: could be name but ID is passed to employee
-                        })
+                            employeeId: employeeId,
+                            designation: formData.designationId 
+                        }
+                        console.log("Creating User with payload:", userPayload)
+                        await userService.createUser(userPayload)
                         toast.success("User account created successfully")
-                    } catch (userError) {
+                    } catch (userError: any) {
                         toast.error("Employee created, but failed to create user account")
-                        console.error("User creation error:", userError)
+                        console.error("User creation error:", userError?.response?.data || userError)
                     }
+                } else if (createUserAccount) {
+                    console.warn("User account creation skipped because employeeId was not found in response")
                 }
             }
             onSuccess?.()
