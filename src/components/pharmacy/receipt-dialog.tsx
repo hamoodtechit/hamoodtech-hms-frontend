@@ -238,14 +238,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                 const netItemTotal = itemTotal - itemDisc;
                 const detailLine = [item.strength, item.dosageForm].filter(Boolean).join(' | ');
                 return `
-                  <tr style="font-size: 12px; border-bottom: 1px solid #f0f0f0;">
-                    <td style="text-align: left; font-weight: 900; padding: 4px 0; vertical-align: top;">
+                  <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
+                    <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1;">
                       ${item.name}
-                      ${detailLine ? `<br/><span style="font-size: 9px; font-weight: 900; color: black; text-transform: uppercase;">${detailLine}</span>` : ''}
+                      ${detailLine ? `<br/><span style="font-size: 7.5px; font-weight: 900; color: black; text-transform: uppercase;">${detailLine}</span>` : ''}
                     </td>
-                    <td style="text-align: center; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${item.quantity}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${item.price.toFixed(2)}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${netItemTotal.toFixed(2)}</td>
+                    <td style="text-align: center; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${item.quantity}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${item.price.toFixed(2)}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${netItemTotal.toFixed(2)}</td>
                   </tr>
                 `;
               }).join('');
