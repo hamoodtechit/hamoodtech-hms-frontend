@@ -61,21 +61,40 @@ export default function SalesHistoryPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const { user } = useAuthStore()
+  const roleName = user?.role?.name?.toLowerCase() || ""
+  const isPharmacist = roleName === "pharmacist"
+  const isReceptionist = roleName === "receptionist"
+
   const urlType = searchParams.get('type')
   
-  const [saleType, setSaleType] = useState<string>(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
+  const [saleType, setSaleType] = useState<string>(() => {
+    if (urlType) return urlType === 'pharmacy' ? 'pos' : urlType
+    if (isPharmacist) return 'pos'
+    if (isReceptionist) return 'hospital'
+    return 'all'
+  })
+
+  // Enforce role-based restrictions even if URL changes
+  useEffect(() => {
+    if (isPharmacist && saleType !== 'pos') {
+      setSaleType('pos')
+    } else if (isReceptionist && saleType !== 'hospital') {
+      setSaleType('hospital')
+    }
+  }, [isPharmacist, isReceptionist, saleType])
+
+  // Sync with URL type if it changes and user is not restricted
+  useEffect(() => {
+    if (urlType && !isPharmacist && !isReceptionist) {
+        const type = urlType === 'pharmacy' ? 'pos' : urlType
+        setSaleType(type)
+    }
+  }, [urlType, isPharmacist, isReceptionist])
+
   const [branchId, setBranchId] = useState<string>("all")
   const [doctorId, setDoctorId] = useState<string>("all")
   const [staffId, setStaffId] = useState<string>("all")
-
-  // Sync with URL type if it changes
-  useEffect(() => {
-    if (urlType) {
-        const type = urlType === 'pharmacy' ? 'pos' : urlType
-        // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-        setSaleType(type)
-    }
-  }, [urlType])
 
   const [patientIdFilter, setPatientIdFilter] = useState<string | null>(urlPatientId)
   const limit = 10
@@ -84,7 +103,6 @@ export default function SalesHistoryPage() {
     setSaleType(value)
     setPage(1)
     
-    // Update URL to keep it as single source of truth
     const params = new URLSearchParams(searchParams.toString())
     if (value === 'all') {
       params.delete('type')
@@ -188,18 +206,20 @@ export default function SalesHistoryPage() {
                     />
                   </div>
 
-                  <div className="w-full md:w-40">
-                    <Select value={saleType} onValueChange={handleTypeChange}>
-                      <SelectTrigger className="h-10 rounded-xl bg-background/50 border-primary/20 text-xs font-medium">
-                        <SelectValue placeholder="Sale Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Sale Type: All</SelectItem>
-                        <SelectItem value="pos">Pharmacy (POS)</SelectItem>
-                        <SelectItem value="hospital">Hospital Sales</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {(!isPharmacist && !isReceptionist) && (
+                    <div className="w-full md:w-40">
+                      <Select value={saleType} onValueChange={handleTypeChange}>
+                        <SelectTrigger className="h-10 rounded-xl bg-background/50 border-primary/20 text-xs font-medium">
+                          <SelectValue placeholder="Sale Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Sale Type: All</SelectItem>
+                          <SelectItem value="pos">Pharmacy (POS)</SelectItem>
+                          <SelectItem value="hospital">Hospital Sales</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <Popover>
                     <PopoverTrigger asChild>
@@ -240,7 +260,12 @@ export default function SalesHistoryPage() {
                                 setMinAmount("")
                                 setMaxAmount("")
                                 setDateRange(undefined)
-                                setSaleType(urlType === 'pharmacy' ? 'pos' : (urlType || "all"))
+                                setSaleType(() => {
+                                  if (isPharmacist) return 'pos'
+                                  if (isReceptionist) return 'hospital'
+                                  if (urlType) return urlType === 'pharmacy' ? 'pos' : urlType
+                                  return 'all'
+                                })
                                 setPatientIdFilter(null)
                               }}
                               className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
