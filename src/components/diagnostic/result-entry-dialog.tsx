@@ -632,11 +632,12 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                         </Select>
                                                                                     ) : (
                                                                                         <div className="relative w-full">
-                                                                                            <Input 
+                                                                                            <Textarea 
                                                                                                 value={data.result}
                                                                                                 onChange={e => updateParam(testKey, paramKey, 'result', e.target.value, defaultData)}
+                                                                                                rows={1}
                                                                                                 className={cn(
-                                                                                                    "h-9 rounded-xl bg-background border-border text-[13px] font-black text-center transition-all focus-visible:ring-primary/20 hover:border-primary/30 shadow-sm px-6",
+                                                                                                    "min-h-9 rounded-xl bg-background border-border text-[13px] font-black transition-all focus-visible:ring-primary/20 hover:border-primary/30 shadow-sm px-4 py-2 resize text-center",
                                                                                                     data.result ? "text-foreground" : "text-muted-foreground/30 italic"
                                                                                                 )}
                                                                                                 placeholder="Value"
@@ -661,31 +662,33 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
                                                                             <TableCell className="px-8 py-3">
                                                                                 <div className="relative group/input">
-                                                                                    <Input 
+                                                                                    <Textarea 
                                                                                         value={data.unit}
                                                                                         onChange={e => updateParam(testKey, paramKey, 'unit', e.target.value, defaultData)}
+                                                                                        rows={1}
                                                                                         className={cn(
-                                                                                            "h-9 rounded-xl bg-muted/20 border-transparent text-center text-[11px] font-bold text-muted-foreground/80 transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4",
+                                                                                            "min-h-9 rounded-xl bg-muted/20 border-transparent text-center text-[11px] font-bold text-muted-foreground/80 transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4 py-2 resize",
                                                                                             !data.unit && "opacity-30"
                                                                                         )}
                                                                                         placeholder="Unit"
                                                                                     />
-                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all" />
+                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all pointer-events-none" />
                                                                                 </div>
                                                                             </TableCell>
 
                                                                             <TableCell className="px-8 py-3">
                                                                                 <div className="relative group/input">
-                                                                                    <Input 
+                                                                                    <Textarea 
                                                                                         value={data.refRange}
                                                                                         onChange={e => updateParam(testKey, paramKey, 'refRange', e.target.value, defaultData)}
+                                                                                        rows={1}
                                                                                         className={cn(
-                                                                                            "h-9 rounded-xl bg-muted/20 border-transparent text-center text-[10px] font-bold text-muted-foreground/70 italic transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4",
+                                                                                            "min-h-9 rounded-xl bg-muted/20 border-transparent text-center text-[10px] font-bold text-muted-foreground/70 italic transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4 py-2 resize",
                                                                                             !data.refRange && "opacity-30"
                                                                                         )}
                                                                                         placeholder="Reference"
                                                                                     />
-                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all" />
+                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all pointer-events-none" />
                                                                                 </div>
                                                                             </TableCell>
                                                                         </TableRow>

@@ -560,7 +560,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                             </div>
                                                             <div className={cn("col-span-12 md:col-span-2 space-y-1.5", param.fieldType === 'dropdown' ? "hidden" : "block")}>
                                                                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground italic">Default Result</Label>
-                                                                <Input 
+                                                                <Textarea 
                                                                     value={param.result}
                                                                     onChange={(e) => {
                                                                         const next = [...(formData.testResultTemplate as any[])]
@@ -568,7 +568,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                                         setFormData(prev => ({ ...prev, testResultTemplate: next }))
                                                                     }}
                                                                     placeholder="N/A"
-                                                                    className="h-10 rounded-xl bg-muted/30 border-none focus-visible:ring-primary font-medium"
+                                                                    rows={1}
+                                                                    className="min-h-11 rounded-xl bg-muted/30 border-none focus-visible:ring-primary font-medium resize leading-tight py-2.5"
                                                                 />
                                                             </div>
                                                             <div className="col-span-6 md:col-span-2 space-y-1.5">
@@ -658,7 +659,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                                                     }}
                                                                     placeholder={param.refRangeEnabled ? "Standard range..." : "Hidden"}
                                                                     rows={1}
-                                                                    className={`min-h-11 rounded-xl bg-muted/30 border-none focus-visible:ring-primary leading-tight py-2.5 ${!param.refRangeEnabled ? 'opacity-50 grayscale' : ''}`}
+                                                                    className={`min-h-11 rounded-xl bg-muted/30 border-none focus-visible:ring-primary leading-tight py-2.5 resize ${!param.refRangeEnabled ? 'opacity-50 grayscale' : ''}`}
                                                                 />
                                                             </div>
                                                         </div>
