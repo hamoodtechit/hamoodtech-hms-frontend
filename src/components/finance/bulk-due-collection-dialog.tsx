@@ -80,7 +80,7 @@ export function BulkDueCollectionDialog({
                         id: sale.id,
                         data: {
                             amount,
-                            paymentMethod,
+                            paymentMethod: paymentMethod as any,
                             accountId,
                             note: note || undefined
                         }
