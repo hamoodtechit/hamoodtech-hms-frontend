@@ -468,8 +468,12 @@ export default function POSPage() {
               type: "pos" as const, // Identifying this as a POS sale
               note: saleNote || undefined,
                saleItems: cart.flatMap(item => {
-                  // If item has quantity within its assigned batch, keep it simple
-                  // BUT for safety, we implement auto-allocation for all multi-batch items
+                  const itemMetadata = {
+                      dosageForm: item.dosageForm,
+                      strength: item.strength,
+                      genericName: item.genericName
+                  };
+
                   if (item.stocks && item.stocks.length > 0) {
                       const allocations = allocateBatches(item.quantity, item.stocks, item.batchNumber);
                       return allocations.map(alloc => ({
@@ -483,12 +487,10 @@ export default function POSPage() {
                           discountAmount: (Number(item.discountAmount || 0) / item.quantity) * alloc.quantity,
                           batchNumber: alloc.batchNumber || "BATCH-N/A",
                           expiryDate: alloc.expiryDate || new Date().toISOString(),
-                          dosageForm: item.dosageForm,
-                          strength: item.strength
+                          additionalData: itemMetadata
                       }));
                   }
                   
-                  // Fallback for items with no stock info
                   return [{
                       medicineId: item.id,
                       itemName: item.name,
@@ -500,8 +502,7 @@ export default function POSPage() {
                       discountAmount: item.discountAmount || 0,
                       batchNumber: item.batchNumber || "BATCH-N/A",
                       expiryDate: item.expiryDate || new Date().toISOString(),
-                      dosageForm: item.dosageForm,
-                      strength: item.strength
+                      additionalData: itemMetadata
                   }];
               }),
               payments: [{

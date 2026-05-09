@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,18 +39,20 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const items = (data as any)?.saleItems || (data as any)?.items || []
   
   console.log("Receipt — Raw Sale Data:", data);
-  console.log("Receipt — First Sale Item:", items[0]);
-  const normalizedItems = items.map((item: any) => ({
-    name: item.itemName || item.name || "Unknown Item",
-    quantity: Number(item.quantity || 0),
-    price: Number(item.price || 0),
-    dosageForm: item.dosageForm || item.medicine?.dosageForm || "",
-    strength: item.strength || item.medicine?.strength || "",
-    genericName: item.genericName || item.medicine?.genericName || "",
-    batchNumber: item.batchNumber,
-    discountAmount: Number(item.discountAmount || 0),
-    discountPercentage: Number(item.discountPercentage || 0)
-  }))
+  const normalizedItems = items.map((item: any) => {
+    const additional = item.additionalData || {}
+    return {
+      name: item.itemName || item.name || "Unknown Item",
+      quantity: Number(item.quantity || 0),
+      price: Number(item.price || 0),
+      dosageForm: item.dosageForm || additional.dosageForm || item.medicine?.dosageForm || "",
+      strength: item.strength || additional.strength || item.medicine?.strength || "",
+      genericName: item.genericName || additional.genericName || item.medicine?.genericName || "",
+      batchNumber: item.batchNumber,
+      discountAmount: Number(item.discountAmount || 0),
+      discountPercentage: Number(item.discountPercentage || 0)
+    }
+  })
 
   const grossTotal = normalizedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
   const totalItemDiscount = normalizedItems.reduce((sum: number, item: any) => {
