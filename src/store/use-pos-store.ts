@@ -15,6 +15,7 @@ export interface Product {
     discountPercentage?: number
     discountAmount?: number
     dosageForm?: string
+    strength?: string
     genericName?: string
     stock?: number
     stocks?: Stock[]

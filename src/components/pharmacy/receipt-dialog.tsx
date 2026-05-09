@@ -38,16 +38,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   if (!data && !isLoading) return null
 
   const items = (data as any)?.saleItems || (data as any)?.items || []
-  
-  // Debug: See exact data structure from API
-  console.log("Receipt — Raw Sale Data:", JSON.stringify(data, null, 2));
-  console.log("Receipt — First Sale Item:", items[0]);
   const normalizedItems = items.map((item: any) => ({
     name: item.itemName || item.name || "Unknown Item",
     quantity: Number(item.quantity || 0),
     price: Number(item.price || 0),
     dosageForm: item.dosageForm || item.medicine?.dosageForm || "",
     strength: item.strength || item.medicine?.strength || "",
+    genericName: item.genericName || item.medicine?.genericName || "",
     batchNumber: item.batchNumber,
     discountAmount: Number(item.discountAmount || 0),
     discountPercentage: Number(item.discountPercentage || 0)
@@ -175,7 +172,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
              )}
-             {paidAmount > netTotal && (
+             {paidAmount >= netTotal && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
                       <span className="w-4">:</span>
@@ -354,7 +351,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <td class="colon-col">:</td>
                                 <td class="value-col">${dueAmount.toFixed(2)} ৳</td>
                             </tr>` : ''}
-                            ${paidAmount > netTotal ? `
+                            ${paidAmount >= netTotal ? `
                             <tr>
                                 <td class="label-col">Change Return</td>
                                 <td class="colon-col">:</td>

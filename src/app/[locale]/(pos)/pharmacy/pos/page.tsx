@@ -396,6 +396,7 @@ export default function POSPage() {
       medicineId: medicine.id,
       category: medicine.category?.name || 'Uncategorized',
       dosageForm: medicine.dosageForm,
+      strength: (medicine as any).strength,
       genericName: medicine.genericName,
       stocks: sortedStocks // Pass sorted stocks
     } as any)
