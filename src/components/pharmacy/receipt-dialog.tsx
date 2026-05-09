@@ -38,6 +38,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   if (!data && !isLoading) return null
 
   const items = (data as any)?.saleItems || (data as any)?.items || []
+  
+  console.log("Receipt — Raw Sale Data:", data);
+  console.log("Receipt — First Sale Item:", items[0]);
   const normalizedItems = items.map((item: any) => ({
     name: item.itemName || item.name || "Unknown Item",
     quantity: Number(item.quantity || 0),
