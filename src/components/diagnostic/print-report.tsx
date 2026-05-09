@@ -144,7 +144,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                             ) : (
                                                 (isParamHeader && !isParameter) ? "" : (
                                                     typeof val === 'string' 
-                                                        ? <div className="leading-tight" dangerouslySetInnerHTML={{ __html: val.replace(/\n/g, '') }} />
+                                                        ? <div className="leading-tight whitespace-pre-wrap">{val}</div>
                                                         : val
                                                 )
                                             )}
