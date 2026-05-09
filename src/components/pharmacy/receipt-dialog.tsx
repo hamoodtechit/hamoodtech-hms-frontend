@@ -89,7 +89,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
            <div className="flex justify-between">
                 <span>Inv: {invoiceNumber}</span>
-                <span>Type: OPD Patient</span>
+                <span>Type: {(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || "OPD Patient"}</span>
            </div>
            <div className="flex justify-between">
                 <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
@@ -291,7 +291,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         <div class="info-grid">
                             <div class="info-row">
                                 <span>Inv: ${invoiceNumber}</span>
-                                <span>Type: OPD Patient</span>
+                                <span>Type: ${(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || "OPD Patient"}</span>
                             </div>
                             <div class="info-row">
                                 <span>Date: ${new Date(date).toLocaleDateString('en-GB')}</span>
