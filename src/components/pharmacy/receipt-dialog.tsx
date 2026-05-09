@@ -61,6 +61,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
   const netTotal = Number((data as any)?.netPrice || (data as any)?.total || 0)
   const paidAmount = Number((data as any)?.paidAmount || 0)
+  const additionalData = (data as any)?.additionalData || {}
+  const changeReturnFromData = Number(additionalData.changeReturn || 0)
+  const realPaidAmount = Number(additionalData.customerPaidAmount || paidAmount)
+  
   const dueAmount = Number((data as any)?.dueAmount || 0)
   const taxAmount = Number((data as any)?.taxAmount || (data as any)?.tax || 0)
   const discountAmount = Number((data as any)?.discountAmount || (data as any)?.discount || 0)
@@ -165,7 +169,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
              <div className="flex">
                  <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
                  <span className="w-4">:</span>
-                 <span className="flex-1 text-right">{(paidAmount).toFixed(2)} ৳</span>
+                 <span className="flex-1 text-right">{(realPaidAmount).toFixed(2)} ৳</span>
              </div>
              
              {dueAmount > 0 && (
@@ -175,11 +179,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
              )}
-             {paidAmount >= netTotal && (
+             {(paidAmount >= netTotal || changeReturnFromData > 0) && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
                       <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{(paidAmount - netTotal).toFixed(2)} ৳</span>
+                      <span className="flex-1 text-right">{(changeReturnFromData || Math.max(0, realPaidAmount - netTotal)).toFixed(2)} ৳</span>
                   </div>
              )}
         </div>

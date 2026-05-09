@@ -443,7 +443,10 @@ export default function POSPage() {
       }
 
       try {
-          const actuallyPaid = Math.min(paidAmount, total)
+          const rawPaidAmount = paidAmount // What the user actually typed
+          const actuallyPaid = Math.min(rawPaidAmount, total) // What is applied to the invoice
+          const changeReturn = Math.max(0, rawPaidAmount - total) // The change to give back
+          
           const dueAmount = Math.max(0, total - actuallyPaid)
           let paymentStatus: 'paid' | 'due' | 'partial' = 'paid'
           
@@ -452,7 +455,7 @@ export default function POSPage() {
           } else if (dueAmount > 0) {
               paymentStatus = 'partial'
           }
-
+ 
           const salePayload: SalePayload = {
               branchId: activeStoreId || undefined,
               patientId: selectedCustomer?.id,
@@ -467,6 +470,10 @@ export default function POSPage() {
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
               note: saleNote || undefined,
+              additionalData: {
+                  customerPaidAmount: rawPaidAmount,
+                  changeReturn: changeReturn
+              },
                saleItems: cart.flatMap(item => {
                   const itemMetadata = {
                       dosageForm: item.dosageForm,
