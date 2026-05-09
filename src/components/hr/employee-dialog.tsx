@@ -24,7 +24,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCreateEmployee, useDepartments, useDesignations, useUpdateEmployee } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Employee } from "@/types/hr"
-import { Loader2, User } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { roleService } from "@/services/role-service"
+import { userService } from "@/services/user-service"
+import { Role } from "@/types/role"
+import { Eye, EyeOff, Loader2, User, Key, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { MediaPicker } from "../media/media-picker"
@@ -74,8 +78,16 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         reportCharge: 0,
         commissionPercentage: 0,
         dutyStartTime: "",
-        dutyEndTime: ""
+        dutyEndTime: "",
+        // User Account Fields
+        username: "",
+        password: "",
+        roleId: ""
     })
+
+    const [createUserAccount, setCreateUserAccount] = useState(false)
+    const [roles, setRoles] = useState<Role[]>([])
+    const [showPassword, setShowPassword] = useState(false)
 
     const { data: departmentsRes } = useDepartments({ 
         branchId: formData.branchId || activeStoreId || undefined, 
@@ -87,8 +99,19 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
         limit: 100 
     })
 
+    const fetchRoles = async () => {
+        try {
+            const response = await roleService.getRoles()
+            setRoles(response.data)
+        } catch (error) {
+            console.error("Failed to fetch roles", error)
+        }
+    }
+
     useEffect(() => {
         if (open) {
+            fetchRoles()
+            setCreateUserAccount(false)
             if (employee) {
                 setFormData({
                     branchId: employee.branchId,
@@ -117,7 +140,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     reportCharge: Number(employee.reportCharge || 0),
                     commissionPercentage: Number(employee.commissionPercentage || 0),
                     dutyStartTime: employee.dutyStartTime ? new Date(employee.dutyStartTime).toISOString().slice(11, 16) : "",
-                    dutyEndTime: employee.dutyEndTime ? new Date(employee.dutyEndTime).toISOString().slice(11, 16) : ""
+                    dutyEndTime: employee.dutyEndTime ? new Date(employee.dutyEndTime).toISOString().slice(11, 16) : "",
+                    username: "",
+                    password: "",
+                    roleId: ""
                 })
             } else {
                 setFormData({
@@ -147,7 +173,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                     reportCharge: 0,
                     commissionPercentage: 0,
                     dutyStartTime: "",
-                    dutyEndTime: ""
+                    dutyEndTime: "",
+                    username: "",
+                    password: "",
+                    roleId: ""
                 })
             }
         }
@@ -159,11 +188,19 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
             return
         }
 
+        if (createUserAccount && !isEdit) {
+            if (!formData.username || !formData.password || !formData.roleId) {
+                toast.error("Username, Password and Role are required for user account")
+                return
+            }
+        }
+
         setLoading(true)
         try {
             // Convert time strings (HH:mm) to valid ISO DateTime for backend
+            const { username, password, roleId, ...employeeData } = formData
             const payload = {
-                ...formData,
+                ...employeeData,
                 dutyStartTime: formData.dutyStartTime ? `1970-01-01T${formData.dutyStartTime}:00.000Z` : undefined,
                 dutyEndTime: formData.dutyEndTime ? `1970-01-01T${formData.dutyEndTime}:00.000Z` : undefined,
             }
@@ -175,8 +212,30 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                 })
                 toast.success("Employee updated successfully")
             } else {
-                await createMutation.mutateAsync(payload)
+                const newEmployee = await createMutation.mutateAsync(payload)
                 toast.success("Employee created successfully")
+
+                // Handle User Account Creation
+                if (createUserAccount && newEmployee?.id) {
+                    try {
+                        await userService.createUser({
+                            username: formData.username,
+                            password: formData.password,
+                            email: formData.email || `${formData.username}@system.local`,
+                            fullName: formData.name,
+                            fullNameBangla: formData.nameBangla,
+                            phone: formData.phone,
+                            roleId: formData.roleId,
+                            branchId: formData.branchId,
+                            employeeId: newEmployee.id,
+                            designation: formData.designationId // Optional: could be name but ID is passed to employee
+                        })
+                        toast.success("User account created successfully")
+                    } catch (userError) {
+                        toast.error("Employee created, but failed to create user account")
+                        console.error("User creation error:", userError)
+                    }
+                }
             }
             onSuccess?.()
             onOpenChange(false)
@@ -505,6 +564,87 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                 </div>
                             )}
                         </div>
+                        {/* Section: System Access (Only for New Employees) */}
+                        {!isEdit && (
+                            <div className="space-y-4 pt-4 border-t border-dashed">
+                                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Shield className="h-4 w-4 text-primary" />
+                                            <h3 className="text-sm font-black uppercase tracking-tight text-primary">System Access</h3>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground font-medium">Create a login account for this employee now.</p>
+                                    </div>
+                                    <Switch 
+                                        checked={createUserAccount}
+                                        onCheckedChange={setCreateUserAccount}
+                                    />
+                                </div>
+
+                                {createUserAccount && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-xl border animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="grid gap-2">
+                                            <Label className="text-xs font-bold flex items-center gap-1.5">
+                                                <User className="h-3 w-3" /> Username *
+                                            </Label>
+                                            <Input 
+                                                value={formData.username}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/\s/g, '') }))}
+                                                placeholder="johndoe"
+                                                className="h-9"
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label className="text-xs font-bold flex items-center gap-1.5">
+                                                <Key className="h-3 w-3" /> Password *
+                                            </Label>
+                                            <div className="relative">
+                                                <Input 
+                                                    type={showPassword ? "text" : "password"}
+                                                    value={formData.password}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                                                    placeholder="Minimum 8 chars"
+                                                    className="h-9 pr-9"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-0 top-0 h-full px-2 py-2 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    ) : (
+                                                        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label className="text-xs font-bold flex items-center gap-1.5">
+                                                <Shield className="h-3 w-3" /> System Role *
+                                            </Label>
+                                            <Select 
+                                                value={formData.roleId} 
+                                                onValueChange={(val) => setFormData(prev => ({ ...prev, roleId: val }))}
+                                            >
+                                                <SelectTrigger className="h-9">
+                                                    <SelectValue placeholder="Select Role" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {roles.map(role => (
+                                                        <SelectItem key={role.id} value={role.id}>
+                                                            {role.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
 
