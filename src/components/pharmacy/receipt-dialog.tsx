@@ -186,8 +186,8 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         {/* Payment Note Section */}
         {(data?.payments?.[0]?.note || (data as any)?.note) && (
             <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
-                <span className="shrink-0 uppercase text-[8px] opacity-70 mt-0.5">Note:</span>
-                <span className={`italic font-medium uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
+                <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
+                <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
                     {(data as any)?.note || data?.payments?.[0]?.note}
                 </span>
             </div>
@@ -195,9 +195,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
         {/* Footer */}
         <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
-            <p className="font-bold tracking-wider">THANK YOU FOR VISITING!</p>
-            <p className="font-semibold leading-tight px-4 text-center">Medicines once sold cannot be<br />returned without the receipt.</p>
-            <p className={`${isPrinting ? 'text-[6.5px] pt-1' : 'text-[10px] pt-2'} font-semibold lowercase opacity-50`}>*Powered by HamoodTech.</p>
+            <p className="font-black tracking-wider">THANK YOU FOR VISITING!</p>
+            <p className="font-black leading-tight px-4 text-center">Medicines once sold cannot be<br />returned without the receipt.</p>
+            <p className={`${isPrinting ? 'text-[7px] pt-1' : 'text-[10px] pt-2'} font-black text-black normal-case`}>*Powered by HamoodTech.</p>
         </div>
     </div>
   )}
@@ -241,11 +241,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                   <tr style="font-size: 12px; border-bottom: 1px solid #f0f0f0;">
                     <td style="text-align: left; font-weight: 900; padding: 4px 0; vertical-align: top;">
                       ${item.name}
-                      ${detailLine ? `<br/><span style="font-size: 9px; font-weight: 600; opacity: 0.6; text-transform: uppercase;">${detailLine}</span>` : ''}
+                      ${detailLine ? `<br/><span style="font-size: 9px; font-weight: 900; color: black; text-transform: uppercase;">${detailLine}</span>` : ''}
                     </td>
-                    <td style="text-align: center; vertical-align: top; padding-top: 4px;">${item.quantity}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 4px;">${item.price.toFixed(2)}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900;">${netItemTotal.toFixed(2)}</td>
+                    <td style="text-align: center; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${item.quantity}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${item.price.toFixed(2)}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 4px; font-weight: 900; color: black;">${netItemTotal.toFixed(2)}</td>
                   </tr>
                 `;
               }).join('');
@@ -293,6 +293,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             <div class="pharmacy-tag">PHARMACY</div>
                             <div class="contact-info">${address}</div>
                             <div class="contact-info">Phone: ${phone}</div>
+                            ${(data as any)?.branch?.email || (data as any)?.general?.email || '' ? `<div class="contact-info">Email: ${(data as any)?.branch?.email || (data as any)?.general?.email}</div>` : ''}
                         </div>
 
                         <div class="info-grid">
@@ -361,14 +362,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
                         ${(data?.payments?.[0]?.note || (data as any)?.note) ? `
                         <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
-                            <span style="text-transform: uppercase; font-size: 9px; opacity: 0.7; font-weight: bold;">Note:</span>
-                            <span style="font-style: italic; font-weight: bold; text-transform: uppercase;">${(data as any)?.note || data?.payments?.[0]?.note}</span>
+                            <span style="text-transform: uppercase; font-size: 9px; font-weight: 900; color: black;">Note:</span>
+                            <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${(data as any)?.note || data?.payments?.[0]?.note}</span>
                         </div>` : ''}
 
                         <div class="footer">
                             <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>
-                            <p style="font-weight: bold; line-height: 1.4;">Medicines once sold cannot be<br>returned without the receipt.</p>
-                            <p style="margin-top: 10px; opacity: 0.6; text-transform: lowercase;">*Powered by HamoodTech.</p>
+                            <p style="font-weight: 900; line-height: 1.4;">Medicines once sold cannot be<br>returned without the receipt.</p>
+                            <p style="margin-top: 10px; font-weight: 900; color: black; text-transform: none;">*Powered by HamoodTech.</p>
                         </div>
                     </div>
                 </body>
