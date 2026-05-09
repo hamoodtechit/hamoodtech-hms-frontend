@@ -130,7 +130,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                             )}
                                         >
                                             {isResult ? (
-                                                <div className={cn(block.isAbnormal && "text-red-600 underline decoration-1 italic")}>
+                                                <div className={cn("whitespace-pre-wrap", block.isAbnormal && "text-red-600 underline decoration-1 italic")}>
                                                     {isParamHeader && !isParameter ? "" : val}
                                                     {block.isAbnormal && (
                                                         <span className={cn(
