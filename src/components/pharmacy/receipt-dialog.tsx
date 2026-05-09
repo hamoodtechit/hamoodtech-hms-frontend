@@ -118,9 +118,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
                             <span className="block font-black text-black">{item.name}</span>
-                            {(item.strength || item.dosageForm) && (
+                            {(item.strength || item.dosageForm || item.genericName) && (
                                 <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-semibold uppercase opacity-60 leading-tight`}>
-                                    {[item.strength, item.dosageForm].filter(Boolean).join(' | ')}
+                                    {[item.genericName, item.strength, item.dosageForm].filter(Boolean).join(' | ')}
                                 </span>
                             )}
                         </div>
@@ -236,7 +236,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                 const itemTotal = item.price * item.quantity;
                 const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0);
                 const netItemTotal = itemTotal - itemDisc;
-                const detailLine = [item.strength, item.dosageForm].filter(Boolean).join(' | ');
+                const detailLine = [item.genericName, item.strength, item.dosageForm].filter(Boolean).join(' | ');
                 return `
                   <tr style="font-size: 12px; border-bottom: 1px solid #f0f0f0;">
                     <td style="text-align: left; font-weight: 900; padding: 4px 0; vertical-align: top;">
