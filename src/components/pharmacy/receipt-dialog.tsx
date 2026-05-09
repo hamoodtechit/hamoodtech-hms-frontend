@@ -42,7 +42,8 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
     name: item.itemName || item.name || "Unknown Item",
     quantity: Number(item.quantity || 0),
     price: Number(item.price || 0),
-    dosageForm: item.dosageForm,
+    dosageForm: item.dosageForm || item.medicine?.dosageForm || "",
+    strength: item.strength || item.medicine?.strength || "",
     batchNumber: item.batchNumber,
     discountAmount: Number(item.discountAmount || 0),
     discountPercentage: Number(item.discountPercentage || 0)
@@ -115,10 +116,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                   return (
                     <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
-                            <span className="block font-black text-black">
-                                {item.name}
-                                {item.dosageForm && <span className={`${isPrinting ? 'text-[7px]' : 'text-[9px]'} font-semibold ml-1 uppercase opacity-70`}>({item.dosageForm})</span>}
-                            </span>
+                            <span className="block font-black text-black">{item.name}</span>
+                            {(item.strength || item.dosageForm) && (
+                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-semibold uppercase opacity-60 leading-tight`}>
+                                    {[item.strength, item.dosageForm].filter(Boolean).join(' | ')}
+                                </span>
+                            )}
                         </div>
                         <div className="col-span-2 text-center font-semibold">{item.quantity}</div>
                         <div className="col-span-2 text-right font-semibold">{item.price.toFixed(2)}</div>
@@ -161,17 +164,18 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  <span className="flex-1 text-right">{(paidAmount).toFixed(2)} ৳</span>
              </div>
              
-             {dueAmount > 0 ? (
+             {dueAmount > 0 && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Due Amount</span>
                       <span className="w-4">:</span>
                       <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
-             ) : (
+             )}
+             {paidAmount > netTotal && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
                       <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</span>
+                      <span className="flex-1 text-right">{(paidAmount - netTotal).toFixed(2)} ৳</span>
                   </div>
              )}
         </div>
@@ -231,10 +235,12 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                 const itemTotal = item.price * item.quantity;
                 const itemDisc = item.discountAmount || (item.discountPercentage ? (itemTotal * item.discountPercentage) / 100 : 0);
                 const netItemTotal = itemTotal - itemDisc;
+                const detailLine = [item.strength, item.dosageForm].filter(Boolean).join(' | ');
                 return `
                   <tr style="font-size: 12px; border-bottom: 1px solid #f0f0f0;">
                     <td style="text-align: left; font-weight: 900; padding: 4px 0; vertical-align: top;">
-                      ${item.name} ${item.dosageForm ? `<span style="font-size: 10px; font-weight: normal; opacity: 0.8;">(${item.dosageForm})</span>` : ''}
+                      ${item.name}
+                      ${detailLine ? `<br/><span style="font-size: 9px; font-weight: 600; opacity: 0.6; text-transform: uppercase;">${detailLine}</span>` : ''}
                     </td>
                     <td style="text-align: center; vertical-align: top; padding-top: 4px;">${item.quantity}</td>
                     <td style="text-align: right; vertical-align: top; padding-top: 4px;">${item.price.toFixed(2)}</td>
@@ -343,12 +349,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <td class="label-col">Due Amount</td>
                                 <td class="colon-col">:</td>
                                 <td class="value-col">${dueAmount.toFixed(2)} ৳</td>
-                            </tr>` : `
+                            </tr>` : ''}
+                            ${paidAmount > netTotal ? `
                             <tr>
                                 <td class="label-col">Change Return</td>
                                 <td class="colon-col">:</td>
-                                <td class="value-col">${Math.max(0, paidAmount - netTotal).toFixed(2)} ৳</td>
-                            </tr>`}
+                                <td class="value-col">${(paidAmount - netTotal).toFixed(2)} ৳</td>
+                            </tr>` : ''}
                         </table>
 
                         ${(data?.payments?.[0]?.note || (data as any)?.note) ? `
