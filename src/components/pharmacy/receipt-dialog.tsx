@@ -38,17 +38,50 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   if (!data && !isLoading) return null
 
   const items = (data as any)?.saleItems || (data as any)?.items || []
-  const normalizedItems = items.map((item: any) => ({
-    name: item.itemName || item.name || "Unknown Item",
-    quantity: Number(item.quantity || 0),
-    price: Number(item.price || 0),
-    dosageForm: item.dosageForm || item.medicine?.dosageForm || "",
-    strength: item.strength || item.medicine?.strength || "",
-    genericName: item.genericName || item.medicine?.genericName || "",
-    batchNumber: item.batchNumber,
-    discountAmount: Number(item.discountAmount || 0),
-    discountPercentage: Number(item.discountPercentage || 0)
-  }))
+  
+  const mergedMeta = (() => {
+    let meta: any = {}
+    try {
+        if (typeof (data as any)?.additionalData === 'string') {
+            meta = { ...meta, ...JSON.parse((data as any).additionalData) }
+        } else if ((data as any)?.additionalData && typeof (data as any)?.additionalData === 'object') {
+            meta = { ...meta, ...(data as any).additionalData }
+        }
+    } catch(e) {}
+    
+    try {
+        if (items.length > 0) {
+            const firstItemMeta = items[0].additionalData
+            if (typeof firstItemMeta === 'string') {
+                meta = { ...meta, ...JSON.parse(firstItemMeta) }
+            } else if (firstItemMeta && typeof firstItemMeta === 'object') {
+                meta = { ...meta, ...firstItemMeta }
+            }
+        }
+    } catch(e) {}
+    return meta
+  })()
+
+  const normalizedItems = items.map((item: any, idx: number) => {
+    const localItem = (transaction as any)?.items?.[idx] || {}
+    let additional: any = {}
+    try {
+        if (typeof item.additionalData === 'string') additional = JSON.parse(item.additionalData)
+        else if (item.additionalData && typeof item.additionalData === 'object') additional = item.additionalData
+    } catch(e) {}
+
+    return {
+      name: item.itemName || item.name || localItem.name || "Unknown Item",
+      quantity: Number(item.quantity || 0),
+      price: Number(item.price || 0),
+      dosageForm: item.dosageForm || additional.dosageForm || item.medicine?.dosageForm || localItem.dosageForm || "",
+      strength: item.strength || additional.strength || item.medicine?.strength || localItem.strength || "",
+      genericName: item.genericName || additional.genericName || item.medicine?.genericName || localItem.genericName || "",
+      batchNumber: item.batchNumber || localItem.batchNumber,
+      discountAmount: Number(item.discountAmount || 0),
+      discountPercentage: Number(item.discountPercentage || 0)
+    }
+  })
 
   const grossTotal = normalizedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
   const totalItemDiscount = normalizedItems.reduce((sum: number, item: any) => {
@@ -57,7 +90,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   }, 0)
 
   const netTotal = Number((data as any)?.netPrice || (data as any)?.total || 0)
-  const paidAmount = Number((data as any)?.paidAmount || 0)
+  
+  const apiPaid = Number((data as any)?.paidAmount || 0)
+  const localPaid = Number((transaction as any)?.paidAmount || 0)
+  const metaPaid = Number(mergedMeta.customerPaidAmount || 0)
+  const finalPaidAmount = Math.max(apiPaid, localPaid, metaPaid)
+  
+  const changeReturnFromData = Number(mergedMeta.changeReturn || Math.max(0, finalPaidAmount - netTotal))
+  
   const dueAmount = Number((data as any)?.dueAmount || 0)
   const taxAmount = Number((data as any)?.taxAmount || (data as any)?.tax || 0)
   const discountAmount = Number((data as any)?.discountAmount || (data as any)?.discount || 0)
@@ -162,7 +202,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
              <div className="flex">
                  <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
                  <span className="w-4">:</span>
-                 <span className="flex-1 text-right">{(paidAmount).toFixed(2)} ৳</span>
+                 <span className="flex-1 text-right">{(finalPaidAmount).toFixed(2)} ৳</span>
              </div>
              
              {dueAmount > 0 && (
@@ -172,11 +212,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                       <span className="flex-1 text-right">{(dueAmount).toFixed(2)} ৳</span>
                   </div>
              )}
-             {paidAmount >= netTotal && (
+             {(finalPaidAmount >= netTotal || changeReturnFromData > 0) && (
                   <div className="flex">
                       <span className={isPrinting ? "w-24" : "w-32"}>Change Return</span>
                       <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{(paidAmount - netTotal).toFixed(2)} ৳</span>
+                      <span className="flex-1 text-right">{(changeReturnFromData).toFixed(2)} ৳</span>
                   </div>
              )}
         </div>
@@ -344,7 +384,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             <tr>
                                 <td class="label-col">Paid Amount</td>
                                 <td class="colon-col">:</td>
-                                <td class="value-col">${paidAmount.toFixed(2)} ৳</td>
+                                <td class="value-col">${finalPaidAmount.toFixed(2)} ৳</td>
                             </tr>
                             ${dueAmount > 0 ? `
                             <tr>
@@ -352,11 +392,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                                 <td class="colon-col">:</td>
                                 <td class="value-col">${dueAmount.toFixed(2)} ৳</td>
                             </tr>` : ''}
-                            ${paidAmount >= netTotal ? `
+                            ${(finalPaidAmount >= netTotal || changeReturnFromData > 0) ? `
                             <tr>
                                 <td class="label-col">Change Return</td>
                                 <td class="colon-col">:</td>
-                                <td class="value-col">${(paidAmount - netTotal).toFixed(2)} ৳</td>
+                                <td class="value-col">${changeReturnFromData.toFixed(2)} ৳</td>
                             </tr>` : ''}
                         </table>
 
