@@ -467,6 +467,14 @@ export default function POSPage() {
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
               note: saleNote || undefined,
+              additionalData: {
+                  cartMetadata: cart.map(item => ({
+                      medicineId: item.id,
+                      dosageForm: item.dosageForm,
+                      strength: item.strength,
+                      genericName: item.genericName
+                  }))
+              },
                saleItems: cart.flatMap(item => {
                   // If item has quantity within its assigned batch, keep it simple
                   // BUT for safety, we implement auto-allocation for all multi-batch items

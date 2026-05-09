@@ -58,6 +58,7 @@ export interface Sale {
   referralPersonId?: string;
   referralPerson?: any;
   chamberOrRoomNumber?: string;
+  additionalData?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,6 +102,7 @@ export interface SalePayload {
   staffId?: string;
   referralPersonId?: string;
   chamberOrRoomNumber?: string;
+  additionalData?: any;
 }
 
 export interface UpdateSalePayload extends Partial<SalePayload> {
