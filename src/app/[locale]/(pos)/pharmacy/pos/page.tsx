@@ -470,15 +470,14 @@ export default function POSPage() {
               taxAmount: tax,
               type: "pos" as const, // Identifying this as a POS sale
               note: saleNote || undefined,
-              additionalData: {
-                  customerPaidAmount: rawPaidAmount,
-                  changeReturn: changeReturn
-              },
                saleItems: cart.flatMap(item => {
                   const itemMetadata = {
                       dosageForm: item.dosageForm,
                       strength: item.strength,
-                      genericName: item.genericName
+                      genericName: item.genericName,
+                      // Adding sale-level metadata to items because root additionalData might be ignored
+                      customerPaidAmount: rawPaidAmount,
+                      changeReturn: changeReturn
                   };
 
                   if (item.stocks && item.stocks.length > 0) {

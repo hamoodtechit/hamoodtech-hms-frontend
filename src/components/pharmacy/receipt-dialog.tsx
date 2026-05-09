@@ -42,8 +42,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const items = (data as any)?.saleItems || (data as any)?.items || []
   const additionalData = (data as any)?.additionalData || {}
   
+  // LOGIC FIX: Metadata might be on root or items. We merge them for robust lookup.
+  const rootAdditional = (data as any)?.additionalData || {}
+  const firstItemAdditional = items[0]?.additionalData || {}
+  const mergedMeta = { ...rootAdditional, ...firstItemAdditional }
+  
   const normalizedItems = items.map((item: any, idx: number) => {
-    // If we have local transaction items, they might have more metadata
+    // Fallback to local transaction items for metadata during active POS session
     const localItem = (transaction as any)?.items?.[idx] || {}
     const additional = item.additionalData || {}
     
@@ -68,13 +73,16 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
   const netTotal = Number((data as any)?.netPrice || (data as any)?.total || 0)
   
-  // LOGIC FIX: The backend often caps paidAmount to netTotal. 
-  // We prefer the raw paidAmount from the local transaction if it's available and higher.
-  const rawPaidAmount = Number((data as any)?.paidAmount || 0)
-  const localPaidAmount = Number((transaction as any)?.paidAmount || 0)
-  const finalPaidAmount = Math.max(rawPaidAmount, localPaidAmount, Number(additionalData.customerPaidAmount || 0))
+  // SOURCES OF TRUTH FOR PAYMENT:
+  // 1. Metadata (Merged from root and items)
+  // 2. Local transaction (Live state)
+  // 3. API field (Often capped to netTotal)
+  const apiPaid = Number((data as any)?.paidAmount || 0)
+  const localPaid = Number((transaction as any)?.paidAmount || 0)
+  const metaPaid = Number(mergedMeta.customerPaidAmount || 0)
   
-  const changeReturnFromData = Number(additionalData.changeReturn || Math.max(0, finalPaidAmount - netTotal))
+  const finalPaidAmount = Math.max(apiPaid, localPaid, metaPaid)
+  const changeReturnFromData = Number(mergedMeta.changeReturn || Math.max(0, finalPaidAmount - netTotal))
   
   const dueAmount = Number((data as any)?.dueAmount || 0)
   const taxAmount = Number((data as any)?.taxAmount || (data as any)?.tax || 0)
