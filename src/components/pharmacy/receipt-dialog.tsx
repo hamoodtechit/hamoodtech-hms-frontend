@@ -38,7 +38,6 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
   const items = (data as any)?.saleItems || (data as any)?.items || []
   
-  console.log("Receipt — Raw Sale Data:", data);
   const normalizedItems = items.map((item: any) => {
     const additional = item.additionalData || {}
     return {
