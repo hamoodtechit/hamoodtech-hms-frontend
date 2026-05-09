@@ -193,6 +193,15 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                 toast.error("Username, Password and Role are required for user account")
                 return
             }
+            // Basic Password Validation (matching UserDialog logic)
+            if (formData.password.length < 8) {
+                toast.error("Password must be at least 8 characters")
+                return
+            }
+            if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+                toast.error("Password must contain uppercase, lowercase, and numbers")
+                return
+            }
         }
 
         setLoading(true)
@@ -213,16 +222,10 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                 toast.success("Employee updated successfully")
             } else {
                 const response: any = await createMutation.mutateAsync(payload)
-                console.log("Create Employee Response:", response)
-                
                 const newEmployee = response.data || response
                 const employeeId = newEmployee?.id
                 
                 toast.success("Employee created successfully")
-
-                // Handle User Account Creation
-                console.log("Create User Account Toggle:", createUserAccount)
-                console.log("Detected Employee ID:", employeeId)
 
                 if (createUserAccount && employeeId) {
                     try {
@@ -238,15 +241,15 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                             employeeId: employeeId,
                             designation: formData.designationId 
                         }
-                        console.log("Creating User with payload:", userPayload)
                         await userService.createUser(userPayload)
                         toast.success("User account created successfully")
                     } catch (userError: any) {
-                        toast.error("Employee created, but failed to create user account")
-                        console.error("User creation error:", userError?.response?.data || userError)
+                        const errorMsg = userError?.response?.data?.error?.errors?.[0]?.message 
+                            || userError?.response?.data?.message 
+                            || "Failed to create user account"
+                        toast.error(`Employee created, but: ${errorMsg}`)
+                        console.error("User creation error details:", userError?.response?.data || userError)
                     }
-                } else if (createUserAccount) {
-                    console.warn("User account creation skipped because employeeId was not found in response")
                 }
             }
             onSuccess?.()
@@ -632,6 +635,9 @@ export function EmployeeDialog({ open, onOpenChange, employee, onSuccess }: Empl
                                                     )}
                                                 </Button>
                                             </div>
+                                            <p className="text-[9px] text-muted-foreground leading-tight">
+                                                Min 8 chars, must include A-z and 0-9.
+                                            </p>
                                         </div>
                                         <div className="grid gap-2">
                                             <Label className="text-xs font-bold flex items-center gap-1.5">
