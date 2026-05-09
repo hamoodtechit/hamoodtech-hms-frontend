@@ -86,12 +86,7 @@ export function AppointmentPaymentDialog({
         }
     }, [accounts, selectedAccountId])
 
-    useEffect(() => {
-        if (open && sale) {
-            console.log("Appointment Payment Dialog — Sale Data:", sale);
-            console.log("Appointment Payment Dialog — Due Amount:", dueAmount);
-        }
-    }, [open, sale, dueAmount]);
+   
 
     const handleAddPayment = async () => {
         if (!sale || !selectedAccountId || amount <= 0) {
@@ -109,7 +104,7 @@ export function AppointmentPaymentDialog({
                     note: note || undefined,
                 },
             };
-            console.log("Appointment Payment Dialog — Submission Payload:", payload);
+           
 
             await addPaymentMutation.mutateAsync(payload)
 

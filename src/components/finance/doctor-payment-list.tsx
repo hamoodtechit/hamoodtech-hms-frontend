@@ -69,7 +69,7 @@ export function DoctorPaymentList() {
             const next = new Set(prev)
             if (next.has(id)) next.delete(id)
             else next.add(id)
-            console.log("Doctor Payment List — Selected IDs Updated:", Array.from(next));
+            
             return next
         })
     }
@@ -92,12 +92,7 @@ export function DoctorPaymentList() {
 
     const selectedTotal = selectedCharges.reduce((sum, c) => sum + Number(c.commissionAmount || 0), 0)
 
-    useMemo(() => {
-        if (selectedCharges.length > 0) {
-            console.log("Doctor Payment List — Selected Charges:", selectedCharges);
-            console.log("Doctor Payment List — Selected Total:", selectedTotal);
-        }
-    }, [selectedCharges, selectedTotal]);
+   
 
     const activeFilterCount = [doctorFilter, startDate, endDate].filter(Boolean).length
 

@@ -66,11 +66,7 @@ export function DoctorPaymentHistory() {
     
     const detailPayment = detailRes?.data
 
-    useMemo(() => {
-        if (detailOpen && detailPayment) {
-            console.log("Doctor Payment History — Detail Payment Data:", detailPayment);
-        }
-    }, [detailOpen, detailPayment]);
+   
 
     const payments: ConsultationPayment[] = data?.data || []
     const totalPages = data?.meta?.totalPages || 1

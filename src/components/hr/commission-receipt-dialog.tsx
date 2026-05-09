@@ -52,11 +52,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     const { formatCurrency } = useCurrency()
     const { user } = useAuthStore()
 
-    useEffect(() => {
-        if (open && payoutData) {
-            console.log("Commission Payout Receipt — Payout Data:", payoutData);
-        }
-    }, [open, payoutData]);
+   
 
     if (!payoutData) return null
 

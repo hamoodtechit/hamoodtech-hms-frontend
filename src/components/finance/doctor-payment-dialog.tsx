@@ -67,12 +67,7 @@ export function DoctorPaymentDialog({
 
     const totalPayable = charges.reduce((sum, c) => sum + Number(c.commissionAmount || (c as any).chargeAmount || 0), 0)
 
-    useEffect(() => {
-        if (open) {
-            console.log("Payment Details — Charges:", charges);
-            console.log("Payment Details — Total Payable:", totalPayable);
-        }
-    }, [open, charges, totalPayable]);
+   
 
     const handleSubmit = async () => {
         if (!accountId) {
@@ -89,7 +84,7 @@ export function DoctorPaymentDialog({
                 paymentMethod,
                 note: note || undefined,
             };
-            console.log("Payment Details — Submission Payload:", payload);
+           
 
             await payMutation.mutateAsync(payload)
             toast.success(`${charges.length} consultation charges paid successfully`)
