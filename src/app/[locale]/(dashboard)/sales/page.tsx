@@ -1,8 +1,10 @@
 "use client"
 
+import { Checkbox } from "@/components/ui/checkbox"
 import { DiagnosticReceiptDialog } from "@/components/billing/diagnostic-receipt-dialog"
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
+import { BulkDueCollectionDialog } from "@/components/finance/bulk-due-collection-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,12 +38,13 @@ import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/hr-queries"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
-import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X } from "lucide-react"
+import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { PermissionGuard } from "@/components/shared/permission-guard"
+import { useAuthStore } from "@/store/use-auth-store"
 
 export default function SalesHistoryPage() {
   const router = useRouter()
@@ -131,6 +134,8 @@ export default function SalesHistoryPage() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [initialAddPayment, setInitialAddPayment] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDueDialogOpen, setBulkDueDialogOpen] = useState(false)
 
   const { data: salesRes, isLoading, refetch } = useSales({
     page,
@@ -173,6 +178,32 @@ export default function SalesHistoryPage() {
   const staffs = staffsRes?.data || []
   const branches = branchesRes?.data?.branches || []
   const pagination = salesRes?.data?.pagination
+
+  // Selection Logic for Bulk Due Collection
+  const validDueSales = sales.filter((s: Sale) => Number(s.dueAmount) > 0 && s.paymentStatus !== 'paid')
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+        const next = new Set(prev)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        return next
+    })
+  }
+
+  const toggleAll = () => {
+    if (selectedIds.size === validDueSales.length) {
+        setSelectedIds(new Set())
+    } else {
+        setSelectedIds(new Set(validDueSales.map((s: Sale) => s.id)))
+    }
+  }
+
+  const selectedSales = sales.filter((s: Sale) => selectedIds.has(s.id))
+  const selectedPatientIds = new Set(selectedSales.map((s: Sale) => s.patient?.id || s.patientId))
+  const isSamePatient = selectedPatientIds.size <= 1
+  const selectedTotalDue = selectedSales.reduce((sum: number, s: Sale) => sum + Number(s.dueAmount || 0), 0)
+  const bulkPatientName = selectedSales[0]?.patient?.name || "Patient"
 
   return (
     <PermissionGuard permission="sale:read">
@@ -444,14 +475,39 @@ export default function SalesHistoryPage() {
                       Clear
                     </Button>
                   )}
+
+                  <PermissionGuard permission="transaction:update">
+                      {selectedSales.length > 0 && (
+                          <Button
+                              onClick={() => setBulkDueDialogOpen(true)}
+                              disabled={!isSamePatient}
+                              className="gap-2 h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700"
+                          >
+                              <Wallet className="h-4 w-4" />
+                              Pay Dues {formatCurrency(selectedTotalDue)} ({selectedSales.length})
+                          </Button>
+                      )}
+                  </PermissionGuard>
                 </div>
               </div>
+              {selectedSales.length > 0 && !isSamePatient && (
+                  <p className="text-xs text-destructive font-bold mt-2">
+                      ⚠ Selected bills must belong to the same patient to process bulk payment.
+                  </p>
+              )}
             </CardHeader>
             <CardContent>
               <div className="rounded-xl border border-primary/10 overflow-hidden">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
+                      <TableHead className="w-12 pl-4">
+                          <Checkbox
+                              checked={validDueSales.length > 0 && selectedIds.size === validDueSales.length}
+                              onCheckedChange={toggleAll}
+                              disabled={validDueSales.length === 0}
+                          />
+                      </TableHead>
                       <TableHead>Invoice</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Type</TableHead>
@@ -467,13 +523,13 @@ export default function SalesHistoryPage() {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="h-24 text-center">
+                        <TableCell colSpan={11} className="h-24 text-center">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                         </TableCell>
                       </TableRow>
                     ) : sales.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                           No sales found.
                         </TableCell>
                       </TableRow>
@@ -488,6 +544,13 @@ export default function SalesHistoryPage() {
                               : "hover:bg-primary/5"
                           )}
                         >
+                          <TableCell className="pl-4">
+                              <Checkbox
+                                  checked={selectedIds.has(sale.id)}
+                                  onCheckedChange={() => toggleSelect(sale.id)}
+                                  disabled={Number(sale.dueAmount) <= 0 || sale.paymentStatus === 'paid'}
+                              />
+                          </TableCell>
                           <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                           <TableCell>
                             {format(new Date(sale.createdAt), "MMM dd, yyyy HH:mm")}
@@ -671,6 +734,17 @@ export default function SalesHistoryPage() {
                 staffs={staffs}
             />
           )}
+
+          <BulkDueCollectionDialog
+             open={bulkDueDialogOpen}
+             onOpenChange={setBulkDueDialogOpen}
+             sales={selectedSales}
+             patientName={bulkPatientName}
+             onSuccess={() => {
+                 setSelectedIds(new Set())
+                 refetch()
+             }}
+          />
         </div>
     </PermissionGuard>
   )
