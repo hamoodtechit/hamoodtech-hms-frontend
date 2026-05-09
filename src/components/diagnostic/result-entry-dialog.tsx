@@ -62,6 +62,7 @@ import { diagnosticService } from "@/services/diagnostic-service"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useEmployees } from "@/hooks/hr-queries"
 import { Textarea as UITextarea } from "@/components/ui/textarea"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 
 function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (val: string) => void; placeholder?: string }) {
     const [isSource, setIsSource] = useState(false);
@@ -743,36 +744,30 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                     <UserCog className="h-3.5 w-3.5" />
                                     <span>Checked By (Technologist/Manager)</span>
                                 </div>
-                                <Select value={checkedBy} onValueChange={setCheckedBy}>
-                                    <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
-                                        <SelectValue placeholder="Select who checked the report..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl shadow-2xl">
-                                        {technologists.map(emp => (
-                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
-                                                {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Staff"})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect 
+                                    value={checkedBy} 
+                                    onChange={setCheckedBy}
+                                    options={technologists.map(emp => ({
+                                        id: emp.id,
+                                        name: `${emp.name} (${typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Staff"})`
+                                    }))}
+                                    placeholder="Select who checked the report..."
+                                />
                             </div>
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-primary font-black text-[9px] uppercase tracking-widest px-1">
                                     <Activity className="h-3.5 w-3.5" />
                                     <span>Reporting Doctor (Authorized By)</span>
                                 </div>
-                                <Select value={authorizedDoctor} onValueChange={setAuthorizedDoctor}>
-                                    <SelectTrigger className="h-9 rounded-xl bg-muted/40 border-border text-[11px] font-bold focus:ring-primary/20 shadow-inner px-4">
-                                        <SelectValue placeholder="Select authorized reporting doctor..." />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl shadow-2xl">
-                                        {doctors.map(emp => (
-                                            <SelectItem key={emp.id} value={emp.id} className="text-xs font-bold">
-                                                {emp.name} ({typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Doctor"})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect 
+                                    value={authorizedDoctor} 
+                                    onChange={setAuthorizedDoctor}
+                                    options={doctors.map(emp => ({
+                                        id: emp.id,
+                                        name: `${emp.name} (${typeof emp.designation === 'string' ? emp.designation : emp.designation?.name || "Doctor"})`
+                                    }))}
+                                    placeholder="Select authorized reporting doctor..."
+                                />
                             </div>
                         </div>
 

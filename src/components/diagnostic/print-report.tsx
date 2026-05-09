@@ -171,7 +171,7 @@ export function PrintReport({ report }: PrintReportProps) {
                     style={{ width: "210mm", height: "297mm", padding: "0" }}
                 >
 
-                    <div className="px-10 py-6 pt-[20mm] pb-[60mm] relative z-10 h-full flex flex-col">
+                    <div className="px-10 pt-[1.5in] pb-[2.5in] relative z-10 h-full flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
@@ -397,7 +397,7 @@ export function PrintReport({ report }: PrintReportProps) {
                         </div>
 
                         {/* Fixed Positioning Footer to align with Pre-printed pads */}
-                        <div className="absolute bottom-[45mm] left-10 right-10">
+                        <div className="absolute bottom-[0.6in] left-10 right-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
