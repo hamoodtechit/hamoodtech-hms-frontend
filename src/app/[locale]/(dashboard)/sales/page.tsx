@@ -5,6 +5,7 @@ import { DiagnosticReceiptDialog } from "@/components/billing/diagnostic-receipt
 import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleDetailsDialog } from "@/components/pharmacy/sale-details-dialog"
 import { BulkDueCollectionDialog } from "@/components/finance/bulk-due-collection-dialog"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,6 +37,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/hr-queries"
+import { usePatients } from "@/hooks/patient-queries"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet } from "lucide-react"
@@ -165,6 +167,7 @@ export default function SalesHistoryPage() {
     limit: 1000, 
     branchId: branchId !== "all" ? branchId : undefined 
   })
+  const { data: patientsRes } = usePatients({ limit: 1000 })
   const { data: branchesRes } = useQuery({ 
     queryKey: ['pharmacy', 'branches', { limit: 100 }],
     queryFn: () => import("@/services/pharmacy-service").then(m => m.pharmacyService.getBranches({ limit: 100 }))
@@ -176,6 +179,7 @@ export default function SalesHistoryPage() {
     emp.role?.name?.toLowerCase().includes('doctor')
   )
   const staffs = staffsRes?.data || []
+  const patients = patientsRes?.data || []
   const branches = branchesRes?.data?.branches || []
   const pagination = salesRes?.data?.pagination
 
@@ -359,6 +363,20 @@ export default function SalesHistoryPage() {
                                  ))}
                                </SelectContent>
                              </Select>
+                           </div>
+
+                           <div className="grid gap-2">
+                             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Patient</Label>
+                             <SearchableSelect
+                               value={patientIdFilter || ""}
+                               onChange={(v) => { setPatientIdFilter(v || null); setPage(1); }}
+                               options={patients.map((p: any) => ({
+                                 id: p.id,
+                                 name: `${p.name} ${p.phone ? `(${p.phone})` : ''}`
+                               }))}
+                               placeholder="Search patient..."
+                               allLabel="All Patients"
+                             />
                            </div>
 
                           <div className="grid gap-2">
