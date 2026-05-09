@@ -108,6 +108,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {general?.phone || branch?.phone || "Phone"}</p>
+                {(general?.email || branch?.email) && (
+                    <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {general?.email || branch?.email}</p>
+                )}
             </div>
         </div>
 
@@ -144,11 +147,6 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                     <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
                             <span className="block font-black text-black">{item.name}</span>
-                            {(item.strength || item.dosageForm) && (
-                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-semibold uppercase opacity-60 leading-tight`}>
-                                    {[item.strength, item.dosageForm].filter(Boolean).join(' | ')}
-                                </span>
-                            )}
                         </div>
                         <div className="col-span-2 text-center font-semibold">{item.quantity}</div>
                         <div className="col-span-2 text-right font-semibold">{item.price.toFixed(2)}</div>
