@@ -122,6 +122,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {general?.phone || branch?.phone || "Phone"}</p>
+                {(general?.email || branch?.email) && (
+                    <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {general?.email || branch?.email}</p>
+                )}
             </div>
         </div>
 
@@ -271,6 +274,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               const hospitalName = general?.hospitalName || branch?.name || "Hospital Name";
               const address = general?.address || branch?.address || "Hospital Address";
               const phone = general?.phone || branch?.phone || "Phone";
+              const email = general?.email || branch?.email || "";
 
               const rows = normalizedItems.map((item: any) => {
                 const itemTotal = item.price * item.quantity;
@@ -331,9 +335,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             <img src="${branchLogo}" style="height: 60px; margin-bottom: 5px;">
                             <h1 class="hospital-name">${hospitalName}</h1>
                             <div class="pharmacy-tag">PHARMACY</div>
-                            <div class="contact-info">${address}</div>
-                            <div class="contact-info">Phone: ${phone}</div>
-                            ${(data as any)?.branch?.email || (data as any)?.general?.email || '' ? `<div class="contact-info">Email: ${(data as any)?.branch?.email || (data as any)?.general?.email}</div>` : ''}
+                             <div class="contact-info">${address}</div>
+                             <div class="contact-info">Phone: ${phone}</div>
+                             ${email ? `<div class="contact-info">Email: ${email}</div>` : ''}
                         </div>
 
                         <div class="info-grid">

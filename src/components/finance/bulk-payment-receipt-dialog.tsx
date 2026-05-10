@@ -40,6 +40,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
     const hospitalName = general?.hospitalName || branch?.name || "Hospital Name"
     const address = general?.address || branch?.address || "Hospital Address"
     const phone = general?.phone || branch?.phone || "Phone"
+    const email = general?.email || branch?.email || ""
 
     const rows = paidSales.map((sale: any) => `
       <tr style="font-size: 10px; border-bottom: 1px dashed #e0e0e0;">
@@ -87,6 +88,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                   <div class="tag">BULK PAYMENT RECEIPT</div>
                   <div class="contact-info">${address}</div>
                   <div class="contact-info">Phone: ${phone}</div>
+                  ${email ? `<div class="contact-info">Email: ${email}</div>` : ''}
               </div>
 
               <div class="info-grid">
