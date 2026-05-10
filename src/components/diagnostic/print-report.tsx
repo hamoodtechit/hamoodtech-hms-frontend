@@ -491,14 +491,7 @@ export function PrintReport({ report }: PrintReportProps) {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
-                    .report-page {
-                        min-height: 9.59in;
-                        padding-top: 0;
-                        padding-bottom: 0;
-                        box-shadow: none !important;
-                        margin: 0 !important;
-                    }
+                   }
                 }
             `}</style>
         </div>

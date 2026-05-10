@@ -118,9 +118,16 @@ export function PharmacyPaymentDialog({
     })
 
     const onSubmit = (data: z.infer<typeof paymentSchema>) => {
+        const branchId = sales[0]?.branchId;
+        if (!branchId) {
+            toast.error("Branch ID missing from pending bills.");
+            return;
+        }
+
         paymentMutation.mutate({
             ...data,
             patientId,
+            branchId,
         })
     }
 
