@@ -482,7 +482,7 @@ export function PrintReport({ report }: PrintReportProps) {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
+                   }
                 }
             `}</style>
         </div>
