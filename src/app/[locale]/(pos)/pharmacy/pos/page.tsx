@@ -136,7 +136,7 @@ export default function POSPage() {
   
   const [activeCategory, setActiveCategory] = useState("All")
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
-  const [discount, setDiscount] = useState(5) // Default 5% discount
+  const [discount, setDiscount] = useState(0) // Default 0% discount
   const [discountFixedAmount, setDiscountFixedAmount] = useState(0)
   
   // Advanced Filters State
