@@ -165,13 +165,12 @@ export function PrintReport({ report }: PrintReportProps) {
                 <div 
                     key={gIdx} 
                     className={cn(
-                        "mx-auto relative overflow-hidden bg-white",
+                        "mx-auto relative bg-white report-page",
                         gIdx > 0 && "print:break-before-page" // Page break for subsequent groups
                     )}
-                    style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
                 >
 
-                    <div className="px-10 pt-[1.5in] pb-[0.6in] relative z-10 min-h-[11.69in] flex flex-col">
+                    <div className="px-10 relative z-10 flex flex-col h-full min-h-full">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
@@ -473,15 +472,32 @@ export function PrintReport({ report }: PrintReportProps) {
                 </div>
             ))}
             <style jsx global>{`
+                .report-page {
+                    width: 210mm;
+                    min-height: 297mm;
+                    padding-top: 1.5in;
+                    padding-bottom: 0.6in;
+                }
+                
                 @media print {
                     @page {
                         size: A4;
-                        margin: 0;
+                        margin-top: 1.5in;
+                        margin-bottom: 0.6in;
+                        margin-left: 0;
+                        margin-right: 0;
                     }
                     body {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                    }
+                    .report-page {
+                        min-height: 9.59in;
+                        padding-top: 0;
+                        padding-bottom: 0;
+                        box-shadow: none !important;
+                        margin: 0 !important;
                     }
                 }
             `}</style>
