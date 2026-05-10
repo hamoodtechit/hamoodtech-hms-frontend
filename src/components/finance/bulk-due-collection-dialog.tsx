@@ -54,6 +54,15 @@ export function BulkDueCollectionDialog({
     const [note, setNote] = useState("")
     const [isProcessing, setIsProcessing] = useState(false)
     const [paymentResult, setPaymentResult] = useState<any>(null)
+    
+    const totalDue = sales.reduce((sum, s) => sum + Number(s.dueAmount || 0), 0)
+    const [payingAmount, setPayingAmount] = useState<number>(0)
+
+    useEffect(() => {
+        if (open) {
+            setPayingAmount(totalDue)
+        }
+    }, [open, totalDue])
 
     useEffect(() => {
         if (open && accounts.length > 0 && !accountId) {
@@ -65,7 +74,6 @@ export function BulkDueCollectionDialog({
         }
     }, [open, accounts, accountId])
 
-    const totalDue = sales.reduce((sum, s) => sum + Number(s.dueAmount || 0), 0)
 
     const handleSubmit = async () => {
         if (!accountId) {
@@ -87,14 +95,14 @@ export function BulkDueCollectionDialog({
                 patientId,
                 branchId,
                 accountId,
-                amount: totalDue,
+                amount: payingAmount,
                 paymentMethod,
                 note: note || undefined
             })
             console.log("Bulk Payment Response:", response)
             
             setPaymentResult(response)
-            toast.success(`Successfully collected ${formatCurrency(totalDue)} for ${sales.length} bills`)
+            toast.success(`Successfully collected ${formatCurrency(payingAmount)} for ${sales.length} bills`)
             setAccountId("")
             setNote("")
             onSuccess?.()
@@ -134,6 +142,24 @@ export function BulkDueCollectionDialog({
                             <span className="font-bold text-primary">Total Payable Due</span>
                             <span className="text-xl font-black text-primary">{formatCurrency(totalDue)}</span>
                         </div>
+                    </div>
+
+                    {/* Paying Amount */}
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Paying Amount *</Label>
+                        <Input
+                            type="number"
+                            placeholder="Enter amount..."
+                            value={payingAmount}
+                            onChange={(e) => setPayingAmount(Number(e.target.value))}
+                            className="text-lg font-bold text-primary border-primary/20"
+                        />
+                        {payingAmount > totalDue && (
+                            <p className="text-[10px] font-bold text-destructive">Amount cannot exceed total due ({formatCurrency(totalDue)})</p>
+                        )}
+                        {payingAmount <= 0 && (
+                            <p className="text-[10px] font-bold text-destructive">Amount must be greater than 0</p>
+                        )}
                     </div>
 
                     {/* Account */}
@@ -185,7 +211,7 @@ export function BulkDueCollectionDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isProcessing}>Cancel</Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isProcessing || !accountId}
+                        disabled={isProcessing || !accountId || payingAmount <= 0 || payingAmount > totalDue}
                         className="gap-2"
                     >
                         {isProcessing ? (
@@ -193,7 +219,7 @@ export function BulkDueCollectionDialog({
                         ) : (
                             <Wallet className="h-4 w-4" />
                         )}
-                        Pay {formatCurrency(totalDue)}
+                        Pay {formatCurrency(payingAmount)}
                     </Button>
                 </DialogFooter>
             </DialogContent>
