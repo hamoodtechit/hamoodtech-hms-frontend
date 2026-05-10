@@ -168,10 +168,10 @@ export function PrintReport({ report }: PrintReportProps) {
                         "mx-auto relative overflow-hidden bg-white",
                         gIdx > 0 && "print:break-before-page" // Page break for subsequent groups
                     )}
-                    style={{ width: "210mm", height: "297mm", padding: "0" }}
+                    style={{ width: "210mm", minHeight: "297mm", padding: "0" }}
                 >
 
-                    <div className="px-10 pt-[1.5in] pb-[2.8in] relative z-10 h-full flex flex-col">
+                    <div className="px-10 pt-[1.5in] pb-[0.6in] relative z-10 min-h-[11.69in] flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
@@ -396,8 +396,8 @@ export function PrintReport({ report }: PrintReportProps) {
                             })}
                         </div>
 
-                        {/* Fixed Positioning Footer to align with Pre-printed pads */}
-                        <div className="absolute bottom-[0.3in] left-10 right-10">
+                        {/* Dynamic Positioning Footer - pushes to bottom but doesn't overlap */}
+                        <div className="mt-auto pt-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
