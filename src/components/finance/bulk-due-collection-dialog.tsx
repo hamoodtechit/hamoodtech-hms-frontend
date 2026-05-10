@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useAddSalePayment } from "@/hooks/sales-queries"
 import { usePayPharmacyDues } from "@/hooks/patient-queries"
@@ -147,11 +148,10 @@ export function BulkDueCollectionDialog({
                     {/* Paying Amount */}
                     <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Paying Amount *</Label>
-                        <Input
-                            type="number"
+                        <SmartNumberInput
                             placeholder="Enter amount..."
                             value={payingAmount}
-                            onChange={(e) => setPayingAmount(Number(e.target.value))}
+                            onChange={(val) => setPayingAmount(val || 0)}
                             className="text-lg font-bold text-primary border-primary/20"
                         />
                         {payingAmount > totalDue && (
