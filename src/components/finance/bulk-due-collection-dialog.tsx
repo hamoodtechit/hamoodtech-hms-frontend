@@ -27,6 +27,7 @@ import { Sale } from "@/types/sales"
 import { Loader2, Wallet } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { BulkPaymentReceiptDialog } from "./bulk-payment-receipt-dialog"
 
 interface BulkDueCollectionDialogProps {
     open: boolean
@@ -52,6 +53,7 @@ export function BulkDueCollectionDialog({
     const [paymentMethod, setPaymentMethod] = useState("cash")
     const [note, setNote] = useState("")
     const [isProcessing, setIsProcessing] = useState(false)
+    const [paymentResult, setPaymentResult] = useState<any>(null)
 
     useEffect(() => {
         if (open && accounts.length > 0 && !accountId) {
@@ -91,8 +93,8 @@ export function BulkDueCollectionDialog({
             })
             console.log("Bulk Payment Response:", response)
             
+            setPaymentResult(response)
             toast.success(`Successfully collected ${formatCurrency(totalDue)} for ${sales.length} bills`)
-            onOpenChange(false)
             setAccountId("")
             setNote("")
             onSuccess?.()
@@ -104,7 +106,8 @@ export function BulkDueCollectionDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={!isProcessing ? onOpenChange : undefined}>
+        <>
+        <Dialog open={open && !paymentResult} onOpenChange={!isProcessing ? onOpenChange : undefined}>
             <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-lg">
@@ -195,5 +198,18 @@ export function BulkDueCollectionDialog({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <BulkPaymentReceiptDialog
+            open={!!paymentResult}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setPaymentResult(null)
+                    onOpenChange(false)
+                }
+            }}
+            data={paymentResult}
+            patientName={patientName}
+        />
+        </>
     )
 }
