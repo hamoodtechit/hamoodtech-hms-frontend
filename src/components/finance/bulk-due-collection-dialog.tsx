@@ -21,6 +21,7 @@ import {
 import { SearchableSelect } from "@/components/shared/searchable-select"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useAddSalePayment } from "@/hooks/sales-queries"
+import { usePayPharmacyDues } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Sale } from "@/types/sales"
 import { Loader2, Wallet } from "lucide-react"
@@ -43,7 +44,7 @@ export function BulkDueCollectionDialog({
     onSuccess,
 }: BulkDueCollectionDialogProps) {
     const { formatCurrency } = useCurrency()
-    const payMutation = useAddSalePayment()
+    const payMutation = usePayPharmacyDues()
     const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
     const accounts = accountsRes?.data || []
 
@@ -70,25 +71,26 @@ export function BulkDueCollectionDialog({
             return
         }
 
+        const patientId = sales[0]?.patientId
+        const branchId = sales[0]?.branchId
+
+        if (!patientId || !branchId) {
+            toast.error("Critical patient/branch data missing from selected bills")
+            return
+        }
+
         setIsProcessing(true)
         try {
-            // Process payments sequentially
-            for (const sale of sales) {
-                const amount = Number(sale.dueAmount || 0)
-                if (amount > 0) {
-                    await payMutation.mutateAsync({
-                        id: sale.id,
-                        data: {
-                            amount,
-                            paymentMethod: paymentMethod as any,
-                            accountId,
-                            note: note || undefined
-                        }
-                    })
-                }
-            }
+            await payMutation.mutateAsync({
+                patientId,
+                branchId,
+                accountId,
+                amount: totalDue,
+                paymentMethod,
+                note: note || undefined
+            })
             
-            toast.success(`Successfully collected dues for ${sales.length} bills`)
+            toast.success(`Successfully collected ${formatCurrency(totalDue)} for ${sales.length} bills`)
             onOpenChange(false)
             setAccountId("")
             setNote("")

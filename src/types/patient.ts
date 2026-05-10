@@ -233,6 +233,7 @@ export interface DischargePayload {
 
 export interface PharmacyPaymentPayload {
   patientId: string;
+  branchId: string;
   amount: number;
   accountId: string;
   paymentMethod: string;

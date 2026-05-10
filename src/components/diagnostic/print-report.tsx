@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
-import { useEffect, useState, useMemo } from "react"
+import { useMemo } from "react"
 import { toast } from "sonner"
 import { useAuthStore } from "@/store/use-auth-store"
 
