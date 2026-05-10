@@ -155,11 +155,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                  const netItemTotal = itemTotal - itemDisc
                  
                   return (
-                    <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[10px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
+                    <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
                         <div className="col-span-6 pr-1">
-                            <span className="block font-black text-black">{item.name}</span>
+                            <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{item.name}</span>
                             {(item.strength || item.dosageForm) && (
-                                <span className={`block ${isPrinting ? 'text-[8.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
+                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
                                     {[item.strength, item.dosageForm].filter(Boolean).join(' | ')}
                                 </span>
                             )}
@@ -278,14 +278,14 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                 const netItemTotal = itemTotal - itemDisc;
                 const detailLine = [item.strength, item.dosageForm].filter(Boolean).join(' | ');
                 return `
-                  <tr style="font-size: 12px; border-bottom: 1px dashed #e0e0e0;">
+                  <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
                     <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1;">
-                      ${item.name}
-                      ${detailLine ? `<br/><span style="font-size: 10px; font-weight: 900; color: black; text-transform: uppercase;">${detailLine}</span>` : ''}
+                      <span style="font-size: 11.5px; display: block;">${item.name}</span>
+                      ${detailLine ? `<span style="font-size: 7.5px; font-weight: 900; color: black; text-transform: uppercase;">${detailLine}</span>` : ''}
                     </td>
-                    <td style="text-align: center; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 12px;">${item.quantity}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 12px;">${item.price.toFixed(2)}</td>
-                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 12px;">${netItemTotal.toFixed(2)}</td>
+                    <td style="text-align: center; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${item.quantity}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${item.price.toFixed(2)}</td>
+                    <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px;">${netItemTotal.toFixed(2)}</td>
                   </tr>
                 `;
               }).join('');
