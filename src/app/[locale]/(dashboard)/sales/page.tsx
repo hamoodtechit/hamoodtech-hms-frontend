@@ -494,18 +494,16 @@ export default function SalesHistoryPage() {
                     </Button>
                   )}
 
-                  <PermissionGuard permission="transaction:update">
-                      {selectedSales.length > 0 && (
-                          <Button
-                              onClick={() => setBulkDueDialogOpen(true)}
-                              disabled={!isSamePatient}
-                              className="gap-2 h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700"
-                          >
-                              <Wallet className="h-4 w-4" />
-                              Pay Dues {formatCurrency(selectedTotalDue)} ({selectedSales.length})
-                          </Button>
-                      )}
-                  </PermissionGuard>
+                  {selectedSales.length > 0 && (
+                      <Button
+                          onClick={() => setBulkDueDialogOpen(true)}
+                          disabled={!isSamePatient}
+                          className="gap-2 h-10 px-6 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700"
+                      >
+                          <Wallet className="h-4 w-4" />
+                          Pay Dues {formatCurrency(selectedTotalDue)} ({selectedSales.length})
+                      </Button>
+                  )}
                 </div>
               </div>
               {selectedSales.length > 0 && !isSamePatient && (
