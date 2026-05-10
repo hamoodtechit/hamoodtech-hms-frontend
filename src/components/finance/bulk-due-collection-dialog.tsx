@@ -81,7 +81,7 @@ export function BulkDueCollectionDialog({
 
         setIsProcessing(true)
         try {
-            await payMutation.mutateAsync({
+            const response = await payMutation.mutateAsync({
                 patientId,
                 branchId,
                 accountId,
@@ -89,6 +89,7 @@ export function BulkDueCollectionDialog({
                 paymentMethod,
                 note: note || undefined
             })
+            console.log("Bulk Payment Response:", response)
             
             toast.success(`Successfully collected ${formatCurrency(totalDue)} for ${sales.length} bills`)
             onOpenChange(false)
