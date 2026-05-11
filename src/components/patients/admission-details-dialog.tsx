@@ -394,10 +394,14 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     open={addServiceOpen}
                     onOpenChange={setAddServiceOpen}
                     admission={admission || null}
-                    onSuccess={() => {
+                    onSuccess={(sale) => {
                         refetch()
                         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
+                        if (sale) {
+                            setSelectedSaleForPrint(sale)
+                            setReceiptDialogOpen(true)
+                        }
                     }}
                 />
 

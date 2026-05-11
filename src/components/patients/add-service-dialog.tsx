@@ -40,7 +40,7 @@ interface AddAdmissionServiceDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     admission: Admission | null
-    onSuccess?: () => void
+    onSuccess?: (sale?: any) => void
 }
 
 interface CartItem {
@@ -62,9 +62,6 @@ export function AddAdmissionServiceDialog({
     const { formatCurrency } = useCurrency()
     const { mutateAsync: createSale, isPending: isSaving } = useCreateSale()
     const addPaymentMutation = useAddSalePayment()
-
-    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
-    const [lastCreatedSale, setLastCreatedSale] = useState<any>(null)
 
     // Cart State
     const [cart, setCart] = useState<CartItem[]>([])
@@ -253,15 +250,9 @@ export function AddAdmissionServiceDialog({
                 toast.success("Services added to hospital bill successfully")
             }
 
-            // Capture the sale data to pass to the receipt dialog
-            if (saleId) {
-                setLastCreatedSale(saleRes.data || saleRes)
-                setReceiptDialogOpen(true)
-            }
-
             resetForm()
-            onSuccess?.()
-            // onOpenChange(false) // Don't close yet, let the receipt dialog show
+            onSuccess?.(saleRes.data || saleRes)
+            onOpenChange(false)
         } catch (error: any) {
             if (!error?.response?.data?.message) {
                 toast.error("Failed to submit bill")
@@ -630,19 +621,6 @@ export function AddAdmissionServiceDialog({
             </DialogContent>
         </Dialog>
 
-        <HospitalReceiptDialog
-            open={receiptDialogOpen}
-            onOpenChange={(open) => {
-                setReceiptDialogOpen(open)
-                if (!open) {
-                    setLastCreatedSale(null)
-                    onOpenChange(false) // Close the main dialog when receipt is closed
-                }
-            }}
-            transaction={lastCreatedSale}
-            patient={admission?.patient}
-            bed={admission?.bed}
-        />
         </>
     )
 }
