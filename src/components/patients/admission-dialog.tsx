@@ -81,7 +81,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         doctorId: "",
         refDoctorName: "",
         departmentId: "",
-        admissionCharge: "100",
+        admissionCharge: "0",
     })
 
     const [saleItems, setSaleItems] = useState<any[]>([])
@@ -163,7 +163,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     doctorId: admission.doctorId || "",
                     refDoctorName: admission.refDoctorName || "",
                     departmentId: admission.departmentId || "",
-                    admissionCharge: (admission as any).admissionCharge !== undefined ? String((admission as any).admissionCharge) : ((admission as any).fees !== undefined ? String((admission as any).fees) : "100"),
+                    admissionCharge: "0",
                 })
                 setSelectedPatient(admission.patient || null)
                 setSaleItems([]) // Reset for now
@@ -183,7 +183,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     doctorId: "",
                     refDoctorName: "",
                     departmentId: "",
-                    admissionCharge: "100",
+                    admissionCharge: "0",
                 })
                 setSelectedPatient(null)
                 setSaleItems([])
@@ -244,7 +244,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     }
 
     // Totals logic
-    const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) + Number(formData.admissionCharge || 0)
+    const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
     const totalItemDiscount = saleItems.reduce((sum, item) => sum + (Number(item.discountAmount) || 0), 0)
     
     const discountedSubtotal = Math.max(0, subtotal - totalItemDiscount)
@@ -475,20 +475,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                             {/* Service Selection Section */}
                             <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
-                                            Admission Charge
-                                        </h4>
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Admission Charge (Tk)</Label>
-                                        <Input 
-                                            type="number"
-                                            placeholder="Enter amount..."
-                                            value={formData.admissionCharge}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, admissionCharge: e.target.value }))}
-                                            className="h-10 text-sm font-bold"
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
+                                    <div className="grid gap-2 col-span-2">
                                         <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
                                             Services
                                         </h4>
