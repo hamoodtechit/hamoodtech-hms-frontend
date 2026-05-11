@@ -49,7 +49,7 @@ interface AdmissionDetailsDialogProps {
 export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: AdmissionDetailsDialogProps) {
     const queryClient = useQueryClient()
     const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
-    const { data: salesRes, isLoading: isLoadingSales } = useSales({ 
+    const { data: salesRes, isLoading: isLoadingSales, refetch: refetchSales } = useSales({ 
         patientAdmissionId: admissionId || "",
         limit: 100 
     }, { enabled: !!admissionId })
@@ -63,7 +63,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     
     const admission = res?.data?.patientAdmission
     const baseSalesRaw = salesRes?.data?.sales || salesRes?.data?.data || []
-    const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === admission?.id)
+    const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === (admissionId || admission?.id))
     const admissionSale = res?.data?.sale
     
     // Merge all possible sales sources and deduplicate by ID
@@ -410,12 +410,13 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
                         refetch()
+                        refetchSales()
                         
                         if (sale) {
                             setTimeout(() => {
                                 setSelectedSaleForPrint(sale)
                                 setReceiptDialogOpen(true)
-                            }, 300)
+                            }, 500)
                         }
                     }}
                 />
