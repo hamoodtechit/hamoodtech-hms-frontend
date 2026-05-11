@@ -65,11 +65,23 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     const baseSalesRaw = salesRes?.data?.sales || salesRes?.data?.data || []
     const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === admission?.id)
     const admissionSale = res?.data?.sale
-    const sales = (res?.data?.allSales?.length ?? 0) > 0 
-        ? res?.data?.allSales 
-        : (admissionSale 
-            ? [admissionSale, ...baseSales.filter((s: any) => s.id !== admissionSale.id)]
-            : baseSales)
+    
+    // Merge all possible sales sources and deduplicate by ID
+    const sales = (() => {
+        const rawList = [
+            ...(res?.data?.allSales || []),
+            ...(admissionSale ? [admissionSale] : []),
+            ...baseSales
+        ]
+        // Deduplicate by ID
+        const uniqueMap = new Map();
+        rawList.forEach(item => {
+            if (item && item.id) uniqueMap.set(item.id, item);
+        });
+        return Array.from(uniqueMap.values()).sort((a, b) => 
+            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+    })()
 
     const getStatusBadge = (status: AdmissionStatus) => {
         switch (status) {
@@ -395,12 +407,15 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     onOpenChange={setAddServiceOpen}
                     admission={admission || null}
                     onSuccess={(sale) => {
-                        refetch()
                         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
+                        refetch()
+                        
                         if (sale) {
-                            setSelectedSaleForPrint(sale)
-                            setReceiptDialogOpen(true)
+                            setTimeout(() => {
+                                setSelectedSaleForPrint(sale)
+                                setReceiptDialogOpen(true)
+                            }, 300)
                         }
                     }}
                 />
