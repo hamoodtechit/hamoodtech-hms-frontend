@@ -34,6 +34,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { toast } from "sonner"
 import { Loader2, Plus, Search, FileText, Activity, Trash2, Wallet } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { HospitalReceiptDialog } from "./hospital-receipt-dialog"
 
 interface AddAdmissionServiceDialogProps {
     open: boolean
@@ -88,6 +89,7 @@ export function AddAdmissionServiceDialog({
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
     const [selectedAccountId, setSelectedAccountId] = useState("")
     const [paidAmount, setPaidAmount] = useState(0)
+    const [note, setNote] = useState("")
 
     const { data: labServicesRes, isLoading: isLoadingLabServices } = useDiagnosticTests({
         branchId: activeStoreId || undefined,
@@ -211,6 +213,7 @@ export function AddAdmissionServiceDialog({
             taxPercentage: 0,
             taxAmount: 0,
             isIndoorSale: true,
+            note: note,
             saleItems: cart.map(item => ({
                 itemName: item.name,
                 unit: "service",
@@ -258,7 +261,7 @@ export function AddAdmissionServiceDialog({
 
             resetForm()
             onSuccess?.()
-            onOpenChange(false)
+            // onOpenChange(false) // Don't close yet, let the receipt dialog show
         } catch (error: any) {
             if (!error?.response?.data?.message) {
                 toast.error("Failed to submit bill")
@@ -277,6 +280,7 @@ export function AddAdmissionServiceDialog({
         setDiscountFixedAmount(0)
         setPaidAmount(0)
         setSelectedAccountId("")
+        setNote("")
     }
 
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
@@ -585,6 +589,16 @@ export function AddAdmissionServiceDialog({
                                     </div>
                                 </div>
                             </div>
+                            
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Bill Note / Remarks</Label>
+                                <Input 
+                                    value={note}
+                                    onChange={(e) => setNote(e.target.value)}
+                                    placeholder="Enter additional details for this bill..."
+                                    className="h-10 rounded-xl bg-background border-muted font-bold text-xs"
+                                />
+                            </div>
                         </>
                     )}
 
@@ -616,13 +630,18 @@ export function AddAdmissionServiceDialog({
             </DialogContent>
         </Dialog>
 
-        <AppointmentReceiptDialog
+        <HospitalReceiptDialog
             open={receiptDialogOpen}
             onOpenChange={(open) => {
                 setReceiptDialogOpen(open)
-                if (!open) setLastCreatedSale(null)
+                if (!open) {
+                    setLastCreatedSale(null)
+                    onOpenChange(false) // Close the main dialog when receipt is closed
+                }
             }}
             transaction={lastCreatedSale}
+            patient={admission?.patient}
+            bed={admission?.bed}
         />
         </>
     )

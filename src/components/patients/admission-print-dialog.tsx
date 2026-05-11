@@ -230,6 +230,10 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                  * We only print patient info and results.
                                  */}
                                 <div className="h-4 letterhead-spacer" />
+                                
+                                <div className="text-center mb-4">
+                                    <h1 className="text-2xl font-black uppercase tracking-[0.2em] border-b-2 border-black inline-block px-8 pb-1">Admission Form</h1>
+                                </div>
 
                                 {/* Structured Info Box */}
                                 <div className="border border-black border-dashed mb-2 mt-4 overflow-hidden">
@@ -251,7 +255,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         <div className="border-r border-black border-dashed flex flex-col">
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Patient Name:</span>
-                                                <span className="font-black text-sm uppercase">{patient?.name || 'N/A'}</span>
+                                                <span className="font-black text-sm uppercase">{(patient as any)?.title ? `${(patient as any).title} ` : ''}{patient?.name || 'N/A'}</span>
                                             </div>
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Age / Sex:</span>

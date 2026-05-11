@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAdmission, useDischargeInitiate } from "@/hooks/patient-queries"
+import { useAdmission, useDischargeInitiate, PATIENT_KEYS } from "@/hooks/patient-queries"
 import { format } from "date-fns"
 import { 
     Bed, 
@@ -396,6 +396,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     admission={admission || null}
                     onSuccess={() => {
                         refetch()
+                        queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
                     }}
                 />
