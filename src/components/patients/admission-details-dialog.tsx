@@ -99,6 +99,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     }
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-card/95 backdrop-blur-xl">
                 <DialogHeader className="p-8 pb-4 bg-primary/5">
@@ -421,14 +422,6 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     }}
                 />
 
-                <HospitalReceiptDialog 
-                    open={receiptDialogOpen}
-                    onOpenChange={setReceiptDialogOpen}
-                    transaction={selectedSaleForPrint}
-                    patient={admission?.patient}
-                    bed={admission?.bed}
-                />
-
                 <DischargeDialog 
                     open={dischargeDialogOpen}
                     onOpenChange={setDischargeDialogOpen}
@@ -449,5 +442,14 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                 />
             </DialogContent>
         </Dialog>
+
+        <HospitalReceiptDialog 
+            open={receiptDialogOpen}
+            onOpenChange={setReceiptDialogOpen}
+            transaction={selectedSaleForPrint}
+            patient={admission?.patient}
+            bed={admission?.bed}
+        />
+        </>
     )
 }
