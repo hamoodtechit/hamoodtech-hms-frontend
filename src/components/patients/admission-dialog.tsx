@@ -95,7 +95,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
         religion: "",
         occupation: "",
         maritalStatus: "" as any,
-        nationality: ""
+        nationality: "",
+        title: ""
     })
 
     // Payment State
@@ -203,7 +204,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                 religion: selectedPatient.religion || "",
                 occupation: selectedPatient.occupation || "",
                 maritalStatus: selectedPatient.maritalStatus || "",
-                nationality: selectedPatient.nationality || "Bangladeshi"
+                nationality: selectedPatient.nationality || "Bangladeshi",
+                title: (selectedPatient as any).title || ""
             })
         } else {
             setPatientExtData({
@@ -215,7 +217,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                 religion: "",
                 occupation: "",
                 maritalStatus: "",
-                nationality: "Bangladeshi"
+                nationality: "Bangladeshi",
+                title: ""
             })
         }
     }, [selectedPatient])
@@ -313,7 +316,9 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                 patientExtData.religion !== (selectedPatient.religion || "") ||
                 patientExtData.occupation !== (selectedPatient.occupation || "") ||
                 patientExtData.maritalStatus !== (selectedPatient.maritalStatus || "") ||
-                patientExtData.nationality !== (selectedPatient.nationality || "")
+                patientExtData.maritalStatus !== (selectedPatient.maritalStatus || "") ||
+                patientExtData.nationality !== (selectedPatient.nationality || "") ||
+                patientExtData.title !== ((selectedPatient as any).title || "")
             );
 
             if (hasPatientChanges && selectedPatient) {
@@ -582,11 +587,30 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                        Patient Demographics & address
+                                        Patient Identification & Demographics
                                     </h4>
                                     
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         <div className="grid gap-1.5">
+                                            <Label className="text-[10px]">Title</Label>
+                                            <Select 
+                                                value={patientExtData.title} 
+                                                onValueChange={(val) => setPatientExtData(p => ({ ...p, title: val }))}
+                                            >
+                                                <SelectTrigger className="h-8 text-xs">
+                                                    <SelectValue placeholder="Title" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Mr.">Mr.</SelectItem>
+                                                    <SelectItem value="Mrs.">Mrs.</SelectItem>
+                                                    <SelectItem value="Ms.">Ms.</SelectItem>
+                                                    <SelectItem value="Dr.">Dr.</SelectItem>
+                                                    <SelectItem value="Prof.">Prof.</SelectItem>
+                                                    <SelectItem value="Master">Master</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-1.5 col-span-1">
                                             <Label className="text-[10px]">District</Label>
                                             <Input 
                                                 className="h-8 text-xs" 
