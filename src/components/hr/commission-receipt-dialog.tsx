@@ -177,16 +177,40 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                     </tr>
                 </thead>
                 <tbody>
-                    {commissions.map((comm, idx) => (
-                        <tr key={comm.id} className="border-b border-gray-100">
-                            <td className="py-3 text-[11px]">{format(new Date(comm.createdAt), "dd/MM/yyyy")}</td>
-                            <td className="py-3 text-[11px] font-mono">{(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}</td>
-                            <td className="py-3 text-[11px] font-bold">{comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A"}</td>
-                            <td className="py-3 text-right text-[11px]">{formatCurrency(comm.sale?.netPrice || 0)}</td>
-                            <td className="py-3 text-[11px] pl-4">{comm.serviceName}</td>
-                            <td className="py-3 text-right text-[11px] font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
-                        </tr>
-                    ))}
+                    {(() => {
+                        // Group commissions by saleId
+                        const groups: Record<string, Commission[]> = {};
+                        commissions.forEach(comm => {
+                            const saleId = comm.saleId || (comm as any).sale?.id || 'unknown';
+                            if (!groups[saleId]) groups[saleId] = [];
+                            groups[saleId].push(comm);
+                        });
+
+                        return Object.values(groups).map((group) => {
+                            return group.map((comm, idx) => (
+                                <tr key={comm.id} className="border-b border-gray-100">
+                                    {idx === 0 ? (
+                                        <>
+                                            <td className="py-3 text-[11px]" rowSpan={group.length}>
+                                                {format(new Date(comm.createdAt), "dd/MM/yyyy")}
+                                            </td>
+                                            <td className="py-3 text-[11px] font-mono" rowSpan={group.length}>
+                                                {(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}
+                                            </td>
+                                            <td className="py-3 text-[11px] font-bold" rowSpan={group.length}>
+                                                {comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A"}
+                                            </td>
+                                            <td className="py-3 text-right text-[11px]" rowSpan={group.length}>
+                                                {formatCurrency(comm.sale?.netPrice || 0)}
+                                            </td>
+                                        </>
+                                    ) : null}
+                                    <td className="py-3 text-[11px] pl-4">{comm.serviceName}</td>
+                                    <td className="py-3 text-right text-[11px] font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
+                                </tr>
+                            ));
+                        });
+                    })()}
                 </tbody>
             </table>
 

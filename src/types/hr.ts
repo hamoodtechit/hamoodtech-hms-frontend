@@ -462,7 +462,7 @@ export interface CommissionPaymentPayload {
 
 export interface ReferralPayment {
   id: string;
-  voucherNumber?: string;
+  paymentNumber?: string;
   branchId: string;
   referralId: string;
   accountId: string;
@@ -471,7 +471,7 @@ export interface ReferralPayment {
   note?: string;
   createdAt: string;
   updatedAt: string;
-  commissions?: Commission[];
+  referralCommissions?: Commission[];
   referral?: {
     id: string;
     name: string;
