@@ -126,18 +126,23 @@ export interface ReferralPerson {
   name: string;
   nameBangla: string;
   phone: string;
-  email: string;
+  email: string | null;
   address: string;
-  commissionStructure: any;
-  employeeId?: string;
+  commissionStructure: {
+    serviceId: string;
+    serviceName: string;
+    commissionPercentage: number;
+  }[];
+  employeeId: string | null;
   isActive: boolean;
+  monthlyCommission: number;
   createdAt: string;
   updatedAt: string;
   branch?: {
     id: string;
     name: string;
   };
-  employee?: Employee;
+  employee?: Employee | null;
   yearlyStats?: {
     year: number;
     totalSalesCount: number;
@@ -385,6 +390,8 @@ export interface Commission {
   invoiceNumber?: string;
   commissionType: string;
   commissionValue: string | number;
+  commissionPercentage?: number;
+  commissionAmount?: number;
   isPaid: boolean;
   createdAt: string;
   updatedAt: string;
@@ -397,6 +404,39 @@ export interface Commission {
     id: string;
     invoiceNumber: string;
     netPrice: string | number;
+    status: string;
+    paymentStatus: string;
+    createdAt: string;
+    patient?: {
+      id: string;
+      patientNumber: string;
+      name: string;
+      phone: string;
+    };
+  };
+}
+
+export interface CommissionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    commissions: Commission[];
+    summary: {
+      monthly: {
+        totalCommission: number;
+        totalPaid: number;
+        totalDue: number;
+      };
+      range: any;
+    };
+  };
+  meta: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
 
@@ -412,11 +452,31 @@ export interface CommissionFilters {
 }
 
 export interface CommissionPaymentPayload {
+  branchId: string;
   referralId: string;
   accountId: string;
   commissionIds: string[];
   paymentMethod: string;
   note?: string;
+}
+
+export interface ReferralPayment {
+  id: string;
+  voucherNumber?: string;
+  branchId: string;
+  referralId: string;
+  accountId: string;
+  totalAmount: string | number;
+  paymentMethod: string;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+  commissions?: Commission[];
+  referral?: {
+    id: string;
+    name: string;
+    phone: string;
+  };
 }
 
 // Duty Roster Types

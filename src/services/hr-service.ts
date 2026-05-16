@@ -25,7 +25,9 @@ import {
     ApproveLeavePayload,
     Commission,
     CommissionFilters,
+    CommissionResponse,
     CommissionPaymentPayload,
+    ReferralPayment,
     Shift,
     ShiftPayload,
     ShiftFilters,
@@ -296,13 +298,23 @@ export const hrService = {
   },
 
   // Commission APIs
-  getCommissions: async (params?: CommissionFilters): Promise<HRPaginatedResponse<Commission>> => {
-    const response = await api.get<HRPaginatedResponse<Commission>>("/referrals/commissions", { params });
+  getCommissions: async (params?: CommissionFilters): Promise<CommissionResponse> => {
+    const response = await api.get<CommissionResponse>("/referrals/commissions", { params });
     return response.data;
   },
 
   processCommissionPayment: async (data: CommissionPaymentPayload): Promise<{ success: boolean; message: string }> => {
-    const response = await api.post<{ success: boolean; message: string }>("/referrals/commissions/payment", data);
+    const response = await api.post<{ success: boolean; message: string }>("/referrals/pay", data);
+    return response.data;
+  },
+
+  getReferralPayments: async (params?: { referralId?: string; page?: number; limit?: number }): Promise<{ success: boolean; data: ReferralPayment[]; meta: any }> => {
+    const response = await api.get<{ success: boolean; data: ReferralPayment[]; meta: any }>("/referrals/payments", { params });
+    return response.data;
+  },
+
+  getReferralPaymentDetails: async (id: string): Promise<{ success: boolean; data: ReferralPayment }> => {
+    const response = await api.get<{ success: boolean; data: ReferralPayment }>(`/referrals/payments/${id}`);
     return response.data;
   },
 

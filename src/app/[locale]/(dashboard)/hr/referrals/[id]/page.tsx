@@ -32,7 +32,7 @@ import { PermissionGuard } from "@/components/shared/permission-guard"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useCommissions } from "@/hooks/hr-queries"
+import { useCommissions, useReferralPayments } from "@/hooks/hr-queries"
 import { CommissionPayoutDialog } from "@/components/hr/commission-payout-dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -50,8 +50,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Filter, MoreVertical, CheckCircle2, XCircle, Clock4, History, Receipt } from "lucide-react"
-import { CommissionReceiptDialog } from "@/components/hr/commission-receipt-dialog"
+import { Commission } from "@/types/hr"
 import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { CommissionReceiptDialog } from "@/components/hr/commission-receipt-dialog"
 
 export default function ReferralDetailPage() {
     const params = useParams()
@@ -68,6 +71,7 @@ export default function ReferralDetailPage() {
     const [payoutOpen, setPayoutOpen] = useState(false)
     const [historyReceiptOpen, setHistoryReceiptOpen] = useState(false)
     const [selectedHistoryPayout, setSelectedHistoryPayout] = useState<any>(null)
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
     // Query for the badge count (Always pending items)
     const { data: pendingCommissionsRes } = useCommissions({
@@ -80,19 +84,21 @@ export default function ReferralDetailPage() {
     const { data: commissionsRes, isLoading: commissionsLoading } = useCommissions({
         referralId: id,
         isPaid: statusFilter === "all" ? undefined : statusFilter,
-        limit: 100
+        limit: 100,
+        startDate: dateRange?.from ? dateRange.from.toISOString() : undefined,
+        endDate: dateRange?.to ? dateRange.to.toISOString() : undefined,
     })
 
-    // Dedicated query for the "Paid History" tab (Always paid items)
-    const { data: historyCommissionsRes, isLoading: historyLoading } = useCommissions({
+
+    // Dedicated query for the "Paid History" tab using real vouchers
+    const { data: paymentsRes, isLoading: historyLoading } = useReferralPayments({
         referralId: id,
-        isPaid: "true",
         limit: 100
     })
 
-    const commissions = commissionsRes?.data || []
-    const pendingCommissions = pendingCommissionsRes?.data || []
-    const historyCommissions = historyCommissionsRes?.data || []
+    const commissions = commissionsRes?.data?.commissions || []
+    const pendingCommissions = pendingCommissionsRes?.data?.commissions || []
+    const historyPayments = paymentsRes?.data || []
 
     useEffect(() => {
         setMounted(true)
@@ -105,7 +111,7 @@ export default function ReferralDetailPage() {
     }
 
     const toggleAll = () => {
-        const unpaidCommissions = commissions.filter(c => !c.isPaid).map(c => c.id)
+        const unpaidCommissions = commissions.filter((c: Commission) => !c.isPaid).map((c: Commission) => c.id)
         if (selectedIds.length === unpaidCommissions.length && unpaidCommissions.length > 0) {
             setSelectedIds([])
         } else {
@@ -113,7 +119,7 @@ export default function ReferralDetailPage() {
         }
     }
 
-    const selectedCommissions = commissions.filter(c => selectedIds.includes(c.id))
+    const selectedCommissions = commissions.filter((c: Commission) => selectedIds.includes(c.id))
 
     if (!mounted || isLoading) {
         return (
@@ -415,6 +421,12 @@ export default function ReferralDetailPage() {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
 
+                                            <DatePickerWithRange 
+                                                date={dateRange} 
+                                                setDate={setDateRange} 
+                                                className="w-full sm:w-[260px]"
+                                            />
+
                                             {selectedIds.length > 0 && (
                                                 <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10 font-bold px-3 py-1 rounded-lg">
                                                     {selectedIds.length} Selected
@@ -429,96 +441,98 @@ export default function ReferralDetailPage() {
                                                     className="h-10 px-6 rounded-xl bg-emerald-500/10 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20 shadow-lg shadow-emerald-500/10"
                                                 >
                                                     <Wallet className="w-4 h-4 mr-2" />
-                                                    Process Payout ({formatCurrency(selectedCommissions.reduce((s, c) => s + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))})
+                                                    Process Payout ({formatCurrency(selectedCommissions.reduce((s: number, c: Commission) => s + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))})
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
 
                                     <Card className="rounded-[2rem] border-muted overflow-hidden">
-                                        <Table>
-                                            <TableHeader className="bg-muted/30">
-                                                <TableRow className="hover:bg-transparent border-muted">
-                                                    <TableHead className="w-12">
-                                                        <Checkbox 
-                                                            checked={selectedIds.length === pendingCommissions.length && pendingCommissions.length > 0}
-                                                            onCheckedChange={toggleAll}
-                                                            className="rounded-md border-muted-foreground/30"
-                                                        />
-                                                    </TableHead>
-                                                    <TableHead className="text-[10px] font-black uppercase tracking-widest">Service/Client</TableHead>
-                                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Amount</TableHead>
-                                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Status</TableHead>
-                                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Date</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {commissionsLoading ? (
-                                                    <TableRow>
-                                                        <TableCell colSpan={5} className="h-64 text-center">
-                                                            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary/30" />
-                                                        </TableCell>
+                                        <ScrollArea className="h-[500px]">
+                                            <Table>
+                                                <TableHeader className="bg-muted/30 sticky top-0 z-10 shadow-sm">
+                                                    <TableRow className="hover:bg-transparent border-muted">
+                                                        <TableHead className="w-12">
+                                                            <Checkbox 
+                                                                checked={selectedIds.length === pendingCommissions.length && pendingCommissions.length > 0}
+                                                                onCheckedChange={toggleAll}
+                                                                className="rounded-md border-muted-foreground/30"
+                                                            />
+                                                        </TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Service/Client</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Amount</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Status</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Date</TableHead>
                                                     </TableRow>
-                                                ) : commissions.length === 0 ? (
-                                                    <TableRow>
-                                                        <TableCell colSpan={5} className="h-64 text-center">
-                                                            <div className="flex flex-col items-center justify-center space-y-3">
-                                                                <div className="p-4 rounded-full bg-muted/30">
-                                                                    <Activity className="w-8 h-8 text-muted-foreground/30" />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <p className="font-bold text-muted-foreground">No Commission Records</p>
-                                                                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest">Check again later for new referrals</p>
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ) : (
-                                                    commissions.map((comm) => (
-                                                        <TableRow key={comm.id} className="hover:bg-muted/20 border-muted transition-colors group">
-                                                            <TableCell>
-                                                                <Checkbox 
-                                                                    checked={selectedIds.includes(comm.id)}
-                                                                    disabled={comm.isPaid}
-                                                                    onCheckedChange={() => toggleSelection(comm.id)}
-                                                                    className="rounded-md border-muted-foreground/30 disabled:opacity-30"
-                                                                />
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {commissionsLoading ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={5} className="h-64 text-center">
+                                                                <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary/30" />
                                                             </TableCell>
-                                                            <TableCell>
-                                                                <div className="space-y-1">
-                                                                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{comm.serviceName}</p>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
-                                                                        <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
+                                                        </TableRow>
+                                                    ) : commissions.length === 0 ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={5} className="h-64 text-center">
+                                                                <div className="flex flex-col items-center justify-center space-y-3">
+                                                                    <div className="p-4 rounded-full bg-muted/30">
+                                                                        <Activity className="w-8 h-8 text-muted-foreground/30" />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <p className="font-bold text-muted-foreground">No Commission Records</p>
+                                                                        <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest">Check again later for new referrals</p>
                                                                     </div>
                                                                 </div>
                                                             </TableCell>
-                                                            <TableCell className="text-center">
-                                                                <p className="text-sm font-black text-foreground">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</p>
-                                                                <p className="text-[9px] text-muted-foreground font-medium">{(comm as any).commissionPercentage || comm.commissionType === "percentage" ? "Percentage" : "Fixed"} Rate</p>
-                                                            </TableCell>
-                                                            <TableCell className="text-center">
-                                                                {comm.isPaid ? (
-                                                                    <Badge className="bg-emerald-50 text-emerald-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none">
-                                                                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                                                                        PAID
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge className="bg-amber-50 text-amber-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none">
-                                                                        <Clock4 className="w-3 h-3 mr-1" />
-                                                                        UNPAID
-                                                                    </Badge>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                <p className="text-xs font-bold text-foreground">{format(new Date(comm.createdAt), 'dd MMM yyyy')}</p>
-                                                                <p className="text-[10px] text-muted-foreground">{format(new Date(comm.createdAt), 'hh:mm a')}</p>
-                                                            </TableCell>
                                                         </TableRow>
-                                                    ))
-                                                )}
-                                            </TableBody>
-                                        </Table>
+                                                    ) : (
+                                                        commissions.map((comm) => (
+                                                            <TableRow key={comm.id} className="hover:bg-muted/20 border-muted transition-colors group">
+                                                                <TableCell>
+                                                                    <Checkbox 
+                                                                        checked={selectedIds.includes(comm.id)}
+                                                                        disabled={comm.isPaid}
+                                                                        onCheckedChange={() => toggleSelection(comm.id)}
+                                                                        className="rounded-md border-muted-foreground/30 disabled:opacity-30"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <div className="space-y-1">
+                                                                        <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{comm.serviceName}</p>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
+                                                                            <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="text-center">
+                                                                    <p className="text-sm font-black text-foreground">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</p>
+                                                                    <p className="text-[9px] text-muted-foreground font-medium">{(comm as any).commissionPercentage || comm.commissionType === "percentage" ? "Percentage" : "Fixed"} Rate</p>
+                                                                </TableCell>
+                                                                <TableCell className="text-center">
+                                                                    {comm.isPaid ? (
+                                                                        <Badge className="bg-emerald-50 text-emerald-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none">
+                                                                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                                                                            PAID
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Badge className="bg-amber-50 text-amber-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none">
+                                                                            <Clock4 className="w-3 h-3 mr-1" />
+                                                                            UNPAID
+                                                                        </Badge>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <p className="text-xs font-bold text-foreground">{format(new Date(comm.createdAt), 'dd MMM yyyy')}</p>
+                                                                    <p className="text-[10px] text-muted-foreground">{format(new Date(comm.createdAt), 'hh:mm a')}</p>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </ScrollArea>
                                     </Card>
                                 </TabsContent>
 
@@ -534,101 +548,88 @@ export default function ReferralDetailPage() {
                                             </div>
                                         </div>
                                         <Badge variant="outline" className="bg-white font-black text-emerald-600 border-emerald-500/20">
-                                            {historyCommissions.length} Items Paid
+                                            {historyPayments.length} Vouchers
                                         </Badge>
                                     </div>
 
-                                    <div className="space-y-4">
+                                    <ScrollArea className="h-[500px] pr-4">
+                                        <div className="space-y-4">
                                         {historyLoading ? (
                                             <div className="h-40 flex items-center justify-center">
                                                 <Loader2 className="w-8 h-8 animate-spin text-emerald-500/30" />
                                             </div>
-                                        ) : historyCommissions.length === 0 ? (
+                                        ) : historyPayments.length === 0 ? (
                                             <Card className="p-12 text-center bg-muted/20 border-dashed rounded-[2.5rem]">
                                                 <History className="w-12 h-12 mx-auto text-muted-foreground/20 mb-4" />
                                                 <h3 className="font-black text-muted-foreground">No Payment History</h3>
                                                 <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto mt-2 uppercase tracking-tighter">Settled commissions will appear here for audit and receipts.</p>
                                             </Card>
                                         ) : (
-                                            /* Grouping logic for Paid History */
-                                            (() => {
-                                                const paidComms = historyCommissions;
-                                                // Group by date (DD-MM-YYYY HH:mm) to simulate payout batches
-                                                const groups: Record<string, typeof paidComms> = {};
-                                                paidComms.forEach(c => {
-                                                    const dateKey = format(new Date(c.updatedAt), 'yyyy-MM-dd HH:mm');
-                                                    if (!groups[dateKey]) groups[dateKey] = [];
-                                                    groups[dateKey].push(c);
-                                                });
-
-                                                return Object.entries(groups)
-                                                    .sort(([a], [b]) => b.localeCompare(a)) // Latest first
-                                                    .map(([dateKey, items]) => {
-                                                        const batchTotal = items.reduce((s, c) => s + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0);
-                                                        return (
-                                                            <Card key={dateKey} className="overflow-hidden border-muted/50 shadow-sm hover:shadow-md transition-all group">
-                                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/10 gap-4 border-b">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="p-2 rounded-lg bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
-                                                                            <Calendar className="w-4 h-4" />
+                                            historyPayments.map((payment) => (
+                                                <Card key={payment.id} className="overflow-hidden border-muted/50 shadow-sm hover:shadow-md transition-all group">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-muted/10 gap-4 border-b">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 rounded-lg bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                                                                <Calendar className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-xs font-black text-foreground">Paid on {format(new Date(payment.createdAt), 'dd MMM yyyy')}</p>
+                                                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{format(new Date(payment.createdAt), 'hh:mm a')} • {payment.voucherNumber || "VOUCHER"}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-between sm:justify-end gap-6">
+                                                            <div className="text-right">
+                                                                <p className="text-[10px] font-black text-muted-foreground uppercase opacity-60">Payout Amount</p>
+                                                                <p className="text-lg font-black text-primary">{formatCurrency(payment.totalAmount)}</p>
+                                                            </div>
+                                                            <Button 
+                                                                variant="outline" 
+                                                                size="sm" 
+                                                                className="rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 h-10 px-4"
+                                                                onClick={() => {
+                                                                    setSelectedHistoryPayout({
+                                                                        referral: referral,
+                                                                        commissions: payment.commissions || [],
+                                                                        totalAmount: payment.totalAmount,
+                                                                        paymentMethod: payment.paymentMethod,
+                                                                        date: payment.createdAt,
+                                                                        note: payment.note || "Re-printed from history"
+                                                                    });
+                                                                    setHistoryReceiptOpen(true);
+                                                                }}
+                                                            >
+                                                                <Receipt className="w-4 h-4" />
+                                                                Receipt
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    {payment.commissions && payment.commissions.length > 0 && (
+                                                        <div className="p-0">
+                                                            <div className="grid grid-cols-1 divide-y divide-border/30">
+                                                                {payment.commissions.map((item) => (
+                                                                    <div key={item.id} className="flex items-center justify-between p-4 text-xs hover:bg-muted/5 transition-colors">
+                                                                        <div className="space-y-0.5">
+                                                                            <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
+                                                                            <p className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                                                                <span>{item.patientName || (item as any).sale?.patientName || (item as any).sale?.patient?.name || "N/A"}</span>
+                                                                                <span className="opacity-30">|</span>
+                                                                                <span className="font-mono">#{(item as any).invoiceNumber || (item as any).sale?.invoiceNumber || "N/A"}</span>
+                                                                            </p>
                                                                         </div>
-                                                                        <div>
-                                                                            <p className="text-xs font-black text-foreground">Paid on {format(new Date(dateKey), 'dd MMM yyyy')}</p>
-                                                                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{format(new Date(dateKey), 'hh:mm a')} • {items.length} Items</p>
+                                                                        <div className="text-right shrink-0">
+                                                                            <p className="font-black text-foreground">{formatCurrency(item.commissionValue || (item as any).commissionAmount)}</p>
+                                                                            <p className="text-[9px] text-emerald-600 font-bold uppercase">Settled</p>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex items-center justify-between sm:justify-end gap-6">
-                                                                        <div className="text-right">
-                                                                            <p className="text-[10px] font-black text-muted-foreground uppercase opacity-60">Payout Amount</p>
-                                                                            <p className="text-lg font-black text-primary">{formatCurrency(batchTotal)}</p>
-                                                                        </div>
-                                                                        <Button 
-                                                                            variant="outline" 
-                                                                            size="sm" 
-                                                                            className="rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 h-10 px-4"
-                                                                            onClick={() => {
-                                                                                setSelectedHistoryPayout({
-                                                                                    referral: referral,
-                                                                                    commissions: items,
-                                                                                    totalAmount: batchTotal,
-                                                                                    paymentMethod: (items[0] as any).paymentMethod || "Electronic",
-                                                                                    date: items[0].updatedAt,
-                                                                                    note: "Re-printed from history"
-                                                                                });
-                                                                                setHistoryReceiptOpen(true);
-                                                                            }}
-                                                                        >
-                                                                            <Receipt className="w-4 h-4" />
-                                                                            Receipt
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="p-0">
-                                                                    <div className="grid grid-cols-1 divide-y divide-border/30">
-                                                                        {items.map((item) => (
-                                                                            <div key={item.id} className="flex items-center justify-between p-4 text-xs hover:bg-muted/5 transition-colors">
-                                                                                <div className="space-y-0.5">
-                                                                                    <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
-                                                                                    <p className="text-[10px] text-muted-foreground flex items-center gap-2">
-                                                                                        <span>{item.patientName || (item as any).sale?.patientName || (item as any).sale?.patient?.name || "N/A"}</span>
-                                                                                        <span className="opacity-30">|</span>
-                                                                                        <span className="font-mono">#{(item as any).invoiceNumber || (item as any).sale?.invoiceNumber || "N/A"}</span>
-                                                                                    </p>
-                                                                                </div>
-                                                                                <div className="text-right shrink-0">
-                                                                                    <p className="font-black text-foreground">{formatCurrency(item.commissionValue || (item as any).commissionAmount)}</p>
-                                                                                    <p className="text-[9px] text-emerald-600 font-bold uppercase">Settled</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            </Card>
-                                                        );
-                                                    });
-                                            })()
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Card>
+                                            ))
                                         )}
-                                    </div>
+                                        </div>
+                                    </ScrollArea>
                                 </TabsContent>
                             </Tabs>
                         </div>

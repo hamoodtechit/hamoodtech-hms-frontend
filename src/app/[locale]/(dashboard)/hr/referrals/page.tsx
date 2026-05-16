@@ -153,14 +153,17 @@ export default function ReferralsPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {Array.isArray(referral.commissionStructure) && referral.commissionStructure.length > 0 ? (
-                                                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
-                                                        <Wallet className="w-3 h-3" />
-                                                        {referral.commissionStructure.length} Services
-                                                    </Badge>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground italic">Generic Rate</span>
-                                                )}
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="font-bold text-emerald-600">৳{referral.monthlyCommission || 0}</span>
+                                                    {Array.isArray(referral.commissionStructure) && referral.commissionStructure.length > 0 ? (
+                                                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                                                            <Wallet className="w-3 h-3" />
+                                                            {referral.commissionStructure.length} Services
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground italic">Generic Rate</span>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <span className="text-xs font-medium text-muted-foreground">

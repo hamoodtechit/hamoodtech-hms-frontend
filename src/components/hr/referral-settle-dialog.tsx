@@ -50,7 +50,7 @@ export function ReferralQuickSettleDialog({
         }
     }, [commissionsRes, error]);
 
-    const commissions = commissionsRes?.data || []
+    const commissions = commissionsRes?.data?.commissions || []
 
     useEffect(() => {
         if (open) {
@@ -69,12 +69,12 @@ export function ReferralQuickSettleDialog({
         if (selectedIds.length === commissions.length) {
             setSelectedIds([])
         } else {
-            setSelectedIds(commissions.map(c => c.id))
+            setSelectedIds(commissions.map((c: Commission) => c.id))
         }
     }
 
-    const selectedCommissions = commissions.filter(c => selectedIds.includes(c.id))
-    const totalSelectedAmount = selectedCommissions.reduce((sum, c) => sum + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0)
+    const selectedCommissions = commissions.filter((c: Commission) => selectedIds.includes(c.id))
+    const totalSelectedAmount = selectedCommissions.reduce((sum: number, c: Commission) => sum + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0)
 
     return (
         <>
@@ -132,14 +132,14 @@ export function ReferralQuickSettleDialog({
                                     <div className="text-right">
                                         <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest leading-none mb-1">Total Outstanding</p>
                                         <p className="text-lg font-black text-primary leading-none tracking-tighter">
-                                            {formatCurrency(commissions.reduce((acc, c) => acc + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))}
+                                            {formatCurrency(commissions.reduce((acc: number, c: Commission) => acc + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0))}
                                         </p>
                                     </div>
                                 </div>
 
                                 <ScrollArea className="h-[300px] rounded-[1.5rem] border bg-muted/10 p-2">
                                     <div className="space-y-2">
-                                        {commissions.map((c) => (
+                                        {commissions.map((c: Commission) => (
                                             <div 
                                                 key={c.id}
                                                 onClick={() => toggleCommission(c.id)}
