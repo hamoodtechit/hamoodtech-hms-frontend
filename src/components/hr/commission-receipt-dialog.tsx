@@ -167,23 +167,24 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
 
             <table className="items-table w-full mb-8">
                 <thead>
-                    <tr className="border-y border-black uppercase text-[11px] font-black tracking-wider">
-                        <th className="py-3 text-left">SL</th>
-                        <th className="py-3 text-left">Service / Item Details</th>
-                        <th className="py-3 text-left">Invoice #</th>
-                        <th className="py-3 text-right">Amount</th>
+                    <tr className="border-y border-black uppercase text-[10px] font-black tracking-wider bg-gray-50/50">
+                        <th className="py-3 text-left">Date</th>
+                        <th className="py-3 text-left">Bill Id</th>
+                        <th className="py-3 text-left">Patient Name</th>
+                        <th className="py-3 text-right">Total Bill</th>
+                        <th className="py-3 text-left pl-4">Service</th>
+                        <th className="py-3 text-right">Com. Given</th>
                     </tr>
                 </thead>
                 <tbody>
                     {commissions.map((comm, idx) => (
                         <tr key={comm.id} className="border-b border-gray-100">
-                            <td className="py-3 text-xs">{idx + 1}</td>
-                            <td className="py-3">
-                                <p className="text-xs font-bold">{comm.serviceName}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</p>
-                            </td>
-                            <td className="py-3 text-xs font-mono">{(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}</td>
-                            <td className="py-3 text-right text-xs font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
+                            <td className="py-3 text-[11px]">{format(new Date(comm.createdAt), "dd/MM/yyyy")}</td>
+                            <td className="py-3 text-[11px] font-mono">{(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}</td>
+                            <td className="py-3 text-[11px] font-bold">{comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A"}</td>
+                            <td className="py-3 text-right text-[11px]">{formatCurrency(comm.sale?.netPrice || 0)}</td>
+                            <td className="py-3 text-[11px] pl-4">{comm.serviceName}</td>
+                            <td className="py-3 text-right text-[11px] font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
                         </tr>
                     ))}
                 </tbody>

@@ -23,6 +23,7 @@ import { Commission } from "@/types/hr"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useProcessCommissionPayment } from "@/hooks/hr-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Wallet, CreditCard, Banknote } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
@@ -58,10 +59,11 @@ export function CommissionPayoutDialog({
     const [receiptOpen, setReceiptOpen] = useState(false)
     
     const { formatCurrency } = useCurrency()
+    const user = useAuthStore(state => state.user)
     const { data: accountsRes, isLoading: accountsLoading } = useFinanceAccounts({ limit: 100 })
     const processPayment = useProcessCommissionPayment()
 
-    const totalAmount = selectedCommissions.reduce((sum, c) => sum + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0)
+    const totalAmount = selectedCommissions.reduce((sum: number, c: Commission) => sum + (Number(c.commissionValue) || (c as any).commissionAmount || 0), 0)
 
     useEffect(() => {
         if (open) {
@@ -88,6 +90,7 @@ export function CommissionPayoutDialog({
         setLoading(true)
         try {
             await processPayment.mutateAsync({
+                branchId: selectedCommissions[0]?.branchId || user?.branchId || "",
                 referralId,
                 accountId,
                 commissionIds: selectedCommissions.map(c => c.id),

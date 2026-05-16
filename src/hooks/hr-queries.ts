@@ -459,6 +459,21 @@ export function useProcessCommissionPayment() {
   });
 }
 
+export function useReferralPayments(params?: { referralId?: string; page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: ['referrals', 'payments', params],
+    queryFn: () => hrService.getReferralPayments(params),
+  });
+}
+
+export function useReferralPaymentDetails(id?: string) {
+  return useQuery({
+    queryKey: ['referrals', 'payments', id],
+    queryFn: () => hrService.getReferralPaymentDetails(id!),
+    enabled: !!id,
+  });
+}
+
 // Shift Hooks
 export function useShifts(params?: ShiftFilters) {
   return useQuery({
