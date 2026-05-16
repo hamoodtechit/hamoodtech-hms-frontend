@@ -104,6 +104,8 @@ export default function ReferralDetailPage() {
         setMounted(true)
     }, [])
 
+
+
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -574,7 +576,7 @@ export default function ReferralDetailPage() {
                                                             </div>
                                                             <div>
                                                                 <p className="text-xs font-black text-foreground">Paid on {format(new Date(payment.createdAt), 'dd MMM yyyy')}</p>
-                                                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{format(new Date(payment.createdAt), 'hh:mm a')} • {payment.voucherNumber || "VOUCHER"}</p>
+                                                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">{format(new Date(payment.createdAt), 'hh:mm a')} • {payment.paymentNumber || "VOUCHER"}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center justify-between sm:justify-end gap-6">
@@ -589,7 +591,7 @@ export default function ReferralDetailPage() {
                                                                 onClick={() => {
                                                                     setSelectedHistoryPayout({
                                                                         referral: referral,
-                                                                        commissions: payment.commissions || [],
+                                                                        commissions: payment.referralCommissions || [],
                                                                         totalAmount: payment.totalAmount,
                                                                         paymentMethod: payment.paymentMethod,
                                                                         date: payment.createdAt,
@@ -603,10 +605,10 @@ export default function ReferralDetailPage() {
                                                             </Button>
                                                         </div>
                                                     </div>
-                                                    {payment.commissions && payment.commissions.length > 0 && (
+                                                    {payment.referralCommissions && payment.referralCommissions.length > 0 && (
                                                         <div className="p-0">
                                                             <div className="grid grid-cols-1 divide-y divide-border/30">
-                                                                {payment.commissions.map((item) => (
+                                                                {payment.referralCommissions.map((item) => (
                                                                     <div key={item.id} className="flex items-center justify-between p-4 text-xs hover:bg-muted/5 transition-colors">
                                                                         <div className="space-y-0.5">
                                                                             <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
