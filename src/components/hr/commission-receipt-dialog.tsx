@@ -306,7 +306,17 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
 
                             totalSubtotalSum += rowSubtotal;
 
-                            const discount = Number((comm.sale as any)?.discountAmount || 0);
+                            const discountPct = Number((comm.sale as any)?.discountPercentage || 0);
+                            const saleTotalPrice = Number((comm.sale as any)?.totalPrice || comm.sale?.netPrice || 0);
+                            const discountAmountVal = Number((comm.sale as any)?.discountAmount || 0);
+
+                            let discount = 0;
+                            if (discountPct > 0) {
+                                discount = rowSubtotal * (discountPct / 100);
+                            } else if (discountAmountVal > 0 && saleTotalPrice > 0) {
+                                discount = (rowSubtotal / saleTotalPrice) * discountAmountVal;
+                            }
+
                             totalDiscountSum += discount;
 
                             const netBill = rowSubtotal - discount;
