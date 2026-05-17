@@ -201,15 +201,15 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                 const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
                                 
                                 const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
-                                let pct = match?.commissionPercentage;
-                                if (pct === undefined && c.commissionType === "percentage") {
-                                    pct = Number(c.commissionValue);
+                                let pct = c.commissionPercentage !== undefined ? Number(c.commissionPercentage) : undefined;
+                                if (pct === undefined || isNaN(pct)) {
+                                    pct = match?.commissionPercentage !== undefined ? Number(match.commissionPercentage) : undefined;
                                 }
-                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                    pct = service.refCommissionsPercentage;
+                                if ((pct === undefined || isNaN(pct)) && service?.refCommissionsPercentage !== undefined) {
+                                    pct = Number(service.refCommissionsPercentage);
                                 }
-                                if (pct === undefined && c.commissionPercentage !== undefined) {
-                                    pct = c.commissionPercentage;
+                                if (pct !== undefined && isNaN(pct)) {
+                                    pct = undefined;
                                 }
                                 
                                 const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
@@ -242,15 +242,15 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
                             
                             const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
-                            let pct = match?.commissionPercentage;
-                            if (pct === undefined && c.commissionType === "percentage") {
-                                pct = Number(c.commissionValue);
+                            let pct = c.commissionPercentage !== undefined ? Number(c.commissionPercentage) : undefined;
+                            if (pct === undefined || isNaN(pct)) {
+                                pct = match?.commissionPercentage !== undefined ? Number(match.commissionPercentage) : undefined;
                             }
-                            if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                pct = service.refCommissionsPercentage;
+                            if ((pct === undefined || isNaN(pct)) && service?.refCommissionsPercentage !== undefined) {
+                                pct = Number(service.refCommissionsPercentage);
                             }
-                            if (pct === undefined && c.commissionPercentage !== undefined) {
-                                pct = c.commissionPercentage;
+                            if (pct !== undefined && isNaN(pct)) {
+                                pct = undefined;
                             }
                             
                             const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
@@ -283,15 +283,15 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                 const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
                                 
                                 const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
-                                let pct = match?.commissionPercentage;
-                                if (pct === undefined && c.commissionType === "percentage") {
-                                    pct = Number(c.commissionValue);
+                                let pct = c.commissionPercentage !== undefined ? Number(c.commissionPercentage) : undefined;
+                                if (pct === undefined || isNaN(pct)) {
+                                    pct = match?.commissionPercentage !== undefined ? Number(match.commissionPercentage) : undefined;
                                 }
-                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                    pct = service.refCommissionsPercentage;
+                                if ((pct === undefined || isNaN(pct)) && service?.refCommissionsPercentage !== undefined) {
+                                    pct = Number(service.refCommissionsPercentage);
                                 }
-                                if (pct === undefined && c.commissionPercentage !== undefined) {
-                                    pct = c.commissionPercentage;
+                                if (pct !== undefined && isNaN(pct)) {
+                                    pct = undefined;
                                 }
                                 
                                 const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
