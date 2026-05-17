@@ -512,15 +512,15 @@ export default function ReferralDetailPage() {
                                                                                 const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
                                                                                 
                                                                                 const match = referral?.commissionStructure?.find((cs: any) => cs.serviceId === comm.serviceId);
-                                                                                let pct = match?.commissionPercentage;
-                                                                                if (pct === undefined && comm.commissionType === "percentage") {
-                                                                                    pct = Number(comm.commissionValue);
+                                                                                let pct = comm.commissionPercentage !== undefined ? Number(comm.commissionPercentage) : undefined;
+                                                                                if (pct === undefined || isNaN(pct)) {
+                                                                                    pct = match?.commissionPercentage !== undefined ? Number(match.commissionPercentage) : undefined;
                                                                                 }
-                                                                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                                                                    pct = service.refCommissionsPercentage;
+                                                                                if ((pct === undefined || isNaN(pct)) && service?.refCommissionsPercentage !== undefined) {
+                                                                                    pct = Number(service.refCommissionsPercentage);
                                                                                 }
-                                                                                if (pct === undefined && comm.commissionPercentage !== undefined) {
-                                                                                    pct = comm.commissionPercentage;
+                                                                                if (pct !== undefined && isNaN(pct)) {
+                                                                                    pct = undefined;
                                                                                 }
                                                                                 
                                                                                 const deptText = departmentName.toUpperCase();
@@ -643,15 +643,15 @@ export default function ReferralDetailPage() {
                                                                                     const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
                                                                                     
                                                                                     const match = referral?.commissionStructure?.find((cs: any) => cs.serviceId === item.serviceId);
-                                                                                    let pct = match?.commissionPercentage;
-                                                                                    if (pct === undefined && item.commissionType === "percentage") {
-                                                                                        pct = Number(item.commissionValue);
+                                                                                    let pct = item.commissionPercentage !== undefined ? Number(item.commissionPercentage) : undefined;
+                                                                                    if (pct === undefined || isNaN(pct)) {
+                                                                                        pct = match?.commissionPercentage !== undefined ? Number(match.commissionPercentage) : undefined;
                                                                                     }
-                                                                                    if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                                                                        pct = service.refCommissionsPercentage;
+                                                                                    if ((pct === undefined || isNaN(pct)) && service?.refCommissionsPercentage !== undefined) {
+                                                                                        pct = Number(service.refCommissionsPercentage);
                                                                                     }
-                                                                                    if (pct === undefined && item.commissionPercentage !== undefined) {
-                                                                                        pct = item.commissionPercentage;
+                                                                                    if (pct !== undefined && isNaN(pct)) {
+                                                                                        pct = undefined;
                                                                                     }
                                                                                     
                                                                                     const deptText = departmentName.toUpperCase();
