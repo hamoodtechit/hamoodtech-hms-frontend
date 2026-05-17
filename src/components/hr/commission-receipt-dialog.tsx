@@ -309,7 +309,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             const discount = Number((comm.sale as any)?.discountAmount || 0);
                             totalDiscountSum += discount;
 
-                            const netBill = Number(comm.sale?.netPrice || rowSubtotal - discount);
+                            const netBill = rowSubtotal - discount;
                             totalNetBillSum += netBill;
 
                             const comGiven = group.reduce((sum, c) => sum + Number(c.commissionValue || (c as any).commissionAmount || 0), 0);
