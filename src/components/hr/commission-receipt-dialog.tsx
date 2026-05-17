@@ -15,6 +15,7 @@ import { Printer, X, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 import { Commission, ReferralPerson } from "@/types/hr"
 import { useEffect } from "react"
+import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 
 // Simple number to words converter (Indian numbering system format)
 function numberToWords(num: number): string {
@@ -52,7 +53,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     const { formatCurrency } = useCurrency()
     const { user } = useAuthStore()
 
-   
+    // Fetch diagnostic tests to get their department names and percentages
+    const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })
+    const services = servicesRes?.data || []
 
     if (!payoutData) return null
 
@@ -172,7 +175,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                         <th className="py-3 text-left">Bill Id</th>
                         <th className="py-3 text-left">Patient Name</th>
                         <th className="py-3 text-right">Total Bill</th>
-                        <th className="py-3 text-left pl-4">Service</th>
+                        <th className="py-3 text-left pl-4">Department</th>
                         <th className="py-3 text-right">Com. Given</th>
                     </tr>
                 </thead>
@@ -205,7 +208,30 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                             </td>
                                         </>
                                     ) : null}
-                                    <td className="py-3 text-[11px] pl-4">{comm.serviceName}</td>
+                                    <td className="py-3 text-[11px] pl-4">
+                                        <span className="font-bold text-black block">
+                                            {(() => {
+                                                const service = services.find(s => s.id === comm.serviceId);
+                                                const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
+                                                
+                                                const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === comm.serviceId);
+                                                let pct = match?.commissionPercentage;
+                                                if (pct === undefined && comm.commissionType === "percentage") {
+                                                    pct = Number(comm.commissionValue);
+                                                }
+                                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                                    pct = service.refCommissionsPercentage;
+                                                }
+                                                if (pct === undefined && comm.commissionPercentage !== undefined) {
+                                                    pct = comm.commissionPercentage;
+                                                }
+                                                
+                                                const deptText = departmentName.toUpperCase();
+                                                return pct !== undefined ? `${deptText} * ${pct}%` : deptText;
+                                            })()}
+                                        </span>
+                                        <span className="block text-[9px] text-gray-500 font-medium mt-0.5">{comm.serviceName}</span>
+                                    </td>
                                     <td className="py-3 text-right text-[11px] font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
                                 </tr>
                             ));
