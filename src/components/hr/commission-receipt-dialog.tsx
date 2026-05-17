@@ -221,7 +221,6 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                 <th key={col} className="py-3 text-right pr-2">{col}</th>
                             ));
                         })()}
-                        <th className="py-3 text-right">Discount</th>
                         <th className="py-3 text-right">Net Bill</th>
                         <th className="py-3 text-right">Com. Given</th>
                     </tr>
@@ -327,7 +326,6 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                             {formatCurrency(deptValues[col])}
                                         </td>
                                     ))}
-                                    <td className="py-3 text-right text-[11px]">{formatCurrency(discount)}</td>
                                     <td className="py-3 text-right text-[11px]">{formatCurrency(netBill)}</td>
                                     <td className="py-3 text-right text-[11px] font-black text-emerald-600">{formatCurrency(comGiven)}</td>
                                 </tr>
@@ -344,7 +342,6 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                         {formatCurrency(deptTotalsMap[col])}
                                     </td>
                                 ))}
-                                <td className="py-3 text-right">{formatCurrency(totalDiscountSum)}</td>
                                 <td className="py-3 text-right">{formatCurrency(totalNetBillSum)}</td>
                                 <td className="py-3 text-right font-black text-emerald-600">{formatCurrency(totalComGivenSum)}</td>
                             </tr>
