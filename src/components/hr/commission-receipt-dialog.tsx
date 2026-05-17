@@ -57,6 +57,20 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     const { data: servicesRes } = useDiagnosticTests({ limit: 5000 })
     const services = servicesRes?.data || []
 
+    // Auto-trigger printing when open and close modal instantly
+    useEffect(() => {
+        if (open && payoutData && servicesRes) {
+            const timer = setTimeout(() => {
+                const el = document.getElementById('commission-receipt-content');
+                if (el && el.innerHTML.trim().length > 0) {
+                    handlePrint();
+                    onOpenChange(false);
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [open, payoutData, servicesRes]);
+
     if (!payoutData) return null
 
     const { referral, commissions, totalAmount, paymentMethod, date, note } = payoutData
@@ -64,7 +78,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     // Branch info is typically available on the referral object
     const branchName = referral.branch?.name || general?.hospitalName || "Hospital"
 
-    const handlePrint = () => {
+    function handlePrint() {
         const printContent = document.getElementById('commission-receipt-content')?.innerHTML;
         if (!printContent) return;
 
