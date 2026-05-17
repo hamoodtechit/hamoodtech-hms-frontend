@@ -33,6 +33,7 @@ import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCommissions, useReferralPayments } from "@/hooks/hr-queries"
+import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { CommissionPayoutDialog } from "@/components/hr/commission-payout-dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -64,6 +65,10 @@ export default function ReferralDetailPage() {
 
     const { data: referralRes, isLoading } = useReferral(id)
     const referral = referralRes?.data
+
+    // Fetch diagnostic tests to resolve department names and percentages in the tables
+    const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })
+    const services = servicesRes?.data || []
 
     // Commissions State
     const [statusFilter, setStatusFilter] = useState<string>("false") // "all", "true", "false" (unpaid by default)
@@ -501,10 +506,31 @@ export default function ReferralDetailPage() {
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <div className="space-y-1">
-                                                                        <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{comm.serviceName}</p>
+                                                                        <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                                                            {(() => {
+                                                                                const service = services.find(s => s.id === comm.serviceId);
+                                                                                const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
+                                                                                
+                                                                                const match = referral?.commissionStructure?.find((cs: any) => cs.serviceId === comm.serviceId);
+                                                                                let pct = match?.commissionPercentage;
+                                                                                if (pct === undefined && comm.commissionType === "percentage") {
+                                                                                    pct = Number(comm.commissionValue);
+                                                                                }
+                                                                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                                                                    pct = service.refCommissionsPercentage;
+                                                                                }
+                                                                                if (pct === undefined && comm.commissionPercentage !== undefined) {
+                                                                                    pct = comm.commissionPercentage;
+                                                                                }
+                                                                                
+                                                                                const deptText = departmentName.toUpperCase();
+                                                                                return pct !== undefined ? `${deptText} * ${pct}%` : deptText;
+                                                                            })()}
+                                                                        </p>
                                                                         <div className="flex items-center gap-2">
                                                                             <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
                                                                             <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
+                                                                            <span className="text-[10px] text-muted-foreground/40 font-medium">({comm.serviceName})</span>
                                                                         </div>
                                                                     </div>
                                                                 </TableCell>
@@ -611,8 +637,30 @@ export default function ReferralDetailPage() {
                                                                 {payment.referralCommissions.map((item) => (
                                                                     <div key={item.id} className="flex items-center justify-between p-4 text-xs hover:bg-muted/5 transition-colors">
                                                                         <div className="space-y-0.5">
-                                                                            <p className="font-bold text-foreground pr-4 line-clamp-1">{item.serviceName}</p>
+                                                                            <p className="font-bold text-foreground pr-4 line-clamp-1">
+                                                                                {(() => {
+                                                                                    const service = services.find(s => s.id === item.serviceId);
+                                                                                    const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
+                                                                                    
+                                                                                    const match = referral?.commissionStructure?.find((cs: any) => cs.serviceId === item.serviceId);
+                                                                                    let pct = match?.commissionPercentage;
+                                                                                    if (pct === undefined && item.commissionType === "percentage") {
+                                                                                        pct = Number(item.commissionValue);
+                                                                                    }
+                                                                                    if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                                                                        pct = service.refCommissionsPercentage;
+                                                                                    }
+                                                                                    if (pct === undefined && item.commissionPercentage !== undefined) {
+                                                                                        pct = item.commissionPercentage;
+                                                                                    }
+                                                                                    
+                                                                                    const deptText = departmentName.toUpperCase();
+                                                                                    return pct !== undefined ? `${deptText} * ${pct}%` : deptText;
+                                                                                })()}
+                                                                            </p>
                                                                             <p className="text-[10px] text-muted-foreground flex items-center gap-2">
+                                                                                <span className="font-medium text-primary/80">{item.serviceName}</span>
+                                                                                <span className="opacity-30">|</span>
                                                                                 <span>{item.patientName || (item as any).sale?.patientName || (item as any).sale?.patient?.name || "N/A"}</span>
                                                                                 <span className="opacity-30">|</span>
                                                                                 <span className="font-mono">#{(item as any).invoiceNumber || (item as any).sale?.invoiceNumber || "N/A"}</span>
