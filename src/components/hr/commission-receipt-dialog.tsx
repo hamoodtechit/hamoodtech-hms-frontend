@@ -54,7 +54,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
     const { user } = useAuthStore()
 
     // Fetch diagnostic tests to get their department names and percentages
-    const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })
+    const { data: servicesRes } = useDiagnosticTests({ limit: 5000 })
     const services = servicesRes?.data || []
 
     if (!payoutData) return null
@@ -94,6 +94,10 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                             .items-table th { border-top: 1px solid black; border-bottom: 1px solid black; padding: 8px; text-align: left; font-size: 12px; font-weight: bold; text-transform: uppercase; }
                             .items-table td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+                            .items-table th.text-right, .items-table td.text-right { text-align: right; }
+                            .items-table th.text-left, .items-table td.text-left { text-align: left; }
+                            .items-table th.text-center, .items-table td.text-center { text-align: center; }
+                            .items-table tr.border-t-2 td { border-top: 2px solid black; font-weight: 900; }
                             .totals { float: right; width: 250px; margin-top: 20px; }
                             .total-row { display: flex; justify-content: space-between; padding: 4px 0; font-weight: bold; }
                             .net-payable { border-top: 1px dashed black; border-bottom: 1px dashed black; margin: 5px 0; padding: 8px 0; font-size: 16px; }
@@ -175,67 +179,164 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                         <th className="py-3 text-left">Bill Id</th>
                         <th className="py-3 text-left">Patient Name</th>
                         <th className="py-3 text-right">Total Bill</th>
-                        <th className="py-3 text-left pl-4">Department</th>
+                        {(() => {
+                            // Discover all unique department * percentage combinations across all payout commissions
+                            const deptColumnsMap: Record<string, boolean> = {};
+                            commissions.forEach(c => {
+                                const service = services.find(s => s.id === c.serviceId);
+                                const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
+                                
+                                const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
+                                let pct = match?.commissionPercentage;
+                                if (pct === undefined && c.commissionType === "percentage") {
+                                    pct = Number(c.commissionValue);
+                                }
+                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                    pct = service.refCommissionsPercentage;
+                                }
+                                if (pct === undefined && c.commissionPercentage !== undefined) {
+                                    pct = c.commissionPercentage;
+                                }
+                                
+                                const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
+                                deptColumnsMap[colKey] = true;
+                            });
+
+                            const activeDeptCols = Object.keys(deptColumnsMap);
+                            return activeDeptCols.map(col => (
+                                <th key={col} className="py-3 text-right pr-2">{col}</th>
+                            ));
+                        })()}
+                        <th className="py-3 text-right">Discount</th>
+                        <th className="py-3 text-right">Net Bill</th>
                         <th className="py-3 text-right">Com. Given</th>
                     </tr>
                 </thead>
                 <tbody>
                     {(() => {
-                        // Group commissions by saleId
+                        // 1. Group commissions by saleId
                         const groups: Record<string, Commission[]> = {};
-                        commissions.forEach(comm => {
-                            const saleId = comm.saleId || (comm as any).sale?.id || 'unknown';
+                        commissions.forEach(c => {
+                            const saleId = c.saleId || (c as any).sale?.id || 'unknown';
                             if (!groups[saleId]) groups[saleId] = [];
-                            groups[saleId].push(comm);
+                            groups[saleId].push(c);
                         });
 
-                        return Object.values(groups).map((group) => {
-                            return group.map((comm, idx) => (
-                                <tr key={comm.id} className="border-b border-gray-100">
-                                    {idx === 0 ? (
-                                        <>
-                                            <td className="py-3 text-[11px]" rowSpan={group.length}>
-                                                {format(new Date(comm.createdAt), "dd/MM/yyyy")}
-                                            </td>
-                                            <td className="py-3 text-[11px] font-mono" rowSpan={group.length}>
-                                                {(comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A"}
-                                            </td>
-                                            <td className="py-3 text-[11px] font-bold" rowSpan={group.length}>
-                                                {comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A"}
-                                            </td>
-                                            <td className="py-3 text-right text-[11px]" rowSpan={group.length}>
-                                                {formatCurrency(comm.sale?.netPrice || 0)}
-                                            </td>
-                                        </>
-                                    ) : null}
-                                    <td className="py-3 text-[11px] pl-4">
-                                        <span className="font-bold text-black block">
-                                            {(() => {
-                                                const service = services.find(s => s.id === comm.serviceId);
-                                                const departmentName = service?.department?.name || "DIAGNOSTIC SERVICE";
-                                                
-                                                const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === comm.serviceId);
-                                                let pct = match?.commissionPercentage;
-                                                if (pct === undefined && comm.commissionType === "percentage") {
-                                                    pct = Number(comm.commissionValue);
-                                                }
-                                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
-                                                    pct = service.refCommissionsPercentage;
-                                                }
-                                                if (pct === undefined && comm.commissionPercentage !== undefined) {
-                                                    pct = comm.commissionPercentage;
-                                                }
-                                                
-                                                const deptText = departmentName.toUpperCase();
-                                                return pct !== undefined ? `${deptText} * ${pct}%` : deptText;
-                                            })()}
-                                        </span>
-                                        <span className="block text-[9px] text-gray-500 font-medium mt-0.5">{comm.serviceName}</span>
-                                    </td>
-                                    <td className="py-3 text-right text-[11px] font-bold">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</td>
-                                </tr>
-                            ));
+                        // 2. Discover all unique department * percentage combinations across all payout commissions
+                        const deptColumnsMap: Record<string, boolean> = {};
+                        commissions.forEach(c => {
+                            const service = services.find(s => s.id === c.serviceId);
+                            const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
+                            
+                            const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
+                            let pct = match?.commissionPercentage;
+                            if (pct === undefined && c.commissionType === "percentage") {
+                                pct = Number(c.commissionValue);
+                            }
+                            if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                pct = service.refCommissionsPercentage;
+                            }
+                            if (pct === undefined && c.commissionPercentage !== undefined) {
+                                pct = c.commissionPercentage;
+                            }
+                            
+                            const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
+                            deptColumnsMap[colKey] = true;
                         });
+
+                        const activeDeptCols = Object.keys(deptColumnsMap);
+
+                        // Keep track of column totals
+                        let totalSubtotalSum = 0;
+                        const deptTotalsMap: Record<string, number> = {};
+                        activeDeptCols.forEach(col => { deptTotalsMap[col] = 0; });
+                        let totalDiscountSum = 0;
+                        let totalNetBillSum = 0;
+                        let totalComGivenSum = 0;
+
+                        const rows = Object.values(groups).map((group) => {
+                            const comm = group[0];
+                            const dateStr = format(new Date(comm.createdAt), "dd/MM/yyyy");
+                            const billId = (comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A";
+                            const patName = comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A";
+                            
+                            // Find the sale subtotal or sum of services in this row
+                            let rowSubtotal = 0;
+                            const deptValues: Record<string, number> = {};
+                            activeDeptCols.forEach(col => { deptValues[col] = 0; });
+
+                            group.forEach(c => {
+                                const service = services.find(s => s.id === c.serviceId);
+                                const deptName = (service?.department?.name || "DIAGNOSTIC SERVICE").toUpperCase();
+                                
+                                const match = referral.commissionStructure?.find((cs: any) => cs.serviceId === c.serviceId);
+                                let pct = match?.commissionPercentage;
+                                if (pct === undefined && c.commissionType === "percentage") {
+                                    pct = Number(c.commissionValue);
+                                }
+                                if (pct === undefined && service?.refCommissionsPercentage !== undefined) {
+                                    pct = service.refCommissionsPercentage;
+                                }
+                                if (pct === undefined && c.commissionPercentage !== undefined) {
+                                    pct = c.commissionPercentage;
+                                }
+                                
+                                const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
+                                const val = Number(c.commissionValue || (c as any).commissionAmount || 0);
+                                const pctVal = pct || 0;
+                                const origPrice = pctVal > 0 ? (val / (pctVal / 100)) : val;
+
+                                deptValues[colKey] = (deptValues[colKey] || 0) + origPrice;
+                                deptTotalsMap[colKey] = (deptTotalsMap[colKey] || 0) + origPrice;
+                                rowSubtotal += origPrice;
+                            });
+
+                            totalSubtotalSum += rowSubtotal;
+
+                            const discount = Number((comm.sale as any)?.discountAmount || 0);
+                            totalDiscountSum += discount;
+
+                            const netBill = Number(comm.sale?.netPrice || rowSubtotal - discount);
+                            totalNetBillSum += netBill;
+
+                            const comGiven = group.reduce((sum, c) => sum + Number(c.commissionValue || (c as any).commissionAmount || 0), 0);
+                            totalComGivenSum += comGiven;
+
+                            return (
+                                <tr key={comm.id} className="border-b border-gray-100 font-bold">
+                                    <td className="py-3 text-[11px] text-left">{dateStr}</td>
+                                    <td className="py-3 text-[11px] font-mono text-left">{billId}</td>
+                                    <td className="py-3 text-[11px] text-left">{patName}</td>
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(rowSubtotal)}</td>
+                                    {activeDeptCols.map(col => (
+                                        <td key={col} className="py-3 text-right text-[11px] pr-2">
+                                            {formatCurrency(deptValues[col])}
+                                        </td>
+                                    ))}
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(discount)}</td>
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(netBill)}</td>
+                                    <td className="py-3 text-right text-[11px] font-black text-emerald-600">{formatCurrency(comGiven)}</td>
+                                </tr>
+                            );
+                        });
+
+                        // Append the total row at the end
+                        const totalRow = (
+                            <tr key="totals-row" className="border-t-2 border-black font-black uppercase text-[11px] bg-gray-50/50">
+                                <td className="py-3 text-left" colSpan={3}>Grand Total</td>
+                                <td className="py-3 text-right">{formatCurrency(totalSubtotalSum)}</td>
+                                {activeDeptCols.map(col => (
+                                    <td key={col} className="py-3 text-right pr-2">
+                                        {formatCurrency(deptTotalsMap[col])}
+                                    </td>
+                                ))}
+                                <td className="py-3 text-right">{formatCurrency(totalDiscountSum)}</td>
+                                <td className="py-3 text-right">{formatCurrency(totalNetBillSum)}</td>
+                                <td className="py-3 text-right font-black text-emerald-600">{formatCurrency(totalComGivenSum)}</td>
+                            </tr>
+                        );
+
+                        return [...rows, totalRow];
                     })()}
                 </tbody>
             </table>

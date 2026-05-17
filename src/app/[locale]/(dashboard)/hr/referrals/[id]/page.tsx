@@ -67,7 +67,7 @@ export default function ReferralDetailPage() {
     const referral = referralRes?.data
 
     // Fetch diagnostic tests to resolve department names and percentages in the tables
-    const { data: servicesRes } = useDiagnosticTests({ limit: 1000 })
+    const { data: servicesRes } = useDiagnosticTests({ limit: 5000 })
     const services = servicesRes?.data || []
 
     // Commissions State
