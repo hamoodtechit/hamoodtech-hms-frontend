@@ -221,6 +221,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                 <th key={col} className="py-3 text-right pr-2">{col}</th>
                             ));
                         })()}
+                        <th className="py-3 text-right">Discount</th>
                         <th className="py-3 text-right">Net Bill</th>
                         <th className="py-3 text-right">Com. Given</th>
                     </tr>
@@ -260,7 +261,7 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                         const activeDeptCols = Object.keys(deptColumnsMap);
 
                         // Keep track of column totals
-                        let totalSubtotalSum = 0;
+                        let totalBillSum = 0;
                         const deptTotalsMap: Record<string, number> = {};
                         activeDeptCols.forEach(col => { deptTotalsMap[col] = 0; });
                         let totalDiscountSum = 0;
@@ -273,8 +274,12 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             const billId = (comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A";
                             const patName = comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A";
                             
-                            // Find the sale subtotal or sum of services in this row
-                            let rowSubtotal = 0;
+                            // Use actual sale data directly from the API
+                            const saleTotalPrice = Number((comm.sale as any)?.totalPrice || 0);
+                            const saleDiscountAmount = Number((comm.sale as any)?.discountAmount || 0);
+                            const saleNetPrice = Number((comm.sale as any)?.netPrice || comm.sale?.netPrice || 0);
+
+                            // Department columns show commission amounts per department
                             const deptValues: Record<string, number> = {};
                             activeDeptCols.forEach(col => { deptValues[col] = 0; });
 
@@ -295,32 +300,15 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                 }
                                 
                                 const colKey = pct !== undefined ? `${deptName} * ${pct}%` : deptName;
-                                const val = Number(c.commissionValue || (c as any).commissionAmount || 0);
-                                const pctVal = pct || 0;
-                                const origPrice = pctVal > 0 ? (val / (pctVal / 100)) : val;
+                                const commAmount = Number(c.commissionValue || (c as any).commissionAmount || 0);
 
-                                deptValues[colKey] = (deptValues[colKey] || 0) + origPrice;
-                                deptTotalsMap[colKey] = (deptTotalsMap[colKey] || 0) + origPrice;
-                                rowSubtotal += origPrice;
+                                deptValues[colKey] = (deptValues[colKey] || 0) + commAmount;
+                                deptTotalsMap[colKey] = (deptTotalsMap[colKey] || 0) + commAmount;
                             });
 
-                            totalSubtotalSum += rowSubtotal;
-
-                            const discountPct = Number((comm.sale as any)?.discountPercentage || 0);
-                            const saleTotalPrice = Number((comm.sale as any)?.totalPrice || comm.sale?.netPrice || 0);
-                            const discountAmountVal = Number((comm.sale as any)?.discountAmount || 0);
-
-                            let discount = 0;
-                            if (discountPct > 0) {
-                                discount = rowSubtotal * (discountPct / 100);
-                            } else if (discountAmountVal > 0 && saleTotalPrice > 0) {
-                                discount = (rowSubtotal / saleTotalPrice) * discountAmountVal;
-                            }
-
-                            totalDiscountSum += discount;
-
-                            const netBill = rowSubtotal - discount;
-                            totalNetBillSum += netBill;
+                            totalBillSum += saleTotalPrice;
+                            totalDiscountSum += saleDiscountAmount;
+                            totalNetBillSum += saleNetPrice;
 
                             const comGiven = group.reduce((sum, c) => sum + Number(c.commissionValue || (c as any).commissionAmount || 0), 0);
                             totalComGivenSum += comGiven;
@@ -330,13 +318,14 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                                     <td className="py-3 text-[11px] text-left">{dateStr}</td>
                                     <td className="py-3 text-[11px] font-mono text-left">{billId}</td>
                                     <td className="py-3 text-[11px] text-left">{patName}</td>
-                                    <td className="py-3 text-right text-[11px]">{formatCurrency(rowSubtotal)}</td>
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(saleTotalPrice)}</td>
                                     {activeDeptCols.map(col => (
                                         <td key={col} className="py-3 text-right text-[11px] pr-2">
                                             {formatCurrency(deptValues[col])}
                                         </td>
                                     ))}
-                                    <td className="py-3 text-right text-[11px]">{formatCurrency(netBill)}</td>
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(saleDiscountAmount)}</td>
+                                    <td className="py-3 text-right text-[11px]">{formatCurrency(saleNetPrice)}</td>
                                     <td className="py-3 text-right text-[11px] font-black text-emerald-600">{formatCurrency(comGiven)}</td>
                                 </tr>
                             );
@@ -346,12 +335,13 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                         const totalRow = (
                             <tr key="totals-row" className="border-t-2 border-black font-black uppercase text-[11px] bg-gray-50/50">
                                 <td className="py-3 text-left" colSpan={3}>Grand Total</td>
-                                <td className="py-3 text-right">{formatCurrency(totalSubtotalSum)}</td>
+                                <td className="py-3 text-right">{formatCurrency(totalBillSum)}</td>
                                 {activeDeptCols.map(col => (
                                     <td key={col} className="py-3 text-right pr-2">
                                         {formatCurrency(deptTotalsMap[col])}
                                     </td>
                                 ))}
+                                <td className="py-3 text-right">{formatCurrency(totalDiscountSum)}</td>
                                 <td className="py-3 text-right">{formatCurrency(totalNetBillSum)}</td>
                                 <td className="py-3 text-right font-black text-emerald-600">{formatCurrency(totalComGivenSum)}</td>
                             </tr>

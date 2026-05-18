@@ -467,7 +467,10 @@ export default function ReferralDetailPage() {
                                                             />
                                                         </TableHead>
                                                         <TableHead className="text-[10px] font-black uppercase tracking-widest">Service/Client</TableHead>
-                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Amount</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Bill Total</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Discount</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Net Bill</TableHead>
+                                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Commission</TableHead>
                                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-center">Status</TableHead>
                                                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Date</TableHead>
                                                     </TableRow>
@@ -475,13 +478,13 @@ export default function ReferralDetailPage() {
                                                 <TableBody>
                                                     {commissionsLoading ? (
                                                         <TableRow>
-                                                            <TableCell colSpan={5} className="h-64 text-center">
+                                                            <TableCell colSpan={8} className="h-64 text-center">
                                                                 <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary/30" />
                                                             </TableCell>
                                                         </TableRow>
                                                     ) : commissions.length === 0 ? (
                                                         <TableRow>
-                                                            <TableCell colSpan={5} className="h-64 text-center">
+                                                            <TableCell colSpan={8} className="h-64 text-center">
                                                                 <div className="flex flex-col items-center justify-center space-y-3">
                                                                     <div className="p-4 rounded-full bg-muted/30">
                                                                         <Activity className="w-8 h-8 text-muted-foreground/30" />
@@ -527,12 +530,24 @@ export default function ReferralDetailPage() {
                                                                                 return pct !== undefined ? `${deptText} * ${pct}%` : deptText;
                                                                             })()}
                                                                         </p>
-                                                                        <div className="flex items-center gap-2">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
                                                                             <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
                                                                             <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
                                                                             <span className="text-[10px] text-muted-foreground/40 font-medium">({comm.serviceName})</span>
                                                                         </div>
+                                                                        {(comm as any).sale?.patient?.phone && (
+                                                                            <p className="text-[9px] text-muted-foreground/40 font-medium">📞 {(comm as any).sale.patient.phone}</p>
+                                                                        )}
                                                                     </div>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <p className="text-xs font-bold text-foreground">{formatCurrency(Number((comm as any).sale?.totalPrice || 0))}</p>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <p className="text-xs font-medium text-muted-foreground">{formatCurrency(Number((comm as any).sale?.discountAmount || 0))}</p>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <p className="text-xs font-bold text-foreground">{formatCurrency(Number((comm as any).sale?.netPrice || comm.sale?.netPrice || 0))}</p>
                                                                 </TableCell>
                                                                 <TableCell className="text-center">
                                                                     <p className="text-sm font-black text-foreground">{formatCurrency(comm.commissionValue || (comm as any).commissionAmount)}</p>
