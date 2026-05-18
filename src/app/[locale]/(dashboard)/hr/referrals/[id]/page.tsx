@@ -541,7 +541,7 @@ export default function ReferralDetailPage() {
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
-                                                                    <p className="text-xs font-bold text-foreground">{formatCurrency(Number((comm as any).sale?.totalPrice || 0))}</p>
+                                                                    <p className="text-xs font-bold text-foreground">{formatCurrency(Number((comm as any).sale?.totalPrice || (comm as any).sale?.netPrice || 0))}</p>
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     <p className="text-xs font-medium text-muted-foreground">{formatCurrency(Number((comm as any).sale?.discountAmount || 0))}</p>
