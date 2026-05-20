@@ -208,7 +208,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 <div className="p-1 px-3 font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
                     <div className="flex flex-wrap items-baseline gap-1 pt-0.5">
-                        <span className="uppercase text-[12px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "N/A"}</span>
+                        <span className="uppercase text-[12px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "Self"}</span>
                         {(data.doctor?.designation || propDoctor?.designation) && (
                             <span className="text-[10px] font-medium italic">
                                 ({data.doctor?.designation || propDoctor?.designation})
