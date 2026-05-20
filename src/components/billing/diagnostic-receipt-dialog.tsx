@@ -85,7 +85,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   const date = data?.createdAt || new Date().toISOString()
   
   // Find consultant
-  let consultantName = "N/A"
+  let consultantName = "Self"
   const doctorObj = data.doctor || propDoctor
   if (doctorObj) {
       const name = doctorObj.fullName || doctorObj.name
@@ -98,7 +98,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
       if (doc) {
           const name = doc.fullName || doc.name
           const designation = doc.designation
-          consultantName = designation ? `${name} (${designation})` : (name || "N/A")
+          consultantName = designation ? `${name} (${designation})` : (name || "Self")
       }
   } else if (data.referredByName) {
       consultantName = data.referredByName
@@ -116,7 +116,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   }
 
   // Find Assigned Referral Person
-  const agentName = data?.referralPerson?.name || data?.commissionAgent?.name || data?.agentName || data?.commissionAgentName || data?.agent?.name || "N/A"
+  const agentName = data?.referralPerson?.name || data?.commissionAgent?.name || data?.agentName || data?.commissionAgentName || data?.agent?.name || "Self"
 
   const deliveryDateRaw = items[0]?.deliveryDate || date;
   // Format as DD/MM/YYYY
