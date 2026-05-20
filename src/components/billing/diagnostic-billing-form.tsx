@@ -233,6 +233,7 @@ export function DiagnosticBillingForm({
         }
     }, [accounts, selectedAccountId])
 
+
     // Handlers
     const handleAddTest = (serviceId?: string) => {
         const testIdToAdd = serviceId || selectedTestId
@@ -304,6 +305,13 @@ export function DiagnosticBillingForm({
     const tax = discountedSubtotal * (vatPercentage / 100)
     const total = discountedSubtotal + tax
 
+    // Auto-fill paid amount with the total
+    useEffect(() => {
+        if (total > 0) {
+            setPaidAmount(total)
+        }
+    }, [total])
+
     const handleCheckout = async () => {
         if (!selectedCustomer || cart.length === 0 || !selectedAccountId) return
 
@@ -372,10 +380,10 @@ export function DiagnosticBillingForm({
     }
 
     // Validation Check
-    const isReady = !!selectedCustomer && !!selectedDoctorId && !!selectedAccountId && cart.length > 0
+    const isReady = !!selectedCustomer && !!selectedAccountId && cart.length > 0
     const validationErrors = [
         { key: 'patient', label: 'Patient Identification', valid: !!selectedCustomer },
-        { key: 'doctor', label: 'Consultant Selected', valid: !!selectedDoctorId },
+        { key: 'doctor', label: 'Consultant Selected (Optional)', valid: true },
         { key: 'account', label: 'Finance Account', valid: !!selectedAccountId },
         { key: 'cart', label: 'Services Added', valid: cart.length > 0 },
     ]
