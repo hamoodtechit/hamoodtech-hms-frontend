@@ -229,10 +229,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             const item = { ...next[index] };
             if (field === 'discountPercentage') {
                 item.discountPercentage = val;
-                item.discountAmount = (Number(item.price) * val) / 100;
+                item.discountAmount = 0;
             } else {
                 item.discountAmount = val;
-                item.discountPercentage = (val / (Number(item.price) || 1)) * 100;
+                item.discountPercentage = 0;
             }
             next[index] = item;
             return next;
@@ -245,7 +245,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
     // Totals logic
     const subtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
-    const totalItemDiscount = saleItems.reduce((sum, item) => sum + (Number(item.discountAmount) || 0), 0)
+    const totalItemDiscount = saleItems.reduce((sum, item) => {
+        const amt = Number(item.discountAmount) || (Number(item.discountPercentage || 0) ? (Number(item.price) * Number(item.quantity) * Number(item.discountPercentage)) / 100 : 0);
+        return sum + amt;
+    }, 0)
     
     const discountedSubtotal = Math.max(0, subtotal - totalItemDiscount)
     const discountAmount = discountFixedAmount || (discountedSubtotal * discount) / 100
@@ -553,7 +556,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                                     </div>
                                                     <div className="flex-1 text-right">
                                                         <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-70 block mb-1">Final</Label>
-                                                        <span className="text-sm font-black text-primary">{formatCurrency(Number(item.price) - Number(item.discountAmount))}</span>
+                                                        <span className="text-sm font-black text-primary">{formatCurrency(Number(item.price) - (Number(item.discountAmount) || (Number(item.discountPercentage || 0) ? (Number(item.price) * Number(item.discountPercentage)) / 100 : 0)))}</span>
                                                     </div>
                                                 </div>
                                             </div>
