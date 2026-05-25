@@ -90,6 +90,7 @@ function handlePrint() {
             <title>Diagnostic Report</title>
             ${styles}
             <style>
+                @page { size: A4; margin: 0 !important; }
                 body { margin: 0; padding: 0; background: white; }
                 #print-report { margin: 0 auto !important; box-shadow: none !important; }
             </style>
