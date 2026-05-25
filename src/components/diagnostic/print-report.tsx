@@ -483,33 +483,9 @@ export function PrintReport({ report }: PrintReportProps) {
                 }
                 
                 @media print {
-                    /* First page: space for pre-printed letterhead */
-                    @page :first {
-                        size: A4;
-                        margin-top: 1.5in;
-                        margin-bottom: 0.8in;
-                        margin-left: 0;
-                        margin-right: 0;
-                        @bottom-center {
-                            content: "Page " counter(page) " of " counter(pages);
-                            font-size: 8pt;
-                            font-family: 'Times New Roman', serif;
-                            color: #666;
-                        }
-                    }
-                    /* Subsequent pages: tighter margins, no letterhead space */
                     @page {
                         size: A4;
-                        margin-top: 0.4in;
-                        margin-bottom: 0.8in;
-                        margin-left: 0;
-                        margin-right: 0;
-                        @bottom-center {
-                            content: "Page " counter(page) " of " counter(pages);
-                            font-size: 8pt;
-                            font-family: 'Times New Roman', serif;
-                            color: #666;
-                        }
+                        margin: 0;
                     }
                     body {
                         margin: 0;
@@ -523,13 +499,6 @@ export function PrintReport({ report }: PrintReportProps) {
                     tr {
                         page-break-inside: avoid;
                         break-inside: avoid;
-                    }
-                    /* Don't split test groups */
-                    .report-page {
-                        page-break-after: always;
-                    }
-                    .report-page:last-child {
-                        page-break-after: auto;
                     }
                     /* Prevent orphan/widow in impression blocks */
                     .print-impression-block {
