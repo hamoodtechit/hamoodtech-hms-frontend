@@ -377,7 +377,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         .replace(/&amp;/g, '&');
                                         
                                     return (
-                                        <div key={bIdx} className={cn("py-4 mb-4 print-impression-block", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
+                                        <div key={bIdx} className={cn("py-4 mb-4", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
                                             {block.type === 'impression' && (
                                                 <span className="font-black underline text-[12pt] mr-3 uppercase text-black italic">INTERPRETATION / CONCLUSION:</span>
                                             )}
@@ -396,7 +396,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             })}
                         </div>
 
-                        {/* Dynamic Positioning Footer */}
+                        {/* Dynamic Positioning Footer - pushes to bottom but doesn't overlap */}
                         <div className="mt-auto pt-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
@@ -473,37 +473,16 @@ export function PrintReport({ report }: PrintReportProps) {
                 </div>
             ))}
             <style jsx global>{`
-                .report-page {
-                    width: 210mm;
-                    min-height: 297mm;
-                    margin-top: 0;
-                    margin-bottom: 0;
-                }
-                
-                @page {
-                    size: A4;
-                    margin: 0 !important;
-                }
-                
                 @media print {
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
                     body {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
-                    /* Table: keep header on every page, don't split rows */
-                    thead {
-                        display: table-header-group;
-                    }
-                    tr {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
-                    /* Prevent orphan/widow in impression blocks */
-                    .print-impression-block {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
+                   }
                 }
             `}</style>
         </div>
