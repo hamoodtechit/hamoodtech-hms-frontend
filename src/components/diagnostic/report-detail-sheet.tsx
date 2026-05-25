@@ -92,10 +92,6 @@ function handlePrint() {
             <style>
                 body { margin: 0; padding: 0; background: white; }
                 #print-report { margin: 0 auto !important; box-shadow: none !important; }
-                @media print {
-                    @page { size: A4; margin: 0; }
-                    body { -webkit-print-color-adjust: exact; }
-                }
             </style>
         </head>
         <body onload="setTimeout(() => { window.print(); window.close(); }, 500)">
