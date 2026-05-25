@@ -476,14 +476,15 @@ export function PrintReport({ report }: PrintReportProps) {
                 .report-page {
                     width: 210mm;
                     min-height: 297mm;
-                    padding-top: 1.5in;
-                    padding-bottom: 0.6in;
                 }
                 
                 @media print {
                     @page {
                         size: A4;
-                        margin: 0;
+                        margin-top: 1.5in;
+                        margin-bottom: 0.6in;
+                        margin-left: 0;
+                        margin-right: 0;
                     }
                     body {
                         margin: 0;
