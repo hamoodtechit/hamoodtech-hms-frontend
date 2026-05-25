@@ -35,24 +35,9 @@ export function DischargeReceiptDialog({
     const { user } = useAuthStore()
     const printRef = useRef<HTMLDivElement>(null)
 
-    if (!admission || !data) return null
-
-    const patient = admission.patient
-
-    // ── Helper: compute item discount info ──────────────────────────
-    const getItemDiscount = (item: any) => {
-        const pct = Number(item.discountPercentage || 0)
-        const amt = Number(item.discountAmount || 0)
-        if (pct > 0) {
-            const computed = (Number(item.price) * Number(item.quantity || 1) * pct) / 100
-            return { pct, amt: computed, label: `${pct}%` }
-        }
-        if (amt > 0) return { pct: 0, amt, label: formatCurrency(amt) }
-        return null
-    }
-
-    // ── Bed Rent Calculation ────────────────────────────────────────
+    // ── Bed Rent Calculation (must be before any conditional return) ──
     const bedRentCalc = useMemo(() => {
+        if (!admission || !data) return null
         const bedType = admission?.bed?.bedType
         if (!bedType?.pricePerDay || !admission?.admissionDate) return null
 
@@ -79,7 +64,23 @@ export function DischargeReceiptDialog({
             totalBedRent,
             alreadyCharged,
         }
-    }, [admission?.bed?.bedType, admission?.admissionDate, data?.hospital?.bills])
+    }, [admission, data])
+
+    if (!admission || !data) return null
+
+    const patient = admission.patient
+
+    // ── Helper: compute item discount info ──────────────────────────
+    const getItemDiscount = (item: any) => {
+        const pct = Number(item.discountPercentage || 0)
+        const amt = Number(item.discountAmount || 0)
+        if (pct > 0) {
+            const computed = (Number(item.price) * Number(item.quantity || 1) * pct) / 100
+            return { pct, amt: computed, label: `${pct}%` }
+        }
+        if (amt > 0) return { pct: 0, amt, label: formatCurrency(amt) }
+        return null
+    }
 
     // We already have the snapshot in data.
     // However, the 'finalPaidAmount' and 'overallDiscount' provided is what applies to the Discharge Action itself.
