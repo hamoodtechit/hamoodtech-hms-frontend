@@ -478,11 +478,12 @@ export function PrintReport({ report }: PrintReportProps) {
                     min-height: 297mm;
                 }
                 
+                @page {
+                    size: A4;
+                    margin: 0 !important;
+                }
+                
                 @media print {
-                    @page {
-                        size: A4;
-                        margin: 0 !important;
-                    }
                     body {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
