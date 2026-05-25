@@ -120,17 +120,18 @@ function handlePrint() {
     .join("\n");
 
   win.document.write(`
-        <html>
+        <html style="margin:0;padding:0">
         <head>
             <title>Diagnostic Report</title>
-            ${styles}
             <style>
                 html, body { margin: 0 !important; padding: 0 !important; background: white; }
+            </style>
+            ${styles}
+            <style>
                 @page { size: A4; margin: 0 !important; }
-                #print-report { margin: 0 auto !important; box-shadow: none !important; }
             </style>
         </head>
-        <body onload="setTimeout(() => { window.print(); window.close(); }, 500)">
+        <body style="margin:0;padding:0" onload="setTimeout(() => { window.print(); window.close(); }, 500)">
             ${el.innerHTML}
         </body>
         </html>
