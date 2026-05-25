@@ -395,7 +395,8 @@ export function PrintReport({ report }: PrintReportProps) {
                             })}
                         </div>
 
-                        {/* Dynamic Positioning Footer - pushes to bottom but doesn't overlap */}
+                        {/* Dynamic Positioning Footer — only on the LAST page */}
+                        {gIdx === groupReports.length - 1 && (
                         <div className="mt-auto pt-10">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
@@ -468,6 +469,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 <p className="italic">*Powered by HamoodTech</p>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             ))}
