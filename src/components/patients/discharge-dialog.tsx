@@ -196,10 +196,9 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
             await createSale({
                 branchId: activeStoreId || "",
                 patientId: admission.patientId,
-                type: "admission",
+                type: "hospital",
                 status: "pending",
                 paymentMethod: "cash",
-                paymentStatus: "due",
                 paidAmount: 0,
                 dueAmount: additionalBedRent,
                 discountPercentage: 0,
@@ -214,13 +213,13 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                     price: pricePerDay,
                     mrp: pricePerDay,
                     quantity: additionalDays,
+                    totalPrice: additionalBedRent,
                     discountPercentage: 0,
                     discountAmount: 0,
-                    totalPrice: additionalBedRent,
                     isDiagnosticTest: false,
                 }],
                 note: "Auto-generated additional bed rent at discharge",
-            } as any)
+            })
             toast.success(`Additional bed rent of ${formatCurrency(additionalBedRent)} added to bill`)
             setAdditionalBedRentAdded(true)
             refetchDischarge()
