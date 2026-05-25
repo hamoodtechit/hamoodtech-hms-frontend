@@ -165,12 +165,13 @@ export function PrintReport({ report }: PrintReportProps) {
                 <div 
                     key={gIdx} 
                     className={cn(
-                        "mx-auto relative bg-white report-page",
+                        "mx-auto relative overflow-hidden bg-white",
                         gIdx > 0 && "print:break-before-page" // Page break for subsequent groups
                     )}
+                    style={{ width: "210mm", minHeight: "330mm", padding: "0" }}
                 >
 
-                    <div className="px-10 relative z-10 flex flex-col h-full min-h-full">
+                    <div className="px-10 pt-[1.5in] pb-[0.6in] relative z-10 min-h-[13in] flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
@@ -376,7 +377,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         .replace(/&amp;/g, '&');
                                         
                                     return (
-                                        <div key={bIdx} className={cn("py-4 mb-4", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
+                                        <div key={bIdx} className={cn("py-4 mb-4 print-impression-block", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
                                             {block.type === 'impression' && (
                                                 <span className="font-black underline text-[12pt] mr-3 uppercase text-black italic">INTERPRETATION / CONCLUSION:</span>
                                             )}
@@ -482,18 +483,59 @@ export function PrintReport({ report }: PrintReportProps) {
                 }
                 
                 @media print {
-                    @page {
+                    /* First page: space for pre-printed letterhead */
+                    @page :first {
                         size: A4;
                         margin-top: 1.5in;
-                        margin-bottom: 0.6in;
+                        margin-bottom: 0.8in;
                         margin-left: 0;
                         margin-right: 0;
+                        @bottom-center {
+                            content: "Page " counter(page) " of " counter(pages);
+                            font-size: 8pt;
+                            font-family: 'Times New Roman', serif;
+                            color: #666;
+                        }
+                    }
+                    /* Subsequent pages: tighter margins, no letterhead space */
+                    @page {
+                        size: A4;
+                        margin-top: 0.4in;
+                        margin-bottom: 0.8in;
+                        margin-left: 0;
+                        margin-right: 0;
+                        @bottom-center {
+                            content: "Page " counter(page) " of " counter(pages);
+                            font-size: 8pt;
+                            font-family: 'Times New Roman', serif;
+                            color: #666;
+                        }
                     }
                     body {
                         margin: 0;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                   }
+                    }
+                    /* Table: keep header on every page, don't split rows */
+                    thead {
+                        display: table-header-group;
+                    }
+                    tr {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                    /* Don't split test groups */
+                    .report-page {
+                        page-break-after: always;
+                    }
+                    .report-page:last-child {
+                        page-break-after: auto;
+                    }
+                    /* Prevent orphan/widow in impression blocks */
+                    .print-impression-block {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
                 }
             `}</style>
         </div>
