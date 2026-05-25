@@ -481,10 +481,7 @@ export function PrintReport({ report }: PrintReportProps) {
                 @media print {
                     @page {
                         size: A4;
-                        margin-top: 0.2in;
-                        margin-bottom: 0.2in;
-                        margin-left: 0;
-                        margin-right: 0;
+                        margin: 0;
                     }
                     body {
                         margin: 0;
