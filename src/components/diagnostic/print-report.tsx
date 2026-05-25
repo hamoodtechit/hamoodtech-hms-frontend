@@ -171,7 +171,7 @@ export function PrintReport({ report }: PrintReportProps) {
                     style={{ width: "210mm", minHeight: "330mm", padding: "0" }}
                 >
 
-                    <div className="px-10 pt-[1.5in] pb-[0.6in] relative z-10 min-h-[13in] flex flex-col">
+                    <div className="px-10 pb-[0.6in] relative z-10 min-h-[13in] flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
                         <div className="flex justify-between items-start mb-6 px-1">
                             <div className="flex flex-col items-center">
