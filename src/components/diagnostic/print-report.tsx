@@ -476,6 +476,8 @@ export function PrintReport({ report }: PrintReportProps) {
                 .report-page {
                     width: 210mm;
                     min-height: 297mm;
+                    margin-top: 0;
+                    margin-bottom: 0;
                 }
                 
                 @page {
