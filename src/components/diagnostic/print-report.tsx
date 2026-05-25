@@ -212,26 +212,26 @@ export function PrintReport({ report }: PrintReportProps) {
                                 return (
                                     <>
                                         {/* Standardized Boxed Patient Info (Unified across all modes) */}
-                                        <div className="py-1 mb-2 bg-white text-black text-[11pt] font-serif">
+                                        <div className="py-0 mb-1 bg-white text-black text-[11pt] font-serif">
                                             <table className="w-full border-collapse text-[11pt]">
                                                 <tbody>
                                                     <tr >
-                                                        <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
-                                                        <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
-                                                        <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
-                                                        <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
+                                                        <td className="pr-1 py-0.5 w-[15%] font-bold">Patient ID</td>
+                                                        <td className="pr-1 py-0.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
+                                                        <td className="pr-1 py-0.5 w-[20%] font-bold">Collection Date</td>
+                                                        <td className="py-0.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
                                                     </tr>
                                                     <tr >
-                                                        <td className="pr-1 py-1.5 font-bold">Name</td>
-                                                        <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
-                                                        <td className="pr-1 py-1.5 font-bold">Report Date</td>
-                                                        <td className="py-1.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
+                                                        <td className="pr-1 py-0.5 font-bold">Name</td>
+                                                        <td className="pr-4 py-0.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
+                                                        <td className="pr-1 py-0.5 font-bold">Report Date</td>
+                                                        <td className="py-0.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td className="pr-1 py-1.5 font-bold">Age / Gender</td>
-                                                        <td className="pr-4 py-1.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
-                                                        <td className="pr-1 py-1.5 font-bold">Consultant</td>
-                                                        <td className="py-1.5">: <span className="font-medium text-black uppercase">
+                                                        <td className="pr-1 py-0.5 font-bold">Age / Gender</td>
+                                                        <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                        <td className="pr-1 py-0.5 font-bold">Consultant</td>
+                                                        <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                             {result?.consultantName || doctor?.fullName || 'SELF'}
                                                             {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
                                                                 <span className="ml-1 text-[9pt] font-medium text-black/60 lowercase italic">
@@ -271,22 +271,22 @@ export function PrintReport({ report }: PrintReportProps) {
                                         <table className="w-full border-collapse text-[11pt]">
                                             <tbody>
                                                 <tr >
-                                                    <td className="pr-1 py-1.5 w-[15%] font-bold">Patient ID</td>
-                                                    <td className="pr-1 py-1.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
-                                                    <td className="pr-1 py-1.5 w-[20%] font-bold">Collection Date</td>
-                                                    <td className="py-1.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
+                                                    <td className="pr-1 py-0.5 w-[15%] font-bold">Patient ID</td>
+                                                    <td className="pr-1 py-0.5 w-[35%]">: <span className="font-mono font-black text-black">{patient?.patientNumber || barcode.toUpperCase()}</span></td>
+                                                    <td className="pr-1 py-0.5 w-[20%] font-bold">Collection Date</td>
+                                                    <td className="py-0.5 w-[30%] font-black">: {detail?.createdAt ? format(new Date(detail.createdAt), "dd MMM yyyy hh:mm a") : "—"}</td>
                                                 </tr>
                                                 <tr >
-                                                    <td className="pr-1 py-1.5 font-bold">Name</td>
-                                                    <td className="pr-4 py-1.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
-                                                    <td className="pr-1 py-1.5 font-bold">Report Date</td>
-                                                    <td className="py-1.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
+                                                    <td className="pr-1 py-0.5 font-bold">Name</td>
+                                                    <td className="pr-4 py-0.5">: <span className="font-black uppercase text-[13pt] text-black">{patient?.name}</span></td>
+                                                    <td className="pr-1 py-0.5 font-bold">Report Date</td>
+                                                    <td className="py-0.5">: {detail?.updatedAt ? format(new Date(detail.updatedAt), "dd MMM yyyy hh:mm a") : format(new Date(), "dd MMM yyyy hh:mm a")}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td className="pr-1 py-1.5 font-bold">Age / Gender</td>
-                                                    <td className="pr-4 py-1.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
-                                                    <td className="pr-1 py-1.5 font-bold">Consultant</td>
-                                                    <td className="py-1.5">: <span className="font-medium text-black uppercase">
+                                                    <td className="pr-1 py-0.5 font-bold">Age / Gender</td>
+                                                    <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                    <td className="pr-1 py-0.5 font-bold">Consultant</td>
+                                                    <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                         {result?.consultantName || doctor?.fullName || 'SELF'}
                                                         {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
                                                             <span className="ml-1 text-[9pt] font-medium text-black/60 lowercase italic">
