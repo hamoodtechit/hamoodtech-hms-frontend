@@ -517,7 +517,7 @@ export function AddAdmissionServiceDialog({
                                     <div className="space-y-1">
                                         <Label className="text-[9px] font-bold text-muted-foreground ml-1">Disc Amt</Label>
                                         <SmartNumberInput
-                                            value={discountFixedAmount || (subtotal * discountPercentage) / 100}
+                                            value={discountFixedAmount || undefined}
                                             onChange={(v) => {
                                                 setDiscountFixedAmount(v || 0)
                                                 setDiscountPercentage(0)
