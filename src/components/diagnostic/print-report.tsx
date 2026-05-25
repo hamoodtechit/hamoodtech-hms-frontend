@@ -173,7 +173,7 @@ export function PrintReport({ report }: PrintReportProps) {
 
                     <div className="px-10 pb-[0.6in] relative z-10 min-h-[13in] flex flex-col">
                         {/* Barcodes at Top Left and Top Right */}
-                        <div className="flex justify-between items-start mb-6 px-1">
+                        <div className="flex justify-between items-start mb-1 px-1">
                             <div className="flex flex-col items-center">
                                 <svg className="h-10 w-40" viewBox="0 0 100 20" preserveAspectRatio="none">
                                     {[2, 5, 8, 12, 15, 20, 22, 25, 30, 32, 35, 40, 42, 45, 50, 52, 55, 60, 62, 65, 70, 72, 75, 80, 82, 85, 90, 92, 95].map((x, i) => (
@@ -212,7 +212,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 return (
                                     <>
                                         {/* Standardized Boxed Patient Info (Unified across all modes) */}
-                                        <div className="py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                        <div className="py-1 mb-2 bg-white text-black text-[11pt] font-serif">
                                             <table className="w-full border-collapse text-[11pt]">
                                                 <tbody>
                                                     <tr >
@@ -245,7 +245,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         </div>
 
                                         {/* Narrative Style: Test Title */}
-                                        <div className="mb-10 text-center">
+                                        <div className="mb-2 text-center">
                                             <div className="inline-flex items-baseline gap-4">
                                                 <span className="font-bold text-[13pt] italic">Test of:</span>
                                                 <h2 className="font-black text-[15pt] uppercase tracking-wide inline-block">
@@ -260,7 +260,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             return (
                                 <>
                                     {/* Standard Style: Prominent Title */}
-                                    <div className="text-center mb-10 pb-2">
+                                    <div className="text-center mb-2 pb-1">
                                         <h2 className="font-black text-[22pt] uppercase tracking-[0.2em] text-black">
                                             {displayTitle} REPORT
                                         </h2>
@@ -353,7 +353,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             );
                             
                             return (
-                                <div className="text-center mb-6 italic text-[11.5pt] text-black font-serif leading-tight">
+                                <div className="text-center mb-2 italic text-[11.5pt] text-black font-serif leading-tight">
                                     {uniqueMachines.map((m, idx) => (
                                         <div key={idx} className="mb-0.5">
                                             (Tests are carried out by {m})
@@ -377,7 +377,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         .replace(/&amp;/g, '&');
                                         
                                     return (
-                                        <div key={bIdx} className={cn("py-4 mb-4", block.type === 'impression' && "mt-10 pt-6 border-t-2 border-black font-serif")}>
+                                        <div key={bIdx} className={cn("py-1 mb-1", block.type === 'impression' && "mt-4 pt-2 border-t-2 border-black font-serif")}>
                                             {block.type === 'impression' && (
                                                 <span className="font-black underline text-[12pt] mr-3 uppercase text-black italic">INTERPRETATION / CONCLUSION:</span>
                                             )}
@@ -397,7 +397,7 @@ export function PrintReport({ report }: PrintReportProps) {
                         </div>
 
                         {/* Dynamic Positioning Footer - pushes to bottom but doesn't overlap */}
-                        <div className="mt-auto pt-10">
+                        <div className="mt-auto pt-4">
                             {(() => {
                                 const isNarrativeGroup = group.blocks.some(b => b.type === 'narrative');
                                 
@@ -414,7 +414,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
                                         <div className="text-left">
                                             <div className="flex flex-col items-start gap-0">
-                                                <div className="h-[40px]" /> {/* Space for signature */}
+                                                <div className="h-[20px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Checked By</p>
                                                 {/* Empty line to match the 2-line height of other columns for line alignment */}
@@ -425,7 +425,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         {/* COLUMN 2: MIDDLE - Narrative: Doctor, Table: Checked By Name */}
                                         <div className="text-center">
                                             <div className="flex flex-col items-center gap-0">
-                                                <div className="h-[40px]" /> {/* Space for signature */}
+                                                <div className="h-[20px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 {isNarrativeGroup ? (
                                                     <>
@@ -452,7 +452,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         {/* COLUMN 3: RIGHT - Always PREPARED BY label + name (no designation) */}
                                         <div className="text-right">
                                             <div className="flex flex-col items-end gap-0">
-                                                <div className="h-[40px]" /> {/* Space for signature */}
+                                                <div className="h-[20px]" /> {/* Space for signature */}
                                                 <div className="w-full max-w-[180px] h-[1.5px] bg-black mb-1" />
                                                 <p className="font-bold text-[11pt] italic leading-none uppercase tracking-widest">Prepared By</p>
                                                 <p className="font-black text-[13pt] leading-none uppercase tracking-tight py-1">
@@ -464,7 +464,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 );
                             })()}
                             
-                            <div className="mt-8 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-2 border-t border-dashed border-black/20">
+                            <div className="mt-2 flex justify-between items-center text-[8pt] text-black font-sans font-bold pt-1 border-t border-dashed border-black/20">
                                 <p>REPORT ID: {barcode.toUpperCase()}</p>
                                 <p className="italic">*Powered by HamoodTech</p>
                             </div>
