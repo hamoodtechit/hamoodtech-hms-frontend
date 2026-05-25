@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useDischargeInitiate, useCompleteDischarge } from "@/hooks/patient-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useCreateSale, useUpdateSale } from "@/hooks/sales-queries"
+import { useCreateSale } from "@/hooks/sales-queries"
 import { format } from "date-fns"
 import { 
     AlertCircle,
@@ -21,7 +21,6 @@ import {
     CreditCard, 
     FileText, 
     Loader2, 
-    Pencil,
     Pill, 
     Plus,
     Receipt, 
@@ -51,36 +50,32 @@ interface DischargeDialogProps {
     onSuccess?: () => void
 }
 
-function BillItemRow({ bill, refetch }: { bill: any; refetch: () => void }) {
-    const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
-    const [discountAmount, setDiscountAmount] = useState<number | undefined>(Number(bill.discountAmount) || undefined)
-    const [discountPercent, setDiscountPercent] = useState<number | undefined>(Number(bill.discountPercentage) || undefined)
-
-    const isChanged = discountAmount !== (Number(bill.discountAmount) || undefined) || discountPercent !== (Number(bill.discountPercentage) || undefined)
-
-    const handleApply = async () => {
-        try {
-            await updateSale({ id: bill.id, data: { discountAmount: discountAmount || 0, discountPercentage: discountPercent || 0 } })
-            toast.success('Discount applied successfully')
-            refetch()
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to apply discount')
-        }
-    }
-
+function BillItemRow({ bill }: { bill: any; refetch: () => void }) {
     return (
         <div className="flex justify-between items-center bg-muted/20 p-2.5 rounded-xl hover:bg-muted/40 transition-colors border border-transparent hover:border-white/10 group">
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-[11px] font-black group-hover:text-primary transition-colors leading-tight">
                     {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type?.toUpperCase()}
                 </span>
                 
-                <div className="flex flex-wrap gap-1 mb-1">
-                    {bill.saleItems?.map((item: any) => (
-                        <Badge key={item.id} variant="outline" className="text-[7.5px] py-0 h-3.5 bg-background font-bold text-muted-foreground/80 leading-none">
-                            {item.itemName}
-                        </Badge>
-                    ))}
+                <div className="flex flex-col gap-0.5 mb-1">
+                    {bill.saleItems?.map((item: any) => {
+                        const itemDiscAmt = Number(item.discountAmount) || (Number(item.discountPercentage || 0) ? (Number(item.price) * Number(item.quantity || 1) * Number(item.discountPercentage)) / 100 : 0)
+                        const hasDiscount = Number(item.discountPercentage) > 0 || Number(item.discountAmount) > 0
+                        return (
+                            <div key={item.id} className="flex items-center gap-1.5 text-[8px] font-bold text-muted-foreground/70">
+                                <span className="bg-muted-foreground/10 px-1.5 py-0.5 rounded text-[7.5px] font-black text-foreground/60 uppercase leading-none">
+                                    {item.itemName}
+                                </span>
+                                <span className="tabular-nums">{formatCurrency(Number(item.price))} × {item.quantity || 1}</span>
+                                {hasDiscount && (
+                                    <span className="text-amber-600/80 font-black italic">
+                                        Disc: {Number(item.discountPercentage) > 0 ? `${item.discountPercentage}%` : formatCurrency(Number(item.discountAmount))}
+                                    </span>
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
 
                 <div className="flex items-center gap-1.5 opacity-60">
@@ -92,38 +87,10 @@ function BillItemRow({ bill, refetch }: { bill: any; refetch: () => void }) {
                 </div>
             </div>
             
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex flex-col items-end gap-1 shrink-0">
                 <div className="flex flex-col items-end">
                     <span className="text-xs font-black tabular-nums">{formatCurrency(Number(bill.netPrice))}</span>
                     {Number(bill.dueAmount) > 0 && <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Due: {formatCurrency(Number(bill.dueAmount))}</span>}
-                </div>
-                
-                <div className="flex items-center gap-1 bg-secondary/30 rounded-md p-0.5 border">
-                    <SmartNumberInput 
-                        placeholder="%"
-                        className="h-6 text-[10px] w-12 bg-background border-none px-1"
-                        min={0} max={100}
-                        value={discountPercent}
-                        onChange={(val: number | undefined) => { setDiscountPercent(val); setDiscountAmount(undefined); }}
-                    />
-                    <Separator orientation="vertical" className="h-4" />
-                    <SmartNumberInput 
-                        placeholder="Amt"
-                        className="h-6 text-[10px] w-16 bg-background border-none px-1"
-                        min={0}
-                        value={discountAmount}
-                        onChange={(val: number | undefined) => { setDiscountAmount(val); setDiscountPercent(undefined); }}
-                    />
-                    {isChanged && (
-                        <Button
-                            variant="ghost" size="icon"
-                            className="h-6 w-6 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all ml-1"
-                            onClick={handleApply}
-                            disabled={isUpdatingSale}
-                        >
-                            {isUpdatingSale ? <Loader2 className="h-3 w-3 animate-spin"/> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                        </Button>
-                    )}
                 </div>
             </div>
         </div>
@@ -137,7 +104,6 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
     const accounts = useMemo(() => accountsRes?.data || [], [accountsRes])
     const { mutateAsync: createSale, isPending: isCreatingExtra } = useCreateSale()
-    const { mutateAsync: updateSale, isPending: isUpdatingSale } = useUpdateSale()
     
     // Receipt State
     const [receiptOpen, setReceiptOpen] = useState(false)
@@ -180,6 +146,90 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const grandTotalBill = Number(data?.grandTotal?.netPrice || data?.grandTotal?.totalBill || data?.grandTotal?.totalPrice || (hospitalTotals.totalBill + pharmacyTotals.totalBill))
     const grandTotalPaid = Number(data?.grandTotal?.paidAmount || data?.grandTotal?.totalPaid || (hospitalTotals.totalPaid + pharmacyTotals.totalPaid))
     const grandTotalDue = Number(data?.grandTotal?.dueAmount || data?.grandTotal?.totalDue || (hospitalTotals.totalDue + pharmacyTotals.totalDue))
+
+    // ── Bed Rent Calculation ──────────────────────────────────────────
+    const [additionalBedRentAdded, setAdditionalBedRentAdded] = useState(false)
+    const [isAddingBedRent, setIsAddingBedRent] = useState(false)
+
+    const bedRentCalculation = useMemo(() => {
+        const bedType = admission?.bed?.bedType
+        if (!bedType?.pricePerDay || !admission?.admissionDate) return null
+
+        const pricePerDay = Number(bedType.pricePerDay)
+        const admissionDate = new Date(admission.admissionDate)
+        const today = new Date()
+        const diffMs = today.getTime() - admissionDate.getTime()
+        const stayDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+
+        const totalBedRent = stayDays * pricePerDay
+
+        let alreadyCharged = 0
+        hospitalBills.forEach((bill: any) => {
+            bill.saleItems?.forEach((item: any) => {
+                if (item.isBedCharge || item.itemName?.toLowerCase().includes('bed') || item.itemName?.toLowerCase().includes('cabin')) {
+                    alreadyCharged += Number(item.price || 0) * Number(item.quantity || 1)
+                }
+            })
+        })
+
+        const additionalBedRent = Math.max(0, totalBedRent - alreadyCharged)
+
+        return {
+            stayDays,
+            pricePerDay,
+            totalBedRent,
+            alreadyCharged,
+            additionalBedRent,
+        }
+    }, [admission?.bed?.bedType, admission?.admissionDate, hospitalBills])
+
+    const handleAddBedRentToBill = async () => {
+        if (!bedRentCalculation || !admission) return
+        const { additionalBedRent, pricePerDay, stayDays, alreadyCharged } = bedRentCalculation
+        if (additionalBedRent <= 0) return
+
+        const additionalDays = stayDays - Math.floor(alreadyCharged / pricePerDay)
+        if (additionalDays <= 0) return
+
+        setIsAddingBedRent(true)
+        try {
+            await createSale({
+                branchId: activeStoreId || "",
+                patientId: admission.patientId,
+                type: "admission",
+                status: "pending",
+                paymentMethod: "cash",
+                paymentStatus: "due",
+                paidAmount: 0,
+                dueAmount: additionalBedRent,
+                discountPercentage: 0,
+                discountAmount: 0,
+                taxPercentage: 0,
+                taxAmount: 0,
+                isIndoorSale: true,
+                patientAdmissionId: admission.id,
+                saleItems: [{
+                    itemName: `Bed/Cabin Charge (Additional ${additionalDays} day${additionalDays > 1 ? 's' : ''})`,
+                    unit: "day",
+                    price: pricePerDay,
+                    mrp: pricePerDay,
+                    quantity: additionalDays,
+                    discountPercentage: 0,
+                    discountAmount: 0,
+                    totalPrice: additionalBedRent,
+                    isDiagnosticTest: false,
+                }],
+                note: "Auto-generated additional bed rent at discharge",
+            } as any)
+            toast.success(`Additional bed rent of ${formatCurrency(additionalBedRent)} added to bill`)
+            setAdditionalBedRentAdded(true)
+            refetchDischarge()
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Failed to add bed rent")
+        } finally {
+            setIsAddingBedRent(false)
+        }
+    }
 
     // Calculate Overall Discount Amount
     const overallDiscountAmount = useMemo(() => {
@@ -319,6 +369,64 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                     </div>
                                 </div>
                             </div>
+
+                            {/* ── Bed Rent Calculation ────────────────────────────── */}
+                            {bedRentCalculation && (
+                                <div className="bg-amber-500/5 p-5 rounded-2xl border border-amber-500/10 shadow-inner space-y-3">
+                                    <div className="flex items-center gap-2 text-amber-600">
+                                        <Wallet className="h-4 w-4" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest">Bed Rent Calculation</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Stay Days</span>
+                                            <span className="text-sm font-black">{bedRentCalculation.stayDays} days</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Daily Rate</span>
+                                            <span className="text-sm font-black">{formatCurrency(bedRentCalculation.pricePerDay)}</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Total Bed Rent</span>
+                                            <span className="text-sm font-black text-primary">{formatCurrency(bedRentCalculation.totalBedRent)}</span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Already Charged</span>
+                                            <span className="text-sm font-black text-emerald-600">-{formatCurrency(bedRentCalculation.alreadyCharged)}</span>
+                                        </div>
+                                    </div>
+                                    {bedRentCalculation.additionalBedRent > 0 && (
+                                        <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-amber-500/20">
+                                            <div className="space-y-0.5">
+                                                <span className="text-[10px] font-black uppercase text-amber-600">Additional Bed Rent Due</span>
+                                                <span className="text-lg font-black text-amber-600">{formatCurrency(bedRentCalculation.additionalBedRent)}</span>
+                                            </div>
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                className="h-9 px-4 text-[10px] font-black uppercase bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 border border-amber-500/20"
+                                                onClick={handleAddBedRentToBill}
+                                                disabled={isAddingBedRent || additionalBedRentAdded}
+                                            >
+                                                {isAddingBedRent ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                                                ) : additionalBedRentAdded ? (
+                                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                                                ) : (
+                                                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                                )}
+                                                {additionalBedRentAdded ? 'Added to Bill' : 'Add to Bill'}
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {bedRentCalculation.additionalBedRent <= 0 && !additionalBedRentAdded && (
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 p-2 bg-emerald-500/5 rounded-lg">
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                            Bed rent is fully settled — no additional charges needed.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Detailed Billing Sections */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

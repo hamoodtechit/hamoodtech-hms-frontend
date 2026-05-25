@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatCurrency } from "@/lib/utils"
 import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Printer, X } from "lucide-react"
-import { useRef } from "react"
+import { useRef, useMemo } from "react"
 import { DischargeInitiateData, Admission } from "@/types/patient"
 
 interface DischargeReceiptDialogProps {
@@ -38,6 +38,49 @@ export function DischargeReceiptDialog({
     if (!admission || !data) return null
 
     const patient = admission.patient
+
+    // ── Helper: compute item discount info ──────────────────────────
+    const getItemDiscount = (item: any) => {
+        const pct = Number(item.discountPercentage || 0)
+        const amt = Number(item.discountAmount || 0)
+        if (pct > 0) {
+            const computed = (Number(item.price) * Number(item.quantity || 1) * pct) / 100
+            return { pct, amt: computed, label: `${pct}%` }
+        }
+        if (amt > 0) return { pct: 0, amt, label: formatCurrency(amt) }
+        return null
+    }
+
+    // ── Bed Rent Calculation ────────────────────────────────────────
+    const bedRentCalc = useMemo(() => {
+        const bedType = admission?.bed?.bedType
+        if (!bedType?.pricePerDay || !admission?.admissionDate) return null
+
+        const pricePerDay = Number(bedType.pricePerDay)
+        const admissionDate = new Date(admission.admissionDate)
+        const today = new Date()
+        const diffMs = today.getTime() - admissionDate.getTime()
+        const stayDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+
+        const totalBedRent = stayDays * pricePerDay
+
+        let alreadyCharged = 0
+        data?.hospital?.bills?.forEach((bill: any) => {
+            bill.saleItems?.forEach((item: any) => {
+                if (item.isBedCharge || item.itemName?.toLowerCase().includes('bed') || item.itemName?.toLowerCase().includes('cabin')) {
+                    alreadyCharged += Number(item.price || 0) * Number(item.quantity || 1)
+                }
+            })
+        })
+
+        return {
+            stayDays,
+            pricePerDay,
+            totalBedRent,
+            alreadyCharged,
+        }
+    }, [admission?.bed?.bedType, admission?.admissionDate, data?.hospital?.bills])
+
     // We already have the snapshot in data.
     // However, the 'finalPaidAmount' and 'overallDiscount' provided is what applies to the Discharge Action itself.
     
@@ -260,31 +303,93 @@ export function DischargeReceiptDialog({
                                             <tr>
                                                 <th className="border-b border-black text-[10px] font-black uppercase pb-1 w-24">Inv. No</th>
                                                 <th className="border-b border-black text-[10px] font-black uppercase pb-1">Particulars</th>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1 text-right w-14">Qty</th>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1 text-right w-20">Price</th>
+                                                <th className="border-b border-black text-[10px] font-black uppercase pb-1 text-right w-20">Discount</th>
                                                 <th className="border-b border-black text-[10px] font-black uppercase pb-1 text-right w-24">Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            
-                                            {data.hospital.bills.map((bill: any) => (
-                                                <tr key={bill.id}>
-                                                    <td className="border-b border-dashed border-gray-300 py-1.5 text-[11px] font-bold align-top">{bill.invoiceNumber}</td>
-                                                    <td className="border-b border-dashed border-gray-300 py-1.5 align-top">
-                                                        <div className="text-[10px] uppercase font-black text-black">
-                                                            {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type}
-                                                        </div>
-                                                        {bill.saleItems?.length > 0 && (
-                                                            <div className="flex flex-wrap gap-x-2 mt-0.5 opacity-70">
-                                                                {bill.saleItems.map((item: any) => (
-                                                                    <span key={item.id} className="text-[8.5px] font-bold uppercase">{item.itemName} (x{item.quantity})</span>
-                                                                ))}
+                                            {data.hospital.bills.map((bill: any) => {
+                                                const billSubtotal = bill.saleItems?.reduce((sum: number, it: any) => {
+                                                    const disc = getItemDiscount(it)
+                                                    return sum + (Number(it.price) * Number(it.quantity || 1)) - (disc?.amt || 0)
+                                                }, 0) || 0
+                                                return (
+                                                    <tr key={bill.id}>
+                                                        <td className="border-b border-dashed border-gray-300 py-1.5 text-[10px] font-bold align-top">{bill.invoiceNumber}</td>
+                                                        <td className="border-b border-dashed border-gray-300 py-1.5 align-top">
+                                                            <div className="text-[9px] uppercase font-black text-black">
+                                                                {bill.type === 'admission' ? 'Admission & Bed Service' : bill.type}
                                                             </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="border-b border-dashed border-gray-300 py-1.5 text-[11px] font-black text-right align-top">{formatCurrency(bill.netPrice)}</td>
-                                                </tr>
-                                            ))}
+                                                            {bill.saleItems?.map((item: any) => {
+                                                                const disc = getItemDiscount(item)
+                                                                return (
+                                                                    <div key={item.id} className="text-[8px] font-bold text-black/60 mt-0.5">
+                                                                        {item.itemName}
+                                                                        {disc && <span className="text-amber-700/70 italic"> (-{disc.label})</span>}
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </td>
+                                                        <td className="border-b border-dashed border-gray-300 py-1.5 text-[10px] text-right align-top" colSpan={5}></td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
+                                    {/* Per-item breakdown table */}
+                                    <table className="w-full text-left border-collapse mt-0">
+                                        <tbody>
+                                            {data.hospital.bills.flatMap((bill: any, bi: number) =>
+                                                bill.saleItems?.map((item: any, ii: number) => {
+                                                    const disc = getItemDiscount(item)
+                                                    const itemTotal = (Number(item.price) * Number(item.quantity || 1)) - (disc?.amt || 0)
+                                                    return (
+                                                        <tr key={item.id}>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] font-bold pl-2 w-24">{bi === 0 && ii === 0 ? '' : ''}</td>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] pl-4">  {item.itemName}</td>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] text-right w-14">{item.quantity || 1}</td>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] text-right w-20">{formatCurrency(Number(item.price))}</td>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] text-right w-20">{disc ? disc.label : '—'}</td>
+                                                            <td className="border-b border-dashed border-gray-300 py-0.5 text-[9px] font-black text-right w-24">{formatCurrency(itemTotal)}</td>
+                                                        </tr>
+                                                    )
+                                                }) || []
+                                            )}
+                                            {data.hospital.bills.length > 0 && (
+                                                <tr>
+                                                    <td colSpan={3}></td>
+                                                    <td colSpan={2} className="border-t-2 border-black pt-1 text-[9px] font-black uppercase text-right">Subtotal:</td>
+                                                    <td className="border-t-2 border-black pt-1 text-[10px] font-black text-right">{formatCurrency(netPrice)}</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {/* ── Bed Rent Summary ────────────────────────────── */}
+                            {bedRentCalc && (
+                                <div className="w-[80%] mx-auto mt-4 relative z-10">
+                                    <h3 className="text-[11px] font-black uppercase border-b border-black pb-1 mb-2">Bed Rent Summary</h3>
+                                    <div className="flex justify-between items-center mb-0.5">
+                                        <span className="text-[10px] font-bold">Daily Rate ({admission?.bed?.bedType?.name}):</span>
+                                        <span className="text-[10px] font-black">{formatCurrency(bedRentCalc.pricePerDay)} × {bedRentCalc.stayDays} Days</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-0.5">
+                                        <span className="text-[10px] font-bold">Total Bed Rent:</span>
+                                        <span className="text-[10px] font-black">{formatCurrency(bedRentCalc.totalBedRent)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-0.5">
+                                        <span className="text-[10px] font-bold">Already Charged:</span>
+                                        <span className="text-[10px] font-black">-{formatCurrency(bedRentCalc.alreadyCharged)}</span>
+                                    </div>
+                                    <div className="border-b border-black w-full mb-0.5"></div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black uppercase">Net Bed Rent Balance:</span>
+                                        <span className="text-[11px] font-black">{formatCurrency(Math.max(0, bedRentCalc.totalBedRent - bedRentCalc.alreadyCharged))}</span>
+                                    </div>
                                 </div>
                             )}
 
