@@ -602,6 +602,8 @@ export default function DiagnosticReportsPage() {
                                     <TableRow>
                                         <TableHead className="pl-6">Barcode / ID</TableHead>
                                         <TableHead>Patient</TableHead>
+                                        <TableHead>Age</TableHead>
+                                        <TableHead>Consultant</TableHead>
                                         <TableHead>Test</TableHead>
                                         <TableHead>Report Status</TableHead>
                                         <TableHead>Sample Status</TableHead>
@@ -613,7 +615,7 @@ export default function DiagnosticReportsPage() {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="h-64 text-center">
+                                            <TableCell colSpan={10} className="h-64 text-center">
                                                 <div className="flex flex-col items-center gap-2 opacity-50">
                                                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                                                     <p className="text-sm font-bold">Fetching worklist...</p>
@@ -622,7 +624,7 @@ export default function DiagnosticReportsPage() {
                                         </TableRow>
                                     ) : reports.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="h-96 text-center">
+                                            <TableCell colSpan={10} className="h-96 text-center">
                                                 <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-50">
                                                     <div className={cn("p-6 rounded-full mb-4",
                                                         activeTab === 'pending' ? "bg-amber-500/10" :
@@ -649,6 +651,12 @@ export default function DiagnosticReportsPage() {
                                                         <span className="font-bold text-sm tracking-tight">{report.patient?.name}</span>
                                                         <span className="text-[10px] text-muted-foreground font-medium">{report.patient?.phone}</span>
                                                     </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-bold text-sm">{report.patient?.age ? `${report.patient.age}Y` : '—'}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-bold text-sm uppercase">{report.doctor?.fullName || 'Self'}</span>
                                                 </TableCell>
                                                 <TableCell className="max-w-[280px]">
                                                     <div className="flex flex-col gap-1">
