@@ -234,7 +234,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                         <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                             {result?.consultantName || doctor?.fullName || 'SELF'}
                                                             {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
-                                                                <span className="ml-1 text-[9pt] font-bold text-black lowercase italic">
+                                                                <span className="ml-1 text-[10pt] font-bold text-black lowercase italic">
                                                                     ({result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name})
                                                                 </span>
                                                             )}
@@ -289,7 +289,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                     <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                         {result?.consultantName || doctor?.fullName || 'SELF'}
                                                         {(result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name) && (
-                                                            <span className="ml-1 text-[9pt] font-medium text-black/60 lowercase italic">
+                                                            <span className="ml-1 text-[10pt] font-bold text-black lowercase italic">
                                                                 ({result?.consultantDesignation || (detail as any)?.doctor?.designation || doctor?.designation?.name})
                                                             </span>
                                                         )}
