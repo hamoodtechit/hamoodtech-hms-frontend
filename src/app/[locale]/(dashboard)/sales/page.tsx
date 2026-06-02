@@ -251,6 +251,7 @@ export default function SalesHistoryPage() {
                           <SelectItem value="all">Sale Type: All</SelectItem>
                           <SelectItem value="pos">Pharmacy (POS)</SelectItem>
                           <SelectItem value="hospital">Hospital Sales</SelectItem>
+                          <SelectItem value="admission">Admission</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
