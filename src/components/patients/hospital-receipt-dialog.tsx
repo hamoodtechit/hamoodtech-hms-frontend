@@ -147,7 +147,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                 <div className="p-1 px-3 font-bold flex flex-wrap items-center">
                     <div className="flex gap-3 mr-8">
                         <span>Age : {patient?.age || 'N/A'}Y</span>
-                        <span>Sex : {patient?.gender || 'N/A'}</span>
+                        <span>Sex : {patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : 'N/A'}</span>
                         <span>Contact : {patient?.phone || 'N/A'}</span>
                     </div>
                     <div className="flex-1">

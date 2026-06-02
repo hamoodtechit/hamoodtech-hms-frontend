@@ -7,7 +7,7 @@ import {
     DialogTitle
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAdmission } from "@/hooks/patient-queries"
+import { useAdmission, usePatient } from "@/hooks/patient-queries"
 import { formatCurrency } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useAuthStore } from "@/store/use-auth-store"
@@ -27,11 +27,13 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
 
     const { data: res, isLoading } = useAdmission(admissionId || "")
     const admission = res?.data?.patientAdmission
+    const { data: patientRes } = usePatient(admission?.patientId || "")
     const sale = res?.data?.sale
 
     if (!admission && !isLoading) return null
 
-    const patient = admission?.patient
+    const freshPatient = patientRes?.data || admission?.patient
+    const patient = freshPatient
     const branch = admission?.branch
     const bed = admission?.bed
 
@@ -60,7 +62,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
         doc.write(`
             <html>
                 <head>
-                    <title>Admission Form - ${patient?.name}</title>
+                    <title>Admission Form - ${freshPatient?.name}</title>
                     <style>
                         @page { size: A4; margin: 5mm; }
                         body { 
@@ -333,7 +335,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                         <div className="p-2 px-3 flex items-center">
                                             <span className="w-24 text-[10px] font-black uppercase opacity-60">Assigned Doctor:</span>
                                             <span className="font-black text-sm text-slate-900">
-                                                {admission?.doctor?.fullName || 'N/A'} {admission?.doctor?.designation ? `(${admission.doctor.designation})` : ''}
+                                                {admission?.doctor?.fullName || 'N/A'} {admission?.doctor?.designation ? <span className="font-bold lowercase">({admission.doctor.designation})</span> : ''}
                                             </span>
                                         </div>
                                     </div>
