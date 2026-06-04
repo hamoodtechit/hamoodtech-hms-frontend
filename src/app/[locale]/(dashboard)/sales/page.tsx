@@ -373,7 +373,7 @@ export default function SalesHistoryPage() {
                                onChange={(v) => { setPatientIdFilter(v || null); setPage(1); }}
                                options={patients.map((p: any) => ({
                                  id: p.id,
-                                 name: `${p.name} ${p.phone ? `(${p.phone})` : ''}`
+                                 name: `${p.patientNumber ? `[${p.patientNumber}] ` : ''}${p.name} ${p.phone ? `(${p.phone})` : ''}`
                                }))}
                                placeholder="Search patient..."
                                allLabel="All Patients"
