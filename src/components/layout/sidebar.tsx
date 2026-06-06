@@ -282,8 +282,7 @@ export function Sidebar() {
             {
               label: "Doctor Payment",
               href: "/finance/doctor-payment",
-              module: "finance",
-              permission: "account:read",
+              permission: ["account:read", "sale:update", "sale:create"],
             },
             {
               label: "Referral Network",
