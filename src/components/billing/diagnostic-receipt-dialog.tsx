@@ -73,7 +73,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   const taxAmount = Number(data?.taxAmount || 0)
   const discountAmount = Number(data?.discountAmount || data?.discount || 0)
   
-  const patient = data?.patient || transaction?.patient || propPatient || {}
+  const patient = data?.patient || data?.patientAdmission?.patient || transaction?.patient || propPatient || {}
   const patientName = patient?.name || data?.customerName || data?.patientName || data?.name || "Walk-in Patient"
   const patientAge = (patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A")))
   const patientSex = patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : (data?.gender || "N/A")
@@ -86,7 +86,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   // Find consultant
   let consultantName = "Self"
-  const doctorObj = data.doctor || propDoctor
+  const doctorObj = data.doctor || data.patientAdmission?.doctor || propDoctor
   if (doctorObj) {
       const name = doctorObj.fullName || doctorObj.name
       const designation = doctorObj.designation
@@ -104,6 +104,8 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
       consultantName = data.referredByName
   } else if (data.consultantName) {
       consultantName = data.consultantName
+  } else if (data.patientAdmission?.refDoctorName) {
+      consultantName = data.patientAdmission.refDoctorName
   }
 
   // Find assigned staff
@@ -207,14 +209,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
             <div className="grid grid-cols-1 font-sans">
                 <div className="p-1 px-3 font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
-                    <div className="flex flex-wrap items-baseline gap-1 pt-0.5">
-                        <span className="uppercase text-[12px]">{data.doctor?.fullName || data.doctor?.name || propDoctor?.fullName || propDoctor?.name || "Self"}</span>
-                        {(data.doctor?.designation || propDoctor?.designation) && (
-                            <span className="text-[10px] font-bold">
-                                ({data.doctor?.designation || propDoctor?.designation})
-                            </span>
-                        )}
-                    </div>
+                        <span className="uppercase text-[12px]">{consultantName}</span>
                 </div>
             </div>
         </div>

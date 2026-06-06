@@ -151,7 +151,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         <span>Contact : {patient?.phone || 'N/A'}</span>
                     </div>
                     <div className="flex-1">
-                        RefBy : {data.referredByName || data.consultantName || 'Self'}
+                        RefBy : {data.referredByName || data.consultantName || data.patientAdmission?.refDoctorName || data.patientAdmission?.doctor?.fullName || data.doctor?.fullName || 'Self'}
                     </div>
                 </div>
             </div>
