@@ -285,7 +285,7 @@ export function Sidebar() {
           label: "Finance & Accounts",
           icon: Wallet,
           color: "text-emerald-500",
-          roles: ["Super Admin", "Admin", "Accountant"],
+          roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
           children: [
             {
               label: "Expense Tracking",
@@ -315,7 +315,7 @@ export function Sidebar() {
           label: "HR & Staff",
           icon: Users,
           color: "text-orange-500",
-          roles: ["Super Admin", "Admin"],
+          roles: ["Super Admin", "Admin", "Receptionist"],
           children: [
             {
               label: "Staff Directory",

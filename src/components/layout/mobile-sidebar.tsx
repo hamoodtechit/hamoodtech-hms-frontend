@@ -333,7 +333,7 @@ function SidebarBase() {
           label: "Finance Management",
           icon: Wallet,
           color: "text-emerald-500",
-          roles: ["Super Admin", "Admin", "Accountant"],
+          roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
           children: [
             {
               label: "Expense Tracking",
@@ -363,7 +363,7 @@ function SidebarBase() {
           label: "HR & Staff",
           icon: Users,
           color: "text-orange-500",
-          roles: ["Super Admin", "Admin"],
+          roles: ["Super Admin", "Admin", "Receptionist"],
           children: [
             {
               label: "Staff Directory",
