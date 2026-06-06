@@ -439,6 +439,7 @@ export default function IPDBillingPage() {
                     transaction={selectedSaleForPrint}
                     patient={selectedAdmission?.patient}
                     bed={selectedAdmission?.bed}
+                    admission={selectedAdmission}
                 />
 
                 <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

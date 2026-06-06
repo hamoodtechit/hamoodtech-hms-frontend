@@ -37,9 +37,10 @@ interface HospitalReceiptDialogProps {
   transaction: any | null
   patient?: any
   bed?: any
+  admission?: any
 }
 
-export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient: passedPatient, bed: passedBed }: HospitalReceiptDialogProps) {
+export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient: passedPatient, bed: passedBed, admission: passedAdmission }: HospitalReceiptDialogProps) {
   const { stores, activeStoreId } = useStoreContext()
   const { general } = useSettingsStore()
   const { formatCurrency } = useCurrency()
@@ -79,8 +80,20 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const date = data?.date || data?.createdAt || new Date().toISOString()
   const isFullyPaid = dueAmount <= 0
   
-  const patient = passedPatient || data?.patientAdmission?.patient || data?.patient
-  const bed = passedBed || data?.patientAdmission?.bed
+  const patient = {
+    ...data?.patient,
+    ...data?.patientAdmission?.patient,
+    ...passedAdmission?.patient,
+    ...passedPatient,
+  }
+  // If passedPatient was an empty object or missing fields, make sure we use the richest data available
+  if (!patient.age && (data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age)) {
+    patient.age = data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age
+  }
+  if (!patient.gender && (data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender)) {
+    patient.gender = data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender
+  }
+  const bed = passedBed || data?.patientAdmission?.bed || passedAdmission?.bed
 
   const amountInWords = numberToWords(netTotal) + " TAKA ONLY"
 
@@ -151,7 +164,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         <span>Contact : {patient?.phone || 'N/A'}</span>
                     </div>
                     <div className="flex-1">
-                        RefBy : {data.referredByName || data.consultantName || data.patientAdmission?.refDoctorName || data.patientAdmission?.doctor?.fullName || data.doctor?.fullName || 'Self'}
+                        RefBy : {data.referredByName || data.consultantName || data.patientAdmission?.refDoctorName || passedAdmission?.refDoctorName || data.patientAdmission?.doctor?.fullName || passedAdmission?.doctor?.fullName || data.doctor?.fullName || 'Self'}
                     </div>
                 </div>
             </div>
