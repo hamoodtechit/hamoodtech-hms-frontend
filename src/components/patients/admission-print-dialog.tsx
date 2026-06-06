@@ -341,9 +341,15 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                     </div>
                                     <div className="grid grid-cols-2 border-b border-black border-dashed">
                                         <div className="p-2 px-3 border-r border-black border-dashed flex items-center">
+                                            <span className="w-24 text-[10px] font-black uppercase opacity-60">Ref By:</span>
+                                            <span className="font-bold text-sm">{admission?.referralPerson?.name || 'N/A'}</span>
+                                        </div>
+                                        <div className="p-2 px-3 flex items-center">
                                             <span className="w-24 text-[10px] font-black uppercase opacity-60">Consultation Dr:</span>
                                             <span className="font-bold text-sm">{admission?.refDoctorName || 'N/A'}</span>
                                         </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 border-b border-black border-dashed">
                                         <div className="p-2 px-3 flex items-center">
                                             <span className="w-24 text-[10px] font-black uppercase opacity-60">Department:</span>
                                             <span className="font-bold text-sm">{admission?.department?.name || 'N/A'}</span>
