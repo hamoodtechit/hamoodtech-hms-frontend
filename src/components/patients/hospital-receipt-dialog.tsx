@@ -97,6 +97,23 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
 
   const amountInWords = numberToWords(netTotal) + " TAKA ONLY"
 
+  // Find consultant
+  let consultantName = "N/A"
+  const docObj = data?.doctor || data?.patientAdmission?.doctor || passedAdmission?.doctor
+  if (docObj) {
+      const name = docObj.fullName || docObj.name
+      const designation = docObj.designation
+      if (name) {
+          consultantName = designation ? `${name} (${designation})` : name
+      }
+  }
+
+  // Find Ref By
+  const refByName = data?.referredByName || data?.patientAdmission?.referralPerson?.name || passedAdmission?.referralPerson?.name || "Self"
+  
+  // Find Reference Doctor
+  const referenceDoctor = data?.patientAdmission?.refDoctorName || passedAdmission?.refDoctorName
+
   const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
         <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
@@ -164,8 +181,22 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
                         <span>Contact : {patient?.phone || 'N/A'}</span>
                     </div>
                     <div className="flex-1">
-                        RefBy : {data.referredByName || data.consultantName || data.patientAdmission?.refDoctorName || passedAdmission?.refDoctorName || data.patientAdmission?.doctor?.fullName || passedAdmission?.doctor?.fullName || data.doctor?.fullName || 'Self'}
+                        RefBy : {refByName}
                     </div>
+                </div>
+            </div>
+            {(referenceDoctor) && (
+                <div className="grid grid-cols-1 border-b border-black">
+                    <div className="p-1 px-3 font-bold flex items-center">
+                        <span className="shrink-0 w-24">Ref Doctor :</span>
+                        <span>{referenceDoctor}</span>
+                    </div>
+                </div>
+            )}
+            <div className="grid grid-cols-1 border-b border-black">
+                <div className="p-1 px-3 font-bold flex items-start">
+                    <span className="shrink-0 w-24">Consultant :</span>
+                    <span className="uppercase text-[12px] pt-0.5">{consultantName}</span>
                 </div>
             </div>
             {bed && (
