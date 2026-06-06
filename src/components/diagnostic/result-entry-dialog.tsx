@@ -286,8 +286,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             const newState = { ...prev };
             let modified = false;
 
-            (report?.diagnosticTests || report?.testItems || [])?.forEach((test, tIdx) => {
-                const testKey = `${test.id}_${tIdx}`;
+            (report?.diagnosticTests || report?.testItems || [])?.forEach((test) => {
+                const testKey = test.id;
                 
                 // Clone the state to avoid mutating React's current state directly
                 const testState = newState[testKey] ? { ...newState[testKey] } : {};
@@ -397,8 +397,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
         groups.forEach(group => {
             blocks.push({ id: uuidv4(), type: 'header', headerText: group.groupName.toUpperCase() });
 
-            group.tests.forEach((test, tIdx) => {
-                const testKey = `${test.id}_${tIdx}`;
+            group.tests.forEach((test) => {
+                const testKey = test.id;
                 const templateService = templatesMap[test.serviceId];
                 const templateType = templateService?.templateType || test.service?.templateType || 'table';
                 
@@ -554,8 +554,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                 )}
                                             </TableHeader>
                                             <TableBody>
-                                                {group.tests.map((test, tIdx) => {
-                                                    const testKey = `${test.id}_${tIdx}`;
+                                                {group.tests.map((test) => {
+                                                    const testKey = test.id;
                                                     const templateService = templatesMap[test.serviceId];
                                                     
                                                     let template = templateService?.testResultTemplate || test.service?.testResultTemplate || [];
