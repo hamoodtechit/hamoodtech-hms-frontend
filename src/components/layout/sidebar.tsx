@@ -288,8 +288,7 @@ export function Sidebar() {
             {
               label: "Referral Network",
               href: "/hr/referrals",
-              module: "hr",
-              permission: "user:read",
+              permission: ["user:read", "account:read", "sale:update", "sale:create"],
             },
           ]
         },
