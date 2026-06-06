@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useSale } from "@/hooks/sales-queries"
+import { useAdmission } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -80,26 +81,31 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const date = data?.date || data?.createdAt || new Date().toISOString()
   const isFullyPaid = dueAmount <= 0
   
+  const admissionId = passedAdmission?.id || data?.patientAdmissionId || data?.patientAdmission?.id
+  const { data: admissionRes } = useAdmission(admissionId || "")
+  const fullAdmission = admissionRes?.data?.patientAdmission
+
   const patient = {
     ...data?.patient,
     ...data?.patientAdmission?.patient,
     ...passedAdmission?.patient,
+    ...fullAdmission?.patient,
     ...passedPatient,
   }
   // If passedPatient was an empty object or missing fields, make sure we use the richest data available
-  if (!patient.age && (data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age)) {
-    patient.age = data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age
+  if (!patient.age && (data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age || fullAdmission?.patient?.age)) {
+    patient.age = data?.patientAdmission?.patient?.age || passedAdmission?.patient?.age || fullAdmission?.patient?.age
   }
-  if (!patient.gender && (data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender)) {
-    patient.gender = data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender
+  if (!patient.gender && (data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender || fullAdmission?.patient?.gender)) {
+    patient.gender = data?.patientAdmission?.patient?.gender || passedAdmission?.patient?.gender || fullAdmission?.patient?.gender
   }
-  const bed = passedBed || data?.patientAdmission?.bed || passedAdmission?.bed
+  const bed = passedBed || data?.patientAdmission?.bed || passedAdmission?.bed || fullAdmission?.bed
 
   const amountInWords = numberToWords(netTotal) + " TAKA ONLY"
 
   // Find consultant
   let consultantName = "N/A"
-  const docObj = data?.doctor || data?.patientAdmission?.doctor || passedAdmission?.doctor
+  const docObj = data?.doctor || data?.patientAdmission?.doctor || passedAdmission?.doctor || fullAdmission?.doctor
   if (docObj) {
       const name = docObj.fullName || docObj.name
       const designation = docObj.designation
@@ -109,10 +115,10 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   }
 
   // Find Ref By
-  const refByName = data?.referredByName || data?.patientAdmission?.referralPerson?.name || passedAdmission?.referralPerson?.name || "Self"
+  const refByName = data?.referredByName || data?.patientAdmission?.referralPerson?.name || passedAdmission?.referralPerson?.name || fullAdmission?.referralPerson?.name || "Self"
   
   // Find Reference Doctor
-  const referenceDoctor = data?.patientAdmission?.refDoctorName || passedAdmission?.refDoctorName
+  const referenceDoctor = data?.patientAdmission?.refDoctorName || passedAdmission?.refDoctorName || fullAdmission?.refDoctorName
 
   const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
     <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
