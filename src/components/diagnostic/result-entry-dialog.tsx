@@ -177,7 +177,19 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     // Parallel fetch service details for full templates
     const testIdsMissingData = useMemo(() => {
         return report?.diagnosticTests
-            ?.filter(t => !t.service?.templateDescription && !t.service?.testResultTemplate) // Only fetch if data is missing
+            ?.filter(t => {
+                const s = t.service;
+                if (!s) return true;
+                // Fetch if narrative and missing description
+                if ((s.templateType === 'narrative' || !s.templateType) && !s.templateDescription && (!s.testResultTemplate || (Array.isArray(s.testResultTemplate) && s.testResultTemplate.length === 0))) return true;
+                // Fetch if table and missing/empty template
+                if (s.templateType !== 'narrative') {
+                    if (!s.testResultTemplate) return true;
+                    if (Array.isArray(s.testResultTemplate) && s.testResultTemplate.length === 0) return true;
+                    if (typeof s.testResultTemplate === 'string' && (s.testResultTemplate === '[]' || s.testResultTemplate === '')) return true;
+                }
+                return false;
+            })
             ?.map(t => t.serviceId) || []
     }, [report]);
 
@@ -276,23 +288,23 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
             report.diagnosticTests?.forEach((test, tIdx) => {
                 const testKey = `${test.id}_${tIdx}`;
-                if (!newState[testKey]) {
-                    newState[testKey] = {};
-                    modified = true;
-                }
+                
+                // Clone the state to avoid mutating React's current state directly
+                const testState = newState[testKey] ? { ...newState[testKey] } : {};
+                if (!newState[testKey]) modified = true;
                 
                 const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service;
                 const templateType = serviceData?.templateType || (test as any).templateType || 'table';
                 
                 if (templateType === 'narrative') {
                     // Inject template if current narrative is empty or placeholder
-                    const currentResult = newState[testKey]['__narrative']?.result || "";
+                    const currentResult = testState['__narrative']?.result || "";
                     if (!currentResult || currentResult === "" || currentResult === "<p><br></p>") {
                         const rawTemplateDescription = serviceData?.templateDescription || (test as any).templateDescription || "";
                         const templateDescription = decodeTemplate(rawTemplateDescription);
 
                         if (templateDescription && templateDescription !== currentResult) {
-                            newState[testKey]['__narrative'] = {
+                            testState['__narrative'] = {
                                 result: templateDescription,
                                 unit: "",
                                 refRange: ""
@@ -300,20 +312,29 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                             modified = true;
                         }
                     }
-                } else if (Array.isArray(serviceData?.testResultTemplate)) {
-                    // Table mode: Fill in missing parameters
-                    serviceData.testResultTemplate.forEach((field: any, fIdx: number) => {
-                        const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
-                        if (!newState[testKey][paramKey]) {
-                            newState[testKey][paramKey] = {
-                                result: field.result || "",
-                                unit: field.unit || "",
-                                refRange: field.refRange || field.normalRange || ""
-                            };
-                            modified = true;
-                        }
-                    });
+                } else {
+                    let templateArray = serviceData?.testResultTemplate;
+                    if (typeof templateArray === 'string') {
+                        try { templateArray = JSON.parse(templateArray); } catch(e) {}
+                    }
+                    
+                    if (Array.isArray(templateArray)) {
+                        // Table mode: Fill in missing parameters
+                        templateArray.forEach((field: any, fIdx: number) => {
+                            const paramKey = field.id || field.key || `${field.name}-${fIdx}`;
+                            if (!testState[paramKey]) {
+                                testState[paramKey] = {
+                                    result: field.result || "",
+                                    unit: field.unit || "",
+                                    refRange: field.refRange || field.normalRange || ""
+                                };
+                                modified = true;
+                            }
+                        });
+                    }
                 }
+                
+                newState[testKey] = testState;
             });
 
             return modified ? newState : prev;
@@ -536,7 +557,11 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                 {group.tests.map((test, tIdx) => {
                                                     const testKey = `${test.id}_${tIdx}`;
                                                     const templateService = templatesMap[test.serviceId];
-                                                    const template = templateService?.testResultTemplate || test.service?.testResultTemplate || [];
+                                                    
+                                                    let template = templateService?.testResultTemplate || test.service?.testResultTemplate || [];
+                                                    if (typeof template === 'string') {
+                                                        try { template = JSON.parse(template); } catch(e) { template = []; }
+                                                    }
                                                     
                                                     return (
                                                         <React.Fragment key={testKey}>
