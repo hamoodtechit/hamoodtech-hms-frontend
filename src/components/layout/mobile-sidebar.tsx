@@ -326,6 +326,18 @@ function SidebarBase() {
               label: "All Invoices & Receipts",
               href: "/sales",
               permission: ["sale:read", "sale:create"],
+            },
+            {
+              label: "Doctor Payment",
+              href: "/finance/doctor-payment",
+              module: "finance",
+              permission: "account:read",
+            },
+            {
+              label: "Referral Network",
+              href: "/hr/referrals",
+              module: "hr",
+              permission: "user:read",
             }
           ]
         },
@@ -333,7 +345,7 @@ function SidebarBase() {
           label: "Finance Management",
           icon: Wallet,
           color: "text-emerald-500",
-          roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+          roles: ["Super Admin", "Admin", "Accountant"],
           children: [
             {
               label: "Expense Tracking",
@@ -343,12 +355,6 @@ function SidebarBase() {
             {
               label: "General Ledger",
               href: "/finance",
-              module: "finance",
-              permission: "account:read",
-            },
-            {
-              label: "Doctor Payment",
-              href: "/finance/doctor-payment",
               module: "finance",
               permission: "account:read",
             }
@@ -363,7 +369,7 @@ function SidebarBase() {
           label: "HR & Staff",
           icon: Users,
           color: "text-orange-500",
-          roles: ["Super Admin", "Admin", "Receptionist"],
+          roles: ["Super Admin", "Admin"],
           children: [
             {
               label: "Staff Directory",
@@ -391,12 +397,6 @@ function SidebarBase() {
             },
             {
               label: "Payroll & Salary",
-            },
-            {
-              label: "Referral Network",
-              href: "/hr/referrals",
-              module: "hr",
-              permission: "user:read",
             }
           ]
         },
