@@ -52,6 +52,11 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   
   const fetchedData = saleRes?.data || (saleRes as any)?.sale || (saleRes as any)?.data
   const data = fetchedData || transaction
+  
+  const admissionId = passedAdmission?.id || data?.patientAdmissionId || data?.patientAdmission?.id || transaction?.patientAdmissionId || transaction?.patientAdmission?.id
+  const { data: admissionRes } = useAdmission(admissionId || "")
+  const fullAdmission = admissionRes?.data?.patientAdmission
+
   const { user } = useAuthStore()
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -80,10 +85,6 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
   const invoiceNumber = data?.invoiceNumber || data?.number || "N/A"
   const date = data?.date || data?.createdAt || new Date().toISOString()
   const isFullyPaid = dueAmount <= 0
-  
-  const admissionId = passedAdmission?.id || data?.patientAdmissionId || data?.patientAdmission?.id
-  const { data: admissionRes } = useAdmission(admissionId || "")
-  const fullAdmission = admissionRes?.data?.patientAdmission
 
   const patient = {
     ...data?.patient,
