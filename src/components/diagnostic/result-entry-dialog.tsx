@@ -176,7 +176,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
     // Parallel fetch service details for full templates
     const testIdsMissingData = useMemo(() => {
-        return report?.diagnosticTests
+        return (report?.diagnosticTests || report?.testItems || [])
             ?.filter(t => {
                 const s = t.service;
                 if (!s) return true;
@@ -206,7 +206,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
         const map: Record<string, any> = {};
         
         // 1. Populate from existing data in report (Highest priority)
-        report?.diagnosticTests?.forEach(t => {
+        (report?.diagnosticTests || report?.testItems || [])?.forEach(t => {
             if (t.serviceId && t.service) {
                 map[t.serviceId] = t.service;
             }
@@ -232,7 +232,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
     // Check if report is narrative only (to hide Checked By)
     const isNarrativeOnly = useMemo(() => {
-        return report?.diagnosticTests?.every(test => {
+        return (report?.diagnosticTests || report?.testItems || [])?.every(test => {
             const serviceData = templatesMap[test.serviceId] || test.service || (test as any).test || (test as any).service;
             return serviceData?.templateType === 'narrative';
         });
@@ -286,7 +286,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             const newState = { ...prev };
             let modified = false;
 
-            report.diagnosticTests?.forEach((test, tIdx) => {
+            (report?.diagnosticTests || report?.testItems || [])?.forEach((test, tIdx) => {
                 const testKey = `${test.id}_${tIdx}`;
                 
                 // Clone the state to avoid mutating React's current state directly

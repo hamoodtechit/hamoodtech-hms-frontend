@@ -10,11 +10,12 @@ export interface GroupedTest {
  * Fallback to "Other Tests" if no group is found.
  */
 export function groupTestsByGroup(report: DiagnosticReport | null): GroupedTest[] {
-    if (!report || !report.diagnosticTests) return [];
+    const tests = report?.diagnosticTests || report?.testItems || [];
+    if (!report || tests.length === 0) return [];
 
     const grouped: Record<string, any[]> = {};
 
-    report.diagnosticTests.forEach((test) => {
+    tests.forEach((test) => {
         const groupName = test.service?.testGroup?.name || "Other Tests";
         if (!grouped[groupName]) {
             grouped[groupName] = [];
