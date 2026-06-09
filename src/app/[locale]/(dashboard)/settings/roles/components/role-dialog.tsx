@@ -153,7 +153,7 @@ export function RoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[800px] h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{roleToEdit ? "Edit Role" : "Create New Role"}</DialogTitle>
           <DialogDescription>
@@ -161,40 +161,41 @@ export function RoleDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4 overflow-y-auto flex-1 pr-2">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Role Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Pharmacy Manager"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the role's responsibilities..."
-              className="min-h-[60px]"
-              rows={2}
-            />
+        <div className="flex flex-col gap-4 py-4 overflow-hidden flex-1 pr-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Role Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Pharmacy Manager"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the role's responsibilities..."
+                className="min-h-[40px] resize-none"
+                rows={1}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2 flex-1 min-h-0">
             <Label>Permissions</Label>
-            <div className="border rounded-md">
+            <div className="border rounded-md flex-1 overflow-y-auto">
                 {loadingPermissions ? (
-                    <div className="p-8 flex justify-center text-muted-foreground">
+                    <div className="p-8 flex justify-center items-center text-muted-foreground h-full">
                         <Loader2 className="h-6 w-6 animate-spin mr-2" />
                         Loading permissions...
                     </div>
                 ) : (
-                    <div className="max-h-[550px] overflow-y-auto">
-                        <div className="divide-y">
+                    <div className="divide-y">
                             {Object.entries(permissions).map(([moduleName, modulePerms]) => {
                                 const selectedCount = modulePerms.filter(p => selectedPermissions.includes(p.id)).length
                                 const totalCount = modulePerms.length
@@ -255,7 +256,6 @@ export function RoleDialog({
                                 )
                             })}
                         </div>
-                    </div>
                 )}
             </div>
           </div>
