@@ -65,6 +65,13 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
     const [commissionStructure, setCommissionStructure] = useState<any[]>([])
     const [branchId, setBranchId] = useState("")
 
+    // Auto-select first branch if activeStoreId is null
+    useEffect(() => {
+        if (open && !isEdit && !branchId && branches.length > 0) {
+            setBranchId(activeStoreId || branches[0].id)
+        }
+    }, [open, isEdit, branchId, branches, activeStoreId])
+
     const displayBranchName = branches.find(s => s.id === branchId)?.name || stores.find(s => s.id === branchId)?.name || "N/A"
 
     // Local Helper State for Adding Commissions
@@ -217,8 +224,20 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
                                     </Select>
                                 </div>
                                 <div className="grid gap-2 col-span-2 sm:col-span-1">
-                                    <Label>Active Branch</Label>
-                                    <Input value={displayBranchName} disabled className="bg-muted h-10" />
+                                    <Label>Branch *</Label>
+                                    <Select 
+                                        value={branchId || ""} 
+                                        onValueChange={setBranchId}
+                                    >
+                                        <SelectTrigger className="h-10">
+                                            <SelectValue placeholder="Select a branch" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {branches.map(b => (
+                                                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Full Name (English) *</Label>
