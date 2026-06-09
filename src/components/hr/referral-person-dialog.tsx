@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { useCreateReferral, useUpdateReferral, useEmployees } from "@/hooks/hr-queries"
 import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
+import { useBranches } from "@/hooks/pharmacy-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { ReferralPerson, Employee } from "@/types/hr"
 import { Loader2, Plus, Trash2, Search, User, Percent } from "lucide-react"
@@ -46,11 +47,12 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
     // External Data
     const { data: employeesRes } = useEmployees({ branchId: activeStoreId || undefined })
     const { data: servicesRes } = useDiagnosticTests({ limit: 100 })
+    const { data: branchesRes } = useBranches({ limit: 100 })
     
     const employees = employeesRes?.data || []
     const services = servicesRes?.data || []
+    const branches = branchesRes?.data || []
 
-    const activeBranchName = stores.find(s => s.id === activeStoreId)?.name || "N/A"
     const isEdit = !!referral
 
     // Form State
@@ -62,6 +64,8 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
     const [employeeId, setEmployeeId] = useState<string | undefined>(undefined)
     const [commissionStructure, setCommissionStructure] = useState<any[]>([])
     const [branchId, setBranchId] = useState("")
+
+    const displayBranchName = branches.find(s => s.id === branchId)?.name || stores.find(s => s.id === branchId)?.name || "N/A"
 
     // Local Helper State for Adding Commissions
     const [selectedServiceId, setSelectedServiceId] = useState("")
@@ -214,7 +218,7 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
                                 </div>
                                 <div className="grid gap-2 col-span-2 sm:col-span-1">
                                     <Label>Active Branch</Label>
-                                    <Input value={activeBranchName} disabled className="bg-muted h-10" />
+                                    <Input value={displayBranchName} disabled className="bg-muted h-10" />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Full Name (English) *</Label>
