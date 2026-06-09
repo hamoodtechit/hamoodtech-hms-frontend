@@ -184,14 +184,14 @@ export function RoleDialog({
 
           <div className="space-y-2">
             <Label>Permissions</Label>
-            <div className="border rounded-md overflow-hidden">
+            <div className="border rounded-md">
                 {loadingPermissions ? (
                     <div className="p-8 flex justify-center text-muted-foreground">
                         <Loader2 className="h-6 w-6 animate-spin mr-2" />
                         Loading permissions...
                     </div>
                 ) : (
-                    <ScrollArea className="h-[300px]">
+                    <div className="max-h-[400px] overflow-y-auto">
                         <div className="divide-y">
                             {Object.entries(permissions).map(([moduleName, modulePerms]) => {
                                 const selectedCount = modulePerms.filter(p => selectedPermissions.includes(p.id)).length
@@ -253,7 +253,7 @@ export function RoleDialog({
                                 )
                             })}
                         </div>
-                    </ScrollArea>
+                    </div>
                 )}
             </div>
           </div>
