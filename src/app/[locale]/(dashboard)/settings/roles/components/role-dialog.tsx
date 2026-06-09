@@ -179,6 +179,8 @@ export function RoleDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the role's responsibilities..."
+              className="min-h-[60px]"
+              rows={2}
             />
           </div>
 
@@ -191,7 +193,7 @@ export function RoleDialog({
                         Loading permissions...
                     </div>
                 ) : (
-                    <div className="max-h-[400px] overflow-y-auto">
+                    <div className="max-h-[550px] overflow-y-auto">
                         <div className="divide-y">
                             {Object.entries(permissions).map(([moduleName, modulePerms]) => {
                                 const selectedCount = modulePerms.filter(p => selectedPermissions.includes(p.id)).length
