@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useSettingsStore } from "@/store/use-settings-store"
+import { useStoreContext } from "@/store/use-store-context"
 import { useEffect } from "react"
 
 export default function DashboardLayout({
@@ -14,10 +15,12 @@ export default function DashboardLayout({
 }) {
   const { fetchSettings } = useSettingsStore()
   const { checkAuth } = useAuthStore()
+  const { fetchStores } = useStoreContext()
 
   useEffect(() => {
     checkAuth()
     fetchSettings()
+    fetchStores()
   }, [])
   return (
     <DashboardShell 
