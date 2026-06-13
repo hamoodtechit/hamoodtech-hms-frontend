@@ -49,9 +49,14 @@ export function ReferralPersonDialog({ open, onOpenChange, referral, onSuccess }
     const { data: servicesRes } = useDiagnosticTests({ limit: 100 })
     const { data: branchesRes } = useBranches({ limit: 100 })
     
-    const employees = employeesRes?.data || []
-    const services = servicesRes?.data || []
-    const branches = branchesRes?.data || []
+    const employeesData = employeesRes?.data || []
+    const employees: Employee[] = Array.isArray(employeesData) ? employeesData : (employeesData as any)?.data || (employeesData as any)?.employees || []
+    
+    const servicesData = servicesRes?.data || []
+    const services: any[] = Array.isArray(servicesData) ? servicesData : (servicesData as any)?.data || (servicesData as any)?.services || (servicesData as any)?.tests || []
+    
+    const branchesData = branchesRes?.data || []
+    const branches: any[] = Array.isArray(branchesData) ? branchesData : (branchesData as any)?.data || (branchesData as any)?.branches || []
 
     const isEdit = !!referral
 

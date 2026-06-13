@@ -40,8 +40,9 @@ export default function ReferralsPage() {
     
     const deleteMutation = useDeleteReferral()
 
-    const referrals = referralsRes?.data || []
-    const meta = referralsRes?.meta
+    const referralsData = referralsRes?.data || []
+    const referrals: ReferralPerson[] = Array.isArray(referralsData) ? referralsData : (referralsData as any)?.data || (referralsData as any)?.referrals || []
+    const meta = referralsRes?.meta || (referralsData as any)?.meta
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this referral person?")) {

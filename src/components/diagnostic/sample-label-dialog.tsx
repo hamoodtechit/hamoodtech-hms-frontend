@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog"
 import { DiagnosticReport } from "@/types/diagnostic"
 import { Printer, X } from "lucide-react"
-// @ts-expect-error: 'react-qr-code' type resolution issue in Next.js build
 import QRCode from "react-qr-code"
 
 interface SampleLabelDialogProps {
