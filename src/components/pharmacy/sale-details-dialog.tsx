@@ -41,6 +41,7 @@ import { CreditCard, Edit, Loader2, RotateCcw, Save, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PatientSearch } from "./pos/patient-search"
+import { ReferralSearch } from "@/components/hr/referral-search"
 
 interface SaleDetailsDialogProps {
   sale: Sale | null
@@ -68,6 +69,7 @@ export function SaleDetailsDialog({
   const [discountPercentage, setDiscountPercentage] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>('')
   const [saleReturns, setSaleReturns] = useState<SaleReturn[]>([])
   const [fetchingReturns, setFetchingReturns] = useState(false)
 
@@ -101,6 +103,7 @@ export function SaleDetailsDialog({
       setDiscountPercentage(Number(sale.discountPercentage) || 0)
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setIsEditMode(false)
+      setSelectedReferralPersonId(sale.referralPersonId || '')
       fetchSaleReturns()
       
       if (initialAddPayment && Number(sale.dueAmount) > 0) {
@@ -165,6 +168,7 @@ export function SaleDetailsDialog({
             discountAmount: discountAmount || undefined,
             paymentStatus: paymentStatus,
             patientId: selectedPatient?.id,
+            referralPersonId: selectedReferralPersonId || undefined,
         }
       }, {
         onSuccess: () => {
@@ -187,6 +191,7 @@ export function SaleDetailsDialog({
       setDiscountPercentage(Number(sale.discountPercentage) || 0)
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setPaymentStatus(sale.paymentStatus || 'due')
+      setSelectedReferralPersonId(sale.referralPersonId || '')
     }
     setIsEditMode(false)
   }
@@ -441,6 +446,14 @@ export function SaleDetailsDialog({
                   <PatientSearch
                     selectedPatient={selectedPatient}
                     onSelect={setSelectedPatient}
+                  />
+                </div>
+
+                <div>
+                  <Label>Referral Person (Optional)</Label>
+                  <ReferralSearch
+                    selectedReferralId={selectedReferralPersonId}
+                    onSelect={(referral) => setSelectedReferralPersonId(referral?.id || '')}
                   />
                 </div>
 
