@@ -325,13 +325,12 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             );
 
             if (hasPatientChanges && selectedPatient) {
-                // Filter out null values (like dob) that cause backend validation errors
                 const cleanedPatientData = Object.fromEntries(
                     Object.entries({
                         ...selectedPatient,
                         ...patientExtData,
-                        age: Number(selectedPatient.age)
-                    }).filter(([_, v]) => v !== null)
+                        age: selectedPatient.age ? Number(selectedPatient.age) : undefined
+                    }).filter(([_, v]) => v !== null && v !== undefined)
                 );
 
                 try {
@@ -353,6 +352,9 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     id: admission.id,
                     data: {
                         ...formData,
+                        departmentId: formData.departmentId || undefined,
+                        doctorId: formData.doctorId || undefined,
+                        referralPersonId: formData.referralPersonId || undefined,
                         admissionCharge: Number(formData.admissionCharge),
                         branchId: finalBranchId,
                         saleItems: saleItems.map(item => ({
@@ -379,6 +381,9 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                 resAdmission = await createMutation.mutateAsync({
                     ...formData,
+                    departmentId: formData.departmentId || undefined,
+                    doctorId: formData.doctorId || undefined,
+                    referralPersonId: formData.referralPersonId || undefined,
                     admissionCharge: Number(formData.admissionCharge),
                     branchId: finalBranchId,
                     saleItems: saleItems.map(item => ({
