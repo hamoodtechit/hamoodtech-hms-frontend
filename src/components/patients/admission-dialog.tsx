@@ -351,23 +351,20 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                 resAdmission = await updateMutation.mutateAsync({
                     id: admission.id,
                     data: {
-                        ...formData,
+                        branchId: finalBranchId,
+                        patientId: formData.patientId,
+                        bedId: formData.bedId,
+                        admissionDate: formData.admissionDate,
+                        reason: formData.reason,
+                        note: formData.note,
+                        status: formData.status,
+                        guardianName: formData.guardianName,
+                        guardianPhone: formData.guardianPhone,
+                        guardianRelation: formData.guardianRelation,
+                        refDoctorName: formData.refDoctorName,
                         departmentId: formData.departmentId || undefined,
                         doctorId: formData.doctorId || undefined,
                         referralPersonId: formData.referralPersonId || undefined,
-                        admissionCharge: Number(formData.admissionCharge),
-                        branchId: finalBranchId,
-                        saleItems: saleItems.map(item => ({
-                            ...item,
-                            price: Number(item.price),
-                            mrp: Number(item.mrp),
-                            quantity: Number(item.quantity)
-                        })),
-                        discountPercentage: discount,
-                        discountAmount: discountAmount,
-                        taxPercentage: vatPercentage,
-                        taxAmount: tax,
-                        type: 'hospital'
                     }
                 })
                 toast.success("Admission updated successfully")
@@ -480,9 +477,10 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                 </div>
                             </div>
 
-                            {/* Service Selection Section */}
-                            <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
-                                <div className="grid grid-cols-2 gap-4">
+                            {/* Service Selection Section - Only for New Admissions */}
+                            {!admission && (
+                                <div className="space-y-4 p-4 bg-muted/30 rounded-2xl border border-border">
+                                    <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2 col-span-2">
                                         <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
                                             Services
@@ -577,6 +575,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     </div>
                                 )}
                             </div>
+                            )}
 
                             {selectedPatient && (
                                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
