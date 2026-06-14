@@ -136,6 +136,9 @@ export interface ReferralPerson {
   employeeId: string | null;
   isActive: boolean;
   monthlyCommission: number;
+  paidAmount?: number;
+  dueAmount?: number;
+  lastPaidAmount?: number;
   createdAt: string;
   updatedAt: string;
   branch?: {

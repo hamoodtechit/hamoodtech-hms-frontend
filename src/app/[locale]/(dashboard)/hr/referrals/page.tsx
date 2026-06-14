@@ -104,7 +104,8 @@ export default function ReferralsPage() {
                                     <TableHead className="w-[300px]">Referral Source</TableHead>
                                     <TableHead>Contact</TableHead>
                                     <TableHead>Type</TableHead>
-                                    <TableHead>Commissions</TableHead>
+                                    <TableHead>Pending</TableHead>
+                                    <TableHead>Last Paid</TableHead>
                                     <TableHead>Branch</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -112,13 +113,13 @@ export default function ReferralsPage() {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-32 text-center">
+                                        <TableCell colSpan={7} className="h-32 text-center">
                                             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/50" />
                                         </TableCell>
                                     </TableRow>
                                 ) : referrals.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                             No referral sources found.
                                         </TableCell>
                                     </TableRow>
@@ -155,7 +156,7 @@ export default function ReferralsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="font-bold text-emerald-600">৳{referral.monthlyCommission || 0}</span>
+                                                    <span className="font-bold text-amber-600">৳{referral.dueAmount || 0}</span>
                                                     {Array.isArray(referral.commissionStructure) && referral.commissionStructure.length > 0 ? (
                                                         <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                                                             <Wallet className="w-3 h-3" />
@@ -164,6 +165,11 @@ export default function ReferralsPage() {
                                                     ) : (
                                                         <span className="text-[10px] text-muted-foreground italic">Generic Rate</span>
                                                     )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="font-bold text-emerald-600">৳{referral.lastPaidAmount || 0}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
