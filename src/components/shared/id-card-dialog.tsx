@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
-import { Printer, X } from "lucide-react"
+import { Printer, X, User } from "lucide-react"
 // @ts-ignore
 import QRCode from "react-qr-code"
 
@@ -132,81 +132,67 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
             {type === 'patient' ? (
               <>
                 {/* Patient Front */}
-                <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                  {/* Blue Top Header */}
-                  <div style={{ background: '#bfdbfe', height: '15mm', width: '100%' }}></div>
-                  <div style={{ position: 'absolute', top: '0', right: '0', width: '0', height: '0', borderBottom: '15mm solid white', borderRight: '15mm solid transparent' }}></div>
+                <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif' }}>
+                  <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', height: '20mm', width: '100%', position: 'absolute', top: 0, left: 0 }}></div>
+                  <div style={{ position: 'absolute', top: '15mm', left: '-5mm', width: '64mm', height: '10mm', background: 'white', borderRadius: '50% 50% 0 0' }}></div>
                   
-                  {/* Logo and Hospital Name */}
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '4mm', gap: '2mm' }}>
-                    <img src={logoUrl} style={{ height: '8mm', width: 'auto' }} alt="Logo" />
-                    <div style={{ color: '#1e3a8a', fontWeight: '900', fontSize: '10px', lineHeight: '1.1' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '3mm 4mm', gap: '2mm', zIndex: 10 }}>
+                    <img src={logoUrl} style={{ height: '7mm', width: 'auto', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2)) brightness(0) invert(1)' }} alt="Logo" />
+                    <div style={{ color: 'white', fontWeight: '900', fontSize: '9px', lineHeight: '1.1', letterSpacing: '0.5px' }}>
                       {hospitalName.toUpperCase()}
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', paddingRight: '4mm', marginBottom: '2mm' }}>
+                  <div style={{ position: 'relative', textAlign: 'center', color: '#1e3a8a', fontSize: '8px', fontWeight: '800', letterSpacing: '1px', marginTop: '6mm', marginBottom: '2mm', zIndex: 10 }}>
                     PATIENT ID CARD
                   </div>
 
-                  {/* Photo & Details Row */}
-                  <div style={{ display: 'flex', padding: '0 4mm', gap: '3mm' }}>
-                    <div style={{ width: '18mm', height: '22mm', border: '1px solid #3b82f6', display: 'flex', flexDirection: 'column', background: '#f1f5f9' }}>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                      </div>
-                      <div style={{ fontSize: '6px', textAlign: 'center', background: '#e2e8f0', padding: '1px' }}>PHOTO</div>
+                  <div style={{ display: 'flex', padding: '0 4mm', gap: '3mm', position: 'relative', zIndex: 10 }}>
+                    <div style={{ width: '18mm', height: '22mm', borderRadius: '2mm', background: '#f8fafc', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                       <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1mm' }}>
-                      <div>
-                        <div style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Name:</div>
-                        <div style={{ color: '#1e3a8a', fontSize: '11px', fontWeight: 'bold' }}>{patientName}</div>
-                      </div>
-                      <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
-                        <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>UHID: </span>
-                        <span style={{ fontSize: '8px' }}>{uhid}</span>
-                      </div>
-                      <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
-                        <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Age: </span>
-                        <span style={{ fontSize: '8px' }}>{age}</span>
-                      </div>
-                      <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
-                        <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Blood Group: </span>
-                        <span style={{ fontSize: '8px', fontWeight: 'bold' }}>{bloodGroup}</span>
-                      </div>
-                      <div>
-                        <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Gender: </span>
-                        <span style={{ fontSize: '8px' }}>{gender}</span>
-                      </div>
+                    
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5mm', justifyContent: 'center' }}>
+                        <div style={{ color: '#0f172a', fontSize: '12px', fontWeight: '900', lineHeight: '1.1', marginBottom: '1mm', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{patientName.toUpperCase()}</div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f1f5f9', padding: '1mm', borderRadius: '1mm' }}>
+                          <span style={{ color: '#475569', fontSize: '7px', fontWeight: '700' }}>UHID: </span>
+                          <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '800' }}>{uhid}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5mm 1mm' }}>
+                          <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>AGE/SEX: </span>
+                          <span style={{ fontSize: '7px', color: '#0f172a', fontWeight: '700' }}>{age} / {gender.charAt(0).toUpperCase()}</span>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5mm 1mm' }}>
+                          <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>BLOOD: </span>
+                          <span style={{ fontSize: '8px', fontWeight: '900', color: '#dc2626' }}>{bloodGroup}</span>
+                        </div>
                     </div>
                   </div>
 
-                  {/* QR Code */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4mm', flexDirection: 'column', alignItems: 'center', gap: '1mm' }}>
-                    <div style={{ background: 'white', padding: '1mm', display: 'inline-block' }}>
-                      <QRCode value={qrValue} size={40} />
-                    </div>
-                    <div style={{ fontSize: '10px' }}>
-                       {qrValue}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2.5mm', flexDirection: 'column', alignItems: 'center', gap: '1mm', position: 'relative', zIndex: 10 }}>
+                    <div style={{ background: 'white', padding: '1.5mm', borderRadius: '1mm', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                      <QRCode value={qrValue} size={34} />
                     </div>
                   </div>
 
-                  {/* Bottom Angles */}
-                  <div style={{ position: 'absolute', bottom: '0', left: '0', width: '100%', height: '8mm', background: '#3b82f6' }}></div>
-                  <div style={{ position: 'absolute', bottom: '0', right: '0', width: '0', height: '0', borderBottom: '10mm solid white', borderLeft: '30mm solid transparent' }}></div>
+                  <div style={{ position: 'absolute', bottom: '0', left: '0', width: '100%', height: '8mm', background: 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ fontSize: '6px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px', fontWeight: 'bold' }}>VALID FOR HOSPITAL SERVICES</div>
+                  </div>
                 </div>
 
                 <div className="page-break"></div>
 
                 {/* Patient Back */}
-                <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-                  {/* Blue Top */}
-                  <div style={{ background: '#1e3a8a', height: '22mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '2mm' }}>
+                <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+                  <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)', height: '20mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '2mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
                       <img src={logoUrl} style={{ height: '6mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
-                      <div style={{ fontWeight: 'bold', fontSize: '10px' }}>{hospitalName.toUpperCase()}</div>
+                      <div style={{ fontWeight: '900', fontSize: '9px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
                     </div>
-                    <div style={{ fontSize: '8px', marginTop: '1mm' }}>PATIENT ID CARD</div>
+                    <div style={{ fontSize: '7px', marginTop: '1.5mm', color: '#bfdbfe', letterSpacing: '1px' }}>PATIENT ID CARD</div>
                   </div>
                   
                   {/* Emergency Contacts */}
@@ -238,71 +224,59 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
             ) : (
               <>
                 {/* Staff Front */}
-                <div style={{ width: '54mm', height: '86mm', background: '#0f172a', position: 'relative', overflow: 'hidden', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column' }}>
-                  {/* Top Hole */}
-                  <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '2mm' }}>
-                    <div style={{ width: '12mm', height: '3mm', background: 'white', borderRadius: '2mm' }}></div>
+                <div style={{ width: '54mm', height: '86mm', background: 'linear-gradient(135deg, #020617 0%, #1e293b 100%)', position: 'relative', overflow: 'hidden', border: '1px solid #0f172a', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '2mm', position: 'relative', zIndex: 10 }}>
+                    <div style={{ width: '12mm', height: '3mm', background: '#e2e8f0', borderRadius: '2mm' }}></div>
                   </div>
 
-                  {/* Gold Header */}
-                  <div style={{ background: '#eab308', height: '14mm', width: '100%', marginTop: '3mm', display: 'flex', alignItems: 'center', padding: '0 4mm', gap: '2mm' }}>
-                     <img src={logoUrl} style={{ height: '8mm' }} alt="Logo" />
-                     <div style={{ color: '#0f172a', fontWeight: '900', fontSize: '8px', lineHeight: '1.2' }}>{hospitalName.toUpperCase()}</div>
+                  <div style={{ background: 'linear-gradient(90deg, #ca8a04 0%, #facc15 50%, #ca8a04 100%)', height: '12mm', width: '100%', marginTop: '3mm', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4mm', gap: '2mm', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', position: 'relative', zIndex: 10 }}>
+                     <img src={logoUrl} style={{ height: '7mm', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
+                     <div style={{ color: '#020617', fontWeight: '900', fontSize: '8px', lineHeight: '1.1', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
                   </div>
 
-                  {/* Middle Content */}
-                  <div style={{ display: 'flex', padding: '4mm', gap: '3mm' }}>
-                     <div style={{ width: '20mm', height: '24mm', border: '1.5px solid #eab308', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <div style={{ margin: '4mm', padding: '3mm', background: 'rgba(255,255,255,0.05)', borderRadius: '2mm', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '3mm', position: 'relative', zIndex: 10 }}>
+                     <div style={{ width: '18mm', height: '22mm', borderRadius: '1.5mm', border: '1px solid #facc15', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                      </div>
                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                       <div style={{ color: '#eab308', fontSize: '12px', fontWeight: '900', lineHeight: '1' }}>STAFF</div>
-                       <div style={{ color: '#eab308', fontSize: '12px', fontWeight: '900', lineHeight: '1', marginBottom: '2mm' }}>ID CARD</div>
-                       <div style={{ color: 'white', fontSize: '7px', fontWeight: 'bold' }}>{designation.toUpperCase()}</div>
+                       <div style={{ color: '#facc15', fontSize: '10px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '1px' }}>STAFF ID</div>
+                       <div style={{ color: 'white', fontSize: '7px', fontWeight: '600', marginTop: '1mm', lineHeight: '1.2' }}>{designation.toUpperCase()}</div>
+                       <div style={{ color: '#94a3b8', fontSize: '6px', fontWeight: '500', lineHeight: '1.2' }}>{department.toUpperCase()}</div>
                      </div>
                   </div>
 
-                  {/* Details */}
-                  <div style={{ padding: '0 4mm' }}>
-                    <div style={{ color: '#eab308', fontSize: '12px', fontWeight: 'bold', marginBottom: '2mm' }}>{empName.toUpperCase()}</div>
-                    <div style={{ fontSize: '7px', color: '#94a3b8', marginBottom: '1mm' }}>
-                      <strong style={{ color: '#eab308' }}>DESIGNATION:</strong> {designation}
-                    </div>
-                    <div style={{ fontSize: '7px', color: '#94a3b8', marginBottom: '1mm' }}>
-                      <strong style={{ color: '#eab308' }}>EMPLOYEE ID:</strong> {empId}
-                    </div>
-                    <div style={{ fontSize: '7px', color: '#94a3b8' }}>
-                      <strong style={{ color: '#eab308' }}>DEPARTMENT:</strong> {department}
+                  <div style={{ padding: '0 4mm', textAlign: 'center', position: 'relative', zIndex: 10 }}>
+                    <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: '900', marginBottom: '1mm', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{empName.toUpperCase()}</div>
+                    
+                    <div style={{ display: 'inline-block', background: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: '1mm', padding: '1mm 2mm', marginTop: '1mm' }}>
+                        <span style={{ fontSize: '6px', color: '#cbd5e1', marginRight: '1mm' }}>EMP ID:</span>
+                        <span style={{ fontSize: '8px', color: '#facc15', fontWeight: '800', letterSpacing: '0.5px' }}>{empId}</span>
                     </div>
                   </div>
 
                   <div style={{ flex: 1 }}></div>
 
-                  {/* Barcode / Footer */}
-                  <div style={{ background: 'white', padding: '2mm', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                     <div style={{ fontSize: '12px', letterSpacing: '2px', fontFamily: 'monospace' }}>||||||||||||||||||||</div>
-                     <div style={{ fontSize: '6px', fontWeight: 'bold' }}>{empId}</div>
+                  <div style={{ background: 'white', padding: '2.5mm', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+                     <QRCode value={qrValue} size={28} />
+                     <div style={{ fontSize: '5px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', marginTop: '1.5mm' }}>SCAN TO VERIFY</div>
                   </div>
-                  <div style={{ background: '#0f172a', padding: '2mm', textAlign: 'center', borderTop: '1px solid #eab308' }}>
-                    <div style={{ color: 'white', fontSize: '7px', fontWeight: 'bold' }}>{hospitalName.toUpperCase()}</div>
-                  </div>
+                  <div style={{ background: 'linear-gradient(90deg, #ca8a04 0%, #facc15 50%, #ca8a04 100%)', height: '2px', width: '100%', position: 'relative', zIndex: 10 }}></div>
                 </div>
 
                 <div className="page-break"></div>
 
                 {/* Staff Back */}
-                <div style={{ width: '54mm', height: '86mm', background: '#0f172a', position: 'relative', overflow: 'hidden', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column' }}>
-                  {/* Top Hole */}
+                <div style={{ width: '54mm', height: '86mm', background: 'linear-gradient(135deg, #020617 0%, #1e293b 100%)', position: 'relative', overflow: 'hidden', border: '1px solid #0f172a', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '2mm' }}>
-                    <div style={{ width: '12mm', height: '3mm', background: 'white', borderRadius: '2mm' }}></div>
+                    <div style={{ width: '12mm', height: '3mm', background: '#e2e8f0', borderRadius: '2mm' }}></div>
                   </div>
                   
                   <div style={{ textAlign: 'center', color: 'white', padding: '2mm' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1mm', marginBottom: '1mm' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1mm', marginBottom: '1mm' }}>
                       <img src={logoUrl} style={{ height: '4mm' }} alt="Logo" />
-                      <div style={{ color: '#eab308', fontWeight: 'bold', fontSize: '9px' }}>{hospitalName.toUpperCase()}</div>
+                      <div style={{ color: '#facc15', fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
                     </div>
-                    <div style={{ fontSize: '7px' }}>THIS SIDE IS FOR HOSPITAL USE</div>
+                    <div style={{ fontSize: '6px', color: '#94a3b8', letterSpacing: '0.5px' }}>THIS SIDE IS FOR HOSPITAL USE</div>
                   </div>
 
                   <div style={{ background: '#eab308', flex: 1, margin: '0 2mm 2mm 2mm', borderRadius: '2mm', padding: '2mm' }}>
