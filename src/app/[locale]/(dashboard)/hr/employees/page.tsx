@@ -4,6 +4,7 @@ import { EmployeeDetailsDialog } from "@/components/hr/employee-details-dialog"
 import { EmployeeDialog } from "@/components/hr/employee-dialog"
 import { EmployeeFilters, EmployeeFilterValues } from "@/components/hr/hr-filters"
 import { FilterPopover } from "@/components/shared/filter-popover"
+import { IdCardDialog } from "@/components/shared/id-card-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -22,7 +23,7 @@ import { useBranches } from "@/hooks/pharmacy-queries"
 import { cn } from "@/lib/utils"
 import { useStoreContext } from "@/store/use-store-context"
 import { Employee } from "@/types/hr"
-import { Briefcase, Edit, Eye, Loader2, MapPin, Phone, Plus, Search, Trash2, User } from "lucide-react"
+import { Briefcase, Edit, Eye, Loader2, MapPin, Phone, Plus, Search, Trash2, User, Printer } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
@@ -35,6 +36,7 @@ export default function EmployeesPage() {
     
     const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false)
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+    const [idCardOpen, setIdCardOpen] = useState(false)
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
     const { activeStoreId } = useStoreContext()
 
@@ -251,6 +253,18 @@ export default function EmployeesPage() {
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                     )}
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp)
+                                                            setIdCardOpen(true)
+                                                        }}
+                                                        title="Print ID Card"
+                                                    >
+                                                        <Printer className="h-4 w-4" />
+                                                    </Button>
                                                     {hasPermission('employee:delete') && (
                                                     <Button 
                                                         variant="outline" 
@@ -283,6 +297,13 @@ export default function EmployeesPage() {
                     open={detailsDialogOpen}
                     onOpenChange={setDetailsDialogOpen}
                     employeeId={selectedEmployee?.id || null}
+                />
+
+                <IdCardDialog 
+                    open={idCardOpen}
+                    onOpenChange={setIdCardOpen}
+                    type="employee"
+                    data={selectedEmployee}
                 />
             </div>
         </PermissionGuard>

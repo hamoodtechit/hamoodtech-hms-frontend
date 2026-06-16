@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { PatientFilters } from "./patient-filters"
+import { IdCardDialog } from "@/components/shared/id-card-dialog"
 import { PHARMACY_KEYS, usePatients } from "@/hooks/pharmacy-queries"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
@@ -41,6 +42,7 @@ import {
     Trash2,
     UserPlus,
     X,
+    Printer,
 } from "lucide-react"
 import { useState } from "react"
 import { useDebounce } from "use-debounce"
@@ -75,6 +77,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
     // Modal state
     const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+    const [idCardOpen, setIdCardOpen] = useState(false)
     const [isPaymentOpen, setIsPaymentOpen] = useState(false)
     const [paymentPatient, setPaymentPatient] = useState<{ id: string; name: string } | null>(null)
     const queryClient = useQueryClient()
@@ -128,6 +131,11 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
     const handleEdit = (patient: Patient) => {
         setSelectedPatient(patient)
         setDialogOpen(true)
+    }
+
+    const handlePrintIdCard = (patient: Patient) => {
+        setSelectedPatient(patient)
+        setIdCardOpen(true)
     }
 
     const handleSuccess = () => {
@@ -393,6 +401,10 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                                                             <span className="font-medium">Edit Profile</span>
                                                         </DropdownMenuItem>
                                                     )}
+                                                    <DropdownMenuItem className="rounded-md" onClick={() => handlePrintIdCard(patient)}>
+                                                        <Printer className="mr-3 h-4 w-4 text-blue-500" /> 
+                                                        <span className="font-medium">Print ID Card</span>
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1" />
                                                     {hasPermission("patient:delete") && (
                                                         <DropdownMenuItem 
@@ -481,6 +493,15 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                     patientId={paymentPatient.id}
                     patientName={paymentPatient.name}
                     onSuccess={handleSuccess}
+                />
+            )}
+
+            {selectedPatient && idCardOpen && (
+                <IdCardDialog
+                    open={idCardOpen}
+                    onOpenChange={setIdCardOpen}
+                    type="patient"
+                    data={selectedPatient}
                 />
             )}
         </div>
