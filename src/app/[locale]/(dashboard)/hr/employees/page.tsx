@@ -69,6 +69,7 @@ export default function EmployeesPage() {
     const deleteMutation = useDeleteEmployee()
 
     const employees = employeesRes?.data || []
+    const meta = employeesRes?.meta
     const branches = branchesRes?.data || []
     const departments = departmentsRes?.data || []
     const designations = designationsRes?.data || []
@@ -285,6 +286,54 @@ export default function EmployeesPage() {
                         </Table>
                     </CardContent>
                 </Card>
+
+                {meta && meta.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-medium text-foreground">{(meta.page - 1) * meta.pageSize + 1}</span> to <span className="font-medium text-foreground">{Math.min(meta.page * meta.pageSize, meta.totalItems)}</span> of <span className="font-medium text-foreground">{meta.totalItems}</span> results
+                        </p>
+                        
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={!meta.hasPreviousPage}
+                            >
+                                Previous
+                            </Button>
+
+                            {Array.from({ length: meta.totalPages }).map((_, i) => {
+                                const p = i + 1;
+                                if (meta.totalPages > 5 && Math.abs(p - meta.page) > 1 && p !== 1 && p !== meta.totalPages) {
+                                    if (p === 2 || p === meta.totalPages - 1) return <span key={p} className="px-2 text-muted-foreground">...</span>;
+                                    return null;
+                                }
+                                
+                                return (
+                                    <Button
+                                        key={p}
+                                        variant={p === meta.page ? "default" : "outline"}
+                                        size="sm"
+                                        className="w-8 p-0"
+                                        onClick={() => setPage(p)}
+                                    >
+                                        {p}
+                                    </Button>
+                                )
+                            })}
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+                                disabled={!meta.hasNextPage}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 <EmployeeDialog 
                     open={employeeDialogOpen}

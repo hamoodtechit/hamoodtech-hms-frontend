@@ -187,7 +187,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                       <QRCode value={qrValue} size={40} />
                     </div>
                     <div style={{ fontSize: '10px' }}>
-                       \${qrValue}
+                       {qrValue}
                     </div>
                   </div>
 
@@ -210,7 +210,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                   </div>
                   
                   {/* Emergency Contacts */}
-                  <div style={{ padding: '4mm' }}>
+                  <div style={{ padding: '4mm', color: '#0f172a' }}>
                     <div style={{ color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', marginBottom: '2mm', textAlign: 'center' }}>EMERGENCY CONTACTS</div>
                     <div style={{ fontSize: '8px', marginBottom: '1mm' }}>Name: ______________________</div>
                     <div style={{ fontSize: '8px', marginBottom: '1mm' }}>Relationship: ________________</div>
@@ -298,7 +298,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                   </div>
                   
                   <div style={{ textAlign: 'center', color: 'white', padding: '2mm' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1mm', marginBottom: '1mm' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1mm', marginBottom: '1mm' }}>
                       <img src={logoUrl} style={{ height: '4mm' }} alt="Logo" />
                       <div style={{ color: '#eab308', fontWeight: 'bold', fontSize: '9px' }}>{hospitalName.toUpperCase()}</div>
                     </div>
@@ -314,10 +314,10 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                       <div style={{ fontSize: '6px', marginBottom: '4mm' }}><strong>   CONTACT:</strong> _________________</div>
 
                       <div style={{ display: 'flex' }}>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, color: '#0f172a' }}>
                           <div style={{ fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm' }}>EMPLOYEE INFO</div>
                           <div style={{ fontSize: '6px', marginBottom: '1mm' }}><strong>BLOOD GROUP:</strong></div>
-                          <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm' }}>{bloodGroup}</div>
+                          <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm', color: '#0f172a' }}>{bloodGroup}</div>
                           <div style={{ fontSize: '6px' }}><strong>DATE OF ISSUE:</strong></div>
                           <div style={{ fontSize: '6px', marginBottom: '2mm' }}>{new Date().toLocaleDateString('en-GB')}</div>
                         </div>
@@ -325,11 +325,11 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                            <div style={{ padding: '1px', border: '1px solid #eab308' }}>
                              <QRCode value={qrValue} size={30} />
                            </div>
-                           <div style={{ fontSize: '5px', textAlign: 'center', fontWeight: 'bold', marginTop: '1px' }}>SCAN FOR HR</div>
+                           <div style={{ fontSize: '5px', textAlign: 'center', fontWeight: 'bold', marginTop: '1px', color: '#0f172a' }}>SCAN FOR HR</div>
                         </div>
                       </div>
 
-                      <div style={{ fontSize: '5.5px', marginTop: '2mm', lineHeight: '1.2' }}>
+                      <div style={{ fontSize: '5.5px', marginTop: '2mm', lineHeight: '1.2', color: '#0f172a' }}>
                         This card is the property of <strong>{hospitalName}</strong> and must be surrendered upon termination of employment.
                       </div>
                     </div>
@@ -383,19 +383,19 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                         </div>
                         <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
                           <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>UHID: </span>
-                          <span style={{ fontSize: '8px' }}>{uhid}</span>
+                          <span style={{ fontSize: '8px', color: '#0f172a' }}>{uhid}</span>
                         </div>
                         <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
                           <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Age: </span>
-                          <span style={{ fontSize: '8px' }}>{age}</span>
+                          <span style={{ fontSize: '8px', color: '#0f172a' }}>{age}</span>
                         </div>
                         <div style={{ borderBottom: '1px solid #bfdbfe', paddingBottom: '1mm' }}>
                           <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Blood: </span>
-                          <span style={{ fontSize: '8px', fontWeight: 'bold' }}>{bloodGroup}</span>
+                          <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#0f172a' }}>{bloodGroup}</span>
                         </div>
                         <div>
                           <span style={{ color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold' }}>Gender: </span>
-                          <span style={{ fontSize: '8px' }}>{gender}</span>
+                          <span style={{ fontSize: '8px', color: '#0f172a' }}>{gender}</span>
                         </div>
                       </div>
                     </div>
@@ -422,7 +422,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                       <div style={{ fontSize: '8px', marginTop: '1mm' }}>PATIENT ID CARD</div>
                     </div>
                     
-                    <div style={{ padding: '4mm' }}>
+                    <div style={{ padding: '4mm', color: '#0f172a' }}>
                       <div style={{ color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', marginBottom: '2mm', textAlign: 'center' }}>EMERGENCY CONTACTS</div>
                       <div style={{ fontSize: '8px', marginBottom: '1mm', color: '#64748b' }}>Name: <span style={{display: 'inline-block', width: '25mm', borderBottom: '1px solid #cbd5e1'}}></span></div>
                       <div style={{ fontSize: '8px', marginBottom: '1mm', color: '#64748b' }}>Rel.: <span style={{display: 'inline-block', width: '27mm', borderBottom: '1px solid #cbd5e1'}}></span></div>
@@ -431,10 +431,10 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
 
                       <div style={{ color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', marginBottom: '2mm', textAlign: 'center' }}>IMPORTANT INFO</div>
                       <div style={{ fontSize: '7px', textAlign: 'center', marginBottom: '1mm' }}>
-                        <strong style={{ color: '#1e3a8a' }}>24/7 HELPLINE:</strong><br/>{phone}
+                        <strong style={{ color: '#1e3a8a' }}>24/7 HELPLINE:</strong><br/><span style={{ color: '#0f172a' }}>{phone}</span>
                       </div>
                       <div style={{ fontSize: '7px', textAlign: 'center' }}>
-                        <strong style={{ color: '#1e3a8a' }}>HOSPITAL ADDRESS:</strong><br/>{address}
+                        <strong style={{ color: '#1e3a8a' }}>HOSPITAL ADDRESS:</strong><br/><span style={{ color: '#0f172a' }}>{address}</span>
                       </div>
                     </div>
 
