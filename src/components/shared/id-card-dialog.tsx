@@ -266,8 +266,8 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                   </div>
 
                   <div style={{ background: '#eab308', flex: 1, margin: '0 2mm 2mm 2mm', borderRadius: '2mm', padding: '2mm' }}>
-                    <div style={{ background: 'white', height: '100%', borderRadius: '1mm', padding: '2mm' }}>
-                      <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm' }}>EMERGENCY CONTACTS</div>
+                    <div style={{ background: 'white', height: '100%', borderRadius: '1mm', padding: '2mm', color: '#0f172a' }}>
+                      <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm', color: '#0f172a' }}>EMERGENCY CONTACTS</div>
                       <div style={{ fontSize: '6px', marginBottom: '1px' }}><strong>1. NAME:</strong> ____________________</div>
                       <div style={{ fontSize: '6px', marginBottom: '3px' }}><strong>   CONTACT:</strong> _________________</div>
                       <div style={{ fontSize: '6px', marginBottom: '1px' }}><strong>2. NAME:</strong> ____________________</div>
