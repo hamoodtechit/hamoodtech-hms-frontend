@@ -45,6 +45,9 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
   const designation = data.designation?.name || "Staff"
   const department = data.department?.name || "General"
 
+  const patientPhoto = data.photoUrl || null
+  const empPhoto = data.photoUrl || null
+
   const qrValue = type === "patient" ? `PT:${uhid}` : `EMP:${empId}`
 
   const handlePrint = () => {
@@ -127,7 +130,11 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
 
                   <div style={{ display: 'flex', padding: '0 4mm', gap: '3mm', position: 'relative', zIndex: 10 }}>
                     <div style={{ width: '18mm', height: '22mm', borderRadius: '2mm', background: '#f8fafc', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                       <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                       {patientPhoto ? (
+                         <img src={patientPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Patient" />
+                       ) : (
+                         <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                       )}
                     </div>
                     
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5mm', justifyContent: 'center' }}>
@@ -211,20 +218,24 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
                   </div>
 
                   <div style={{ margin: '4mm', padding: '3mm', background: 'rgba(255,255,255,0.05)', borderRadius: '2mm', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '3mm', position: 'relative', zIndex: 10 }}>
-                     <div style={{ width: '18mm', height: '22mm', borderRadius: '1.5mm', border: '1px solid #facc15', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                     <div style={{ width: '18mm', height: '22mm', borderRadius: '1.5mm', border: '1px solid #facc15', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                         {empPhoto ? (
+                            <img src={empPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Employee" />
+                         ) : (
+                            <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                         )}
                      </div>
                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                       <div style={{ color: '#facc15', fontSize: '10px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '1px' }}>STAFF ID</div>
-                       <div style={{ color: 'white', fontSize: '7px', fontWeight: '600', marginTop: '1mm', lineHeight: '1.2' }}>{designation.toUpperCase()}</div>
-                       <div style={{ color: '#94a3b8', fontSize: '6px', fontWeight: '500', lineHeight: '1.2' }}>{department.toUpperCase()}</div>
+                       <div style={{ color: '#facc15', fontSize: '10px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '1px', marginBottom: '2mm' }}>STAFF ID</div>
+                       <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '-0.3px' }}>{empName.toUpperCase()}</div>
                      </div>
                   </div>
 
                   <div style={{ padding: '0 4mm', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-                    <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: '900', marginBottom: '1mm', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{empName.toUpperCase()}</div>
+                    <div style={{ color: 'white', fontSize: '7px', fontWeight: '600', marginBottom: '1mm', lineHeight: '1.2' }}>{designation.toUpperCase()}</div>
+                    <div style={{ color: '#94a3b8', fontSize: '6px', fontWeight: '500', lineHeight: '1.2' }}>{department.toUpperCase()}</div>
                     
-                    <div style={{ display: 'inline-block', background: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: '1mm', padding: '1mm 2mm', marginTop: '1mm' }}>
+                    <div style={{ display: 'inline-block', background: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: '1mm', padding: '1mm 2mm', marginTop: '1.5mm' }}>
                         <span style={{ fontSize: '6px', color: '#cbd5e1', marginRight: '1mm' }}>EMP ID:</span>
                         <span style={{ fontSize: '8px', color: '#facc15', fontWeight: '800', letterSpacing: '0.5px' }}>{empId}</span>
                     </div>
