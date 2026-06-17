@@ -29,16 +29,11 @@ import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
 import { Patient } from "@/types/pharmacy"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -106,6 +101,38 @@ export function PatientDialog({
       dob: undefined
     },
   })
+
+  const dobValue = form.watch("dob");
+
+  const exactAgeText = useMemo(() => {
+    if (!dobValue) return null;
+    const birthDate = new Date(dobValue);
+    const today = new Date();
+    
+    let years = today.getFullYear() - birthDate.getFullYear();
+    let months = today.getMonth() - birthDate.getMonth();
+    let days = today.getDate() - birthDate.getDate();
+
+    if (days < 0) {
+      months--;
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += lastMonth.getDate();
+    }
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    if (years < 0) return "Invalid Date";
+
+    const parts = [];
+    if (years > 0) parts.push(`${years}Y`);
+    if (months > 0) parts.push(`${months}M`);
+    if (days > 0) parts.push(`${days}D`);
+    
+    return parts.length > 0 ? parts.join(" ") : "0D";
+  }, [dobValue]);
 
   useEffect(() => {
     if (patient) {
@@ -257,6 +284,7 @@ export function PatientDialog({
                                   }}
                                 />
                             </FormControl>
+                            {exactAgeText && <p className="text-[10px] text-muted-foreground font-bold mt-1 tracking-tight text-primary">Exact Age: {exactAgeText}</p>}
                             <FormMessage />
                             </FormItem>
                         )}
