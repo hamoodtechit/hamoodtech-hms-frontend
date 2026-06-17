@@ -9,6 +9,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { formatCurrency } from "@/lib/utils"
 import { useAuthStore } from "@/store/use-auth-store"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { Loader2, Printer, X } from "lucide-react"
 import { useRef, useMemo } from "react"
 import { DischargeInitiateData, Admission } from "@/types/patient"
@@ -276,7 +277,7 @@ export function DischargeReceiptDialog({
                                     </div>
                                     <div className="p-2 flex">
                                         <span className="w-24 text-[10px] font-black uppercase">Age / Sex:</span>
-                                        <span className="font-bold text-sm">{patient?.age} Y / {patient?.gender?.charAt(0).toUpperCase()}</span>
+                                        <span className="font-bold text-sm">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "N/A")} / {patient?.gender?.charAt(0).toUpperCase()}</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 border-b border-black">

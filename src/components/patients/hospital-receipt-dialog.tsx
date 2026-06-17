@@ -10,6 +10,7 @@ import {
 import { useSale } from "@/hooks/sales-queries"
 import { useAdmission } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -183,7 +184,7 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
             <div className="grid grid-cols-1 border-b border-black">
                 <div className="p-1 px-3 font-bold flex flex-wrap items-center">
                     <div className="flex gap-3 mr-8">
-                        <span>Age : {patient?.age || 'N/A'}Y</span>
+                        <span>Age : {patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : 'N/A')}</span>
                         <span>Sex : {patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : 'N/A'}</span>
                         <span>Contact : {patient?.phone || 'N/A'}</span>
                     </div>

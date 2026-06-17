@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAdmission, useDischargeInitiate, PATIENT_KEYS } from "@/hooks/patient-queries"
 import { format } from "date-fns"
@@ -161,7 +162,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                         <div className="grid grid-cols-3 gap-2 py-1">
                                             <div className="flex flex-col">
                                                 <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Age / Gender</span>
-                                                <span className="text-xs font-black opacity-80">{admission.patient?.age || 'N/A'} Y / {(admission.patient?.gender || 'N/A').toUpperCase()}</span>
+                                                <span className="text-xs font-black opacity-80">{admission.patient?.dob ? calculateExactAge(admission.patient.dob) : (admission.patient?.age ? `${admission.patient.age}Y` : 'N/A')} / {(admission.patient?.gender || 'N/A').toUpperCase()}</span>
                                             </div>
                                             <div className="flex flex-col border-x border-white/5 px-2">
                                                 <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Blood Group</span>

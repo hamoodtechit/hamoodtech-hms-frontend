@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { useSale } from "@/hooks/sales-queries"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { useCurrency } from "@/hooks/use-currency"
 import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
@@ -75,7 +76,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   const patient = data?.patient || data?.patientAdmission?.patient || transaction?.patient || propPatient || {}
   const patientName = patient?.name || data?.customerName || data?.patientName || data?.name || "Walk-in Patient"
-  const patientAge = (patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A")))
+  const patientAge = patient?.dob ? calculateExactAge(patient.dob) : ((patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A"))))
   const patientSex = patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : (data?.gender || "N/A")
   const patientPhone = patient?.phone || data?.customerPhone || data?.patientPhone || data?.phone || "N/A"
   const patientId = patient?.patientNumber || patient?.uhid || patient?.id?.slice(0,8).toUpperCase() || data?.patientUhId || data?.uhid || data?.patientId || "N/A"

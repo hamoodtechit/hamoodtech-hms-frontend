@@ -11,6 +11,7 @@ import { useAdmission, usePatient } from "@/hooks/patient-queries"
 import { formatCurrency } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useAuthStore } from "@/store/use-auth-store"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { Loader2, Printer, X } from "lucide-react"
 import { useRef } from "react"
 
@@ -261,7 +262,7 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
                                             </div>
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Age / Sex:</span>
-                                                <span className="font-bold text-sm">{patient?.age} Y / {patient?.gender?.charAt(0).toUpperCase()}</span>
+                                                <span className="font-bold text-sm">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "N/A")} / {patient?.gender?.charAt(0).toUpperCase()}</span>
                                             </div>
                                             <div className="p-2 px-3 border-b border-black border-dashed flex items-center">
                                                 <span className="w-24 text-[10px] font-black uppercase opacity-60">Guardian:</span>

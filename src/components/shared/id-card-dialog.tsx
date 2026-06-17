@@ -12,6 +12,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { Printer, X, User } from "lucide-react"
 // @ts-ignore
 import QRCode from "react-qr-code"
+import { calculateExactAge } from "@/lib/age-calculator"
 
 interface IdCardDialogProps {
   open: boolean
@@ -35,7 +36,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
   // Patient Info
   const uhid = data.uhid || data.patientNumber || "N/A"
   const patientName = data.name || "N/A"
-  const age = data.age || "N/A"
+  const age = data.dob ? calculateExactAge(data.dob) : (data.age !== undefined ? `${data.age}Y` : "N/A")
   const bloodGroup = data.bloodGroup || "N/A"
   const gender = data.gender ? data.gender.charAt(0).toUpperCase() + data.gender.slice(1) : "N/A"
 

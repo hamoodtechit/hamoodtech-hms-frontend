@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { useSale } from "@/hooks/sales-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { cn } from "@/lib/utils"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
@@ -75,7 +76,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
   
   const patient = data?.patient || transaction?.patient || propPatient || {}
   const patientName = patient?.name || data?.customerName || data?.patientName || data?.name || "Walk-in Patient"
-  const patientAge = (patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A")))
+  const patientAge = patient?.dob ? calculateExactAge(patient.dob) : ((patient?.age !== undefined && patient?.age !== null) ? `${patient.age}Y` : (data?.customerAge ? `${data.customerAge}Y` : (data?.patientAge ? `${data.patientAge}Y` : (data?.age ? `${data.age}Y` : "N/A"))))
   const patientSex = patient?.gender ? (patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)) : (data?.gender || "N/A")
   const patientPhone = patient?.phone || data?.customerPhone || data?.patientPhone || data?.phone || "N/A"
   const patientId = patient?.patientNumber || patient?.uhid || patient?.id?.slice(0,8).toUpperCase() || data?.patientUhId || data?.uhid || data?.patientId || "N/A"

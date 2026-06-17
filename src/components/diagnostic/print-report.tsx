@@ -4,6 +4,7 @@ import { useDiagnosticReport } from "@/hooks/diagnostic-queries"
 import { cn } from "@/lib/utils"
 import { DiagnosticBlock, DiagnosticColumnDef, DiagnosticReport, DiagnosticResult } from "@/types/diagnostic"
 import { format } from "date-fns"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { Loader2 } from "lucide-react"
 import { useMemo } from "react"
 import { toast } from "sonner"
@@ -229,7 +230,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                     </tr>
                                                     <tr>
                                                         <td className="pr-1 py-0.5 font-bold">Age / Gender</td>
-                                                        <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                        <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "—")} / {patient?.gender?.toUpperCase() || "—"}</span></td>
                                                         <td className="pr-1 py-0.5 font-bold">Consultant</td>
                                                         <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                             {result?.consultantName || doctor?.fullName || 'SELF'}
@@ -284,7 +285,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                                 </tr>
                                                 <tr>
                                                     <td className="pr-1 py-0.5 font-bold">Age / Gender</td>
-                                                    <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.age ? `${patient.age}Y` : "—"} / {patient?.gender?.toUpperCase() || "—"}</span></td>
+                                                    <td className="pr-4 py-0.5">: <span className="font-bold">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "—")} / {patient?.gender?.toUpperCase() || "—"}</span></td>
                                                     <td className="pr-1 py-0.5 font-bold">Consultant</td>
                                                     <td className="py-0.5">: <span className="font-medium text-black uppercase">
                                                         {result?.consultantName || doctor?.fullName || 'SELF'}
