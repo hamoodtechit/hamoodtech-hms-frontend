@@ -107,8 +107,15 @@ export function PatientDialog({
   const exactAgeText = useMemo(() => {
     if (!dobValue) return null;
     const birthDate = new Date(dobValue);
+    
+    // Check if the date is actually valid
+    if (isNaN(birthDate.getTime())) return null;
+
     const today = new Date();
     
+    // If the birthdate is in the future
+    if (birthDate > today) return "Future date not allowed";
+
     let years = today.getFullYear() - birthDate.getFullYear();
     let months = today.getMonth() - birthDate.getMonth();
     let days = today.getDate() - birthDate.getDate();
@@ -124,7 +131,7 @@ export function PatientDialog({
       months += 12;
     }
 
-    if (years < 0) return "Invalid Date";
+    if (years < 0) return "Future date not allowed";
 
     const parts = [];
     if (years > 0) parts.push(`${years}Y`);
