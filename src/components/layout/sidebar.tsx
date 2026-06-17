@@ -94,7 +94,7 @@ export function Sidebar() {
           href: "/dashboard",
           color: "text-sky-400",
           permission: "dashboard:read",
-          roles: ["Super Admin", "Admin", "Pharmacist", "Doctor", "Pathologist", "Radiologist", "Receptionist", "Accountant"],
+          roles: ["Super Admin", "Admin", "Pharmacist", "Doctor", "Pathologist", "Radiologist", "Receptionist", "Accountant", "Pathology", "Radiology", "USG", "Ultrasound"],
         },
       ]
     },
@@ -136,7 +136,7 @@ export function Sidebar() {
           label: "Clinical Ops",
           icon: FlaskConical,
           color: "text-indigo-400",
-          roles: ["Super Admin", "Admin", "Doctor", "Pathologist", "Radiologist", "Pathology", "Radiology", "USG"],
+          roles: ["Super Admin", "Admin", "Doctor", "Pathologist", "Radiologist", "Pathology", "Radiology", "USG", "Ultrasound"],
           children: [
             {
               label: "Diagnostic Reports",
