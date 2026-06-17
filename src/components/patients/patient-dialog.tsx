@@ -33,7 +33,7 @@ import { Patient } from "@/types/pharmacy"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { CalendarIcon, Loader2 } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -230,50 +230,44 @@ export function PatientDialog({
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <FormField
-                        control={form.control}
-                        name="dob"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Date of Birth</FormLabel>
-                            <FormControl>
-                                <Input 
-                                  type="date" 
-                                  {...field} 
-                                  value={field.value || ''}
-                                  onChange={(e) => {
-                                    field.onChange(e);
-                                    if (e.target.value) {
-                                      const birthDate = new Date(e.target.value);
-                                      const today = new Date();
-                                      let calcAge = today.getFullYear() - birthDate.getFullYear();
-                                      const m = today.getMonth() - birthDate.getMonth();
-                                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                          calcAge--;
-                                      }
-                                      const newAge = calcAge >= 0 ? calcAge : 0;
-                                      // Force React Hook Form to trigger re-evaluation of value for SmartNumberInput
-                                      setTimeout(() => {
-                                        form.setValue('age', newAge, { shouldValidate: true, shouldDirty: true });
-                                      }, 0);
-                                    }
-                                  }}
-                                />
-                            </FormControl>
-                            {exactAgeText && <p className="text-[10px] text-muted-foreground font-bold mt-1 tracking-tight text-primary">Exact Age: {exactAgeText}</p>}
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                         control={form.control}
                         name="age"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Age *</FormLabel>
+                            <FormLabel className="flex items-center justify-between">
+                              <span>Age *</span>
+                              {exactAgeText && <span className="text-[10px] text-muted-foreground font-bold tracking-tight text-primary">{exactAgeText}</span>}
+                            </FormLabel>
                             <FormControl>
-                                <SmartNumberInput placeholder="30" {...field} onChange={(val: number | undefined) => field.onChange(val)} />
+                                <div className="relative flex items-center">
+                                  <SmartNumberInput placeholder="e.g. 30" {...field} onChange={(val: number | undefined) => field.onChange(val)} className="pr-10" />
+                                  <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded-r-md transition-colors overflow-hidden" title="Pick Date of Birth">
+                                     <CalendarIcon className="absolute h-4 w-4 text-muted-foreground pointer-events-none" />
+                                     <Input 
+                                        type="date" 
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                        value={dobValue || ''}
+                                        onChange={(e) => {
+                                            form.setValue('dob', e.target.value || undefined, { shouldValidate: true, shouldDirty: true });
+                                            if (e.target.value) {
+                                                const birthDate = new Date(e.target.value);
+                                                const today = new Date();
+                                                let calcAge = today.getFullYear() - birthDate.getFullYear();
+                                                const m = today.getMonth() - birthDate.getMonth();
+                                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                                    calcAge--;
+                                                }
+                                                const newAge = calcAge >= 0 ? calcAge : 0;
+                                                setTimeout(() => {
+                                                  form.setValue('age', newAge, { shouldValidate: true, shouldDirty: true });
+                                                }, 0);
+                                            }
+                                        }}
+                                     />
+                                  </div>
+                                </div>
                             </FormControl>
                             <FormMessage />
                             </FormItem>
