@@ -66,6 +66,7 @@ export function FinanceStatementReport({ incomeData, expenseData, dateRange, act
                                 <th className="border border-black px-1 py-1 text-right">Net Amount</th>
                                 <th className="border border-black px-1 py-1 text-right">Paid</th>
                                 <th className="border border-black px-1 py-1 text-right">Due</th>
+                                <th className="border border-black px-1 py-1">Created By</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,6 +81,7 @@ export function FinanceStatementReport({ incomeData, expenseData, dateRange, act
                                     <td className="border border-black px-1 py-1 text-right">{Number(sale.netAmount).toFixed(2)}</td>
                                     <td className="border border-black px-1 py-1 text-right text-emerald-700 font-medium">{Number(sale.paid).toFixed(2)}</td>
                                     <td className="border border-black px-1 py-1 text-right text-red-700">{Number(sale.due).toFixed(2)}</td>
+                                    <td className="border border-black px-1 py-1">{sale.createdBy || '-'}</td>
                                 </tr>
                             ))}
                             <tr className="font-bold bg-gray-100">
@@ -89,6 +91,7 @@ export function FinanceStatementReport({ incomeData, expenseData, dateRange, act
                                 <td className="border border-black px-1 py-1 text-right">{Number(group.subTotals.netAmount || 0).toFixed(2)}</td>
                                 <td className="border border-black px-1 py-1 text-right text-emerald-800">{Number(group.subTotals.paid || 0).toFixed(2)}</td>
                                 <td className="border border-black px-1 py-1 text-right text-red-800">{Number(group.subTotals.due || 0).toFixed(2)}</td>
+                                <td className="border border-black px-1 py-1"></td>
                             </tr>
                         </tbody>
                     </table>

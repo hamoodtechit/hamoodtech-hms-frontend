@@ -84,12 +84,12 @@ export function FinanceReportsDashboard() {
     // INCOME
     csvContent += "INCOME REPORT\n"
     if (incomeResponse?.groups) {
-        csvContent += "Type,SL No,Patient No,Patient Name,Invoice No,Total Price,Discount,Tax,Net Amount,Paid,Due\n"
+        csvContent += "Type,SL No,Patient No,Patient Name,Invoice No,Total Price,Discount,Tax,Net Amount,Paid,Due,Created By\n"
         incomeResponse.groups.forEach((group: IncomeGroup) => {
             group.sales.forEach((s: any) => {
-                csvContent += `${group.type},${s.slNo},${s.patientNumber},${s.patientName},${s.invoiceNumber},${s.totalPrice},${s.discountAmount},${s.taxAmount},${s.netAmount},${s.paid},${s.due}\n`
+                csvContent += `${group.type},${s.slNo},${s.patientNumber},${s.patientName},${s.invoiceNumber},${s.totalPrice},${s.discountAmount},${s.taxAmount},${s.netAmount},${s.paid},${s.due},${s.createdBy || ''}\n`
             })
-            csvContent += `SUBTOTAL,,,,,,,,,${group.subTotals.paid},${group.subTotals.due}\n`
+            csvContent += `SUBTOTAL,,,,,,,,,${group.subTotals.paid},${group.subTotals.due},\n`
         })
     } else {
         csvContent += "No income data\n"
@@ -248,6 +248,7 @@ export function FinanceReportsDashboard() {
                                                 <th className="px-4 py-3 font-medium text-right">Net Amount</th>
                                                 <th className="px-4 py-3 font-medium text-right">Paid</th>
                                                 <th className="px-4 py-3 font-medium text-right">Due</th>
+                                                <th className="px-4 py-3 font-medium">Created By</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
@@ -263,6 +264,7 @@ export function FinanceReportsDashboard() {
                                                     <td className="px-4 py-2 text-right">{formatCurrency(sale.netAmount)}</td>
                                                     <td className="px-4 py-2 text-right text-emerald-600 font-medium">{formatCurrency(sale.paid)}</td>
                                                     <td className="px-4 py-2 text-right text-rose-600">{formatCurrency(sale.due)}</td>
+                                                    <td className="px-4 py-2">{sale.createdBy || '-'}</td>
                                                 </tr>
                                             ))}
                                             <tr className="bg-muted/50 font-bold">
@@ -273,6 +275,7 @@ export function FinanceReportsDashboard() {
                                                 <td className="px-4 py-3 text-right">{formatCurrency(group.subTotals.netAmount)}</td>
                                                 <td className="px-4 py-3 text-right text-emerald-700">{formatCurrency(group.subTotals.paid)}</td>
                                                 <td className="px-4 py-3 text-right text-rose-700">{formatCurrency(group.subTotals.due)}</td>
+                                                <td className="px-4 py-3"></td>
                                             </tr>
                                         </tbody>
                                     </table>
