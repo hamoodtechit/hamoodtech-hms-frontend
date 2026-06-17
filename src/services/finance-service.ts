@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { AccountDetailResponse, AccountListResponse, ConsultationChargeListResponse, ConsultationPaymentListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, FundTransferPayload, FundTransferResponse, PayConsultationChargesPayload, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload } from "@/types/finance";
+import { AccountDetailResponse, AccountListResponse, ConsultationChargeListResponse, ConsultationPaymentListResponse, CreateAccountPayload, FinanceTransaction, FinanceTransactionListResponse, FundTransferPayload, FundTransferResponse, PayConsultationChargesPayload, TransactionQueryParams, UpdateAccountPayload, WithdrawPayload, IncomeReportResponse, ExpenseReportResponse } from "@/types/finance";
 
 export const financeService = {
     getAccounts: async (params?: { page?: number; limit?: number; type?: string; group?: string; search?: string; isActive?: boolean }): Promise<AccountListResponse> => {
@@ -73,4 +73,17 @@ export const financeService = {
         const response = await api.get(`/finance/consultation-charges/payments/${id}`);
         return response.data;
     },
+
+    // ── Reports ──────────────────────────────────────────────────
+
+    getIncomeReport: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<{ success: boolean; message: string; data: IncomeReportResponse }> => {
+        const response = await api.get<{ success: boolean; message: string; data: IncomeReportResponse }>("/reports/finance/income", { params });
+        return response.data;
+    },
+
+    getExpenseReport: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<{ success: boolean; message: string; data: ExpenseReportResponse }> => {
+        const response = await api.get<{ success: boolean; message: string; data: ExpenseReportResponse }>("/reports/finance/expense", { params });
+        return response.data;
+    },
 };
+

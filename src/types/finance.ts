@@ -213,3 +213,63 @@ export interface PayConsultationChargesPayload {
     paymentMethod: string;
     note?: string;
 }
+
+// ── Finance Reports ──────────────────────────────────────────────
+
+export interface IncomeSummary {
+  totalCollection: number;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+export interface IncomeSaleRecord {
+  slNo: number;
+  patientNumber: string;
+  patientName: string;
+  invoiceNumber: string;
+  totalPrice: number;
+  discountAmount: number;
+  taxAmount: number;
+  netAmount: number;
+  paid: number;
+  due: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface IncomeGroup {
+  type: string;
+  subTotals: Omit<IncomeSaleRecord, 'slNo' | 'patientNumber' | 'patientName' | 'invoiceNumber' | 'createdBy' | 'createdAt'>;
+  sales: IncomeSaleRecord[];
+}
+
+export interface IncomeReportResponse {
+  summary: IncomeSummary;
+  groups: IncomeGroup[];
+}
+
+export interface ExpenseSummary {
+  totalExpenditure: number;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+export interface ExpenseRecord {
+  slNo: number;
+  expenseNumber: string;
+  amount: number;
+  note: string;
+  recordedBy: string;
+  date: string;
+}
+
+export interface ExpenseGroup {
+  category: string;
+  subTotals: { amount: number };
+  expenses: ExpenseRecord[];
+}
+
+export interface ExpenseReportResponse {
+  summary: ExpenseSummary;
+  groups: ExpenseGroup[];
+}

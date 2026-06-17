@@ -11,6 +11,8 @@ export const FINANCE_KEYS = {
     consultationCharges: (params?: any) => [...FINANCE_KEYS.all, "consultation-charges", params] as const,
     consultationPayments: (params?: any) => [...FINANCE_KEYS.all, "consultation-payments", params] as const,
     consultationPayment: (id: string) => [...FINANCE_KEYS.all, "consultation-payment", id] as const,
+    incomeReport: (params?: any) => [...FINANCE_KEYS.all, "income-report", params] as const,
+    expenseReport: (params?: any) => [...FINANCE_KEYS.all, "expense-report", params] as const,
 };
 
 export function useFinanceAccounts(params?: any, options: { enabled?: boolean } = {}) {
@@ -132,3 +134,22 @@ export function usePayConsultationCharges() {
         },
     });
 }
+
+// ── Reports ──────────────────────────────────────────────────
+
+export function useFinanceIncomeReport(params?: { branchId?: string; startDate?: string; endDate?: string }, options: { enabled?: boolean } = {}) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.incomeReport(params),
+        queryFn: () => financeService.getIncomeReport(params),
+        ...options,
+    });
+}
+
+export function useFinanceExpenseReport(params?: { branchId?: string; startDate?: string; endDate?: string }, options: { enabled?: boolean } = {}) {
+    return useQuery({
+        queryKey: FINANCE_KEYS.expenseReport(params),
+        queryFn: () => financeService.getExpenseReport(params),
+        ...options,
+    });
+}
+

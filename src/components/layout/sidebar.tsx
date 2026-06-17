@@ -307,6 +307,12 @@ export function Sidebar() {
               href: "/finance",
               module: "finance",
               permission: "account:read",
+            },
+            {
+              label: "Finance Reports",
+              href: "/finance/reports",
+              module: "finance",
+              permission: "account:read",
             }
           ]
         }
