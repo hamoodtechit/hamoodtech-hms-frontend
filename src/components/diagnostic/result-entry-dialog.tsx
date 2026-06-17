@@ -59,6 +59,7 @@ import {
 import { groupTestsByGroup } from "@/lib/diagnostic-grouping"
 import { useQueries } from "@tanstack/react-query"
 import { diagnosticService } from "@/services/diagnostic-service"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { useAuthStore } from "@/store/use-auth-store"
 import { useEmployees } from "@/hooks/hr-queries"
 import { Textarea as UITextarea } from "@/components/ui/textarea"
@@ -497,7 +498,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                 <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/10 text-primary px-3 py-1 uppercase tracking-widest font-black rounded-full">PIN: {report?.patient?.pin || "N/A"}</Badge>
                             </h3>
                             <div className="flex items-center gap-4 text-muted-foreground font-bold text-[10px] uppercase tracking-tight opacity-80">
-                                <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {report?.patient?.gender}, {report?.patient?.age}</span>
+                                <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {report?.patient?.gender}, {(report?.patient as any)?.dob ? calculateExactAge((report?.patient as any)?.dob) : report?.patient?.age}</span>
                                 <Separator orientation="vertical" className="h-3 bg-border" />
                                 <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {report?.createdAt ? format(new Date(report.createdAt), 'dd MMM yyyy, hh:mm a') : 'N/A'}</span>
                                 <Separator orientation="vertical" className="h-3 bg-border" />

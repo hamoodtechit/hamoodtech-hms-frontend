@@ -32,6 +32,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticReport, ReportStatus, SampleStatus } from "@/types/diagnostic"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { useAuthStore } from "@/store/use-auth-store"
 import {
     Activity,
@@ -682,7 +683,7 @@ export default function DiagnosticReportsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="font-bold text-sm">{report.patient?.age ? `${report.patient.age}Y` : '—'}</span>
+                                                    <span className="font-bold text-sm">{(report.patient as any)?.dob ? calculateExactAge((report.patient as any).dob) : (report.patient?.age ? `${report.patient.age}Y` : '—')}</span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="font-bold text-sm uppercase">{report.doctor?.fullName || 'Self'}</span>
