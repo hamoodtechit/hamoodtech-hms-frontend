@@ -181,6 +181,11 @@ export default function DiagnosticReportsPage() {
             const isEcgDept = dName.includes('ecg');
             if (isEcgRole && isEcgDept) return true;
 
+            const isRadiologyRole = rName.includes('radiolog');
+            const isRadiologyDept = dName.includes('radiolog');
+            // If they are specifically a radiologist, ONLY match the radiology department (don't accidentally match USG or ECG)
+            if (isRadiologyRole && !isUsgRole && !isXrayRole && !isEcgRole && isRadiologyDept) return true;
+
             return false;
         });
 
