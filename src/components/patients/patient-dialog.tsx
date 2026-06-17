@@ -28,6 +28,7 @@ import {
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
+import { DobPicker } from "./dob-picker"
 import { calculateExactAge } from "@/lib/age-calculator"
 import { Patient } from "@/types/pharmacy"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -243,30 +244,25 @@ export function PatientDialog({
                             <FormControl>
                                 <div className="relative flex items-center">
                                   <SmartNumberInput placeholder="e.g. 30" {...field} onChange={(val: number | undefined) => field.onChange(val)} className="pr-10" />
-                                  <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded-r-md transition-colors overflow-hidden" title="Pick Date of Birth">
-                                     <CalendarIcon className="absolute h-4 w-4 text-muted-foreground pointer-events-none" />
-                                     <Input 
-                                        type="date" 
-                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                        value={dobValue || ''}
-                                        onChange={(e) => {
-                                            form.setValue('dob', e.target.value || undefined, { shouldValidate: true, shouldDirty: true });
-                                            if (e.target.value) {
-                                                const birthDate = new Date(e.target.value);
-                                                const today = new Date();
-                                                let calcAge = today.getFullYear() - birthDate.getFullYear();
-                                                const m = today.getMonth() - birthDate.getMonth();
-                                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                                    calcAge--;
-                                                }
-                                                const newAge = calcAge >= 0 ? calcAge : 0;
-                                                setTimeout(() => {
-                                                  form.setValue('age', newAge, { shouldValidate: true, shouldDirty: true });
-                                                }, 0);
+                                  <DobPicker 
+                                    value={dobValue}
+                                    onChange={(dateString) => {
+                                        form.setValue('dob', dateString || undefined, { shouldValidate: true, shouldDirty: true });
+                                        if (dateString) {
+                                            const birthDate = new Date(dateString);
+                                            const today = new Date();
+                                            let calcAge = today.getFullYear() - birthDate.getFullYear();
+                                            const m = today.getMonth() - birthDate.getMonth();
+                                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                                calcAge--;
                                             }
-                                        }}
-                                     />
-                                  </div>
+                                            const newAge = calcAge >= 0 ? calcAge : 0;
+                                            setTimeout(() => {
+                                                form.setValue('age', newAge, { shouldValidate: true, shouldDirty: true });
+                                            }, 0);
+                                        }
+                                    }}
+                                  />
                                 </div>
                             </FormControl>
                             <FormMessage />
