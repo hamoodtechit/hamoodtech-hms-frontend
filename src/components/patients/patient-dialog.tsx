@@ -230,7 +230,37 @@ export function PatientDialog({
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="dob"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Date of Birth</FormLabel>
+                            <FormControl>
+                                <Input 
+                                  type="date" 
+                                  {...field} 
+                                  value={field.value || ''}
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value) {
+                                      const birthDate = new Date(e.target.value);
+                                      const today = new Date();
+                                      let calcAge = today.getFullYear() - birthDate.getFullYear();
+                                      const m = today.getMonth() - birthDate.getMonth();
+                                      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                          calcAge--;
+                                      }
+                                      form.setValue('age', calcAge >= 0 ? calcAge : 0, { shouldValidate: true });
+                                    }
+                                  }}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                         <FormField
                         control={form.control}
                         name="age"
