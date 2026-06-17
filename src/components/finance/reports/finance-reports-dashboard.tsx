@@ -10,10 +10,14 @@ import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { Skeleton } from "@/components/ui/skeleton"
 import { IncomeGroup, ExpenseGroup } from "@/types/finance"
-import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { createRoot } from 'react-dom/client'
+import { FinanceStatementReport } from "./finance-statement-report"
+import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet, FileDown, Printer } from "lucide-react"
 
 export function FinanceReportsDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
 
@@ -120,19 +124,62 @@ export function FinanceReportsDashboard() {
     document.body.removeChild(link)
   }
 
+  const handlePrintReport = () => {
+    if (!date?.from || !date?.to) {
+        return
+    }
+
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>Finance Income & Expense Statement</title>')
+        printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
+        printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
+        printWindow.document.close()
+        
+        const container = printWindow.document.getElementById('report-root')
+        if (container) {
+            const root = createRoot(container)
+            const activeBranch = stores.find(s => s.id === activeStoreId)
+            root.render(
+              <FinanceStatementReport 
+                incomeData={incomeResponse} 
+                expenseData={expenseResponse} 
+                dateRange={{ from: date.from, to: date.to }} 
+                activeBranch={activeBranch} 
+              />
+            )
+            
+            setTimeout(() => {
+                printWindow.print()
+            }, 1000)
+        }
+    }
+  }
+
   return (
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Finance Reports</h2>
             <div className="flex items-center space-x-2">
                 <DatePickerWithRange date={date} setDate={setDate} />
-                <button 
-                  onClick={handleExportCSV}
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 gap-2"
-                >
-                    <ArrowDownRight className="h-4 w-4" />
-                    Export CSV
-                </button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                            <FileDown className="h-4 w-4" />
+                            Download Report
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem className="gap-2" onClick={handlePrintReport}>
+                            <Printer className="h-4 w-4" />
+                            Print Finance Statement
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2" onClick={handleExportCSV}>
+                            <FileDown className="h-4 w-4" />
+                            Export Finance (CSV)
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
 
