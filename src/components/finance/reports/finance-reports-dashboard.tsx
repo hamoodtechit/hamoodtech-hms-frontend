@@ -70,12 +70,69 @@ export function FinanceReportsDashboard() {
   const totalExpense = expenseResponse?.summary?.totalExpenditure || 0
   const cashInHand = totalIncome - totalExpense
 
+  const handleExportCSV = () => {
+    if (!incomeResponse && !expenseResponse) {
+        return
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+
+    // INCOME
+    csvContent += "INCOME REPORT\n"
+    if (incomeResponse?.groups) {
+        csvContent += "Type,SL No,Patient No,Patient Name,Invoice No,Total Price,Discount,Tax,Net Amount,Paid,Due\n"
+        incomeResponse.groups.forEach((group: IncomeGroup) => {
+            group.sales.forEach((s: any) => {
+                csvContent += `${group.type},${s.slNo},${s.patientNumber},${s.patientName},${s.invoiceNumber},${s.totalPrice},${s.discountAmount},${s.taxAmount},${s.netAmount},${s.paid},${s.due}\n`
+            })
+            csvContent += `SUBTOTAL,,,,,,,,,${group.subTotals.paid},${group.subTotals.due}\n`
+        })
+    } else {
+        csvContent += "No income data\n"
+    }
+
+    // EXPENSE
+    csvContent += "\nEXPENSE REPORT\n"
+    if (expenseResponse?.groups) {
+        csvContent += "Category,SL No,Date,Expense No,Note,Recorded By,Amount\n"
+        expenseResponse.groups.forEach((group: ExpenseGroup) => {
+            group.expenses.forEach((e: any) => {
+                csvContent += `${group.category},${e.slNo},${format(new Date(e.date), 'yyyy-MM-dd')},${e.expenseNumber},"${e.note || ''}",${e.recordedBy},${e.amount}\n`
+            })
+            csvContent += `SUBTOTAL,,,,,,${group.subTotals.amount}\n`
+        })
+    } else {
+        csvContent += "No expense data\n"
+    }
+
+    // SUMMARY
+    csvContent += "\nSUMMARY\n"
+    csvContent += `Total Income,${totalIncome}\n`
+    csvContent += `Total Expenditure,${totalExpense}\n`
+    csvContent += `Cash in Hand,${cashInHand}\n`
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `finance_report_${startDate}_to_${endDate}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Finance Reports</h2>
             <div className="flex items-center space-x-2">
                 <DatePickerWithRange date={date} setDate={setDate} />
+                <button 
+                  onClick={handleExportCSV}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 gap-2"
+                >
+                    <ArrowDownRight className="h-4 w-4" />
+                    Export CSV
+                </button>
             </div>
         </div>
 
