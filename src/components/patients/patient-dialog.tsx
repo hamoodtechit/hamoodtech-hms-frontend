@@ -28,6 +28,7 @@ import {
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { Patient } from "@/types/pharmacy"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -104,42 +105,7 @@ export function PatientDialog({
 
   const dobValue = form.watch("dob");
 
-  const exactAgeText = useMemo(() => {
-    if (!dobValue) return null;
-    const birthDate = new Date(dobValue);
-    
-    // Check if the date is actually valid
-    if (isNaN(birthDate.getTime())) return null;
-
-    const today = new Date();
-    
-    // If the birthdate is in the future
-    if (birthDate > today) return "Future date not allowed";
-
-    let years = today.getFullYear() - birthDate.getFullYear();
-    let months = today.getMonth() - birthDate.getMonth();
-    let days = today.getDate() - birthDate.getDate();
-
-    if (days < 0) {
-      months--;
-      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      days += lastMonth.getDate();
-    }
-    
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-
-    if (years < 0) return "Future date not allowed";
-
-    const parts = [];
-    if (years > 0) parts.push(`${years}Y`);
-    if (months > 0) parts.push(`${months}M`);
-    if (days > 0) parts.push(`${days}D`);
-    
-    return parts.length > 0 ? parts.join(" ") : "0D";
-  }, [dobValue]);
+  const exactAgeText = useMemo(() => calculateExactAge(dobValue), [dobValue]);
 
   useEffect(() => {
     if (patient) {
@@ -286,7 +252,11 @@ export function PatientDialog({
                                       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                                           calcAge--;
                                       }
-                                      form.setValue('age', calcAge >= 0 ? calcAge : 0, { shouldValidate: true });
+                                      const newAge = calcAge >= 0 ? calcAge : 0;
+                                      // Force React Hook Form to trigger re-evaluation of value for SmartNumberInput
+                                      setTimeout(() => {
+                                        form.setValue('age', newAge, { shouldValidate: true, shouldDirty: true });
+                                      }, 0);
                                     }
                                   }}
                                 />

@@ -24,6 +24,7 @@ import { FilterPopover } from "@/components/shared/filter-popover"
 import { PatientFilters } from "./patient-filters"
 import { IdCardDialog } from "@/components/shared/id-card-dialog"
 import { PHARMACY_KEYS, usePatients } from "@/hooks/pharmacy-queries"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Link } from "@/i18n/navigation"
 import { Patient } from "@/types/pharmacy"
@@ -322,7 +323,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                                         <td className="px-6 py-5 border-y border-border/40 group-hover:border-primary/30">
                                             <div className="flex flex-col gap-1.5">
                                                 <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
-                                                    {patient.age}y • {patient.gender === 'male' ? 'M' : patient.gender === 'female' ? 'F' : 'O'}
+                                                    {patient.dob ? calculateExactAge(patient.dob) : `${patient.age}y`} • {patient.gender === 'male' ? 'M' : patient.gender === 'female' ? 'F' : 'O'}
                                                 </span>
                                                 <Badge className={cn(
                                                     "w-fit text-[10px] h-5 font-bold shadow-none border",
