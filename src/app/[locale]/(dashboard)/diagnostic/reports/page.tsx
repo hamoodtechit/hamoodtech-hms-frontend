@@ -159,10 +159,36 @@ export default function DiagnosticReportsPage() {
         }
         
         if (isPathologyUser) {
-            return departments.filter(d => d.name.toLowerCase() === 'pathology')
+            return departments.filter(d => d.name.toLowerCase() === 'pathology' || d.name.toLowerCase().includes('patholog'))
         }
-        return departments.filter(d => d.name.toLowerCase() !== 'pathology')
-    }, [isAdmin, isPathologyUser, departments, userEmployeeDeptId])
+
+        // For non-pathology, if they have a specific role, try to match it
+        const specificDepts = departments.filter(d => {
+            const dName = d.name.toLowerCase();
+            const rName = userRole.toLowerCase();
+            
+            if (dName === rName) return true;
+            
+            const isUsgRole = rName.includes('usg') || rName.includes('ultra');
+            const isUsgDept = dName.includes('usg') || dName.includes('ultra');
+            if (isUsgRole && isUsgDept) return true;
+
+            const isXrayRole = rName.includes('x-ray') || rName.includes('xray');
+            const isXrayDept = dName.includes('x-ray') || dName.includes('xray');
+            if (isXrayRole && isXrayDept) return true;
+            
+            const isEcgRole = rName.includes('ecg');
+            const isEcgDept = dName.includes('ecg');
+            if (isEcgRole && isEcgDept) return true;
+
+            return false;
+        });
+
+        if (specificDepts.length > 0) return specificDepts;
+
+        // If no specific match, just return all non-pathology departments
+        return departments.filter(d => !d.name.toLowerCase().includes('patholog'))
+    }, [isAdmin, isPathologyUser, departments, userEmployeeDeptId, userRole])
 
     // Determine actual department ID for API call (Strict for non-admins)
     const activeDepartmentId = useMemo(() => {
@@ -171,20 +197,18 @@ export default function DiagnosticReportsPage() {
         // Priority 1: Direct or nested department ID
         if (userEmployeeDeptId) return userEmployeeDeptId;
 
-        // Priority 2: Match by role name directly to the fetched departments (Very robust)
-        const roleDept = departments.find(d => {
-            const dName = d.name.toLowerCase();
-            const rName = userRole.toLowerCase();
-            return dName === rName || 
-                   (rName.includes('patholog') && dName.includes('patholog')) ||
-                   (rName.includes('radiolog') && (dName.includes('radiolog') || dName.includes('imaging') || dName.includes('usg') || dName.includes('x-ray')));
-        });
-        
-        if (roleDept) return roleDept.id;
+        // Priority 2: Filter selection if there are multiple permitted departments
+        if (filteredDepartments.length > 1) {
+            return departmentId === 'all' ? undefined : departmentId;
+        }
 
-        // Priority 3: Filter selection
+        // Priority 3: Only one department permitted
+        if (filteredDepartments.length === 1) {
+            return filteredDepartments[0].id;
+        }
+
         return departmentId === 'all' ? undefined : departmentId;
-    }, [isAdmin, userEmployeeDeptId, departmentId, filteredDepartments, departments, userRole]);
+    }, [isAdmin, userEmployeeDeptId, departmentId, filteredDepartments]);
 
     const canReadPathology = hasPermission('pathology:read')
     const canReadRadiology = hasPermission('radiology:read')
