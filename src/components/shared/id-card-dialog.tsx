@@ -7,12 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { calculateExactAge } from "@/lib/age-calculator"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Printer, X, User } from "lucide-react"
 // @ts-ignore
 import QRCode from "react-qr-code"
-import { calculateExactAge } from "@/lib/age-calculator"
 
 interface IdCardDialogProps {
   open: boolean
