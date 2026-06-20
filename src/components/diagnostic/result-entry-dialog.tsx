@@ -172,7 +172,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
     const employees = employeesRes?.data || [];
     
     // Group employees by type for better UX
-    const doctors = employees.filter(e => e.employeeType?.toLowerCase().includes('doctor') || e.designation?.name?.toLowerCase().includes('doctor'));
+    const doctors = employees.filter(e => e.employeeType?.toLowerCase().includes('doctor') || e.employeeType?.toLowerCase() === 'guest-doctor' || e.designation?.name?.toLowerCase().includes('doctor'));
     const technologists = employees.filter(e => !doctors.includes(e));
 
     // Parallel fetch service details for full templates
