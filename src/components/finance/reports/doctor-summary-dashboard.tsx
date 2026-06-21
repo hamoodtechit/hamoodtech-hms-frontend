@@ -13,9 +13,12 @@ import { DoctorSummary } from "@/types/finance"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope, Printer } from "lucide-react"
+import { useSettingsStore } from "@/store/use-settings-store"
 
 export function DoctorSummaryDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
+  const activeStore = stores.find(s => s.id === activeStoreId)
+  const { general } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
 
@@ -94,100 +97,45 @@ export function DoctorSummaryDashboard() {
   const handlePrintPDF = () => {
     if (!doctors.length) return
 
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-        printWindow.document.write(`
+    const printContent = document.getElementById('doctor-summary-print-content')?.innerHTML;
+    if (!printContent) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(`
+            <!DOCTYPE html>
             <html>
                 <head>
+                    <meta charset="UTF-8">
                     <title>Doctor Summary Report</title>
-                    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                    ${Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(el => el.outerHTML).join('\n')}
                     <style>
-                        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; color: #1f2937; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-                        th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
-                        th { background-color: #f9fafb; font-weight: 600; font-size: 0.875rem; color: #4b5563; }
-                        td { font-size: 0.875rem; }
-                        .text-right { text-align: right; }
-                        .text-center { text-align: center; }
-                        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
-                        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 2rem; }
-                        .kpi-card { border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.5rem; background: #f9fafb; }
-                        .kpi-title { font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; margin-bottom: 0.5rem; }
-                        .kpi-value { font-size: 1.5rem; font-weight: 700; color: #111827; }
-                        @media print {
-                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
-                            .kpi-card { border: 1px solid #d1d5db; }
-                        }
+                        @page { size: A4; margin: 0; }
+                        body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
+                        .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
                     </style>
                 </head>
                 <body>
-                    <div class="header">
-                        <div>
-                            <h1 class="text-2xl font-bold mb-1">Doctor Summary Report</h1>
-                            <p class="text-sm text-gray-500">Period: ${startDate || 'Start'} to ${endDate || 'End'}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold">Generated On</p>
-                            <p class="text-sm text-gray-500">${format(new Date(), 'MMM dd, yyyy HH:mm')}</p>
-                        </div>
+                    <div class="print-container">
+                        ${printContent}
                     </div>
-
-                    <div class="summary-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-title">Total Patients</div>
-                            <div class="kpi-value">${summary?.totalPatientVisited || 0}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-title">Appointment Sales</div>
-                            <div class="kpi-value">${formatCurrency(summary?.totalAppointmentSale || 0)}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-title">Consultation Charges</div>
-                            <div class="kpi-value">${formatCurrency(summary?.totalConsultationCharge || 0)}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-title">Total Paid</div>
-                            <div class="kpi-value">${formatCurrency(summary?.totalAmountPaid || 0)}</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-title">Total Due</div>
-                            <div class="kpi-value">${formatCurrency(summary?.totalAmountDue || 0)}</div>
-                        </div>
-                    </div>
-
-                    <h2 class="text-lg font-semibold mb-4">Doctor Performance Breakdown</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Doctor Name</th>
-                                <th class="text-center">Patients</th>
-                                <th class="text-right">Appt. Sales</th>
-                                <th class="text-right">Consultation</th>
-                                <th class="text-right">Paid</th>
-                                <th class="text-right">Due</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${doctors.map((doctor: any) => `
-                                <tr>
-                                    <td class="font-medium">${doctor.doctorName}</td>
-                                    <td class="text-center">${doctor.patientVisited}</td>
-                                    <td class="text-right">${formatCurrency(doctor.appointmentSale)}</td>
-                                    <td class="text-right text-green-600 font-medium">${formatCurrency(doctor.consultationChargeGot)}</td>
-                                    <td class="text-right">${formatCurrency(doctor.amountPaid)}</td>
-                                    <td class="text-right text-red-600 font-medium">${formatCurrency(doctor.amountDue)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
                 </body>
             </html>
-        `)
-        
-        printWindow.document.close()
+        `);
+        iframeDoc.close();
+
         setTimeout(() => {
-            printWindow.print()
-        }, 500)
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
     }
   }
 
@@ -303,6 +251,84 @@ export function DoctorSummaryDashboard() {
                 )}
             </CardContent>
         </Card>
+
+        {/* Hidden Print Layout */}
+        <div className="hidden">
+            <div id="doctor-summary-print-content" className="w-full text-black bg-white">
+                <div className="text-center mb-4 pb-2 border-b-2 border-black">
+                    <div className="flex justify-center mb-1">
+                        <img src={activeStore?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto' }} />
+                    </div>
+                    <h1 className="text-2xl font-black uppercase leading-tight m-0">{general?.hospitalName || activeStore?.name || "HOSPITAL NAME"}</h1>
+                    <p className="text-xs font-bold leading-tight m-0">{general?.address || activeStore?.address || "Address"}</p>
+                    <p className="text-xs font-bold leading-tight m-0">Ph: {general?.phone || activeStore?.phone || "Phone"}</p>
+                    <div className="mt-4 inline-block border-2 border-black rounded-full px-6 py-1 font-black tracking-widest text-sm uppercase">
+                        DOCTOR SUMMARY REPORT
+                    </div>
+                </div>
+
+                <div className="border-2 border-black mb-4 flex flex-col font-bold text-sm">
+                    <div className="grid grid-cols-2 border-b border-black">
+                        <div className="p-2 border-r border-black">
+                            Total Patients: {summary?.totalPatientVisited || 0}
+                        </div>
+                        <div className="p-2">
+                            Date: {startDate && endDate 
+                                ? `${format(new Date(startDate), 'dd MMM yyyy')} - ${format(new Date(endDate), 'dd MMM yyyy')}`
+                                : startDate ? `From ${format(new Date(startDate), 'dd MMM yyyy')}`
+                                : endDate ? `Until ${format(new Date(endDate), 'dd MMM yyyy')}`
+                                : 'All Dates'
+                            }
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2">
+                        <div className="p-2 border-r border-black flex gap-4">
+                            <span>Total Consultation: <span className="text-emerald-600">{formatCurrency(summary?.totalConsultationCharge || 0)}</span></span>
+                            <span>Total Due: <span className="text-red-600">{formatCurrency(summary?.totalAmountDue || 0)}</span></span>
+                        </div>
+                        <div className="p-2">
+                            Report Generated: {format(new Date(), 'dd MMM yyyy, hh:mm a')}
+                        </div>
+                    </div>
+                </div>
+
+                <table className="w-full text-left border-collapse border-2 border-black font-bold text-xs mb-8">
+                    <thead>
+                        <tr className="border-b-2 border-black bg-gray-100">
+                            <th className="p-2 border-r border-black w-10 text-center">SL</th>
+                            <th className="p-2 border-r border-black">Doctor Name</th>
+                            <th className="p-2 border-r border-black text-center">Patients</th>
+                            <th className="p-2 border-r border-black text-right">Appt. Sales</th>
+                            <th className="p-2 border-r border-black text-right">Consultation</th>
+                            <th className="p-2 border-r border-black text-right">Paid</th>
+                            <th className="p-2 text-right">Due</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {doctors.map((doctor: any, idx: number) => (
+                            <tr key={idx} className="border-b border-black">
+                                <td className="p-2 border-r border-black text-center">{idx + 1}</td>
+                                <td className="p-2 border-r border-black">{doctor.doctorName}</td>
+                                <td className="p-2 border-r border-black text-center">{doctor.patientVisited}</td>
+                                <td className="p-2 border-r border-black text-right">{formatCurrency(doctor.appointmentSale)}</td>
+                                <td className="p-2 border-r border-black text-right text-emerald-600">{formatCurrency(doctor.consultationChargeGot)}</td>
+                                <td className="p-2 border-r border-black text-right">{formatCurrency(doctor.amountPaid)}</td>
+                                <td className="p-2 text-right text-red-600">{formatCurrency(doctor.amountDue)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                <div className="flex justify-between mt-24 pt-2 font-bold text-sm">
+                    <div className="w-48 text-center border-t border-black pt-1">
+                        Prepared By
+                    </div>
+                    <div className="w-48 text-center border-t border-black pt-1">
+                        Authorized Signature
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   )
 }
