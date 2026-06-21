@@ -14,12 +14,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button"
 import { createRoot } from 'react-dom/client'
 import { FinanceStatementReport } from "./finance-statement-report"
-import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet, FileDown, Printer } from "lucide-react"
+import { DollarSign, ArrowUpRight, ArrowDownRight, Wallet, FileDown, Printer, Filter } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function FinanceReportsDashboard() {
   const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
+  const [saleType, setSaleType] = useState<string>("all")
 
   useEffect(() => {
     setDate({
@@ -34,7 +36,8 @@ export function FinanceReportsDashboard() {
   const { data: incomeData, isLoading: incomeLoading } = useFinanceIncomeReport({
     branchId: activeStoreId || undefined,
     startDate,
-    endDate
+    endDate,
+    type: saleType === "all" ? undefined : saleType
   }, { enabled: !!date?.from && !!date?.to })
 
   const { data: expenseData, isLoading: expenseLoading } = useFinanceExpenseReport({
@@ -160,7 +163,20 @@ export function FinanceReportsDashboard() {
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Finance Reports</h2>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
+                <Select value={saleType} onValueChange={setSaleType}>
+                    <SelectTrigger className="w-[180px]">
+                        <Filter className="mr-2 h-4 w-4" />
+                        <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="appointment">Appointment</SelectItem>
+                        <SelectItem value="hospital">Hospital</SelectItem>
+                        <SelectItem value="admission">Admission</SelectItem>
+                        <SelectItem value="emergency">Emergency</SelectItem>
+                    </SelectContent>
+                </Select>
                 <DatePickerWithRange date={date} setDate={setDate} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

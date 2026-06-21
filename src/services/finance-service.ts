@@ -76,13 +76,18 @@ export const financeService = {
 
     // ── Reports ──────────────────────────────────────────────────
 
-    getIncomeReport: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<{ success: boolean; message: string; data: IncomeReportResponse }> => {
+    getIncomeReport: async (params?: { branchId?: string; startDate?: string; endDate?: string; type?: string }): Promise<{ success: boolean; message: string; data: IncomeReportResponse }> => {
         const response = await api.get<{ success: boolean; message: string; data: IncomeReportResponse }>("/reports/finance/income", { params });
         return response.data;
     },
 
     getExpenseReport: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<{ success: boolean; message: string; data: ExpenseReportResponse }> => {
         const response = await api.get<{ success: boolean; message: string; data: ExpenseReportResponse }>("/reports/finance/expense", { params });
+        return response.data;
+    },
+
+    getDoctorSummaryReport: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<import("@/types/finance").DoctorReportResponse> => {
+        const response = await api.get<import("@/types/finance").DoctorReportResponse>("/reports/doctor-summary", { params });
         return response.data;
     },
 };

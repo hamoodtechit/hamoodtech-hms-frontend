@@ -273,3 +273,30 @@ export interface ExpenseReportResponse {
   summary: ExpenseSummary;
   groups: ExpenseGroup[];
 }
+
+export interface DoctorSummary {
+  doctorId: string;
+  doctorName: string;
+  patientVisited: number;
+  appointmentSale: number;
+  consultationChargeGot: number;
+  amountPaid: number;
+  amountDue: number;
+}
+
+export interface DoctorReportResponse {
+  success: boolean;
+  message: string;
+  data: {
+    summary: {
+      totalPatientVisited: number;
+      totalAppointmentSale: number;
+      totalConsultationCharge: number;
+      totalAmountPaid: number;
+      totalAmountDue: number;
+      startDate: string | null;
+      endDate: string | null;
+    };
+    doctors: DoctorSummary[];
+  }
+}
