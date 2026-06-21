@@ -10,6 +10,7 @@ import { useSettingsStore } from "@/store/use-settings-store"
 import {
   Activity,
   Ambulance,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   FlaskConical,
@@ -251,12 +252,6 @@ function SidebarBase() {
               label: "Suppliers",
               href: "/suppliers",
               permission: "supplier:read",
-            },
-            {
-              label: "Pharmacy Reports",
-              href: "/reports",
-              module: "sales",
-              permission: "sale:read",
             }
           ]
         },
@@ -355,12 +350,31 @@ function SidebarBase() {
               href: "/finance",
               module: "finance",
               permission: "account:read",
+            }
+          ]
+        },
+        {
+          label: "Reports & Analytics",
+          icon: BarChart3,
+          color: "text-blue-500",
+          roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+          children: [
+            {
+              label: "Pharmacy Reports",
+              href: "/reports",
+              module: "sales",
+              permission: "sale:read",
             },
             {
-              label: "Finance Reports",
+              label: "Sales & Finance",
               href: "/finance/reports",
               module: "finance",
               permission: "account:read",
+            },
+            {
+              label: "Doctor Summary",
+              href: "/finance/doctor-payment?tab=summary",
+              permission: ["consultation-charge:read", "sale:read"],
             }
           ]
         }
