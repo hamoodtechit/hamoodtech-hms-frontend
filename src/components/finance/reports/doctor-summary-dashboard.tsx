@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DoctorSummary } from "@/types/finance"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope } from "lucide-react"
+import { Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope, Printer } from "lucide-react"
 
 export function DoctorSummaryDashboard() {
   const { activeStoreId } = useStoreContext()
@@ -91,6 +91,106 @@ export function DoctorSummaryDashboard() {
     document.body.removeChild(link)
   }
 
+  const handlePrintPDF = () => {
+    if (!doctors.length) return
+
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Doctor Summary Report</title>
+                    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                    <style>
+                        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; color: #1f2937; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+                        th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
+                        th { background-color: #f9fafb; font-weight: 600; font-size: 0.875rem; color: #4b5563; }
+                        td { font-size: 0.875rem; }
+                        .text-right { text-align: right; }
+                        .text-center { text-align: center; }
+                        .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+                        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 2rem; }
+                        .kpi-card { border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.5rem; background: #f9fafb; }
+                        .kpi-title { font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; margin-bottom: 0.5rem; }
+                        .kpi-value { font-size: 1.5rem; font-weight: 700; color: #111827; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
+                            .kpi-card { border: 1px solid #d1d5db; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <h1 class="text-2xl font-bold mb-1">Doctor Summary Report</h1>
+                            <p class="text-sm text-gray-500">Period: ${startDate || 'Start'} to ${endDate || 'End'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold">Generated On</p>
+                            <p class="text-sm text-gray-500">${format(new Date(), 'MMM dd, yyyy HH:mm')}</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Patients</div>
+                            <div class="kpi-value">${summary?.totalPatientVisited || 0}</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Appointment Sales</div>
+                            <div class="kpi-value">${formatCurrency(summary?.totalAppointmentSale || 0)}</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Consultation Charges</div>
+                            <div class="kpi-value">${formatCurrency(summary?.totalConsultationCharge || 0)}</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Paid</div>
+                            <div class="kpi-value">${formatCurrency(summary?.totalAmountPaid || 0)}</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Due</div>
+                            <div class="kpi-value">${formatCurrency(summary?.totalAmountDue || 0)}</div>
+                        </div>
+                    </div>
+
+                    <h2 class="text-lg font-semibold mb-4">Doctor Performance Breakdown</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Doctor Name</th>
+                                <th class="text-center">Patients</th>
+                                <th class="text-right">Appt. Sales</th>
+                                <th class="text-right">Consultation</th>
+                                <th class="text-right">Paid</th>
+                                <th class="text-right">Due</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${doctors.map((doctor: any) => `
+                                <tr>
+                                    <td class="font-medium">${doctor.doctorName}</td>
+                                    <td class="text-center">${doctor.patientVisited}</td>
+                                    <td class="text-right">${formatCurrency(doctor.appointmentSale)}</td>
+                                    <td class="text-right text-green-600 font-medium">${formatCurrency(doctor.consultationChargeGot)}</td>
+                                    <td class="text-right">${formatCurrency(doctor.amountPaid)}</td>
+                                    <td class="text-right text-red-600 font-medium">${formatCurrency(doctor.amountDue)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+            </html>
+        `)
+        
+        printWindow.document.close()
+        setTimeout(() => {
+            printWindow.print()
+        }, 500)
+    }
+  }
+
   return (
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -100,6 +200,10 @@ export function DoctorSummaryDashboard() {
                 <Button variant="outline" className="gap-2" onClick={handleExportCSV} disabled={!doctors.length}>
                     <FileDown className="h-4 w-4" />
                     Export CSV
+                </Button>
+                <Button variant="default" className="gap-2" onClick={handlePrintPDF} disabled={!doctors.length}>
+                    <Printer className="h-4 w-4" />
+                    Export PDF
                 </Button>
             </div>
         </div>
