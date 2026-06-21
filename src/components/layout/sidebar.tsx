@@ -308,7 +308,7 @@ export function Sidebar() {
           label: "Reports & Analytics",
           icon: BarChart3,
           color: "text-blue-500",
-          roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+          roles: ["Super Admin", "Admin", "Accountant", "Receptionist", "Pharmacist"],
           children: [
             {
               label: "Pharmacy Reports",
