@@ -313,12 +313,6 @@ export function Sidebar() {
               href: "/finance/reports",
               module: "finance",
               permission: "account:read",
-            },
-            {
-              label: "Doctor Reports",
-              href: "/reports/doctors",
-              module: "finance",
-              permission: "account:read",
             }
           ]
         }
