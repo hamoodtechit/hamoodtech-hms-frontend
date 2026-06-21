@@ -137,7 +137,7 @@ export function AppointmentSaleDialog({
                 branchId: activeStoreId || "",
                 patientId: appointment.patientId,
                 appointmentId: appointment.id,
-                type: "hospital",
+                type: "appointment",
                 doctorId: appointment.doctorId,
                 referralPersonId: appointment.referralPersonId || undefined,
                 chamberOrRoomNumber: appointment.chamberOrRoomNumber || undefined,

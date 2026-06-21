@@ -52,7 +52,7 @@ export interface Sale {
   patientAdmissionId?: string;
   cashRegisterSessionId?: string;
   saleItems: SaleItemDetails[];
-  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'emergency' | 'others';
   doctorId?: string;
   staffId?: string;
   referralPersonId?: string;
@@ -97,7 +97,7 @@ export interface SalePayload {
   patientAdmissionId?: string;
   payments?: SalePayment[];
   saleItems: SaleItem[];
-  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'emergency' | 'others';
   doctorId?: string;
   staffId?: string;
   referralPersonId?: string;
@@ -121,7 +121,7 @@ export interface UpdateSalePayload extends Partial<SalePayload> {
     name: string;
   };
   saleItems?: SaleItem[];
-  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'others';
+  type?: 'pos' | 'hospital' | 'appointment' | 'pathology' | 'radiology' | 'admission' | 'emergency' | 'others';
 }
 
 export interface SaleReturnItem {

@@ -318,7 +318,7 @@ export function DiagnosticBillingForm({
         const payload: SalePayload = {
             branchId: activeStoreId || "",
             patientId: selectedCustomer.id,
-            type: "hospital",
+            type: type === 'opd' ? 'hospital' : type,
             note: saleNote || undefined,
             doctorId: selectedDoctorId || undefined,
             status: paidAmount >= total ? 'completed' : 'pending',
