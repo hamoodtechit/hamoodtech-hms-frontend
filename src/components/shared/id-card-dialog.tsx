@@ -187,9 +187,10 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
       {/* Emergency Contacts */}
       <div style={{ padding: '4mm', color: '#0f172a', flex: 1 }}>
         <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryTeal}`, paddingBottom: '1mm' }}>EMERGENCY CONTACT</div>
-        <div style={{ fontSize: '8px', marginBottom: '2mm', fontWeight: '700' }}>Name: ______________________</div>
-        <div style={{ fontSize: '8px', marginBottom: '2mm', fontWeight: '700' }}>Phone 1: ____________________</div>
-        <div style={{ fontSize: '8px', marginBottom: '3.5mm', fontWeight: '700' }}>Phone 2: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Name: ______________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Age: ________________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Phone 1: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '3mm', fontWeight: '700' }}>Phone 2: ____________________</div>
 
         <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryTeal}`, paddingBottom: '1mm' }}>IMPORTANT INFORMATION</div>
         <div style={{ fontSize: '8px', textAlign: 'center', marginBottom: '1.5mm', fontWeight: '700' }}>
@@ -282,9 +283,10 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
       {/* Emergency Contacts */}
       <div style={{ padding: '4mm', color: '#0f172a', flex: 1 }}>
         <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryBlue}`, paddingBottom: '1mm' }}>EMERGENCY CONTACT</div>
-        <div style={{ fontSize: '8px', marginBottom: '2mm', fontWeight: '700' }}>Name: ______________________</div>
-        <div style={{ fontSize: '8px', marginBottom: '2mm', fontWeight: '700' }}>Phone 1: ____________________</div>
-        <div style={{ fontSize: '8px', marginBottom: '3.5mm', fontWeight: '700' }}>Phone 2: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Name: ______________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Age: ________________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Phone 1: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '3mm', fontWeight: '700' }}>Phone 2: ____________________</div>
 
         <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryBlue}`, paddingBottom: '1mm' }}>EMPLOYEE INFO</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1mm' }}>
