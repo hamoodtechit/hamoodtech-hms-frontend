@@ -200,7 +200,7 @@ export function AddAdmissionServiceDialog({
             branchId: activeStoreId || "",
             patientId: admission.patientId,
             patientAdmissionId: admission.id,
-            type: "hospital",
+            type: "admission",
             status: dueAmount > 0 ? "pending" : "completed",
             paymentMethod: paymentMethod,
             paidAmount: paidAmount,
