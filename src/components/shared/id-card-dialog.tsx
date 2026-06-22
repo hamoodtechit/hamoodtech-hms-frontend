@@ -167,8 +167,8 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
       </div>
 
       {/* QR Code and Footer */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '2mm', alignItems: 'center', gap: '2mm' }}>
-        <QRCode value={qrValue} size={24} />
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '3mm', alignItems: 'center', gap: '2mm', marginTop: 'auto' }}>
+        <QRCode value={qrValue} size={32} />
       </div>
 
       <div style={{ background: `linear-gradient(90deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, height: '4mm', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -263,8 +263,8 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
       </div>
 
       {/* QR Code and Footer */}
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '2mm', alignItems: 'center', gap: '2mm' }}>
-        <QRCode value={qrValue} size={24} />
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '3mm', alignItems: 'center', gap: '2mm', marginTop: 'auto' }}>
+        <QRCode value={qrValue} size={32} />
       </div>
 
       <div style={{ background: `linear-gradient(90deg, ${primaryBlue} 0%, #000000 100%)`, height: '4mm', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
