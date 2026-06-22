@@ -113,195 +113,206 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
   }
 
 
+  const primaryBlue = "#0c4a6e";
+  const primaryTeal = "#0f766e";
+
   const patientFront = (
-    <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', height: '20mm', width: '100%', position: 'absolute', top: 0, left: 0 }}></div>
-                  <div style={{ position: 'absolute', top: '15mm', left: '-5mm', width: '64mm', height: '10mm', background: 'white', borderRadius: '50% 50% 0 0' }}></div>
-                  
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '3mm 4mm', gap: '2mm', zIndex: 10 }}>
-                    <img src={logoUrl} style={{ height: '7mm', width: 'auto', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2)) brightness(0) invert(1)' }} alt="Logo" />
-                    <div style={{ color: 'white', fontWeight: '900', fontSize: '9px', lineHeight: '1.1', letterSpacing: '0.5px' }}>
-                      {hospitalName.toUpperCase()}
-                    </div>
-                  </div>
+    <div style={{ width: '54mm', height: '86mm', background: '#ffffff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      {/* Top Banner with Logo and Hospital Name */}
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, padding: '3mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '10mm', width: 'auto', marginBottom: '1mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
+        <div style={{ color: 'white', fontWeight: '900', fontSize: '8px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
+          {hospitalName.toUpperCase()}
+        </div>
+      </div>
 
-                  <div style={{ position: 'relative', textAlign: 'center', color: '#1e3a8a', fontSize: '8px', fontWeight: '800', letterSpacing: '1px', marginTop: '6mm', marginBottom: '2mm', zIndex: 10 }}>
-                    PATIENT ID CARD
-                  </div>
+      <div style={{ textAlign: 'center', color: primaryBlue, fontSize: '9px', fontWeight: '900', letterSpacing: '1px', padding: '2mm 0', borderBottom: '1px solid #e2e8f0' }}>
+        PATIENT ID CARD
+      </div>
 
-                  <div style={{ display: 'flex', padding: '0 4mm', gap: '3mm', position: 'relative', zIndex: 10 }}>
-                    <div style={{ width: '18mm', height: '22mm', borderRadius: '2mm', background: '#f8fafc', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                       {patientPhoto ? (
-                         <img src={patientPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Patient" />
-                       ) : (
-                         <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                       )}
-                    </div>
-                    
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5mm', justifyContent: 'center' }}>
-                        <div style={{ color: '#0f172a', fontSize: '12px', fontWeight: '900', lineHeight: '1.1', marginBottom: '1mm', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{patientName.toUpperCase()}</div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f1f5f9', padding: '1mm', borderRadius: '1mm' }}>
-                          <span style={{ color: '#475569', fontSize: '7px', fontWeight: '700' }}>UHID: </span>
-                          <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '800' }}>{uhid}</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5mm 1mm' }}>
-                          <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>AGE/SEX: </span>
-                          <span style={{ fontSize: '7px', color: '#0f172a', fontWeight: '700' }}>{age} / {gender.charAt(0).toUpperCase()}</span>
-                        </div>
+      <div style={{ padding: '3mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Photo */}
+        <div style={{ width: '22mm', height: '22mm', borderRadius: '4mm', background: '#f8fafc', border: `2px solid ${primaryTeal}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '2mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+           {patientPhoto ? (
+             <img src={patientPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Patient" />
+           ) : (
+             <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+           )}
+        </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5mm 1mm' }}>
-                          <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '600' }}>BLOOD: </span>
-                          <span style={{ fontSize: '8px', fontWeight: '900', color: '#dc2626' }}>{bloodGroup}</span>
-                        </div>
-                    </div>
-                  </div>
+        {/* Name */}
+        <div style={{ color: '#0f172a', fontSize: '12px', fontWeight: '900', lineHeight: '1.2', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2mm' }}>
+          {patientName.toUpperCase()}
+        </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2.5mm', flexDirection: 'column', alignItems: 'center', gap: '1mm', position: 'relative', zIndex: 10 }}>
-                    <div style={{ background: 'white', padding: '1.5mm', borderRadius: '1mm', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                      <QRCode value={qrValue} size={34} />
-                    </div>
-                  </div>
+        {/* Info Grid */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1mm' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>UHID:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{uhid}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>AGE/SEX:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{age} / {gender.charAt(0).toUpperCase()}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>BLOOD GRP:</span>
+            <span style={{ fontSize: '9px', fontWeight: '900', color: '#dc2626' }}>{bloodGroup}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>PHONE:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{data.phone || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
 
-                  <div style={{ position: 'absolute', bottom: '0', left: '0', width: '100%', height: '8mm', background: 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ fontSize: '6px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.5px', fontWeight: 'bold' }}>VALID FOR HOSPITAL SERVICES</div>
-                  </div>
-                </div>
+      {/* QR Code and Footer */}
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '2mm', alignItems: 'center', gap: '2mm' }}>
+        <QRCode value={qrValue} size={24} />
+      </div>
+
+      <div style={{ background: `linear-gradient(90deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, height: '4mm', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: '5px', color: 'rgba(255,255,255,0.9)', letterSpacing: '1px', fontWeight: 'bold' }}>VALID FOR HOSPITAL SERVICES</div>
+      </div>
+    </div>
   )
 
   const patientBack = (
     <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)', height: '20mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '2mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
-                      <img src={logoUrl} style={{ height: '6mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
-                      <div style={{ fontWeight: '900', fontSize: '9px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
-                    </div>
-                    <div style={{ fontSize: '7px', marginTop: '1.5mm', color: '#bfdbfe', letterSpacing: '1px' }}>PATIENT ID CARD</div>
-                  </div>
-                  
-                  {/* Emergency Contacts */}
-                  <div style={{ padding: '4mm', color: '#0f172a' }}>
-                    <div style={{ color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', marginBottom: '2mm', textAlign: 'center' }}>EMERGENCY CONTACTS</div>
-                    <div style={{ fontSize: '8px', marginBottom: '1mm' }}>Name: ______________________</div>
-                    <div style={{ fontSize: '8px', marginBottom: '1mm' }}>Relationship: ________________</div>
-                    <div style={{ fontSize: '8px', marginBottom: '1mm' }}>Phone 1: ____________________</div>
-                    <div style={{ fontSize: '8px', marginBottom: '3mm' }}>Phone 2: ____________________</div>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, height: '15mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '1mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
+          <img src={logoUrl} style={{ height: '5mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
+          <div style={{ fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
+        </div>
+      </div>
+      
+      {/* Emergency Contacts */}
+      <div style={{ padding: '4mm', color: '#0f172a', flex: 1 }}>
+        <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryTeal}`, paddingBottom: '1mm' }}>EMERGENCY CONTACT</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Name: ______________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Relationship: ________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Phone 1: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '3mm', fontWeight: '700' }}>Phone 2: ____________________</div>
 
-                    <div style={{ color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', marginBottom: '2mm', textAlign: 'center' }}>IMPORTANT INFORMATION</div>
-                    <div style={{ fontSize: '7px', textAlign: 'center', marginBottom: '1mm' }}>
-                      <strong style={{ color: '#1e3a8a' }}>24/7 HELPLINE:</strong><br/>{phone}
-                    </div>
-                    <div style={{ fontSize: '7px', textAlign: 'center' }}>
-                      <strong style={{ color: '#1e3a8a' }}>HOSPITAL ADDRESS:</strong><br/>{address}
-                    </div>
-                  </div>
+        <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryTeal}`, paddingBottom: '1mm' }}>IMPORTANT INFORMATION</div>
+        <div style={{ fontSize: '8px', textAlign: 'center', marginBottom: '1.5mm', fontWeight: '700' }}>
+          <strong style={{ color: primaryTeal }}>24/7 HELPLINE:</strong><br/>{phone}
+        </div>
+        <div style={{ fontSize: '7px', textAlign: 'center', fontWeight: '700' }}>
+          <strong style={{ color: primaryTeal }}>HOSPITAL ADDRESS:</strong><br/>{address}
+        </div>
+      </div>
 
-                  <div style={{ flex: 1 }}></div>
-
-                  {/* Return Disclaimer */}
-                  <div style={{ background: '#3b82f6', color: 'white', padding: '3mm', textAlign: 'center', fontSize: '8px', fontWeight: 'bold' }}>
-                    IF FOUND, PLEASE RETURN TO<br/>{hospitalName.toUpperCase()}<br/>
-                    {phone}
-                  </div>
-                </div>
+      {/* Return Disclaimer */}
+      <div style={{ background: primaryBlue, color: 'white', padding: '3mm', textAlign: 'center', fontSize: '7px', fontWeight: '900', letterSpacing: '0.5px' }}>
+        IF FOUND, PLEASE RETURN TO<br/>{hospitalName.toUpperCase()}<br/>
+        {phone}
+      </div>
+    </div>
   )
 
   const staffFront = (
-    <div style={{ width: '54mm', height: '86mm', background: 'linear-gradient(135deg, #020617 0%, #1e293b 100%)', position: 'relative', overflow: 'hidden', border: '1px solid #0f172a', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '2mm', position: 'relative', zIndex: 10 }}>
-                    <div style={{ width: '12mm', height: '3mm', background: '#e2e8f0', borderRadius: '2mm' }}></div>
-                  </div>
+    <div style={{ width: '54mm', height: '86mm', background: '#ffffff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      {/* Top Banner with Logo and Hospital Name */}
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, padding: '3mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '10mm', width: 'auto', marginBottom: '1mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
+        <div style={{ color: '#ffffff', fontWeight: '900', fontSize: '8px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
+          {hospitalName.toUpperCase()}
+        </div>
+      </div>
 
-                  <div style={{ background: 'linear-gradient(90deg, #ca8a04 0%, #facc15 50%, #ca8a04 100%)', height: '12mm', width: '100%', marginTop: '3mm', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4mm', gap: '2mm', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', position: 'relative', zIndex: 10 }}>
-                     <img src={logoUrl} style={{ height: '7mm', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
-                     <div style={{ color: '#020617', fontWeight: '900', fontSize: '8px', lineHeight: '1.1', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
-                  </div>
+      <div style={{ textAlign: 'center', color: '#000000', fontSize: '9px', fontWeight: '900', letterSpacing: '1.5px', padding: '2mm 0', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+        STAFF ID CARD
+      </div>
 
-                  <div style={{ margin: '4mm', padding: '3mm', background: 'rgba(255,255,255,0.05)', borderRadius: '2mm', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '3mm', position: 'relative', zIndex: 10 }}>
-                     <div style={{ width: '18mm', height: '22mm', borderRadius: '1.5mm', border: '1px solid #facc15', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                         {empPhoto ? (
-                            <img src={empPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Employee" />
-                         ) : (
-                            <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                         )}
-                     </div>
-                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                       <div style={{ color: '#facc15', fontSize: '10px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '1px', marginBottom: '2mm' }}>STAFF ID</div>
-                       <div style={{ color: '#ffffff', fontSize: '12px', fontWeight: '900', lineHeight: '1.1', letterSpacing: '-0.3px' }}>{empName.toUpperCase()}</div>
-                     </div>
-                  </div>
+      <div style={{ padding: '3mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Photo */}
+        <div style={{ width: '22mm', height: '22mm', borderRadius: '4mm', background: '#f8fafc', border: `2px solid ${primaryBlue}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1.5mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+           {empPhoto ? (
+             <img src={empPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Employee" />
+           ) : (
+             <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+           )}
+        </div>
 
-                  <div style={{ padding: '0 4mm', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-                    <div style={{ color: 'white', fontSize: '7px', fontWeight: '600', marginBottom: '1mm', lineHeight: '1.2' }}>{designation.toUpperCase()}</div>
-                    <div style={{ color: '#94a3b8', fontSize: '6px', fontWeight: '500', lineHeight: '1.2' }}>{department.toUpperCase()}</div>
-                    
-                    <div style={{ display: 'inline-block', background: 'rgba(250, 204, 21, 0.1)', border: '1px solid rgba(250, 204, 21, 0.3)', borderRadius: '1mm', padding: '1mm 2mm', marginTop: '1.5mm' }}>
-                        <span style={{ fontSize: '6px', color: '#cbd5e1', marginRight: '1mm' }}>EMP ID:</span>
-                        <span style={{ fontSize: '8px', color: '#facc15', fontWeight: '800', letterSpacing: '0.5px' }}>{empId}</span>
-                    </div>
-                  </div>
+        {/* Name and Designation */}
+        <div style={{ color: primaryBlue, fontSize: '11px', fontWeight: '900', lineHeight: '1.2', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '0.5mm' }}>
+          {empName.toUpperCase()}
+        </div>
+        <div style={{ color: '#ef4444', fontSize: '8px', fontWeight: '900', textAlign: 'center', marginBottom: '2mm', letterSpacing: '0.5px' }}>
+          {designation.toUpperCase()}
+        </div>
 
-                  <div style={{ flex: 1 }}></div>
+        {/* Info Grid */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1mm' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>EMP ID:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{empId}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>DEPT:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{department.toUpperCase()}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>BLOOD GRP:</span>
+            <span style={{ fontSize: '8px', fontWeight: '900', color: '#dc2626' }}>{bloodGroup}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.5mm' }}>
+            <span style={{ color: '#64748b', fontSize: '7px', fontWeight: '700' }}>PHONE:</span>
+            <span style={{ fontSize: '8px', color: '#0f172a', fontWeight: '900' }}>{data.phone || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
 
-                  <div style={{ background: 'white', padding: '2.5mm', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 10 }}>
-                     <QRCode value={qrValue} size={28} />
-                     <div style={{ fontSize: '5px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', marginTop: '1.5mm' }}>SCAN TO VERIFY</div>
-                  </div>
-                  <div style={{ background: 'linear-gradient(90deg, #ca8a04 0%, #facc15 50%, #ca8a04 100%)', height: '2px', width: '100%', position: 'relative', zIndex: 10 }}></div>
-                </div>
+      {/* QR Code and Footer */}
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '2mm', alignItems: 'center', gap: '2mm' }}>
+        <QRCode value={qrValue} size={24} />
+      </div>
+
+      <div style={{ background: `linear-gradient(90deg, ${primaryBlue} 0%, #000000 100%)`, height: '4mm', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: '5px', color: 'rgba(255,255,255,0.9)', letterSpacing: '1px', fontWeight: 'bold' }}>SCAN TO VERIFY IDENTITY</div>
+      </div>
+    </div>
   )
 
   const staffBack = (
-    <div style={{ width: '54mm', height: '86mm', background: 'linear-gradient(135deg, #020617 0%, #1e293b 100%)', position: 'relative', overflow: 'hidden', border: '1px solid #0f172a', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '2mm' }}>
-                    <div style={{ width: '12mm', height: '3mm', background: '#e2e8f0', borderRadius: '2mm' }}></div>
-                  </div>
-                  
-                  <div style={{ textAlign: 'center', color: 'white', padding: '2mm' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1mm', marginBottom: '1mm' }}>
-                      <img src={logoUrl} style={{ height: '4mm' }} alt="Logo" />
-                      <div style={{ color: '#facc15', fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
-                    </div>
-                    <div style={{ fontSize: '6px', color: '#94a3b8', letterSpacing: '0.5px' }}>THIS SIDE IS FOR HOSPITAL USE</div>
-                  </div>
+    <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, height: '15mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '1mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
+          <img src={logoUrl} style={{ height: '5mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
+          <div style={{ fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
+        </div>
+      </div>
+      
+      {/* Emergency Contacts */}
+      <div style={{ padding: '4mm', color: '#0f172a', flex: 1 }}>
+        <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryBlue}`, paddingBottom: '1mm' }}>EMERGENCY CONTACT</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Name: ______________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Relationship: ________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '1.5mm', fontWeight: '700' }}>Phone 1: ____________________</div>
+        <div style={{ fontSize: '8px', marginBottom: '3mm', fontWeight: '700' }}>Phone 2: ____________________</div>
 
-                  <div style={{ background: '#eab308', flex: 1, margin: '0 2mm 2mm 2mm', borderRadius: '2mm', padding: '2mm' }}>
-                    <div style={{ background: 'white', height: '100%', borderRadius: '1mm', padding: '2mm', color: '#0f172a' }}>
-                      <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm', color: '#0f172a' }}>EMERGENCY CONTACTS</div>
-                      <div style={{ fontSize: '6px', marginBottom: '1px' }}><strong>1. NAME:</strong> ____________________</div>
-                      <div style={{ fontSize: '6px', marginBottom: '3px' }}><strong>   CONTACT:</strong> _________________</div>
-                      <div style={{ fontSize: '6px', marginBottom: '1px' }}><strong>2. NAME:</strong> ____________________</div>
-                      <div style={{ fontSize: '6px', marginBottom: '4mm' }}><strong>   CONTACT:</strong> _________________</div>
+        <div style={{ color: primaryBlue, fontSize: '9px', fontWeight: '900', marginBottom: '2mm', textAlign: 'center', borderBottom: `1px solid ${primaryBlue}`, paddingBottom: '1mm' }}>EMPLOYEE INFO</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1mm' }}>
+          <strong style={{ fontSize: '7px' }}>BLOOD GROUP:</strong>
+          <span style={{ background: '#ef4444', color: 'white', padding: '1px 4px', borderRadius: '2px', fontSize: '8px', fontWeight: 'bold' }}>{bloodGroup}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3mm' }}>
+          <strong style={{ fontSize: '7px' }}>DATE OF ISSUE:</strong>
+          <span style={{ fontSize: '7px', fontWeight: '700' }}>{new Date().toLocaleDateString('en-GB')}</span>
+        </div>
+        
+        <div style={{ fontSize: '6px', textAlign: 'center', fontWeight: '600', color: '#64748b' }}>
+          This card is the property of <strong style={{ color: '#0f172a' }}>{hospitalName}</strong> and must be surrendered upon termination of employment.
+        </div>
+      </div>
 
-                      <div style={{ display: 'flex' }}>
-                        <div style={{ flex: 1, color: '#0f172a' }}>
-                          <div style={{ fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm' }}>EMPLOYEE INFO</div>
-                          <div style={{ fontSize: '6px', marginBottom: '1mm' }}><strong>BLOOD GROUP:</strong></div>
-                          <div style={{ background: '#eab308', display: 'inline-block', padding: '1px 3px', fontSize: '7px', fontWeight: 'bold', marginBottom: '2mm', color: '#0f172a' }}>{bloodGroup}</div>
-                          <div style={{ fontSize: '6px' }}><strong>DATE OF ISSUE:</strong></div>
-                          <div style={{ fontSize: '6px', marginBottom: '2mm' }}>{new Date().toLocaleDateString('en-GB')}</div>
-                        </div>
-                        <div>
-                           <div style={{ padding: '1px', border: '1px solid #eab308' }}>
-                             <QRCode value={qrValue} size={30} />
-                           </div>
-                           <div style={{ fontSize: '5px', textAlign: 'center', fontWeight: 'bold', marginTop: '1px', color: '#0f172a' }}>SCAN FOR HR</div>
-                        </div>
-                      </div>
-
-                      <div style={{ fontSize: '5.5px', marginTop: '2mm', lineHeight: '1.2', color: '#0f172a' }}>
-                        This card is the property of <strong>{hospitalName}</strong> and must be surrendered upon termination of employment.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '2mm', textAlign: 'center', color: 'white' }}>
-                    <div style={{ fontSize: '6px', marginBottom: '1mm' }}>If found, please return immediately to:</div>
-                    <div style={{ fontSize: '6px', marginBottom: '1mm' }}>Human Resources Department,</div>
-                    <div style={{ fontSize: '6px' }}>{address}</div>
-                  </div>
-                </div>
+      {/* Return Disclaimer */}
+      <div style={{ background: primaryBlue, color: 'white', padding: '3mm', textAlign: 'center', fontSize: '7px', fontWeight: '900', letterSpacing: '0.5px' }}>
+        IF FOUND, PLEASE RETURN TO HR DEPT<br/>{hospitalName.toUpperCase()}<br/>
+        {phone}
+      </div>
+    </div>
   )
 
   return (
