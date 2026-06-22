@@ -94,7 +94,7 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
             </style>
           </head>
           <body>
-            \${printContent}
+            ${printContent}
             <script>
               window.onload = () => {
                 setTimeout(() => {
@@ -119,24 +119,24 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
   const patientFront = (
     <div style={{ width: '54mm', height: '86mm', background: '#ffffff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
       {/* Top Banner with Logo and Hospital Name */}
-      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, padding: '3mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <img src={logoUrl} style={{ height: '10mm', width: 'auto', marginBottom: '1mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
-        <div style={{ color: 'white', fontWeight: '900', fontSize: '8px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, padding: '2mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '8mm', width: 'auto', marginBottom: '0.5mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
+        <div style={{ color: 'white', fontWeight: '900', fontSize: '7px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
           {hospitalName.toUpperCase()}
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', color: primaryBlue, fontSize: '9px', fontWeight: '900', letterSpacing: '1px', padding: '2mm 0', borderBottom: '1px solid #e2e8f0' }}>
+      <div style={{ textAlign: 'center', color: primaryBlue, fontSize: '8px', fontWeight: '900', letterSpacing: '1px', padding: '1.5mm 0', borderBottom: '1px solid #e2e8f0' }}>
         PATIENT ID CARD
       </div>
 
-      <div style={{ padding: '3mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ padding: '1.5mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Photo */}
-        <div style={{ width: '22mm', height: '22mm', borderRadius: '4mm', background: '#f8fafc', border: `2px solid ${primaryTeal}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '2mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+        <div style={{ width: '18mm', height: '18mm', borderRadius: '3mm', background: '#f8fafc', border: `2px solid ${primaryTeal}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1.5mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
            {patientPhoto ? (
              <img src={patientPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Patient" />
            ) : (
-             <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+             <div style={{ color: '#94a3b8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
            )}
         </div>
 
@@ -179,11 +179,9 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
 
   const patientBack = (
     <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, height: '15mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '1mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
-          <img src={logoUrl} style={{ height: '5mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
-          <div style={{ fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
-        </div>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, ${primaryTeal} 100%)`, padding: '2mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '6mm', filter: 'brightness(0) invert(1)', marginBottom: '1mm' }} alt="Logo" />
+        <div style={{ fontWeight: '900', fontSize: '7px', letterSpacing: '0.5px', textAlign: 'center' }}>{hospitalName.toUpperCase()}</div>
       </div>
       
       {/* Emergency Contacts */}
@@ -214,24 +212,24 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
   const staffFront = (
     <div style={{ width: '54mm', height: '86mm', background: '#ffffff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column' }}>
       {/* Top Banner with Logo and Hospital Name */}
-      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, padding: '3mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <img src={logoUrl} style={{ height: '10mm', width: 'auto', marginBottom: '1mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
-        <div style={{ color: '#ffffff', fontWeight: '900', fontSize: '8px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, padding: '1.5mm', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '6mm', width: 'auto', marginBottom: '0.5mm', filter: 'brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }} alt="Logo" />
+        <div style={{ color: '#ffffff', fontWeight: '900', fontSize: '6px', lineHeight: '1.2', letterSpacing: '0.5px', textAlign: 'center' }}>
           {hospitalName.toUpperCase()}
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', color: '#000000', fontSize: '9px', fontWeight: '900', letterSpacing: '1.5px', padding: '2mm 0', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+      <div style={{ textAlign: 'center', color: '#000000', fontSize: '8px', fontWeight: '900', letterSpacing: '1.5px', padding: '1.5mm 0', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
         STAFF ID CARD
       </div>
 
-      <div style={{ padding: '3mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ padding: '1.5mm 4mm', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Photo */}
-        <div style={{ width: '22mm', height: '22mm', borderRadius: '4mm', background: '#f8fafc', border: `2px solid ${primaryBlue}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1.5mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+        <div style={{ width: '18mm', height: '18mm', borderRadius: '3mm', background: '#f8fafc', border: `2px solid ${primaryBlue}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1.5mm', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
            {empPhoto ? (
              <img src={empPhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Employee" />
            ) : (
-             <div style={{ color: '#94a3b8' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+             <div style={{ color: '#94a3b8' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
            )}
         </div>
 
@@ -277,11 +275,9 @@ export function IdCardDialog({ open, onOpenChange, type, data }: IdCardDialogPro
 
   const staffBack = (
     <div style={{ width: '54mm', height: '86mm', background: '#fff', position: 'relative', overflow: 'hidden', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, height: '15mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', paddingTop: '1mm', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2mm' }}>
-          <img src={logoUrl} style={{ height: '5mm', filter: 'brightness(0) invert(1)' }} alt="Logo" />
-          <div style={{ fontWeight: '900', fontSize: '8px', letterSpacing: '0.5px' }}>{hospitalName.toUpperCase()}</div>
-        </div>
+      <div style={{ background: `linear-gradient(135deg, ${primaryBlue} 0%, #000000 100%)`, padding: '2mm', width: '100%', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <img src={logoUrl} style={{ height: '6mm', filter: 'brightness(0) invert(1)', marginBottom: '1mm' }} alt="Logo" />
+        <div style={{ fontWeight: '900', fontSize: '7px', letterSpacing: '0.5px', textAlign: 'center' }}>{hospitalName.toUpperCase()}</div>
       </div>
       
       {/* Emergency Contacts */}
