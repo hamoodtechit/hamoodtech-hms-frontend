@@ -315,17 +315,20 @@ export function Sidebar() {
               href: "/reports",
               module: "sales",
               permission: "sale:read",
+              roles: ["Super Admin", "Admin", "Accountant", "Pharmacist"],
             },
             {
               label: "Sales & Finance",
               href: "/finance/reports",
               module: "finance",
               permission: "account:read",
+              roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             },
             {
               label: "Doctor Summary",
               href: "/finance/doctor-payment?tab=summary",
               permission: ["consultation-charge:read", "sale:read"],
+              roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             }
           ]
         }
