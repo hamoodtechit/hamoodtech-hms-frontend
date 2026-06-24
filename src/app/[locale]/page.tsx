@@ -110,7 +110,7 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <section
-        className="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-32"
+        className="relative overflow-hidden pt-24 pb-20 lg:pt-28 lg:pb-32"
         style={{ background: `linear-gradient(135deg, ${BRAND.navy} 0%, #064e3b 50%, ${BRAND.teal} 100%)` }}
       >
         {/* Decorative orbs */}
