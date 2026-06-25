@@ -256,7 +256,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="py-24 bg-gray-50/50">
+      <section className="py-14 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>Why Choose Us</p>
@@ -286,7 +286,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── MODULES SHOWCASE ── */}
-      <section className="py-24 bg-white">
+      <section className="py-14 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>Comprehensive Modules</p>
@@ -349,7 +349,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="py-24" style={{ background: `linear-gradient(180deg, white 0%, ${BRAND.teal}06 100%)` }}>
+      <section className="py-14" style={{ background: `linear-gradient(180deg, white 0%, ${BRAND.teal}06 100%)` }}>
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>Simple Onboarding</p>
@@ -378,7 +378,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-24 bg-gray-50/50">
+      <section className="py-14 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>What Our Clients Say</p>
@@ -413,7 +413,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-24 bg-white">
+      <section className="py-14 bg-white">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>FAQ</p>
@@ -435,7 +435,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-24">
+      <section className="py-14">
         <div className="max-w-4xl mx-auto px-6">
           <div
             className="relative overflow-hidden rounded-3xl p-12 md:p-16 text-center"
