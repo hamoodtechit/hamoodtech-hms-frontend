@@ -297,7 +297,7 @@ export default function LandingPage() {
               From outpatient registration to pharmacy POS, lab reports to financial analytics — all integrated in one seamless platform.
             </p>
           </div>
-          <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-start">
+          <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-center">
             <div className="space-y-2">
               {modules.map((m, i) => (
                 <button
