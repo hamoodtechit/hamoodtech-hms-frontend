@@ -297,7 +297,7 @@ export default function LandingPage() {
               From outpatient registration to pharmacy POS, lab reports to financial analytics — all integrated in one seamless platform.
             </p>
           </div>
-          <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-center">
+          <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-start">
             <div className="space-y-2">
               {modules.map((m, i) => (
                 <button
@@ -321,7 +321,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div
-              className="rounded-3xl min-h-[400px] flex flex-col overflow-hidden relative group"
+              className="rounded-3xl min-h-[400px] flex flex-col overflow-hidden relative group self-center"
               style={{
                 border: `1px solid ${BRAND.teal}15`,
               }}
