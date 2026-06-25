@@ -321,7 +321,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div
-              className="rounded-3xl min-h-[400px] flex flex-col overflow-hidden relative group self-center"
+              className="rounded-3xl min-h-[550px] flex flex-col overflow-hidden relative group self-center w-full"
               style={{
                 border: `1px solid ${BRAND.teal}15`,
               }}
