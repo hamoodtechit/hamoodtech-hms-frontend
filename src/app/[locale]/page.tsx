@@ -77,14 +77,14 @@ export default function LandingPage() {
   }, [])
 
   const modules = [
-    { icon: Stethoscope, title: "OPD Management", desc: "Streamline outpatient visits with smart queuing, consultation tracking, and instant prescriptions." },
-    { icon: BedDouble, title: "IPD & Admissions", desc: "Manage bed allocation, patient admissions, transfers, and discharge workflows effortlessly." },
-    { icon: Pill, title: "Pharmacy & POS", desc: "Full inventory control, barcode scanning, expiry tracking, and integrated point-of-sale billing." },
-    { icon: FlaskConical, title: "Pathology Lab", desc: "Automated test workflows, result entry, report generation, and direct patient notifications." },
-    { icon: Microscope, title: "Radiology", desc: "Digital imaging management, report templates, and seamless integration with patient records." },
-    { icon: BarChart3, title: "Finance & Billing", desc: "Complete accounting, invoice generation, payment tracking, and comprehensive financial reports." },
-    { icon: CalendarCheck, title: "Appointments", desc: "Online booking, doctor schedules, automated reminders, and real-time availability management." },
-    { icon: Users, title: "HR & Payroll", desc: "Staff management, attendance tracking, shift scheduling, duty rosters, and payroll processing." },
+    { icon: Stethoscope, title: "OPD Management", desc: "Streamline outpatient visits with smart queuing, consultation tracking, and instant prescriptions.", tags: ["Smart Queuing", "Prescriptions", "Vitals Tracking", "Patient History"] },
+    { icon: BedDouble, title: "IPD & Admissions", desc: "Manage bed allocation, patient admissions, transfers, and discharge workflows effortlessly.", tags: ["Bed Management", "Discharge Flow", "Ward Transfers", "Service Billing"] },
+    { icon: Pill, title: "Pharmacy & POS", desc: "Full inventory control, barcode scanning, expiry tracking, and integrated point-of-sale billing.", tags: ["Barcode Scanning", "Expiry Alerts", "Stock Control", "POS Billing"] },
+    { icon: FlaskConical, title: "Pathology Lab", desc: "Automated test workflows, result entry, report generation, and direct patient notifications.", tags: ["Test Workflows", "Auto Reports", "Sample Tracking", "Result SMS"] },
+    { icon: Microscope, title: "Radiology", desc: "Digital imaging management, report templates, and seamless integration with patient records.", tags: ["Image Upload", "Report Templates", "DICOM Ready", "Doctor Access"] },
+    { icon: BarChart3, title: "Finance & Billing", desc: "Complete accounting, invoice generation, payment tracking, and comprehensive financial reports.", tags: ["Ledger System", "Invoice Gen", "Due Tracking", "Profit Reports"] },
+    { icon: CalendarCheck, title: "Appointments", desc: "Online booking, doctor schedules, automated reminders, and real-time availability management.", tags: ["Online Booking", "Auto Reminders", "Doctor Slots", "Walk-in Queue"] },
+    { icon: Users, title: "HR & Payroll", desc: "Staff management, attendance tracking, shift scheduling, duty rosters, and payroll processing.", tags: ["Attendance", "Shift Roster", "Payroll", "Leave Management"] },
   ]
 
   const features = [
@@ -321,27 +321,59 @@ export default function LandingPage() {
               ))}
             </div>
             <div
-              className="p-10 rounded-3xl min-h-[400px] flex flex-col justify-center"
+              className="rounded-3xl min-h-[400px] flex flex-col overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${BRAND.navy}08, ${BRAND.teal}08)`,
                 border: `1px solid ${BRAND.teal}15`,
               }}
             >
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.teal})`, boxShadow: "0 8px 30px rgba(12,74,110,0.2)" }}>
-                {(() => { const Icon = modules[activeModule].icon; return <Icon className="w-8 h-8 text-white" /> })()}
+              {/* Mini UI Mockup */}
+              <div className="px-6 pt-6 pb-4">
+                <div className="rounded-2xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.teal})`, boxShadow: "0 8px 30px rgba(12,74,110,0.15)" }}>
+                  <div className="flex items-center gap-1.5 px-4 py-2.5" style={{ background: "rgba(0,0,0,0.2)" }}>
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
+                    <span className="text-[9px] text-white/40 font-bold ml-2">{modules[activeModule].title} — HamoodTech HMS</span>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    {[0,1,2].map(row => (
+                      <div key={row} className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+                          {(() => { const Icon = modules[activeModule].icon; return <Icon className="w-3.5 h-3.5 text-white/60" /> })()}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="h-2 rounded-full" style={{ background: "rgba(255,255,255,0.15)", width: `${85 - row * 15}%` }} />
+                          <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", width: `${65 - row * 10}%` }} />
+                        </div>
+                        <div className="px-2 py-1 rounded text-[8px] font-bold" style={{ background: row === 0 ? "rgba(20,184,166,0.3)" : "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" }}>
+                          {modules[activeModule].tags[row] || "Active"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-black mb-4" style={{ color: BRAND.navy }}>
-                {modules[activeModule].title}
-              </h3>
-              <p className="text-gray-500 leading-relaxed text-lg mb-8">
-                {modules[activeModule].desc}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {["Real-time Updates", "Role-Based Access", "Detailed Reports", "Mobile Ready"].map(tag => (
-                  <span key={tag} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold" style={{ background: `${BRAND.teal}10`, color: BRAND.teal }}>
-                    <BadgeCheck className="w-3.5 h-3.5" /> {tag}
-                  </span>
-                ))}
+              {/* Module Info */}
+              <div className="px-8 pb-8 pt-2 flex-1 flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.teal})`, boxShadow: "0 4px 15px rgba(12,74,110,0.2)" }}>
+                    {(() => { const Icon = modules[activeModule].icon; return <Icon className="w-6 h-6 text-white" /> })()}
+                  </div>
+                  <h3 className="text-xl font-black" style={{ color: BRAND.navy }}>
+                    {modules[activeModule].title}
+                  </h3>
+                </div>
+                <p className="text-gray-500 leading-relaxed mb-6">
+                  {modules[activeModule].desc}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-auto">
+                  {modules[activeModule].tags.map(tag => (
+                    <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold" style={{ background: `${BRAND.teal}10`, color: BRAND.teal }}>
+                      <BadgeCheck className="w-3 h-3" /> {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
