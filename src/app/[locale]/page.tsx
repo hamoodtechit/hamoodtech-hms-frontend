@@ -2,12 +2,56 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import {
   Activity, ArrowRight, BadgeCheck, BarChart3, BedDouble, CalendarCheck,
-  ChevronRight, ClipboardList, FlaskConical, HeartPulse, Layers, Lock,
-  Microscope, Pill, Shield, Sparkles, Star, Stethoscope, Users, Zap
+  ChevronDown, ChevronRight, ClipboardList, FlaskConical, HeartPulse, Layers, Lock,
+  MessageCircle, Microscope, Pill, Shield, Sparkles, Star, Stethoscope, Users, Zap
 } from "lucide-react"
+
+function useInView(threshold = 0.2) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } }, { threshold })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return { ref, visible }
+}
+
+function AnimatedCounter({ target, suffix = "" }: { target: string; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const { ref, visible } = useInView()
+  const num = parseInt(target.replace(/[^0-9]/g, "")) || 0
+  const pre = target.replace(/[0-9.]/g, "").replace(num.toString(), "")
+  useEffect(() => {
+    if (!visible || num === 0) return
+    let start = 0
+    const step = Math.max(1, Math.floor(num / 40))
+    const timer = setInterval(() => { start += step; if (start >= num) { setCount(num); clearInterval(timer) } else setCount(start) }, 30)
+    return () => clearInterval(timer)
+  }, [visible, num])
+  const display = num === 0 ? target : `${count}${target.includes("+") ? "+" : ""}${target.includes("%") ? "%" : ""}${target.includes("x") ? "x" : ""}`
+  return <span ref={ref}>{visible ? display : target}</span>
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-2xl overflow-hidden transition-all duration-300" style={{ border: "1px solid rgba(0,0,0,0.06)", background: open ? "#f8fafc" : "white" }}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 text-left">
+        <span className="text-sm font-bold pr-4" style={{ color: "#0c4a6e" }}>{q}</span>
+        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`} style={{ color: "#0f766e" }} />
+      </button>
+      <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: open ? "200px" : "0px" }}>
+        <p className="px-5 pb-5 text-sm text-gray-500 leading-relaxed">{a}</p>
+      </div>
+    </div>
+  )
+}
 
 const BRAND = {
   navy: "#0c4a6e",
@@ -203,7 +247,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 rounded-3xl bg-white shadow-xl" style={{ border: "1px solid rgba(0,0,0,0.05)" }}>
             {stats.map(s => (
               <div key={s.label} className="text-center">
-                <p className="text-3xl font-black tracking-tight" style={{ color: BRAND.navy }}>{s.value}</p>
+                <p className="text-3xl font-black tracking-tight" style={{ color: BRAND.navy }}><AnimatedCounter target={s.value} /></p>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{s.label}</p>
               </div>
             ))}
@@ -304,6 +348,92 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-24" style={{ background: `linear-gradient(180deg, white 0%, ${BRAND.teal}06 100%)` }}>
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>Simple Onboarding</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4" style={{ color: BRAND.navy }}>
+              Get Started in 3 Easy Steps
+            </h2>
+            <p className="text-gray-500 leading-relaxed">From first contact to full deployment — we make the transition smooth and hassle-free.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: "01", title: "Request a Demo", desc: "Schedule a free demo call. We understand your hospital's unique needs and show you the platform in action." },
+              { step: "02", title: "Setup & Training", desc: "Our team deploys the system, migrates your data, and trains your staff — all within days, not months." },
+              { step: "03", title: "Go Live & Grow", desc: "Start managing your hospital with ease. Our 24/7 support team is always here to help you succeed." },
+            ].map((s, i) => (
+              <div key={i} className="relative text-center group">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.teal})`, boxShadow: "0 8px 25px rgba(12,74,110,0.2)" }}>
+                  <span className="text-white text-lg font-black">{s.step}</span>
+                </div>
+                {i < 2 && <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px]" style={{ background: `linear-gradient(to right, ${BRAND.teal}30, transparent)` }} />}
+                <h3 className="text-lg font-black mb-2" style={{ color: BRAND.navy }}>{s.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="py-24 bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>What Our Clients Say</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4" style={{ color: BRAND.navy }}>
+              Trusted by Healthcare Leaders
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: "Dr. Rahman", role: "Director", hospital: "City General Hospital", text: "This HMS transformed how we operate. Billing that took hours now takes minutes. The pharmacy module alone saved us from stock losses." },
+              { name: "Fatima Akter", role: "Admin Head", hospital: "Care Plus Clinic", text: "The multi-branch feature is a game changer. We manage 3 locations from one dashboard. Staff actually enjoy using it — that's rare!" },
+              { name: "Dr. Hossain", role: "Managing Director", hospital: "MediCare Hospital", text: "From appointment scheduling to lab reports, everything is seamless. Patient satisfaction improved significantly since we adopted HamoodTech HMS." },
+            ].map((t, i) => (
+              <div key={i} className="p-8 rounded-2xl bg-white hover:shadow-xl transition-all duration-300" style={{ border: "1px solid rgba(0,0,0,0.05)" }}>
+                <div className="flex items-center gap-1 mb-4">
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed mb-6 italic">&ldquo;{t.text}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black" style={{ background: `linear-gradient(135deg, ${BRAND.navy}, ${BRAND.teal})` }}>
+                    {t.name[0]}{t.name.split(" ")[1]?.[0] || ""}
+                  </div>
+                  <div>
+                    <p className="text-sm font-black" style={{ color: BRAND.navy }}>{t.name}</p>
+                    <p className="text-[11px] text-gray-400">{t.role}, {t.hospital}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: BRAND.teal }}>FAQ</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4" style={{ color: BRAND.navy }}>
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              { q: "Can I migrate data from my current system?", a: "Absolutely! Our team handles full data migration from any existing system — spreadsheets, legacy software, or paper records. We ensure zero data loss during the transition." },
+              { q: "Do you provide staff training?", a: "Yes, comprehensive on-site and remote training is included. We train doctors, nurses, pharmacists, receptionists, and admin staff separately based on their roles." },
+              { q: "Is there a mobile app?", a: "The entire system is fully responsive and works beautifully on phones, tablets, and desktops. Dedicated mobile apps for doctors and patients are on our roadmap." },
+              { q: "How long does setup take?", a: "Most hospitals are fully operational within 3-5 days. Complex multi-branch setups may take 1-2 weeks. We work on your timeline, not ours." },
+            ].map((faq, i) => (
+              <FaqItem key={i} q={faq.q} a={faq.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-6">
@@ -365,6 +495,18 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── WHATSAPP FLOAT ── */}
+      <a
+        href="https://wa.me/8801XXXXXXXXX"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
+        style={{ background: "#25D366", boxShadow: "0 4px 20px rgba(37,211,102,0.4)" }}
+        title="Chat with us on WhatsApp"
+      >
+        <MessageCircle className="w-6 h-6 text-white" />
+      </a>
     </div>
   )
 }
