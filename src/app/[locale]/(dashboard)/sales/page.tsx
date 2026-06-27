@@ -184,7 +184,7 @@ export default function SalesHistoryPage() {
   const pagination = salesRes?.data?.pagination
 
   // Selection Logic for Bulk Due Collection
-  const validDueSales = sales.filter((s: Sale) => Number(s.dueAmount) > 0 && s.paymentStatus !== 'paid' && s.type === 'pos')
+  const validDueSales = sales.filter((s: Sale) => Number(s.dueAmount) > 0 && s.paymentStatus !== 'paid')
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
@@ -567,7 +567,7 @@ export default function SalesHistoryPage() {
                               <Checkbox
                                   checked={selectedIds.has(sale.id)}
                                   onCheckedChange={() => toggleSelect(sale.id)}
-                                  disabled={Number(sale.dueAmount) <= 0 || sale.paymentStatus === 'paid' || sale.type !== 'pos'}
+                                  disabled={Number(sale.dueAmount) <= 0 || sale.paymentStatus === 'paid'}
                               />
                           </TableCell>
                           <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
