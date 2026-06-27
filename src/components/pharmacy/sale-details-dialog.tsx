@@ -116,6 +116,17 @@ export function SaleDetailsDialog({
     }
   }, [sale, initialAddPayment])
 
+  // Automatically select a default account when paying dues
+  useEffect(() => {
+    if (isAddingPayment && accounts.length > 0 && !paymentAccountId) {
+      const activeAccounts = accounts.filter((a: any) => a.isActive)
+      const defaultAccount = activeAccounts.find((a: any) => a.name?.toLowerCase().includes('hospital')) || activeAccounts[0]
+      if (defaultAccount) {
+        setPaymentAccountId(defaultAccount.id)
+      }
+    }
+  }, [isAddingPayment, accounts, paymentAccountId])
+
   const fetchSaleReturns = async () => {
     if (!sale) return
     try {
