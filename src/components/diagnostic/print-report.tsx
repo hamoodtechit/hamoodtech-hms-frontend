@@ -474,6 +474,15 @@ export function PrintReport({ report }: PrintReportProps) {
                 </div>
             ))}
             <style jsx global>{`
+                /* Enforce font sizes for editor output */
+                #print-report font[size="1"] { font-size: 8pt !important; }
+                #print-report font[size="2"] { font-size: 10pt !important; }
+                #print-report font[size="3"] { font-size: 12pt !important; }
+                #print-report font[size="4"] { font-size: 14pt !important; }
+                #print-report font[size="5"] { font-size: 18pt !important; }
+                #print-report font[size="6"] { font-size: 24pt !important; }
+                #print-report font[size="7"] { font-size: 36pt !important; }
+                
                 @media print {
                     @page {
                         size: A4;
