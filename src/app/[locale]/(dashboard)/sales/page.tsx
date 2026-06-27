@@ -55,7 +55,7 @@ export default function SalesHistoryPage() {
   
   const { formatCurrency } = useCurrency()
   const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 500)
+  const [debouncedSearch] = useDebounce(search, 500)
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState<string>("all")
   const [paymentStatus, setPaymentStatus] = useState<string>("all")

@@ -38,7 +38,7 @@ export default function CashRegisterHistoryPage() {
   const [branchId, setBranchId] = useState<string>("all")
   const [userId, setUserId] = useState<string>("all")
   const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 500)
+  const [debouncedSearch] = useDebounce(search, 500)
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
