@@ -52,6 +52,15 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         onChange(e.currentTarget.innerHTML);
     };
 
+    const handleFontSize = (increase: boolean) => {
+        const currentSize = document.queryCommandValue('fontSize') || "3";
+        let newSize = parseInt(currentSize, 10);
+        if (isNaN(newSize)) newSize = 3;
+        if (increase) newSize = Math.min(newSize + 1, 7);
+        else newSize = Math.max(newSize - 1, 1);
+        handleCommand('fontSize', newSize.toString());
+    };
+
     return (
         <div className="flex flex-col rounded-2xl bg-muted/20 border border-border shadow-inner overflow-hidden">
             <div className="flex items-center justify-between p-2 bg-card border-b border-border shrink-0">
@@ -64,6 +73,13 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleCommand('underline')} className="h-8 w-8 p-0 rounded-md">
                         <u>U</u>
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border mx-1" />
+                    <Button variant="ghost" size="sm" onClick={() => handleFontSize(true)} className="h-8 w-8 p-0 rounded-md font-bold" title="Increase Font Size">
+                        A+
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleFontSize(false)} className="h-8 w-8 p-0 rounded-md font-bold text-xs" title="Decrease Font Size">
+                        A-
                     </Button>
                     <div className="w-[1px] h-4 bg-border mx-1" />
                     <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-8 w-8 p-0 rounded-md">
