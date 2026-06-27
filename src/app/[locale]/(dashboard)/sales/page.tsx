@@ -139,7 +139,7 @@ export default function SalesHistoryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDueDialogOpen, setBulkDueDialogOpen] = useState(false)
 
-  const { data: salesRes, isLoading, refetch } = useSales({
+  const { data: salesRes, isLoading, isFetching, refetch } = useSales({
     page,
     limit,
     status: status !== "all" ? (status as any) : undefined,
@@ -236,8 +236,11 @@ export default function SalesHistoryPage() {
                     <Input
                       placeholder="Search invoice, phone, or patient ID..."
                       value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10 h-10 bg-background/50 border-primary/20 focus:border-primary transition-all rounded-xl"
+                      onChange={(e) => {
+                        setSearch(e.target.value)
+                        setPage(1)
+                      }}
+                      className="pl-9 h-9 w-[300px] border-muted-foreground/20 focus-visible:ring-primary/20 bg-background/50 backdrop-blur-sm transition-all rounded-xl"
                     />
                   </div>
 
@@ -540,7 +543,7 @@ export default function SalesHistoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoading ? (
+                    {(isLoading || isFetching) ? (
                       <TableRow>
                         <TableCell colSpan={11} className="h-24 text-center">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
