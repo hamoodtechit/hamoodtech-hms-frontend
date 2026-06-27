@@ -281,7 +281,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                     <span>Advanced Tk.</span>
                     <span>{paidAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between py-0.5 font-black text-red-600">
+                <div className="flex justify-between py-1 px-2 font-black text-[14px]" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
                     <span>Due Tk.</span>
                     <span>{dueAmount.toFixed(2)}</span>
                 </div>
