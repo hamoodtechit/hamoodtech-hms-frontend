@@ -251,11 +251,11 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
         <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
             <div className="pt-2 pl-4">
                 {isFullPaid ? (
-                    <div className="border-4 border-green-600 text-green-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                    <div style={{ border: '4px solid #16a34a', color: '#16a34a', fontSize: '24px', fontWeight: '900', padding: '8px 24px', borderRadius: '12px', transform: 'rotate(-5deg)', display: 'inline-block', textTransform: 'uppercase' }}>
                         Full Paid
                     </div>
                 ) : (
-                    <div className="border-4 border-red-600 text-red-600 font-black text-2xl px-6 py-2 rounded-xl rotate-[-5deg] inline-block uppercase">
+                    <div style={{ border: '4px solid #dc2626', color: '#dc2626', fontSize: '28px', fontWeight: '900', padding: '8px 24px', borderRadius: '12px', transform: 'rotate(-5deg)', display: 'inline-block', textTransform: 'uppercase' }}>
                         Due
                     </div>
                 )}
