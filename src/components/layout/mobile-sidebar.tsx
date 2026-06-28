@@ -360,6 +360,11 @@ function SidebarBase() {
           roles: ["Super Admin", "Admin", "Accountant", "Receptionist", "Pharmacist"],
           children: [
             {
+              label: "Overall Summary",
+              href: "/reports/overall-summary",
+              roles: ["Super Admin"],
+            },
+            {
               label: "Pharmacy Reports",
               href: "/reports",
               module: "sales",
