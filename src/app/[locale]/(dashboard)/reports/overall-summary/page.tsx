@@ -6,7 +6,9 @@ import { AlertCircle } from "lucide-react"
 
 export default function OverallSummaryPage() {
   const { user } = useAuthStore()
-  const isSuperAdmin = user?.role?.name?.toLowerCase() === "superadmin"
+  const rawRoleName = user?.role?.name?.toLowerCase() || ''
+  const normalizedRoleName = rawRoleName.replace(/[\s\-_]+/g, '')
+  const isSuperAdmin = normalizedRoleName === 'superadmin' || user?.permissions?.includes('*') || user?.role?.permissions?.some(p => p.key === '*')
 
   if (!isSuperAdmin) {
     return (
