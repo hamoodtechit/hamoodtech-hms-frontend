@@ -144,17 +144,20 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
                     <td className="border border-black p-2 w-1/2 text-right">{formatCurrency(summary?.totalExpenses || 0)}</td>
                 </tr>
                 <tr>
-                    <td className="border border-black p-2 font-semibold bg-gray-50">Gross Profit (Sales - Purchases)</td>
+                    <td className="border border-black p-2 font-semibold bg-gray-50">Total Purchases</td>
+                    <td className="border border-black p-2 text-right">{formatCurrency(summary?.totalPurchases || 0)}</td>
+                </tr>
+                <tr>
+                    <td className="border border-black p-2 font-semibold bg-gray-50">Purchase Payments</td>
+                    <td className="border border-black p-2 text-right">{formatCurrency(summary?.totalPurchasesPaid || 0)}</td>
+                </tr>
+                <tr>
+                    <td className="border border-black p-2 font-semibold bg-gray-50">Gross Profit</td>
                     <td className="border border-black p-2 text-right font-bold">{formatCurrency(summary?.grossProfit || 0)}</td>
                 </tr>
                 <tr>
                     <td className="border border-black p-2 font-bold bg-gray-100 uppercase text-lg">Net Profit</td>
                     <td className="border border-black p-2 text-right font-black text-lg bg-gray-100">{formatCurrency(summary?.netProfit || 0)}</td>
-                </tr>
-                <tr>
-                    <td colSpan={2} className="border border-black p-1 text-center text-xs italic">
-                        *Net Profit = Collection - (Expenses + Purchase Payments + Commissions)
-                    </td>
                 </tr>
             </tbody>
         </table>

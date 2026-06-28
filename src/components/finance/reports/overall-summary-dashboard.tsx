@@ -173,8 +173,8 @@ export function OverallSummaryDashboard() {
             </Card>
         </div>
 
-        {/* Global Stats Header - Row 2 (Profit & Expenses) */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Row 2 (Expenses & Purchases) */}
+        <div className="grid gap-4 md:grid-cols-3">
             <Card className="bg-slate-50 dark:bg-slate-900 border-l-4 border-l-slate-400">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -182,10 +182,32 @@ export function OverallSummaryDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{formatCurrency(summary?.totalExpenses || 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">General expenditures</p>
                 </CardContent>
             </Card>
 
+            <Card className="bg-orange-50 dark:bg-orange-950 border-l-4 border-l-orange-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+                    <FileText className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{formatCurrency(summary?.totalPurchases || 0)}</div>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-teal-50 dark:bg-teal-950 border-l-4 border-l-teal-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Purchase Payments</CardTitle>
+                    <Wallet className="h-4 w-4 text-teal-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-teal-700 dark:text-teal-400">{formatCurrency(summary?.totalPurchasesPaid || 0)}</div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Row 3 (Profits) */}
+        <div className="grid gap-4 md:grid-cols-2">
             <Card className="bg-indigo-50 dark:bg-indigo-950 border-l-4 border-l-indigo-500">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
@@ -193,7 +215,6 @@ export function OverallSummaryDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{formatCurrency(summary?.grossProfit || 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Sales - Purchases</p>
                 </CardContent>
             </Card>
 
@@ -204,9 +225,6 @@ export function OverallSummaryDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-black text-emerald-700 dark:text-emerald-400">{formatCurrency(summary?.netProfit || 0)}</div>
-                    <p className="text-xs text-emerald-800/70 dark:text-emerald-300 mt-1 font-medium">
-                        Collection - (Expenses + Purchase Payments + Commissions)
-                    </p>
                 </CardContent>
             </Card>
         </div>
