@@ -629,10 +629,21 @@ export function CreateOrderDialog() {
                             <SmartNumberInput 
                                 value={paidAmount}
                                 onChange={(val: number | undefined) => setPaidAmount(val || 0)}
-                                className="h-9 pl-7 font-black text-xs bg-primary/5 border-primary/30"
+                                className={cn(
+                                    "h-9 pl-7 font-black text-xs bg-primary/5",
+                                    paidAmount > total ? "border-destructive text-destructive focus:border-destructive" : "border-primary/30"
+                                )}
                             />
-                            <Banknote className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-primary opacity-60" />
+                            <Banknote className={cn(
+                                "absolute left-2.5 top-2.5 h-3.5 w-3.5 opacity-60",
+                                paidAmount > total ? "text-destructive" : "text-primary"
+                            )} />
                         </div>
+                        {paidAmount > total && (
+                            <span className="text-[10px] text-destructive font-semibold">
+                                Paid amount cannot exceed {formatCurrency(total)}
+                            </span>
+                        )}
                     </div>
 
                     <div className="lg:col-span-3 flex flex-col gap-1.5">
@@ -720,7 +731,7 @@ export function CreateOrderDialog() {
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
                 Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={loading}>
+            <Button onClick={handleCreate} disabled={loading || paidAmount > total}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Purchase
             </Button>
