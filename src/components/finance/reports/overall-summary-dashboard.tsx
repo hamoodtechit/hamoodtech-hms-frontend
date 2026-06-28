@@ -21,11 +21,15 @@ import {
     FileText, 
     Users, 
     HeartHandshake,
-    Stethoscope
+    Stethoscope,
+    Printer,
+    FileDown
 } from "lucide-react"
+import { createRoot } from 'react-dom/client'
+import { OverallSummaryPrint } from "./overall-summary-print"
 
 export function OverallSummaryDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
 
@@ -75,6 +79,37 @@ export function OverallSummaryDashboard() {
   const referrals = response?.referrals
   const salesByType = response?.salesByType || []
 
+  const handlePrintReport = () => {
+    if (!date?.from || !date?.to || !response) {
+        return
+    }
+
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>Overall Financial Summary</title>')
+        printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
+        printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
+        printWindow.document.close()
+        
+        const container = printWindow.document.getElementById('report-root')
+        if (container) {
+            const root = createRoot(container)
+            const activeBranch = stores.find(s => s.id === activeStoreId)
+            root.render(
+              <OverallSummaryPrint 
+                reportData={response} 
+                dateRange={{ from: date.from, to: date.to }} 
+                activeBranch={activeBranch} 
+              />
+            )
+            
+            setTimeout(() => {
+                printWindow.print()
+            }, 1000)
+        }
+    }
+  }
+
   return (
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -84,6 +119,10 @@ export function OverallSummaryDashboard() {
             </div>
             <div className="flex items-center gap-2">
                 <DatePickerWithRange date={date} setDate={setDate} />
+                <Button variant="outline" className="gap-2" onClick={handlePrintReport}>
+                    <Printer className="h-4 w-4" />
+                    Print / PDF
+                </Button>
             </div>
         </div>
 
