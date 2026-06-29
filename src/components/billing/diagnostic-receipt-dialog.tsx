@@ -297,7 +297,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
                 <div className="text-right space-y-1">
                     <div>TYPE : {data?.paymentMethod?.toUpperCase() || "CASH"}</div>
-                    <div>Cashier : {(data as any)?.createdBy || user?.fullName || user?.username || assignedStaffName}</div>
+                    <div>Billing By : {(data as any)?.createdBy || user?.fullName || user?.username || assignedStaffName}</div>
                 </div>
             </div>
             

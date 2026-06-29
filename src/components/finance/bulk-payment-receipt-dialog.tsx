@@ -129,7 +129,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
               <div class="footer">
                   <p style="font-weight: 900; margin-bottom: 5px;">PAYMENT RECEIVED WITH THANKS</p>
-                  <p style="font-weight: 900; line-height: 1.4;">Cashier: ${(data as any)?.createdBy || user?.fullName || 'Staff'}</p>
+                  <p style="font-weight: 900; line-height: 1.4;">Collected by: ${(data as any)?.createdBy || user?.fullName || 'Staff'}</p>
                   <p style="margin-top: 10px; font-weight: 900; color: black; text-transform: none;">*Powered by HamoodTech.</p>
               </div>
           </div>

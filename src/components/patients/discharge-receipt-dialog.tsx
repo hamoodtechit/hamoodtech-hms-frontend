@@ -451,8 +451,8 @@ export function DischargeReceiptDialog({
                             <div className="mt-16 flex justify-between px-4 relative z-10">
                                 <div className="text-center space-y-1">
                                     <div className="border-t border-black w-40 mx-auto"></div>
-                                    <span className="text-[11px] font-black uppercase">Cashier</span>
-                                    <p className="text-[10px] font-bold text-black italic">{(data as any)?.createdBy || user?.fullName || user?.username || 'Staff'}</p>
+                                    <span className="text-[11px] font-black uppercase">Prepared By</span>
+                                    <p className="text-[10px] font-bold text-black italic">{(data as any)?.createdBy || user?.fullName}</p>
                                 </div>
                                 <div className="text-center space-y-1">
                                     <div className="border-t border-black w-48 mx-auto"></div>
