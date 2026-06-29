@@ -112,7 +112,7 @@ export function ExpenseReceiptDialog({ open, onOpenChange, expense }: ExpenseRec
 
               <div class="footer">
                   <p style="font-weight: 900; margin-bottom: 5px;">EXPENSE VOUCHER</p>
-                  <p style="font-weight: 900; line-height: 1.4;">Recorded by: ${(expense as any)?.createdBy || expense.recordedBy?.fullName || user?.fullName || 'Staff'}</p>
+                  <p style="font-weight: 900; line-height: 1.4;">Recorded by: ${(expense as any)?.createdBy || (expense as any)?.recordedBy?.fullName || user?.fullName || 'Staff'}</p>
                   <p style="margin-top: 10px; font-weight: 900; color: black; text-transform: none;">*Powered by HamoodTech.</p>
               </div>
           </div>
