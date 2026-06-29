@@ -28,8 +28,7 @@ export function IncomeCategoryList() {
     const { data: response, isLoading, refetch } = useIncomeCategories(undefined)
     const deleteMutation = useDeleteIncomeCategory()
 
-    // Safely extract categories array regardless of backend wrapper format
-    const categories: IncomeCategory[] = (response as any)?.data?.categories || (response as any)?.categories || (Array.isArray(response?.data) ? response.data : [])
+    const categories = response?.categories || []
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this category?")) {

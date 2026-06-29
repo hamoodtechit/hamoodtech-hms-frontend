@@ -16,15 +16,11 @@ export interface IncomeCategoryPayload {
 }
 
 export interface IncomeCategoryListResponse {
-    success: boolean;
-    message: string;
-    data: IncomeCategory[];
-    meta?: {
-        page: number;
-        limit: number;
-        totalPages: number;
-        total: number;
-    };
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    categories: IncomeCategory[];
 }
 
 export interface Income {
@@ -56,15 +52,11 @@ export interface IncomePayload {
 }
 
 export interface IncomeListResponse {
-    success: boolean;
-    message: string;
-    data: Income[];
-    meta?: {
-        page: number;
-        limit: number;
-        totalPages: number;
-        total: number;
-    };
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    incomes: Income[];
 }
 
 export interface IncomeQueryParams {
