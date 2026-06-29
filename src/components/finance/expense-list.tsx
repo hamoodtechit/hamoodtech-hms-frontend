@@ -15,10 +15,11 @@ import { useExpenses } from "@/hooks/expense-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Expense } from "@/types/expense"
 import { format } from "date-fns"
-import { Eye, Loader2, Plus, Search } from "lucide-react"
+import { Eye, Loader2, Plus, Printer, Search } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { ExpenseDialog } from "./expense-dialog"
+import { ExpenseReceiptDialog } from "./expense-receipt-dialog"
 
 import { useStoreContext } from "@/store/use-store-context"
 
@@ -26,6 +27,7 @@ export function ExpenseList() {
     const { formatCurrency } = useCurrency()
     const { activeStoreId } = useStoreContext()
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [receiptOpen, setReceiptOpen] = useState(false)
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
     const [search, setSearch] = useState("")
 
@@ -117,16 +119,30 @@ export function ExpenseList() {
                                         {formatCurrency(Number(expense.amount))}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => {
-                                                setSelectedExpense(expense)
-                                                setDialogOpen(true)
-                                            }}
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex justify-end gap-2">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                title="Print Voucher"
+                                                onClick={() => {
+                                                    setSelectedExpense(expense)
+                                                    setReceiptOpen(true)
+                                                }}
+                                            >
+                                                <Printer className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                title="View Details"
+                                                onClick={() => {
+                                                    setSelectedExpense(expense)
+                                                    setDialogOpen(true)
+                                                }}
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -140,6 +156,12 @@ export function ExpenseList() {
                 onOpenChange={setDialogOpen}
                 expense={selectedExpense}
                 onSuccess={refetch}
+            />
+
+            <ExpenseReceiptDialog
+                open={receiptOpen}
+                onOpenChange={setReceiptOpen}
+                expense={selectedExpense}
             />
         </div>
     )

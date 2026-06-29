@@ -292,6 +292,11 @@ export function Sidebar() {
           roles: ["Super Admin", "Admin", "Accountant"],
           children: [
             {
+              label: "Income Tracking",
+              href: "/finance/incomes",
+              permission: "income:read",
+            },
+            {
               label: "Expense Tracking",
               href: "/finance/expenses",
               permission: "account:read",
