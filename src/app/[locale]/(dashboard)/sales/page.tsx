@@ -102,7 +102,7 @@ export default function SalesHistoryPage() {
   const [staffId, setStaffId] = useState<string>("all")
 
   const [patientIdFilter, setPatientIdFilter] = useState<string | null>(urlPatientId)
-  const limit = 10
+  const limit = 50
 
   const handleTypeChange = (value: string) => {
     setSaleType(value)
@@ -539,19 +539,20 @@ export default function SalesHistoryPage() {
                       <TableHead>Due</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
+                      <TableHead>Created By</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(isLoading || isFetching) ? (
                       <TableRow>
-                        <TableCell colSpan={11} className="h-24 text-center">
+                        <TableCell colSpan={12} className="h-24 text-center">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                         </TableCell>
                       </TableRow>
                     ) : sales.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={12} className="h-24 text-center text-muted-foreground">
                           No sales found.
                         </TableCell>
                       </TableRow>
@@ -630,6 +631,9 @@ export default function SalesHistoryPage() {
                             >
                               {sale.paymentStatus}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-semibold text-xs text-muted-foreground uppercase">{sale.createdBy || "System"}</span>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
