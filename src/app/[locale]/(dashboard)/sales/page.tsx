@@ -633,7 +633,7 @@ export default function SalesHistoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <span className="font-semibold text-xs text-muted-foreground uppercase">{sale.createdBy || "System"}</span>
+                            <span className="font-semibold text-xs text-muted-foreground uppercase">{(sale as any).createdBy || "System"}</span>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
