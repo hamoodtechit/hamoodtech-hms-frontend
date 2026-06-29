@@ -27,6 +27,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
   const { formatCurrency } = useCurrency()
+  const { user } = useAuthStore()
   
   const saleId = transaction?.id || (transaction as any)?.sale?.id || (transaction as any)?.data?.sale?.id
   const { data: saleRes, isLoading } = useSale(saleId || "")
