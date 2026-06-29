@@ -272,7 +272,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             const comm = group[0];
                             const dateStr = format(new Date(comm.createdAt), "dd/MM/yyyy");
                             const billId = (comm as any).invoiceNumber || comm.sale?.invoiceNumber || "N/A";
-                            const patName = comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A";
+                            let patName = comm.patientName || (comm as any).sale?.patientName || comm.sale?.patient?.name || "N/A";
+                            const patUhid = comm.sale?.patient?.uhid || comm.sale?.patient?.patientNumber;
+                            if (patUhid) patName = `${patName} [${patUhid}]`;
                             
                             // Use actual sale data directly from the API
                             const saleTotalPrice = Number((comm.sale as any)?.totalPrice || 0);

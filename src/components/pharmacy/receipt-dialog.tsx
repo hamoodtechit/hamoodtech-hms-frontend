@@ -135,10 +135,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
            <div className="flex justify-between">
                 <span>Inv: {invoiceNumber}</span>
-                <span>Type: {(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || "OPD Patient"}</span>
+                <span>UHID: {(data as any)?.patient?.uhid || (data as any)?.patient?.patientNumber || "N/A"}</span>
            </div>
            <div className="flex justify-between">
+                <span>Type: {(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || "OPD Patient"}</span>
                 <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
+           </div>
+           <div className="flex justify-between">
                 <span>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
            </div>
         </div>
@@ -345,12 +348,15 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                         </div>
 
                         <div class="info-grid">
-                            <div class="info-row">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                                 <span>Inv: ${invoiceNumber}</span>
-                                <span>Type: ${(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || "OPD Patient"}</span>
+                                <span>UHID: ${(data as any)?.patient?.uhid || (data as any)?.patient?.patientNumber || "N/A"}</span>
                             </div>
-                            <div class="info-row">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                <span>Type: ${(data as any)?.patient?.name || (data as any)?.patientName || (data as any)?.customerName || 'OPD Patient'}</span>
                                 <span>Date: ${new Date(date).toLocaleDateString('en-GB')}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span>Time: ${new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                         </div>

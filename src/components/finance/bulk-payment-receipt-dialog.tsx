@@ -19,9 +19,10 @@ interface BulkPaymentReceiptDialogProps {
   onOpenChange: (open: boolean) => void
   data: any
   patientName: string
+  patientUhid?: string
 }
 
-export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName }: BulkPaymentReceiptDialogProps) {
+export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName, patientUhid }: BulkPaymentReceiptDialogProps) {
   const { general } = useSettingsStore()
   const { activeBranch } = usePosStore()
   const { formatCurrency } = useCurrency()
@@ -92,6 +93,9 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
               </div>
 
               <div class="info-grid">
+                  <div class="info-row">
+                      <span>UHID: ${patientUhid || 'N/A'}</span>
+                  </div>
                   <div class="info-row">
                       <span>Patient: ${patientName}</span>
                   </div>
@@ -172,7 +176,11 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
           <Separator />
 
           <div className="space-y-3">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">UHID</span>
+              <span className="font-bold">{patientUhid || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Patient Name</span>
               <span className="font-bold">{patientName}</span>
             </div>

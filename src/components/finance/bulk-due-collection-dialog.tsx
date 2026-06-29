@@ -235,6 +235,7 @@ export function BulkDueCollectionDialog({
             }}
             data={paymentResult}
             patientName={patientName}
+            patientUhid={sales[0]?.patient?.uhid || sales[0]?.patient?.patientNumber || "N/A"}
         />
         </>
     )
