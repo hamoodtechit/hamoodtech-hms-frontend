@@ -362,7 +362,7 @@ function SidebarBase() {
             {
               label: "Overall Summary",
               href: "/reports/overall-summary",
-              roles: ["Super Admin"],
+              roles: ["Super Admin", "Admin"],
             },
             {
               label: "Pharmacy Reports",
