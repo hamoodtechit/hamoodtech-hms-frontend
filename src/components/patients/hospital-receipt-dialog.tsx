@@ -301,8 +301,8 @@ export function HospitalReceiptDialog({ open, onOpenChange, transaction, patient
         <div className="mt-12 flex justify-between px-8 relative z-10">
             <div className="text-center space-y-1">
                 <div className="border-t border-black w-48 mx-auto"></div>
-                <span className="text-[12px] font-black uppercase">Prepared By</span>
-                <p className="text-[10px] font-bold text-black italic">{user?.fullName || 'Staff'}</p>
+                <span className="text-[12px] font-black uppercase">Cashier</span>
+                <p className="text-[10px] font-bold text-black italic">{(data as any)?.createdBy || user?.fullName || 'Staff'}</p>
             </div>
             <div className="text-center space-y-1">
                 <div className="border-t border-black w-48 mx-auto"></div>

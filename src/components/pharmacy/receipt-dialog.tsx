@@ -239,7 +239,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         {/* Footer */}
         <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
             <div className={`flex justify-between items-center mb-2 text-left ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
-                <span className="font-black">Served By: {(data as any)?.createdBy || user?.fullName || user?.username || "Admin"}</span>
+                <span className="font-black">Cashier: {(data as any)?.createdBy || user?.fullName || user?.username || "Staff"}</span>
             </div>
             <p className="font-black tracking-wider">THANK YOU FOR VISITING!</p>
             <p className="font-black leading-tight px-4 text-center">Medicines once sold cannot be<br />returned without the receipt.</p>
@@ -415,7 +415,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
 
                         <div class="footer">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 10px;">
-                                <span style="font-weight: 900; text-align: left; text-transform: uppercase;">Served By: ${(data as any)?.createdBy || user?.fullName || user?.username || 'Admin'}</span>
+                                <span style="font-weight: 900; text-align: left; text-transform: uppercase;">Cashier: ${(data as any)?.createdBy || user?.fullName || user?.username || 'Staff'}</span>
                             </div>
                             <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>
                             <p style="font-weight: 900; line-height: 1.4;">Medicines once sold cannot be<br>returned without the receipt.</p>
