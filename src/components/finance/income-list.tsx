@@ -42,7 +42,8 @@ export function IncomeList() {
     
     const deleteMutation = useDeleteIncome()
     
-    const incomes: Income[] = Array.isArray(response?.data) ? response.data : []
+    // Safely extract incomes array regardless of backend wrapper format
+    const incomes: Income[] = response?.data?.incomes || response?.incomes || (Array.isArray(response?.data) ? response.data : [])
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete/void this income? This will reverse the account balance.")) {
