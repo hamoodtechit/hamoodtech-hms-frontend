@@ -54,8 +54,8 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
     const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
     const [note, setNote] = useState("")
 
-    const categories: IncomeCategory[] = categoriesRes?.data?.categories || categoriesRes?.categories || (Array.isArray(categoriesRes?.data) ? categoriesRes.data : [])
-    const accounts: FinanceAccount[] = accountsRes?.data?.accounts || accountsRes?.accounts || accountsRes?.data || (Array.isArray(accountsRes) ? accountsRes : [])
+    const categories: IncomeCategory[] = (categoriesRes as any)?.data?.categories || (categoriesRes as any)?.categories || (Array.isArray(categoriesRes?.data) ? categoriesRes.data : [])
+    const accounts: FinanceAccount[] = (accountsRes as any)?.data?.accounts || (accountsRes as any)?.accounts || (accountsRes as any)?.data || (Array.isArray(accountsRes) ? accountsRes : [])
 
     useEffect(() => {
         if (open) {
