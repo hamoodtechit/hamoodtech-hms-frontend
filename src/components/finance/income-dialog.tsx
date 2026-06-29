@@ -23,7 +23,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCreateIncome, useIncomeCategories } from "@/hooks/income-queries"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useStoreContext } from "@/store/use-store-context"
-import { Income } from "@/types/income"
+import { FinanceAccount } from "@/types/finance"
+import { Income, IncomeCategory } from "@/types/income"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -53,8 +54,8 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
     const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
     const [note, setNote] = useState("")
 
-    const categories = Array.isArray(categoriesRes?.data) ? categoriesRes.data : []
-    const accounts = Array.isArray(accountsRes?.data) ? accountsRes.data : []
+    const categories: IncomeCategory[] = Array.isArray(categoriesRes?.data) ? categoriesRes.data : []
+    const accounts: FinanceAccount[] = Array.isArray(accountsRes?.data) ? accountsRes.data : []
 
     useEffect(() => {
         if (open) {

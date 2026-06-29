@@ -6,7 +6,7 @@ import {
     IncomeQueryParams,
     Income
 } from "@/types/income";
-import { fetcher } from "./api";
+import { api } from "@/lib/api";
 
 const BASE_PATH = "/finance/incomes";
 const CATEGORY_PATH = "/finance/incomes/categories";
@@ -22,19 +22,23 @@ export const incomeService = {
         const queryString = queryParams.toString();
         const url = queryString ? `${CATEGORY_PATH}?${queryString}` : CATEGORY_PATH;
         
-        return await fetcher.get<IncomeCategoryListResponse>(url);
+        const response = await api.get<IncomeCategoryListResponse>(url);
+        return response.data;
     },
 
     createCategory: async (payload: IncomeCategoryPayload) => {
-        return await fetcher.post<{ success: boolean; message: string; data: any }>(CATEGORY_PATH, payload);
+        const response = await api.post<{ success: boolean; message: string; data: any }>(CATEGORY_PATH, payload);
+        return response.data;
     },
 
     updateCategory: async (id: string, payload: Partial<IncomeCategoryPayload>) => {
-        return await fetcher.patch<{ success: boolean; message: string; data: any }>(`${CATEGORY_PATH}/${id}`, payload);
+        const response = await api.patch<{ success: boolean; message: string; data: any }>(`${CATEGORY_PATH}/${id}`, payload);
+        return response.data;
     },
 
     deleteCategory: async (id: string) => {
-        return await fetcher.delete<{ success: boolean; message: string }>(`${CATEGORY_PATH}/${id}`);
+        const response = await api.delete<{ success: boolean; message: string }>(`${CATEGORY_PATH}/${id}`);
+        return response.data;
     },
 
     // Incomes
@@ -52,18 +56,22 @@ export const incomeService = {
         const queryString = queryParams.toString();
         const url = queryString ? `${BASE_PATH}?${queryString}` : BASE_PATH;
 
-        return await fetcher.get<IncomeListResponse>(url);
+        const response = await api.get<IncomeListResponse>(url);
+        return response.data;
     },
 
     getIncome: async (id: string) => {
-        return await fetcher.get<{ success: boolean; message: string; data: Income }>(`${BASE_PATH}/${id}`);
+        const response = await api.get<{ success: boolean; message: string; data: Income }>(`${BASE_PATH}/${id}`);
+        return response.data;
     },
 
     createIncome: async (payload: IncomePayload) => {
-        return await fetcher.post<{ success: boolean; message: string; data: Income }>(BASE_PATH, payload);
+        const response = await api.post<{ success: boolean; message: string; data: Income }>(BASE_PATH, payload);
+        return response.data;
     },
 
     deleteIncome: async (id: string) => {
-        return await fetcher.delete<{ success: boolean; message: string }>(`${BASE_PATH}/${id}`);
+        const response = await api.delete<{ success: boolean; message: string }>(`${BASE_PATH}/${id}`);
+        return response.data;
     }
 };

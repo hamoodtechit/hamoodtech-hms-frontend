@@ -29,7 +29,7 @@ export function IncomeCategoryList() {
     const deleteMutation = useDeleteIncomeCategory()
 
     // API response contains `data` directly or nested, so handle both safely
-    const categories = Array.isArray(response?.data) ? response.data : []
+    const categories: IncomeCategory[] = Array.isArray(response?.data) ? response.data : []
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this category?")) {
