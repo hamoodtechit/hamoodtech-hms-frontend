@@ -22,7 +22,7 @@ import { SearchableSelect } from "@/components/shared/searchable-select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useAddSalePayment } from "@/hooks/sales-queries"
-import { usePayPharmacyDues } from "@/hooks/patient-queries"
+import { usePayPharmacyDues, useProcessHospitalPayment } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Sale } from "@/types/sales"
 import { Loader2, Wallet } from "lucide-react"
@@ -46,7 +46,8 @@ export function BulkDueCollectionDialog({
     onSuccess,
 }: BulkDueCollectionDialogProps) {
     const { formatCurrency } = useCurrency()
-    const payMutation = usePayPharmacyDues()
+    const payPharmacyMutation = usePayPharmacyDues()
+    const payHospitalMutation = useProcessHospitalPayment()
     const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
     const accounts = accountsRes?.data || []
 
@@ -92,14 +93,21 @@ export function BulkDueCollectionDialog({
 
         setIsProcessing(true)
         try {
-            const response = await payMutation.mutateAsync({
+            const isPosSale = sales.some(s => s.type === 'pos');
+            
+            const payload = {
                 patientId,
                 branchId,
                 accountId,
                 amount: payingAmount,
                 paymentMethod,
                 note: note || undefined
-            })
+            };
+            
+            const response = isPosSale 
+                ? await payPharmacyMutation.mutateAsync(payload)
+                : await payHospitalMutation.mutateAsync(payload);
+                
             console.log("Bulk Payment Response:", response)
             
             setPaymentResult(response)
