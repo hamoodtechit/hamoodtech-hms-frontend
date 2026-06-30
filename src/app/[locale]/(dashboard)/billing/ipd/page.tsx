@@ -278,7 +278,7 @@ export default function IPDBillingPage() {
                                             <TableCell className="py-4">
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-rose-500">
-                                                        {formatCurrency(Number(adm.dueAmount || 0))}
+                                                        {formatCurrency(Number(adm.patient?.balance || 0))}
                                                     </span>
                                                 </div>
                                             </TableCell>

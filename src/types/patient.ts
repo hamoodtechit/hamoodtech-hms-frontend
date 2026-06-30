@@ -119,6 +119,7 @@ export interface Patient {
   occupation?: string;
   maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
   nationality?: string;
+  balance?: string | number;
 
   createdAt: string;
   updatedAt: string;
