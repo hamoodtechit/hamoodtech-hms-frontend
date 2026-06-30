@@ -148,11 +148,11 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                  {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img src={data.branch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
              </div>
-            <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || data.branch?.name || "PATWARY GENERAL HOSPITAL"}</h1>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || data.branch?.address || "Hospital Address"}</p>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || data.branch?.phone || "Hospital Phone"}</p>
-            {(general?.email || data.branch?.email) && (
-                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {general?.email || data.branch?.email}</p>
+            <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{data.branch?.name || general?.hospitalName || "PATWARY GENERAL HOSPITAL"}</h1>
+            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{data.branch?.address || general?.address || "Hospital Address"}</p>
+            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {data.branch?.phone || general?.phone || "Hospital Phone"}</p>
+            {(data.branch?.email || general?.email) && (
+                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {data.branch?.email || general?.email}</p>
             )}
             
             <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
