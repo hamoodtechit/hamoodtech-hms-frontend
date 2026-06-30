@@ -45,8 +45,15 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
     const rows = paidSales.map((sale: any) => `
       <tr style="font-size: 10px; border-bottom: 1px dashed #e0e0e0;">
-        <td style="text-align: left; font-weight: 900; padding: 5px 0;">${sale.invoiceNumber}</td>
-        <td style="text-align: right; font-weight: 900; padding: 5px 0;">${Number(sale.paidAmount).toFixed(2)}</td>
+        <td style="text-align: left; font-weight: 900; padding: 5px 0;">
+            ${sale.invoiceNumber}
+            ${sale.saleItems && sale.saleItems.length > 0 ? `
+            <div style="font-size: 8px; font-weight: normal; color: #444; margin-top: 2px;">
+                ${sale.saleItems.map((item: any) => item.itemName).join(', ')}
+            </div>
+            ` : ''}
+        </td>
+        <td style="text-align: right; font-weight: 900; padding: 5px 0; vertical-align: top;">${Number(sale.paidAmount).toFixed(2)}</td>
       </tr>
     `).join('')
 
@@ -196,9 +203,16 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
           <div className="rounded-xl bg-muted/50 p-4 space-y-2 max-h-[150px] overflow-y-auto">
             <p className="text-[10px] font-black uppercase text-muted-foreground mb-2">Invoice Summary</p>
             {paidSales.map((sale: any, idx: number) => (
-              <div key={idx} className="flex justify-between text-xs font-medium">
-                <span>{sale.invoiceNumber}</span>
-                <span>{formatCurrency(sale.paidAmount)}</span>
+              <div key={idx} className="flex flex-col border-b border-border/50 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
+                <div className="flex justify-between text-xs font-bold text-foreground">
+                  <span>{sale.invoiceNumber}</span>
+                  <span className="text-emerald-600">{formatCurrency(sale.paidAmount)}</span>
+                </div>
+                {sale.saleItems && sale.saleItems.length > 0 && (
+                  <span className="text-[9px] font-medium text-muted-foreground mt-0.5 line-clamp-2 leading-tight">
+                    {sale.saleItems.map((item: any) => item.itemName).join(', ')}
+                  </span>
+                )}
               </div>
             ))}
           </div>
