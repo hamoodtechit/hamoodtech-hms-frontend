@@ -10,7 +10,8 @@ import {
   DischargeInitiateData,
   DischargePayload,
   PharmacyPaymentPayload,
-  HospitalPaymentPayload
+  HospitalPaymentPayload,
+  BulkSalePaymentPayload
 } from '@/types/patient';
 import { api } from '@/lib/api';
 
@@ -88,6 +89,11 @@ export const patientService = {
 
   processHospitalPayment: async (data: HospitalPaymentPayload): Promise<{ success: boolean; message: string; data: any }> => {
     const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/hospital-payment', data);
+    return response.data;
+  },
+
+  processBulkSalePayment: async (data: BulkSalePaymentPayload): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await api.post<{ success: boolean; message: string; data: any }>('/patients/bulk-sale-payment', data);
     return response.data;
   },
 };

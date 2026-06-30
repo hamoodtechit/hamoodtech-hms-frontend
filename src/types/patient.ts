@@ -248,3 +248,14 @@ export interface HospitalPaymentPayload {
   paymentMethod: string;
   note?: string;
 }
+
+export interface BulkSalePaymentPayload {
+  patientId: string;
+  accountId: string;
+  paymentMethod: string;
+  note?: string;
+  payments: {
+    saleId: string;
+    amount: number;
+  }[];
+}

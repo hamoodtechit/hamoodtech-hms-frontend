@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table"
 import { useBeds } from "@/hooks/facility-queries"
 import { useAdmissions, usePatients, useDeleteAdmission } from "@/hooks/patient-queries"
+import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { Admission, AdmissionQueryParams, AdmissionStatus } from "@/types/patient"
 import { format } from "date-fns"
@@ -70,6 +71,7 @@ export default function IPDBillingPage() {
     const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
 
     const router = useRouter()
+    const { formatCurrency } = useCurrency()
     const { activeStoreId } = useStoreContext()
 
     const isValidBranchId = activeStoreId && activeStoreId !== 'default-branch'
@@ -202,6 +204,7 @@ export default function IPDBillingPage() {
                                     <TableHead className="h-10 text-center">Admission Date</TableHead>
                                     <TableHead className="h-10">Guardian / Info</TableHead>
                                     <TableHead className="h-10">Status</TableHead>
+                                    <TableHead className="h-10">Balance</TableHead>
                                     <TableHead className="text-right pr-6 h-10">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -272,7 +275,14 @@ export default function IPDBillingPage() {
                                             <TableCell>
                                                 {getStatusBadge(adm.status)}
                                             </TableCell>
-                                            <TableCell className="text-right pr-6">
+                                            <TableCell className="py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-rose-500">
+                                                        {formatCurrency(Number(adm.dueAmount || 0))}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Button 
                                                         variant="ghost" 

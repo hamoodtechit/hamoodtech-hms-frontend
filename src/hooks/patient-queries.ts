@@ -5,7 +5,8 @@ import {
   PatientQueryParams,
   DischargePayload,
   PharmacyPaymentPayload,
-  HospitalPaymentPayload
+  HospitalPaymentPayload,
+  BulkSalePaymentPayload
 } from "@/types/patient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { patientService } from "@/services/patient-service";
@@ -147,6 +148,17 @@ export function useProcessHospitalPayment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: HospitalPaymentPayload) => patientService.processHospitalPayment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+    },
+  });
+}
+
+export function useProcessBulkSalePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkSalePaymentPayload) => patientService.processBulkSalePayment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
