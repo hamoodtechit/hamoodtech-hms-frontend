@@ -239,3 +239,12 @@ export interface PharmacyPaymentPayload {
   paymentMethod: string;
   note?: string;
 }
+
+export interface HospitalPaymentPayload {
+  patientId: string;
+  branchId: string;
+  amount: number;
+  accountId: string;
+  paymentMethod: string;
+  note?: string;
+}

@@ -4,7 +4,8 @@ import {
   PatientPayload, 
   PatientQueryParams,
   DischargePayload,
-  PharmacyPaymentPayload
+  PharmacyPaymentPayload,
+  HospitalPaymentPayload
 } from "@/types/patient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { patientService } from "@/services/patient-service";
@@ -135,6 +136,17 @@ export function useCompleteDischarge() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: PharmacyPaymentPayload) => patientService.payPharmacyDues(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
+    },
+  });
+}
+
+export function useProcessHospitalPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: HospitalPaymentPayload) => patientService.processHospitalPayment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
