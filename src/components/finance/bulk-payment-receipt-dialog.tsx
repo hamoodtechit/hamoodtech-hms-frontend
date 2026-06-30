@@ -86,7 +86,6 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
               <div class="header">
                   <img src="${branchLogo}" style="height: 60px; margin-bottom: 5px;">
                   <h1 class="hospital-name">${hospitalName}</h1>
-                  <div class="tag">BULK PAYMENT RECEIPT</div>
                   <div class="contact-info">${address}</div>
                   <div class="contact-info">Phone: ${phone}</div>
                   ${email ? `<div class="contact-info">Email: ${email}</div>` : ''}
