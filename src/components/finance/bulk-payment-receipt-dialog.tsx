@@ -48,6 +48,11 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
   const paymentData = data.data || data
   const paidSales = paymentData.paidSales || []
+  
+  const firstPatient = paidSales[0]?.patient
+  const derivedPatientUhid = patientUhid && patientUhid !== "N/A" ? patientUhid : (firstPatient?.uhid || firstPatient?.patientNumber || "N/A")
+  const derivedPatientName = patientName && patientName !== "N/A" ? patientName : (firstPatient?.name || "N/A")
+
   const totalPaid = paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
   const date = new Date().toISOString()
   const amountInWords = numberToWords(totalPaid) + " TAKA ONLY"
@@ -90,10 +95,10 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
         <div className="border border-black mb-2 relative z-10 mt-2 text-[13px]">
             <div className="grid grid-cols-2 border-b border-black">
                 <div className="p-1 px-3 border-r border-black font-bold flex items-center">
-                    UHID : {patientUhid || 'N/A'}
+                    UHID : {derivedPatientUhid}
                 </div>
                 <div className="p-1 px-3 flex items-center font-bold">
-                    <span>Patient : {patientName || 'N/A'}</span>
+                    <span>Patient : {derivedPatientName}</span>
                 </div>
             </div>
             <div className="grid grid-cols-1 border-b border-black">
@@ -208,7 +213,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
     iframeDoc.write(`
         <html>
             <head>
-                <title>Bulk Payment Receipt - \${patientName}</title>
+                <title>Bulk Payment Receipt - ${derivedPatientName}</title>
                 <style>
                     @page { size: A4; margin: 0; }
                     body { 
