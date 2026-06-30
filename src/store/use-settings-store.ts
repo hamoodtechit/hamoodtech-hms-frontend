@@ -25,17 +25,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     error: null,
 
     fetchSettings: async () => {
-        const user = useAuthStore.getState().user
-        const hasSettingsAccess = user?.role?.name === 'Super Admin' || 
-                                user?.role?.name === 'Admin' || 
-                                user?.role?.name === 'PRO ADMIN' ||
-                                user?.role?.permissions?.some(p => p.key === 'settings:read') ||
-                                user?.permissions?.includes('*');
-
-        if (!hasSettingsAccess) {
-            // If no access, we just don't fetch. UI should handle nulls gracefully.
-            return
-        }
+        // Everyone needs access to read basic settings (like hospital name for receipts)
 
         try {
             set({ loading: true, error: null });
