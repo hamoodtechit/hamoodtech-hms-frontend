@@ -39,7 +39,8 @@ import {
     Search, 
     Trash2,
     UserCheck,
-    ClipboardCheck
+    ClipboardCheck,
+    CreditCard
 } from "lucide-react"
 import { 
     AlertDialog, 
@@ -52,6 +53,7 @@ import {
     AlertDialogTitle 
 } from "@/components/ui/alert-dialog"
 import { useState } from "react"
+import { useRouter } from "@/i18n/navigation"
 
 export default function IPDBillingPage() {
     const [page, setPage] = useState(1)
@@ -67,6 +69,7 @@ export default function IPDBillingPage() {
     const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
 
+    const router = useRouter()
     const { activeStoreId } = useStoreContext()
 
     const isValidBranchId = activeStoreId && activeStoreId !== 'default-branch'
@@ -307,6 +310,18 @@ export default function IPDBillingPage() {
                                                         }}
                                                     >
                                                         <Plus className="h-4 w-4 transition-all group-hover/btn:scale-110" />
+                                                    </Button>
+
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-9 w-9 rounded-xl hover:bg-orange-500/20 hover:text-orange-500 transition-all group/btn bg-orange-500/5 border border-orange-500/10"
+                                                        title="Collect Dues"
+                                                        onClick={() => {
+                                                            router.push(`/patients/${adm.patientId}/due-payment`)
+                                                        }}
+                                                    >
+                                                        <CreditCard className="h-4 w-4 transition-all group-hover/btn:scale-110" />
                                                     </Button>
 
                                                     <Button 

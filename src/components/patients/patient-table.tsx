@@ -381,13 +381,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                                                         }}
                                                     >
                                                         <CreditCard className="mr-3 h-4 w-4 text-emerald-500" /> 
-                                                        <span className="font-medium">Collect Pharmacy Dues</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="rounded-md" asChild>
-                                                        <Link href={`/patients/${patient.id}/due-payment`}>
-                                                            <CreditCard className="mr-3 h-4 w-4 text-primary" /> 
-                                                            <span className="font-medium">Collect Hospital Dues</span>
-                                                        </Link>
+                                                        <span className="font-medium">Collect Dues</span>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1" />
                                                     <DropdownMenuItem className="rounded-md" asChild>
