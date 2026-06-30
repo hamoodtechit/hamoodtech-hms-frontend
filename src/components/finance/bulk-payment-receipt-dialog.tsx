@@ -7,27 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { useAuthStore } from "@/store/use-auth-store"
-import { Printer, CheckCircle2, X } from "lucide-react"
-
-// Simple number to words converter for BDT/Taka
-function numberToWords(num: number): string {
-  if (num === 0) return "ZERO";
-  const a = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
-  const b = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
-  const inWords = (n: number): string => {
-    if (n < 20) return a[n];
-    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
-    if (n < 1000) return a[Math.floor(n / 100)] + " HUNDRED" + (n % 100 !== 0 ? " " + inWords(n % 100) : "");
-    if (n < 100000) return inWords(Math.floor(n / 1000)) + " THOUSAND" + (n % 1000 !== 0 ? " " + inWords(n % 1000) : "");
-    if (n < 10000000) return inWords(Math.floor(n / 100000)) + " LAKH" + (n % 100000 !== 0 ? " " + inWords(n % 100000) : "");
-    return inWords(Math.floor(n / 10000000)) + " CRORE" + (n % 10000000 !== 0 ? " " + inWords(n % 10000000) : "");
-  };
-  return inWords(Math.floor(num));
-}
+import { Printer } from "lucide-react"
 
 interface BulkPaymentReceiptDialogProps {
   open: boolean
@@ -55,340 +40,278 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
   const totalPaid = paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
   const date = new Date().toISOString()
-  const amountInWords = numberToWords(totalPaid) + " TAKA ONLY"
+  const branchLogo = activeBranch?.logoUrl || "/Logo.png"
+  const hospitalName = general?.hospitalName || activeBranch?.name || "Hospital Name"
+  const address = general?.address || activeBranch?.address || "Hospital Address"
+  const phone = general?.phone || activeBranch?.phone || "Phone"
+  const email = general?.email || activeBranch?.email || ""
 
-  const ReceiptContent = ({ copyTitle }: { copyTitle: string }) => (
-    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
-        <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
-
-        {/* PAID/DUE Stamps */}
-        <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
-            <div className="text-[80px] font-black uppercase text-green-600 -rotate-[25deg] border-[8px] border-green-600 px-8 py-2 rounded-[20px] tracking-[10px]">
-                PAID
-            </div>
-        </div>
-
-        {/* Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
-             <div className="flex justify-center" style={{ marginBottom: '2px' }}>
-                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                 <img src={activeBranch?.logoUrl || "/Logo.png"} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
-             </div>
-            <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || activeBranch?.name || "HOSPITAL"}</h1>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{general?.address || activeBranch?.address || "Hospital Address"}</p>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {general?.phone || activeBranch?.phone || "Hospital Phone"}</p>
-            {(general?.email || activeBranch?.email) && (
-                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {general?.email || activeBranch?.email}</p>
-            )}
-            
-            <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
-                {activeBranch?.licenseNumber && <span>License No: {activeBranch?.licenseNumber}</span>}
-                {activeBranch?.taxRegistration && <span>TX Registration No: {activeBranch?.taxRegistration}</span>}
-            </div>
-
-            <div className="mt-2 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
-                {copyTitle}
-            </div>
-        </div>
-
-        {/* Info Table Box */}
-        <div className="border border-black mb-2 relative z-10 mt-2 text-[13px]">
-            <div className="grid grid-cols-2 border-b border-black">
-                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
-                    UHID : {derivedPatientUhid}
-                </div>
-                <div className="p-1 px-3 flex items-center font-bold">
-                    <span>Patient : {derivedPatientName}</span>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex flex-wrap items-center">
-                    <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
-                </div>
-            </div>
-            <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex items-center">
-                    <span className="shrink-0 w-32">Payment Mode :</span>
-                    <span className="uppercase text-[12px]">{paymentData.paymentMethod || "CASH"}</span>
-                </div>
-            </div>
-            {paymentData.note && (
-            <div className="p-1 px-3 font-bold flex items-center border-b border-black">
-                <span className="shrink-0 w-32 uppercase">Remarks :</span>
-                <span className="italic">{paymentData.note}</span>
-            </div>
-            )}
-        </div>
-
-        {/* Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2 text-[13px]">
-            <thead>
-                <tr style={{ borderBottom: '2px solid black' }} className="font-black">
-                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Invoice Number</th>
-                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items Details</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount Paid</th>
-                </tr>
-            </thead>
-            <tbody>
-                {paidSales.map((sale: any, idx: number) => {
-                    return (
-                        <tr key={idx} style={{ borderBottom: '1px dashed #ccc' }}>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '700', verticalAlign: 'top' }}>{sale.invoiceNumber}</td>
-                            <td style={{ padding: '6px 4px', fontSize: '10px', fontWeight: '600', color: '#444' }}>
-                                {sale.saleItems && sale.saleItems.length > 0 
-                                    ? sale.saleItems.map((item: any) => item.itemName).join(', ')
-                                    : 'Bulk Settlement'}
-                            </td>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top' }}>{Number(sale.paidAmount).toFixed(2)}</td>
-                        </tr>
-                    )
-                })}
-            </tbody>
-        </table>
-
-        {/* Financial Settlement */}
-        <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
-            <div className="pt-2 pl-4">
-            </div>
-            <div className="w-[300px]">
-                <div className="flex justify-between py-1 px-2 font-black text-[14px]" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
-                    <span>Total Paid:</span>
-                    <span>{totalPaid.toFixed(2)} ৳</span>
-                </div>
-                {paymentData.newPatientBalance !== undefined && (
-                <div className="flex justify-between py-1 px-2 font-black mt-1" style={{ color: '#444', borderBottom: '1px solid #ccc' }}>
-                    <span>New Account Balance:</span>
-                    <span>{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
-                </div>
+  const ReceiptContent = ({ isPrinting = false }: { isPrinting?: boolean }) => {
+    return (
+    <div className={`p-2 ${isPrinting ? 'space-y-1' : 'space-y-3'} pb-6 print:pb-0 relative`}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
+             <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={branchLogo} alt="Logo" style={{ height: '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+              </div>
+            <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{hospitalName}</h2>
+            <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Bulk Payment Receipt</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
+                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{address}</p>
+                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {phone}</p>
+                {email && (
+                    <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {email}</p>
                 )}
             </div>
         </div>
 
-        {/* In Words */}
-        <div className="mt-2 px-8 relative z-10">
-            <div className="border border-black p-2 bg-gray-50/50 font-black text-[12px]">
-                <span className="uppercase opacity-50">In Words: </span>
-                <span className="uppercase">{amountInWords}</span>
-            </div>
+        <Separator className="border-black/20" />
+
+        {/* Info Grid */}
+        <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
+           <div className="flex justify-between">
+                <span>UHID: {derivedPatientUhid}</span>
+           </div>
+           <div className="flex justify-between">
+                <span>Patient: {derivedPatientName}</span>
+                <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
+           </div>
+           <div className="flex justify-between">
+                <span>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+           </div>
         </div>
 
-        {/* Signature */}
-        <div className="mt-12 flex justify-between px-8 relative z-10">
-            <div className="text-center space-y-1">
-                <div className="border-t border-black w-48 mx-auto"></div>
-                <span className="text-[12px] font-black uppercase">Prepared By</span>
-                <p className="text-[10px] font-bold text-black italic">{paymentData.createdBy || user?.fullName || 'Staff'}</p>
+        <Separator className={isPrinting ? "border-black/40" : "border-black/20"} />
+
+        {/* Items Table */}
+        <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
+            <div className={`grid grid-cols-12 ${isPrinting ? 'text-[7.5px] mt-0.5' : 'text-[10px] mt-1'} font-bold border-b border-black/40 pb-0.5 uppercase tracking-tighter`}>
+                <div className="col-span-8">INVOICE & ITEMS</div>
+                <div className="col-span-4 text-right">AMT PAID</div>
             </div>
-            <div className="text-center space-y-1">
-                <div className="border-t border-black w-48 mx-auto"></div>
-                <span className="text-[12px] font-black uppercase">Authorized By</span>
-            </div>
+            {paidSales.map((sale: any, idx: number) => {
+                  return (
+                    <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
+                        <div className="col-span-8 pr-1">
+                            <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{sale.invoiceNumber}</span>
+                            {sale.saleItems && sale.saleItems.length > 0 && (
+                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
+                                    {sale.saleItems.map((item: any) => item.itemName).join(', ')}
+                                </span>
+                            )}
+                        </div>
+                        <div className="col-span-4 text-right font-black text-black">
+                            {Number(sale.paidAmount).toFixed(2)}
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+
+        <Separator className="border-dashed border-black/20" />
+
+        {/* Totals Section */}
+        <div className={`${isPrinting ? 'space-y-0.5 text-[8.5px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-bold`}>
+             <div className="flex">
+                 <span className={isPrinting ? "w-24" : "w-32"}>Total Paid</span>
+                 <span className="w-4">:</span>
+                 <span className="flex-1 text-right">{totalPaid.toFixed(2)} ৳</span>
+             </div>
+             
+             {paymentData.newPatientBalance !== undefined && (
+                  <div className="flex">
+                      <span className={isPrinting ? "w-24" : "w-32"}>New Balance</span>
+                      <span className="w-4">:</span>
+                      <span className="flex-1 text-right">{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
+                  </div>
+             )}
         </div>
         
-        <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
-            <span>*Powered by HamoodTech</span>
-            <span>Printed: {new Date().toLocaleString('en-GB')}</span>
-        </div>
+        <Separator className="border-black/20" />
+        
+        {/* Payment Note Section */}
+        {paymentData.note && (
+            <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
+                <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
+                <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
+                    {paymentData.note}
+                </span>
+            </div>
+        )}
+
+        {/* Footer */}
+        <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
+            <div className={`flex justify-between items-center mb-2 text-left ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
+                <span className="font-black">Billing By: {paymentData.createdBy || user?.fullName || user?.username || "Staff"}</span>
+            </div>
+            <p className="font-black tracking-wider">THANK YOU FOR VISITING!</p>
+            <p className={`${isPrinting ? 'text-[7px] pt-1' : 'text-[10px] pt-2'} font-black text-black normal-case`}>*Powered by HamoodTech.</p>
         </div>
     </div>
-  )
+  )}
 
   const handlePrint = () => {
-    const printContent = document.getElementById('bulk-receipt-content')?.innerHTML;
-    if (!printContent) return
+    const rows = paidSales.map((sale: any) => {
+        const itemsList = sale.saleItems && sale.saleItems.length > 0 
+            ? sale.saleItems.map((item: any) => item.itemName).join(', ')
+            : '';
+        return `
+            <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
+            <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1; width: 70%;">
+                <span style="font-size: 11.5px; display: block;">${sale.invoiceNumber}</span>
+                ${itemsList ? `<span style="font-size: 7.5px; font-weight: 900; color: black; text-transform: uppercase;">${itemsList}</span>` : ''}
+            </td>
+            <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px; width: 30%;">${Number(sale.paidAmount).toFixed(2)}</td>
+            </tr>
+        `;
+    }).join('');
 
-    const iframe = document.createElement('iframe')
-    iframe.style.position = 'fixed'
-    iframe.style.right = '100%'
-    iframe.style.bottom = '100%'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = 'none'
-    document.body.appendChild(iframe)
-
-    const iframeDoc = iframe.contentWindow?.document
-    if (!iframeDoc) return
-
-    iframeDoc.open()
-    iframeDoc.write(`
+    const printableHtml = `
+        <!DOCTYPE html>
         <html>
-            <head>
-                <title>Bulk Payment Receipt - ${derivedPatientName}</title>
-                <style>
-                    @page { size: A4; margin: 0; }
-                    body { 
-                        font-family: Arial, sans-serif; 
-                        -webkit-print-color-adjust: exact; 
-                        print-color-adjust: exact;
-                        margin: 0;
-                        padding: 0;
-                        display: flex;
-                        justify-content: center;
-                        background: #f5f5f5;
-                                    * { box-sizing: border-box !important; }
-                    .print-container {
-                        width: 185mm;
-                        background: white;
-                        padding: 0;
-                        margin: 0 auto;
-                        display: block;
-                    }
-                    /* Reset/normalize some Tailwind styles for absolute consistency */
-                    .border { border: 1px solid black !important; }
-                    .border-dashed { border-style: solid !important; border-width: 1px !important; }
-                    .border-dotted { border-style: solid !important; }
-                    .border-black { border-color: black !important; }
-                    .page-break { 
-                        page-break-after: always !important; 
-                        break-after: page !important;
-                        height: 0 !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        display: block !important;
-                    }
-                    
-                    .border-t-0 { border-top-width: 0 !important; }
-                    .border-b-0 { border-bottom-width: 0 !important; }
-                    .border-r-0 { border-right-width: 0 !important; }
-                    .border-l-0 { border-left-width: 0 !important; }
-                    
-                    .border-b { border-bottom-width: 1px !important; }
-                    .border-r { border-right-width: 1px !important; }
-                    .border-t { border-top-width: 1px !important; }
-                    .border-y { border-top-width: 1px !important; border-bottom-width: 1px !important; }
-                    
-                    .grid { display: grid !important; }
-                    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-                    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-                    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-                    .flex { display: flex !important; }
-                    .flex-wrap { flex-wrap: wrap !important; }
-                    .flex-col { flex-direction: column !important; }
-                    .justify-center { justify-content: center !important; }
-                    .justify-between { justify-content: space-between !important; }
-                    .items-center { align-items: center !important; }
-                    .items-start { align-items: flex-start !important; }
-                    .items-end { align-items: flex-end !important; }
-                    .gap-1 { gap: 0.25rem !important; }
-                    .gap-2 { gap: 0.5rem !important; }
-                    .gap-3 { gap: 0.75rem !important; }
-                    .gap-4 { gap: 1rem !important; }
-                    .gap-6 { gap: 1.5rem !important; }
-                    .gap-8 { gap: 2rem !important; }
-                    .p-1 { padding: 0.25rem !important; }
-                    .p-2 { padding: 0.5rem !important; }
-                    .p-4 { padding: 1rem !important; }
-                    .p-8 { padding: 2rem !important; }
-                    .px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-                    .px-6 { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
-                    .px-8 { padding-left: 2rem !important; padding-right: 2rem !important; }
-                    .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
-                    .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
-                    .pt-2 { padding-top: 0.5rem !important; }
-                    .mb-0 { margin-bottom: 0 !important; }
-                    .mb-1 { margin-bottom: 0.25rem !important; }
-                    .mb-2 { margin-bottom: 0.5rem !important; }
-                    .mt-1 { margin-top: 0.25rem !important; }
-                    .mt-2 { margin-top: 0.5rem !important; }
-                    .mt-4 { margin-top: 1rem !important; }
-                    .mt-12 { margin-top: 3rem !important; }
-                    .mx-1 { margin-left: 0.25rem !important; margin-right: 0.25rem !important; }
-                    .mx-2 { margin-left: 0.5rem !important; margin-right: 0.5rem !important; }
-                    .mx-8 { margin-left: 2rem !important; margin-right: 2rem !important; }
-                    .mr-2 { margin-right: 0.5rem !important; }
-                    .mr-8 { margin-right: 2rem !important; }
-                    .w-12 { width: 3rem !important; }
-                    .w-24 { width: 6rem !important; }
-                    .w-32 { width: 8rem !important; }
-                    .w-48 { width: 12rem !important; }
-                    .w-full { width: 100% !important; }
-                    .flex-1 { flex: 1 1 0% !important; }
-                    .shrink-0 { flex-shrink: 0 !important; }
-                    .text-center { text-align: center !important; }
-                    .text-right { text-align: right !important; }
-                    .text-green-600 { color: #16a34a !important; }
-                    .text-red-600 { color: #dc2626 !important; }
-                    .text-\\[8px\\] { font-size: 8px !important; }
-                    .text-\\[10px\\] { font-size: 10px !important; }
-                    .text-\\[11px\\] { font-size: 11px !important; }
-                    .text-\\[12px\\] { font-size: 12px !important; }
-                    .text-\\[13px\\] { font-size: 13px !important; }
-                    .text-\\[14px\\] { font-size: 14px !important; }
-                    .text-\\[22px\\] { font-size: 22px !important; }
-                    .text-\\[80px\\] { font-size: 80px !important; }
-                    .text-sm { font-size: 0.875rem !important; }
-                    .font-bold { font-weight: 700 !important; }
-                    .font-black { font-weight: 900 !important; }
-                    .font-medium { font-weight: 500 !important; }
-                    .uppercase { text-transform: uppercase !important; }
-                    .italic { font-style: italic !important; }
-                    .tracking-widest { letter-spacing: 0.1em !important; }
-                    .tracking-\\[10px\\] { letter-spacing: 10px !important; }
-                    .rounded-full { border-radius: 9999px !important; }
-                    .rounded-\\[20px\\] { border-radius: 20px !important; }
-                    .border-2 { border-width: 2px !important; }
-                    .border-8 { border-width: 8px !important; }
-                    .opacity-\\[0\\.15\\] { opacity: 0.15 !important; }
-                    .opacity-50 { opacity: 0.5 !important; }
-                    .opacity-70 { opacity: 0.7 !important; }
-                    .z-0 { z-index: 0 !important; }
-                    .z-10 { z-index: 10 !important; }
-                    .top-\\[20\\%\\] { top: 20% !important; }
-                    .right-\\[10\\%\\] { right: 10% !important; }
-                    .relative { position: relative !important; }
-                    .absolute { position: absolute !important; }
-                    .-rotate-\\[25deg\\] { transform: rotate(-25deg) !important; }
-                    .bg-gray-50 { background-color: #f9fafb !important; }
-                    .bg-white { background-color: #ffffff !important; }
-                    
-                    .whitespace-nowrap { white-space: nowrap !important; }
-                    .border-t-2 { border-top: 2px solid black !important; }
-                    .space-y-1 > * + * { margin-top: 0.25rem !important; }
-                    body { margin: 0 !important; padding: 0 !important; }
-                    @page { margin: 0; }
-                </style>
-            </head>
-            <body>
-                <div class="print-container">
-                    \${printContent}
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                @page { size: 80mm auto; margin: 0; }
+                body { 
+                    font-family: 'Courier New', Courier, monospace; 
+                    width: 80mm; 
+                    margin: 0; 
+                    padding: 5mm; 
+                    box-sizing: border-box;
+                    color: black;
+                    background: white;
+                    line-height: 1.2;
+                }
+                .container { width: 100%; display: flex; flex-direction: column; align-items: center; }
+                .header { text-align: center; margin-bottom: 10px; width: 100%; }
+                .hospital-name { font-size: 18px; font-weight: 900; margin: 0; text-transform: uppercase; }
+                .pharmacy-tag { font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #444; margin: 2px 0; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 2px 0; }
+                .contact-info { font-size: 10px; font-weight: bold; margin: 2px 0; }
+                .info-grid { width: 100%; border-top: 1px solid black; border-bottom: 1px solid black; padding: 5px 0; margin-top: 5px; font-size: 11px; font-weight: bold; }
+                .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                .items-table th { font-size: 10px; border-bottom: 2px solid black; padding-bottom: 2px; text-align: left; }
+                .totals-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-weight: 900; font-size: 13px; }
+                .totals-table td { padding: 2px 0; }
+                .footer { text-align: center; margin-top: 15px; border-top: 1px dashed black; padding-top: 10px; font-size: 10px; text-transform: uppercase; }
+                .separator { border-top: 1px dashed #ccc; margin: 5px 0; }
+                .label-col { width: 50%; }
+                .colon-col { width: 15px; text-align: center; }
+                .value-col { text-align: right; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img src="${branchLogo}" style="height: 60px; margin-bottom: 5px;">
+                    <h1 class="hospital-name">${hospitalName}</h1>
+                    <div class="pharmacy-tag">BULK PAYMENT</div>
+                        <div class="contact-info">${address}</div>
+                        <div class="contact-info">Phone: ${phone}</div>
+                        ${email ? `<div class="contact-info">Email: ${email}</div>` : ''}
                 </div>
-            </body>
-        </html>
-    `)
-    iframeDoc.close()
 
-    setTimeout(() => {
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
+                <div class="info-grid">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <span>UHID: ${derivedPatientUhid}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <span>Patient: ${derivedPatientName}</span>
+                        <span>Date: ${new Date(date).toLocaleDateString('en-GB')}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Time: ${new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 70%;">INVOICE & ITEMS</th>
+                            <th style="width: 30%; text-align: right;">AMT PAID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+
+                <div style="border-top: 1px dashed black; margin-top: 5px;"></div>
+
+                <table class="totals-table">
+                    <tr style="font-size: 15px; color: black;">
+                        <td class="label-col">Total Paid</td>
+                        <td class="colon-col">:</td>
+                        <td class="value-col">${totalPaid.toFixed(2)} ৳</td>
+                    </tr>
+                    ${paymentData.newPatientBalance !== undefined ? `
+                    <tr>
+                        <td class="label-col">New Balance</td>
+                        <td class="colon-col">:</td>
+                        <td class="value-col">${Number(paymentData.newPatientBalance).toFixed(2)} ৳</td>
+                    </tr>` : ''}
+                </table>
+
+                ${paymentData.note ? `
+                <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
+                    <span style="text-transform: uppercase; font-size: 9px; font-weight: 900; color: black;">Note:</span>
+                    <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${paymentData.note}</span>
+                </div>` : ''}
+
+                <div class="footer">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 10px;">
+                        <span style="font-weight: 900; text-align: left; text-transform: uppercase;">Billing By: ${paymentData.createdBy || user?.fullName || user?.username || 'Staff'}</span>
+                    </div>
+                    <p style="font-weight: 900; margin-bottom: 5px;">THANK YOU FOR VISITING!</p>
+                    <p style="margin-top: 10px; font-weight: 900; color: black; text-transform: none;">*Powered by HamoodTech.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(printableHtml);
+        iframeDoc.close();
+        
         setTimeout(() => {
-            document.body.removeChild(iframe)
-        }, 1000)
-    }, 800)
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-white border-none shadow-2xl light max-h-[95vh]">
-        <div className="p-4 border-b flex justify-between items-center bg-gray-50/80 backdrop-blur text-slate-900">
-            <DialogTitle className="text-xl font-black flex items-center gap-2 text-slate-900">
-                <Printer className="w-5 h-5 text-blue-600" />
-                Bulk Payment Receipt
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-                <Button onClick={handlePrint} size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20">
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print Receipt
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-500 hover:bg-black/5" onClick={() => onOpenChange(false)}>
-                    <X className="w-4 h-4" />
-                </Button>
-            </div>
-        </div>
+      <DialogContent className="max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none print:max-w-none print:w-[80mm] print:mx-auto">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Receipt</DialogTitle>
+        </DialogHeader>
         
-        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 bg-white text-black" id="bulk-receipt-content" style={{ width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
-            <ReceiptContent copyTitle="BULK PAYMENT — OFFICE COPY" />
-            <div className="page-break" />
-            <ReceiptContent copyTitle="BULK PAYMENT — CUSTOMER COPY" />
+        <div className="p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white" id="receipt-content">
+            <ReceiptContent />
+        </div>
+
+        <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
+          <Button 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+            onClick={handlePrint}
+          >
+            <Printer className="mr-2 h-4 w-4" /> Print Receipt
+          </Button>
+          <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+             Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
