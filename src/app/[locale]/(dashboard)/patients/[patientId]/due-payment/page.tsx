@@ -143,20 +143,17 @@ export default function HospitalDuePaymentPage({
     }
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col p-6">
+        <div className="h-[calc(100vh-4rem)] flex flex-col p-4 md:p-6 pb-0 md:pb-0 gap-4">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-10 w-10 rounded-lg hover:bg-muted">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-10 w-10 rounded-lg hover:bg-muted shrink-0">
                         <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/5">
-                        <Building2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight">Hospital Dues</h1>
-                        <p className="text-xs font-bold text-muted-foreground/70 uppercase tracking-widest mt-1">
-                            Managing IPD / Hospital dues for <span className="text-primary">{patientName}</span>
+                    <div className="flex flex-col">
+                        <h1 className="text-2xl font-black tracking-tight">{patientName}</h1>
+                        <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest mt-0.5">
+                            Due Payments
                         </p>
                     </div>
                 </div>
@@ -173,13 +170,7 @@ export default function HospitalDuePaymentPage({
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-card rounded-xl shadow-sm border flex flex-col overflow-hidden min-h-0">
-                <div className="p-6 pb-4 border-b border-border/50">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Receipt className="h-4 w-4" />
-                        Pending Master Folios
-                    </h3>
-                </div>
+            <div className="flex-1 bg-card rounded-t-xl shadow-sm border border-b-0 flex flex-col overflow-hidden min-h-0">
                 
                 <ScrollArea className="flex-1">
                     {isLoadingSales ? (
