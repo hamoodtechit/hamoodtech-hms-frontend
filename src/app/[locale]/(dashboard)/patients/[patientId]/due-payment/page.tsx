@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { BulkDueCollectionDialog } from "@/components/finance/bulk-due-collection-dialog"
+import { BulkPaymentReceiptDialog } from "@/components/finance/bulk-payment-receipt-dialog"
 
 export default function HospitalDuePaymentPage({
     params,
@@ -46,6 +47,7 @@ export default function HospitalDuePaymentPage({
     const [paymentAmounts, setPaymentAmounts] = useState<Record<string, number>>({})
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
     const [bulkDueDialogOpen, setBulkDueDialogOpen] = useState(false)
+    const [paymentResult, setPaymentResult] = useState<any>(null)
 
     const { data: dueBillsRes, isLoading: isLoadingSales, refetch } = usePatientDueBills(patientId)
     const sales = dueBillsRes?.data || []
@@ -124,12 +126,14 @@ export default function HospitalDuePaymentPage({
             onSuccess: (res) => {
                 if (res.success) {
                     toast.success("Payment successful!")
+                    setPaymentResult(res)
                     // Deselect if it was selected
                     setSelectedIds(prev => {
                         const next = new Set(prev)
                         next.delete(saleId)
                         return next
                     })
+                    refetch()
                 }
             },
             onError: (error: any) => {
@@ -302,6 +306,18 @@ export default function HospitalDuePaymentPage({
                     setSelectedIds(new Set())
                     refetch()
                 }}
+            />
+
+            <BulkPaymentReceiptDialog
+                open={!!paymentResult}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setPaymentResult(null)
+                    }
+                }}
+                data={paymentResult}
+                patientName={patientName}
+                patientUhid={patientRes?.data?.uhid || patientRes?.data?.patientNumber || "N/A"}
             />
         </div>
     )
