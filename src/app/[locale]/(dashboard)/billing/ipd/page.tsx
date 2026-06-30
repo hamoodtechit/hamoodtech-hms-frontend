@@ -315,7 +315,8 @@ export default function IPDBillingPage() {
                                                     <Button 
                                                         variant="ghost" 
                                                         size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-orange-500/20 hover:text-orange-500 transition-all group/btn bg-orange-500/5 border border-orange-500/10"
+                                                        className="h-9 w-9 rounded-xl hover:bg-orange-500/20 hover:text-orange-500 transition-all group/btn bg-orange-500/5 border border-orange-500/10 disabled:opacity-30"
+                                                        disabled={adm.status !== 'admitted'}
                                                         title="Collect Dues"
                                                         onClick={() => {
                                                             router.push(`/patients/${adm.patientId}/due-payment`)
