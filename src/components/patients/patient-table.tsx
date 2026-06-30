@@ -50,6 +50,7 @@ import { useDebounce } from "use-debounce"
 import { toast } from "sonner"
 import { PatientDialog } from "./patient-dialog"
 import { PharmacyPaymentDialog } from "@/components/pharmacy/pharmacy-payment-dialog"
+import { HospitalPaymentDialog } from "./hospital-payment-dialog"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDeletePatient } from "@/hooks/patient-queries"
 
@@ -80,6 +81,7 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
     const [idCardOpen, setIdCardOpen] = useState(false)
     const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+    const [isHospitalPaymentOpen, setIsHospitalPaymentOpen] = useState(false)
     const [paymentPatient, setPaymentPatient] = useState<{ id: string; name: string } | null>(null)
     const queryClient = useQueryClient()
     const { mutate: deletePatient } = useDeletePatient()
@@ -381,7 +383,17 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
                                                         }}
                                                     >
                                                         <CreditCard className="mr-3 h-4 w-4 text-emerald-500" /> 
-                                                        <span className="font-medium">Collect Dues</span>
+                                                        <span className="font-medium">Collect Pharmacy Dues</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="rounded-md"
+                                                        onClick={() => {
+                                                            setPaymentPatient({ id: patient.id, name: patient.name })
+                                                            setIsHospitalPaymentOpen(true)
+                                                        }}
+                                                    >
+                                                        <CreditCard className="mr-3 h-4 w-4 text-primary" /> 
+                                                        <span className="font-medium">Collect Hospital Dues</span>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1" />
                                                     <DropdownMenuItem className="rounded-md" asChild>
@@ -488,13 +500,22 @@ export function PatientTable({ visitType: fixedVisitType }: PatientTableProps) {
             />
 
             {paymentPatient && (
-                <PharmacyPaymentDialog
-                    open={isPaymentOpen}
-                    onOpenChange={setIsPaymentOpen}
-                    patientId={paymentPatient.id}
-                    patientName={paymentPatient.name}
-                    onSuccess={handleSuccess}
-                />
+                <>
+                    <PharmacyPaymentDialog
+                        open={isPaymentOpen}
+                        onOpenChange={setIsPaymentOpen}
+                        patientId={paymentPatient.id}
+                        patientName={paymentPatient.name}
+                        onSuccess={handleSuccess}
+                    />
+                    <HospitalPaymentDialog
+                        open={isHospitalPaymentOpen}
+                        onOpenChange={setIsHospitalPaymentOpen}
+                        patientId={paymentPatient.id}
+                        patientName={paymentPatient.name}
+                        onSuccess={handleSuccess}
+                    />
+                </>
             )}
 
             {selectedPatient && idCardOpen && (
