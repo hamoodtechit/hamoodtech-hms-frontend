@@ -245,7 +245,7 @@ export default function IPDBillingPage() {
                                                     <span className="font-extrabold text-foreground tracking-tight leading-none text-sm group-hover:text-primary transition-colors">{adm.patient?.name}</span>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[9px] font-black bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded text-primary uppercase shadow-sm">
-                                                            {adm.patient?.uhid}
+                                                            {adm.patient?.patientNumber || adm.patient?.uhid || "N/A"}
                                                         </span>
                                                         <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Patient</span>
                                                     </div>
