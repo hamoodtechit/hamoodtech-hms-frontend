@@ -147,88 +147,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     const grandTotalPaid = Number(data?.grandTotal?.paidAmount || data?.grandTotal?.totalPaid || (hospitalTotals.totalPaid + pharmacyTotals.totalPaid))
     const grandTotalDue = Number(data?.grandTotal?.dueAmount || data?.grandTotal?.totalDue || (hospitalTotals.totalDue + pharmacyTotals.totalDue))
 
-    // ── Bed Rent Calculation ──────────────────────────────────────────
-    const [additionalBedRentAdded, setAdditionalBedRentAdded] = useState(false)
-    const [isAddingBedRent, setIsAddingBedRent] = useState(false)
-
-    const bedRentCalculation = useMemo(() => {
-        const bedType = admission?.bed?.bedType
-        if (!bedType?.pricePerDay || !admission?.admissionDate) return null
-
-        const pricePerDay = Number(bedType.pricePerDay)
-        const admissionDate = new Date(admission.admissionDate)
-        const today = new Date()
-        const diffMs = today.getTime() - admissionDate.getTime()
-        const stayDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-
-        const totalBedRent = stayDays * pricePerDay
-
-        let alreadyCharged = 0
-        hospitalBills.forEach((bill: any) => {
-            bill.saleItems?.forEach((item: any) => {
-                if (item.isBedCharge || item.itemName?.toLowerCase().includes('bed') || item.itemName?.toLowerCase().includes('cabin')) {
-                    alreadyCharged += Number(item.price || 0) * Number(item.quantity || 1)
-                }
-            })
-        })
-
-        const additionalBedRent = Math.max(0, totalBedRent - alreadyCharged)
-
-        return {
-            stayDays,
-            pricePerDay,
-            totalBedRent,
-            alreadyCharged,
-            additionalBedRent,
-        }
-    }, [admission?.bed?.bedType, admission?.admissionDate, hospitalBills])
-
-    const handleAddBedRentToBill = async () => {
-        if (!bedRentCalculation || !admission) return
-        const { additionalBedRent, pricePerDay, stayDays, alreadyCharged } = bedRentCalculation
-        if (additionalBedRent <= 0) return
-
-        const additionalDays = stayDays - Math.floor(alreadyCharged / pricePerDay)
-        if (additionalDays <= 0) return
-
-        setIsAddingBedRent(true)
-        try {
-            await createSale({
-                branchId: activeStoreId || "",
-                patientId: admission.patientId,
-                type: "hospital",
-                status: "pending",
-                paymentMethod: "cash",
-                paidAmount: 0,
-                dueAmount: additionalBedRent,
-                discountPercentage: 0,
-                discountAmount: 0,
-                taxPercentage: 0,
-                taxAmount: 0,
-                isIndoorSale: true,
-                patientAdmissionId: admission.id,
-                saleItems: [{
-                    itemName: `Bed/Cabin Charge (Additional ${additionalDays} day${additionalDays > 1 ? 's' : ''})`,
-                    unit: "day",
-                    price: pricePerDay,
-                    mrp: pricePerDay,
-                    quantity: additionalDays,
-                    totalPrice: additionalBedRent,
-                    discountPercentage: 0,
-                    discountAmount: 0,
-                    isDiagnosticTest: false,
-                }],
-                note: "Auto-generated additional bed rent at discharge",
-            })
-            toast.success(`Additional bed rent of ${formatCurrency(additionalBedRent)} added to bill`)
-            setAdditionalBedRentAdded(true)
-            refetchDischarge()
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || "Failed to add bed rent")
-        } finally {
-            setIsAddingBedRent(false)
-        }
-    }
+    // ── Bed Rent Calculation is now automatically handled by backend upon discharge ──────────────────────────────────────────
 
     // Calculate Overall Discount Amount
     const overallDiscountAmount = useMemo(() => {
@@ -369,63 +288,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                                 </div>
                             </div>
 
-                            {/* ── Bed Rent Calculation ────────────────────────────── */}
-                            {bedRentCalculation && (
-                                <div className="bg-amber-500/5 p-5 rounded-2xl border border-amber-500/10 shadow-inner space-y-3">
-                                    <div className="flex items-center gap-2 text-amber-600">
-                                        <Wallet className="h-4 w-4" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest">Bed Rent Calculation</h3>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Stay Days</span>
-                                            <span className="text-sm font-black">{bedRentCalculation.stayDays} days</span>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Daily Rate</span>
-                                            <span className="text-sm font-black">{formatCurrency(bedRentCalculation.pricePerDay)}</span>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Total Bed Rent</span>
-                                            <span className="text-sm font-black text-primary">{formatCurrency(bedRentCalculation.totalBedRent)}</span>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Already Charged</span>
-                                            <span className="text-sm font-black text-emerald-600">-{formatCurrency(bedRentCalculation.alreadyCharged)}</span>
-                                        </div>
-                                    </div>
-                                    {bedRentCalculation.additionalBedRent > 0 && (
-                                        <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-amber-500/20">
-                                            <div className="space-y-0.5">
-                                                <span className="text-[10px] font-black uppercase text-amber-600">Additional Bed Rent Due</span>
-                                                <span className="text-lg font-black text-amber-600">{formatCurrency(bedRentCalculation.additionalBedRent)}</span>
-                                            </div>
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                className="h-9 px-4 text-[10px] font-black uppercase bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 border border-amber-500/20"
-                                                onClick={handleAddBedRentToBill}
-                                                disabled={isAddingBedRent || additionalBedRentAdded}
-                                            >
-                                                {isAddingBedRent ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                                                ) : additionalBedRentAdded ? (
-                                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                                                ) : (
-                                                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                                                )}
-                                                {additionalBedRentAdded ? 'Added to Bill' : 'Add to Bill'}
-                                            </Button>
-                                        </div>
-                                    )}
-                                    {bedRentCalculation.additionalBedRent <= 0 && !additionalBedRentAdded && (
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 p-2 bg-emerald-500/5 rounded-lg">
-                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                            Bed rent is fully settled — no additional charges needed.
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            {/* Bed rent is now fully managed by the unified billing record on backend */}
 
                             {/* Detailed Billing Sections */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

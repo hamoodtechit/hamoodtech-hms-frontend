@@ -41,6 +41,11 @@ export const salesService = {
     return response.data;
   },
 
+  getPatientDueBills: async (patientId: string): Promise<{ success: boolean; message: string; data: Sale[] }> => {
+    const response = await api.get<{ success: boolean; message: string; data: Sale[] }>(`/sales/due-bills/${patientId}`);
+    return response.data;
+  },
+
   createSale: async (data: SalePayload): Promise<{ success: boolean; message: string; data: Sale }> => {
     const response = await api.post<{ success: boolean; message: string; data: Sale }>('/sales', data);
     return response.data;

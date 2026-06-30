@@ -33,6 +33,14 @@ export function useSale(id: string) {
   });
 }
 
+export function usePatientDueBills(patientId: string) {
+  return useQuery({
+    queryKey: [...SALES_KEYS.all, "due-bills", patientId],
+    queryFn: () => salesService.getPatientDueBills(patientId),
+    enabled: !!patientId,
+  });
+}
+
 export function useCreateSale() {
   const queryClient = useQueryClient();
   return useMutation({

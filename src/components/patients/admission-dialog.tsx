@@ -257,36 +257,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     const total = finalSubtotal + tax
     const dueAmount = Math.max(0, total - paidAmount)
 
-    // This effect only syncs the base fee (bed fee) when a bed is selected.
-    useEffect(() => {
-        if (formData.bedId && bedsRes?.data) {
-            const selectedBed = bedsRes.data.find(b => b.id === formData.bedId)
-            const bedPrice = Number(selectedBed?.bedType?.pricePerDay) || 0
-            
-            setSaleItems(prev => {
-                const bedItemIndex = prev.findIndex(item => item.isBedCharge);
-                const bedItem = {
-                    itemName: `Bed/Cabin Charge (${selectedBed?.bedNumber})`,
-                    unit: "day",
-                    price: bedPrice,
-                    mrp: bedPrice,
-                    quantity: 1,
-                    isDiagnosticTest: false,
-                    isBedCharge: true,
-                    discountPercentage: 0,
-                    discountAmount: 0
-                };
-
-                if (bedItemIndex > -1) {
-                    const next = [...prev];
-                    next[bedItemIndex] = bedItem;
-                    return next;
-                } else {
-                    return [bedItem, ...prev];
-                }
-            });
-        }
-    }, [formData.bedId, bedsRes])
+    // Bed rent is now automatically calculated and injected by the backend upon admission creation.
 
     // Update paid amount when total changes (for new admission only)
     useEffect(() => {
