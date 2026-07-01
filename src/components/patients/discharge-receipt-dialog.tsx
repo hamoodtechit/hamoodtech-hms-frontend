@@ -99,7 +99,7 @@ export function DischargeReceiptDialog({
         }
     }, [billsToRender, isSuccessData, data, overallDiscount, finalPaidAmount, printMode])
 
-    const patient = admission?.patient || data?.patient
+    const patient = data?.patient || admission?.patient
     
     const branchLogo = activeBranch?.logoUrl || "/Logo.png"
     const hospitalName = general?.hospitalName || activeBranch?.name || "HOSPITAL"
@@ -345,7 +345,7 @@ export function DischargeReceiptDialog({
                                     </div>
                                     <div className="p-2 flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Age / Sex:</span>
-                                        <span className="font-bold text-sm">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "N/A")} / {patient?.gender?.charAt(0).toUpperCase()}</span>
+                                        <span className="font-bold text-sm">{patient?.dob ? calculateExactAge(patient.dob) : (patient?.age ? `${patient.age}Y` : "N/A")} / {patient?.gender ? patient.gender.charAt(0).toUpperCase() : 'N/A'}</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 border-b border-black">
