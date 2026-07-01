@@ -38,6 +38,9 @@ export function usePatientDueBills(patientId: string) {
     queryKey: [...SALES_KEYS.all, "due-bills", patientId],
     queryFn: () => salesService.getPatientDueBills(patientId),
     enabled: !!patientId,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always'
   });
 }
 
