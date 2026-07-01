@@ -110,6 +110,17 @@ export function BulkDueCollectionDialog({
                 
             console.log("Bulk Payment Response:", response)
             
+            // Inject saleItems from the GET API into the POST API response so the receipt can print item details!
+            if (response?.data?.paidSales) {
+                response.data.paidSales = response.data.paidSales.map((ps: any) => {
+                    const originalSale = sales.find(s => s.id === ps.saleId);
+                    return {
+                        ...ps,
+                        saleItems: originalSale?.saleItems || []
+                    };
+                });
+            }
+            
             setPaymentResult(response)
             toast.success(`Successfully collected ${formatCurrency(payingAmount)} for ${sales.length} bills`)
             setAccountId("")
