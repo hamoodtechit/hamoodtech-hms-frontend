@@ -41,6 +41,7 @@ export interface Admission {
   totalAmount?: number;
   paidAmount?: number;
   dueAmount?: number;
+  patientBedHistories?: any[];
 }
 
 export interface AdmissionPayload {

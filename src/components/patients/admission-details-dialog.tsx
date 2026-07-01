@@ -50,10 +50,6 @@ interface AdmissionDetailsDialogProps {
 export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: AdmissionDetailsDialogProps) {
     const queryClient = useQueryClient()
     const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
-    const { data: salesRes, isLoading: isLoadingSales, refetch: refetchSales } = useSales({ 
-        patientAdmissionId: admissionId || "",
-        limit: 100 
-    }, { enabled: !!admissionId })
     const { data: initDataRes } = useDischargeInitiate(res?.data?.patientAdmission?.patientId || "")
 
     const [addServiceOpen, setAddServiceOpen] = useState(false)
@@ -63,26 +59,10 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     
     const admission = res?.data?.patientAdmission
-    const baseSalesRaw = salesRes?.data?.sales || salesRes?.data?.data || []
-    const baseSales = baseSalesRaw.filter((s: any) => s.patientAdmissionId === (admissionId || admission?.id))
-    const admissionSale = res?.data?.sale
     
-    // Merge all possible sales sources and deduplicate by ID
-    const sales = (() => {
-        const rawList = [
-            ...(res?.data?.allSales || []),
-            ...(admissionSale ? [admissionSale] : []),
-            ...baseSales
-        ]
-        // Deduplicate by ID
-        const uniqueMap = new Map();
-        rawList.forEach(item => {
-            if (item && item.id) uniqueMap.set(item.id, item);
-        });
-        return Array.from(uniqueMap.values()).sort((a, b) => 
-            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        );
-    })()
+    const sales = res?.data?.allSales || []
+    const grandTotal = res?.data?.grandTotal
+    const bedHistories = admission?.patientBedHistories || []
 
     const getStatusBadge = (status: AdmissionStatus) => {
         switch (status) {
@@ -209,6 +189,23 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                                 {admission.bed?.section?.name} {admission.bed?.section?.floor?.name && `, ${admission.bed.section.floor.name}`}
                                             </div>
                                         </div>
+                                        {bedHistories.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50 block">Bed History</span>
+                                                {bedHistories.map((bh: any) => (
+                                                    <div key={bh.id} className="flex justify-between items-center bg-white/5 px-3 py-2 rounded-lg">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-bold text-foreground/80">{bh.bedType}</span>
+                                                            <span className="text-[9px] font-medium text-muted-foreground">{format(new Date(bh.fromDate), "dd MMM")} - {bh.toDate ? format(new Date(bh.toDate), "dd MMM") : 'Present'}</span>
+                                                        </div>
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-[10px] font-black text-foreground">{bh.totalDays} Days</span>
+                                                            <span className="text-[9px] font-bold text-blue-400">{formatCurrency(Number(bh.totalAmount || 0))}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -309,11 +306,26 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                         <h3 className="text-xs font-black uppercase tracking-widest font-black tracking-tight">Financial Record (Indoor Sale)</h3>
                                     </div>
                                 </div>
-                                {isLoadingSales ? (
-                                    <div className="flex justify-center py-8">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
+
+                                {/* Financial Summary Dashboard */}
+                                {grandTotal && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div className="bg-muted/30 p-4 rounded-xl border border-white/5 space-y-1">
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bill</span>
+                                            <div className="text-xl font-black">{formatCurrency(grandTotal.netPrice || 0)}</div>
+                                        </div>
+                                        <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 space-y-1">
+                                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Paid Amount</span>
+                                            <div className="text-xl font-black text-emerald-600">{formatCurrency(grandTotal.paidAmount || 0)}</div>
+                                        </div>
+                                        <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20 space-y-1">
+                                            <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Due Amount</span>
+                                            <div className="text-xl font-black text-rose-600">{formatCurrency(grandTotal.dueAmount || 0)}</div>
+                                        </div>
                                     </div>
-                                ) : sales && sales.length > 0 ? (
+                                )}
+
+                                {sales && sales.length > 0 ? (
                                     <div className="space-y-4">
                                         {sales.map((s: any) => (
                                             <div key={s.id} className="bg-blue-500/5 p-5 rounded-2xl border border-blue-500/10 overflow-hidden relative group hover:bg-blue-500/[0.08] transition-all">
@@ -412,7 +424,6 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
                         refetch()
-                        refetchSales()
                         
                         if (sale) {
                             setTimeout(() => {
