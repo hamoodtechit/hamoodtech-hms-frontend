@@ -48,14 +48,17 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
   if (!data) return null
 
-  const paymentData = data.data || data
-  const paidSales = paymentData.paidSales || []
+  const paymentData = data?.data || data || {}
+  const paidSales = paymentData.updatedSales || paymentData.paidSales || []
   
   const firstPatient = paidSales[0]?.patient
   const derivedPatientUhid = patientUhid && patientUhid !== "N/A" ? patientUhid : (firstPatient?.uhid || firstPatient?.patientNumber || "N/A")
   const derivedPatientName = patientName && patientName !== "N/A" ? patientName : (firstPatient?.name || "N/A")
 
-  const totalPaid = paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
+  const totalPaid = paymentData.totalCollected !== undefined 
+      ? Number(paymentData.totalCollected) 
+      : paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
+  
   const date = new Date().toISOString()
   const amountInWords = numberToWords(totalPaid) + " TAKA ONLY"
   
