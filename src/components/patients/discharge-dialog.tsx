@@ -110,6 +110,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
     // Extra Charge State
     const [extraChargeOpen, setExtraChargeOpen] = useState(false)
     const [isDraftPrint, setIsDraftPrint] = useState(false)
+    const [dischargeSuccessData, setDischargeSuccessData] = useState<any>(null)
     // Global Discount State
     const [overallDiscountFixed, setOverallDiscountFixed] = useState(0)
     const [overallDiscountPercent, setOverallDiscountPercent] = useState(0)
@@ -209,6 +210,7 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                 toast.success(res.message || "Patient discharged successfully")
                 onSuccess?.()
                 setIsDraftPrint(false)
+                setDischargeSuccessData(res?.data)
                 setReceiptOpen(true)
             },
             onError: (err: any) => {
@@ -565,13 +567,14 @@ export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: Di
                 setReceiptOpen(v)
                 if (!v) {
                     setIsDraftPrint(false)
+                    setDischargeSuccessData(null)
                     if (!isDraftPrint) {
                         onOpenChange(false)
                     }
                 }
             }}
             admission={admission}
-            data={data || null}
+            data={dischargeSuccessData || data || null}
             finalPaidAmount={isDraftPrint ? 0 : paidAmount}
             overallDiscount={overallDiscountAmount}
             remarks={paymentNote}
