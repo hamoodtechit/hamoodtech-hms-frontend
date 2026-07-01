@@ -290,10 +290,18 @@ export function DischargeReceiptDialog({
                                         <span className="font-bold text-xs">{new Date().toLocaleString('en-GB')}</span>
                                     </div>
                                 </div>
-                                <div className="p-2 flex">
-                                    <span className="w-24 text-[10px] font-black uppercase">Doctor:</span>
-                                    <span className="font-bold text-sm">{admission?.doctor?.fullName || 'N/A'}{admission?.doctor?.designation ? <span className="font-bold lowercase"> ({admission.doctor.designation})</span> : ''}</span>
-                                </div>
+                                    <div className="p-2 flex">
+                                        <span className="w-24 text-[10px] font-black uppercase">Doctor:</span>
+                                        <span className="font-bold text-sm">
+                                            {admission?.doctor?.fullName || admission?.refDoctorName || 'N/A'}
+                                            {(admission?.doctor?.designation || (admission?.doctor as any)?.employee?.designation?.name) ? (
+                                                <span className="font-bold lowercase">
+                                                    {' '}
+                                                    ({admission?.doctor?.designation || (admission?.doctor as any)?.employee?.designation?.name})
+                                                </span>
+                                            ) : ''}
+                                        </span>
+                                    </div>
                             </div>
 
                             {/* Billing Summary Section */}
