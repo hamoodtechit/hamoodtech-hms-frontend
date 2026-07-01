@@ -335,7 +335,7 @@ export function DischargeReceiptDialog({
                                     </div>
                                     <div className="p-2 flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Adm. ID:</span>
-                                        <span className="font-bold text-sm">A{admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
+                                        <span className="font-bold text-sm">A{admission?.id?.slice(0, 8).toUpperCase() || data?.admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 border-b border-black">
@@ -351,21 +351,21 @@ export function DischargeReceiptDialog({
                                 <div className="grid grid-cols-2 border-b border-black">
                                     <div className="p-2 border-r border-black flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Admission:</span>
-                                        <span className="font-bold text-xs">{admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB') : 'N/A'}</span>
+                                        <span className="font-bold text-xs">{admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB') : (data?.admission?.admissionDate ? new Date(data.admission.admissionDate).toLocaleString('en-GB') : 'N/A')}</span>
                                     </div>
                                     <div className="p-2 flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Discharge:</span>
-                                        <span className="font-bold text-xs">{(admission?.dischargeDate || data?.admission?.dischargeDate) ? new Date(admission?.dischargeDate || data?.admission?.dischargeDate).toLocaleString('en-GB') : new Date().toLocaleString('en-GB')}</span>
+                                        <span className="font-bold text-xs">{(data?.admission?.dischargeDate || admission?.dischargeDate) ? new Date(data?.admission?.dischargeDate || admission?.dischargeDate).toLocaleString('en-GB') : new Date().toLocaleString('en-GB')}</span>
                                     </div>
                                 </div>
                                 <div className="p-2 flex items-center">
                                     <span className="w-24 text-[10px] font-black uppercase">Doctor:</span>
                                     <span className="font-bold text-sm">
-                                        {admission?.doctor?.fullName || admission?.refDoctorName || 'N/A'}
-                                        {(admission?.doctor?.designation || (admission?.doctor as any)?.employee?.designation?.name) ? (
-                                            <span className="font-bold lowercase">
+                                        {(data?.admission?.doctor || admission?.doctor)?.fullName || data?.admission?.refDoctorName || admission?.refDoctorName || 'N/A'}
+                                        {((data?.admission?.doctor || admission?.doctor)?.designation || ((data?.admission?.doctor || admission?.doctor) as any)?.employee?.designation?.name) ? (
+                                            <span className="font-bold">
                                                 {' '}
-                                                ({admission?.doctor?.designation || (admission?.doctor as any)?.employee?.designation?.name})
+                                                ({(data?.admission?.doctor || admission?.doctor)?.designation || ((data?.admission?.doctor || admission?.doctor) as any)?.employee?.designation?.name})
                                             </span>
                                         ) : ''}
                                     </span>
