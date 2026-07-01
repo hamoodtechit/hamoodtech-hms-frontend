@@ -21,6 +21,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useBeds } from "@/hooks/facility-queries"
 import { useAdmissions, usePatients, useDeleteAdmission } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
@@ -41,7 +49,8 @@ import {
     Trash2,
     UserCheck,
     ClipboardCheck,
-    CreditCard
+    CreditCard,
+    MoreHorizontal
 } from "lucide-react"
 import { 
     AlertDialog, 
@@ -283,95 +292,101 @@ export default function IPDBillingPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right pr-6 py-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-primary/20 hover:text-primary transition-all group/btn bg-primary/5 border border-primary/10"
-                                                        onClick={() => {
-                                                            setSelectedAdmission(adm)
-                                                            setDetailsDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Eye className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0 bg-primary/5 hover:bg-primary/20 hover:text-primary rounded-lg border border-primary/10 transition-all focus-visible:ring-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-white/10 p-2 space-y-1">
+                                                        <DropdownMenuLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-2 py-1.5 opacity-60">Actions</DropdownMenuLabel>
+                                                        
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-primary/10 focus:text-primary transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedAdmission(adm)
+                                                                setDetailsDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5 text-primary opacity-70" />
+                                                            View Details
+                                                        </DropdownMenuItem>
+                                                        
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-primary/10 focus:text-primary transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedAdmission(adm)
+                                                                setAdmissionDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Edit2 className="h-3.5 w-3.5 text-primary opacity-70" />
+                                                            Edit Info
+                                                        </DropdownMenuItem>
 
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-primary/20 hover:text-primary transition-all group/btn bg-primary/5 border border-primary/10"
-                                                        onClick={() => {
-                                                            setSelectedAdmission(adm)
-                                                            setAdmissionDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Edit2 className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-primary/10 focus:text-primary transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedAdmission(adm)
+                                                                setPrintDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Printer className="h-3.5 w-3.5 text-primary opacity-70" />
+                                                            Print Admission
+                                                        </DropdownMenuItem>
+                                                        
+                                                        <DropdownMenuSeparator className="bg-border/50 my-1.5 mx-1" />
 
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-blue-500/20 hover:text-blue-500 transition-all group/btn bg-blue-500/5 border border-blue-500/10 disabled:opacity-30"
-                                                        disabled={adm.status !== 'admitted'}
-                                                        title="Add Service / Bill"
-                                                        onClick={() => {
-                                                            setSelectedAdmission(adm)
-                                                            setAddServiceDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Plus className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-blue-500/10 focus:text-blue-500 transition-colors"
+                                                            disabled={adm.status !== 'admitted'}
+                                                            onClick={() => {
+                                                                setSelectedAdmission(adm)
+                                                                setAddServiceDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <Plus className="h-3.5 w-3.5 text-blue-500 opacity-80" />
+                                                            Add Service / Bill
+                                                        </DropdownMenuItem>
 
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-orange-500/20 hover:text-orange-500 transition-all group/btn bg-orange-500/5 border border-orange-500/10 disabled:opacity-30"
-                                                        disabled={adm.status !== 'admitted'}
-                                                        title="Collect Dues"
-                                                        onClick={() => {
-                                                            router.push(`/patients/${adm.patientId}/due-payment`)
-                                                        }}
-                                                    >
-                                                        <CreditCard className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-orange-500/10 focus:text-orange-500 transition-colors"
+                                                            disabled={adm.status !== 'admitted'}
+                                                            onClick={() => {
+                                                                router.push(`/patients/${adm.patientId}/due-payment`)
+                                                            }}
+                                                        >
+                                                            <CreditCard className="h-3.5 w-3.5 text-orange-500 opacity-80" />
+                                                            Collect Dues
+                                                        </DropdownMenuItem>
+                                                        
+                                                        <DropdownMenuSeparator className="bg-border/50 my-1.5 mx-1" />
 
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-destructive/20 hover:text-destructive transition-all group/btn bg-destructive/5 border border-destructive/10"
-                                                        onClick={() => {
-                                                            setDeleteId(adm.id)
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 focus:bg-emerald-500/10 focus:text-emerald-500 transition-colors"
+                                                            disabled={adm.status !== 'admitted'}
+                                                            onClick={() => {
+                                                                setSelectedAdmission(adm)
+                                                                setDischargeDialogOpen(true)
+                                                            }}
+                                                        >
+                                                            <ClipboardCheck className="h-3.5 w-3.5 text-emerald-500 opacity-80" />
+                                                            Discharge Patient
+                                                        </DropdownMenuItem>
+                                                        
+                                                        <DropdownMenuSeparator className="bg-border/50 my-1.5 mx-1" />
 
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-emerald-500/20 hover:text-emerald-500 transition-all group/btn bg-emerald-500/5 border border-emerald-500/10 disabled:opacity-30"
-                                                        disabled={adm.status !== 'admitted'}
-                                                        title="Discharge Patient"
-                                                        onClick={() => {
-                                                            setSelectedAdmission(adm)
-                                                            setDischargeDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <ClipboardCheck className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
-
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="h-9 w-9 rounded-xl hover:bg-primary/20 hover:text-primary transition-all group/btn bg-primary/5 border border-primary/10"
-                                                        onClick={() => {
-                                                            setSelectedAdmission(adm)
-                                                            setPrintDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Printer className="h-4 w-4 transition-all group-hover/btn:scale-110" />
-                                                    </Button>
-                                                </div>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer gap-2 font-bold text-xs rounded-lg px-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive transition-colors"
+                                                            onClick={() => {
+                                                                setDeleteId(adm.id)
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5 opacity-80" />
+                                                            Delete Record
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))
