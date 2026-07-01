@@ -99,7 +99,8 @@ export function DischargeReceiptDialog({
         }
     }, [billsToRender, isSuccessData, data, overallDiscount, finalPaidAmount, printMode])
 
-    const patient = data?.patient || admission?.patient
+    const activeAdmission = data?.admission || data?.patientAdmission || admission
+    const patient = data?.patient || activeAdmission?.patient
     
     const branchLogo = activeBranch?.logoUrl || "/Logo.png"
     const hospitalName = general?.hospitalName || activeBranch?.name || "HOSPITAL"
@@ -311,7 +312,7 @@ export function DischargeReceiptDialog({
                         <div className="text-black bg-white antialiased font-sans flex flex-col h-full">
                             
                             {/* Header Section */}
-                            <div className="flex flex-col items-center text-center w-full mb-6">
+                            <div className="flex flex-col items-center text-center w-full mb-2">
                                 <div className="flex justify-center mb-1">
                                     <img src={branchLogo} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block' }} />
                                 </div>
@@ -320,7 +321,7 @@ export function DischargeReceiptDialog({
                                 <p className="text-xs font-bold leading-tight m-0 p-0">Ph: {phone}</p>
                             </div>
 
-                            <div className="text-center mb-4">
+                            <div className="text-center mb-2">
                                 <h2 className="text-lg font-black uppercase tracking-widest border-b-2 border-black inline-block pb-1">
                                     {receiptTotals.isPartial ? "Discharge Payment Receipt" : "Discharge Bill & Receipt"}
                                 </h2>
@@ -335,7 +336,7 @@ export function DischargeReceiptDialog({
                                     </div>
                                     <div className="p-2 flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Adm. ID:</span>
-                                        <span className="font-bold text-sm">A{admission?.id?.slice(0, 8).toUpperCase() || data?.admission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
+                                        <span className="font-bold text-sm">A{activeAdmission?.id?.slice(0, 8).toUpperCase() || 'N/A'}</span>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 border-b border-black">
@@ -351,21 +352,21 @@ export function DischargeReceiptDialog({
                                 <div className="grid grid-cols-2 border-b border-black">
                                     <div className="p-2 border-r border-black flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Admission:</span>
-                                        <span className="font-bold text-xs">{admission?.admissionDate ? new Date(admission.admissionDate).toLocaleString('en-GB') : (data?.admission?.admissionDate ? new Date(data.admission.admissionDate).toLocaleString('en-GB') : 'N/A')}</span>
+                                        <span className="font-bold text-xs">{activeAdmission?.admissionDate ? new Date(activeAdmission.admissionDate).toLocaleString('en-GB') : 'N/A'}</span>
                                     </div>
                                     <div className="p-2 flex items-center">
                                         <span className="w-24 text-[10px] font-black uppercase">Discharge:</span>
-                                        <span className="font-bold text-xs">{(data?.admission?.dischargeDate || admission?.dischargeDate) ? new Date(data?.admission?.dischargeDate || admission?.dischargeDate).toLocaleString('en-GB') : new Date().toLocaleString('en-GB')}</span>
+                                        <span className="font-bold text-xs">{activeAdmission?.dischargeDate ? new Date(activeAdmission.dischargeDate).toLocaleString('en-GB') : new Date().toLocaleString('en-GB')}</span>
                                     </div>
                                 </div>
                                 <div className="p-2 flex items-center">
                                     <span className="w-24 text-[10px] font-black uppercase">Doctor:</span>
                                     <span className="font-bold text-sm">
-                                        {(data?.admission?.doctor || admission?.doctor)?.fullName || data?.admission?.refDoctorName || admission?.refDoctorName || 'N/A'}
-                                        {((data?.admission?.doctor || admission?.doctor)?.designation || ((data?.admission?.doctor || admission?.doctor) as any)?.employee?.designation?.name) ? (
+                                        {activeAdmission?.doctor?.fullName || activeAdmission?.refDoctorName || 'N/A'}
+                                        {(activeAdmission?.doctor?.designation || (activeAdmission?.doctor as any)?.employee?.designation?.name) ? (
                                             <span className="font-bold">
                                                 {' '}
-                                                ({(data?.admission?.doctor || admission?.doctor)?.designation || ((data?.admission?.doctor || admission?.doctor) as any)?.employee?.designation?.name})
+                                                ({activeAdmission?.doctor?.designation || (activeAdmission?.doctor as any)?.employee?.designation?.name})
                                             </span>
                                         ) : ''}
                                     </span>
