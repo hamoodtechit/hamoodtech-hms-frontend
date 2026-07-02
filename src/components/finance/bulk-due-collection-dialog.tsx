@@ -121,6 +121,11 @@ export function BulkDueCollectionDialog({
                 });
             }
             
+            if (response?.data) {
+                response.data.note = note;
+                response.data.paymentMethod = paymentMethod;
+            }
+            
             setPaymentResult(response)
             toast.success(`Successfully collected ${formatCurrency(payingAmount)} for ${sales.length} bills`)
             setAccountId("")
