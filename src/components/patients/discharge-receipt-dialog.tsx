@@ -468,8 +468,8 @@ export function DischargeReceiptDialog({
                                                 const billDiscountAmt = discountDetail ? Number(discountDetail.discountAmount) : Number(bill.discountAmount || 0);
                                                 
                                                 const itemsOutput = bill.saleItems?.map((item: any, ii: number) => {
-                                                    const discAmt = Number(item.discountAmount) || (Number(item.discountPercentage || 0) ? (Number(item.price) * Number(item.quantity || 1) * Number(item.discountPercentage)) / 100 : 0)
-                                                    const itemTotal = (Number(item.price) * Number(item.quantity || 1)) - discAmt
+                                                    const discAmt = Number(item.discountAmount || 0)
+                                                    const itemTotal = Number(item.totalPrice || 0)
                                                     const isLastInBill = ii === bill.saleItems.length - 1 && billDiscountAmt === 0
                                                     
                                                     const borderClass = isLastInBill ? 'border-b border-dashed border-gray-300' : ''
