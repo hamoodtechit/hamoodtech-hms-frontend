@@ -94,19 +94,38 @@ export function DischargeReceiptDialog({
             dischargeCollection = finalPaidAmount
         }
 
-        const prevPaid = printMode === 'full' ? Math.max(0, sumPaid - dischargeCollection) : 0
+        const activeAdmission = data?.admission || data?.patientAdmission || admission
+
+        if (printMode === 'full') {
+            const net = Number(activeAdmission?.totalAmount || sumNet)
+            const admDiscount = Number(activeAdmission?.discountAmount || 0)
+            const paid = Number(activeAdmission?.paidAmount || sumPaid)
+            const due = Number(activeAdmission?.dueAmount || Math.max(0, net - paid))
+            const prevPaid = Math.max(0, paid - dischargeCollection)
+
+            return {
+                subtotal: net + admDiscount,
+                discount: admDiscount,
+                netPayable: net,
+                previouslyPaid: prevPaid,
+                currentPayment: dischargeCollection,
+                totalPaid: paid,
+                due: due,
+                isPartial: false
+            }
+        }
 
         return {
-            subtotal: sumSubtotal,
-            discount: sumDiscount,
+            subtotal: sumNet, // using sumNet to avoid item-level discount confusion
+            discount: 0,      // item discounts are baked into netPrice
             netPayable: sumNet,
-            previouslyPaid: prevPaid,
-            currentPayment: printMode === 'full' ? dischargeCollection : sumPaid,
-            totalPaid: sumPaid,
-            due: sumNet - sumPaid,
-            isPartial: printMode === 'last'
+            previouslyPaid: 0,
+            currentPayment: dischargeCollection,
+            totalPaid: dischargeCollection,
+            due: Math.max(0, sumNet - dischargeCollection),
+            isPartial: true
         }
-    }, [billsToRender, isSuccessData, data, overallDiscount, finalPaidAmount, printMode])
+    }, [billsToRender, isSuccessData, data, admission, overallDiscount, finalPaidAmount, printMode])
 
     const activeAdmission = data?.admission || data?.patientAdmission || admission
     const patient = data?.patient || activeAdmission?.patient
