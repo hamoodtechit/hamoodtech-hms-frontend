@@ -87,12 +87,21 @@ export function DischargeReceiptDialog({
         }
 
         // Success mode calculation
+        let dischargeCollection = 0
+        if (data?.lastPaidSales && Array.isArray(data.lastPaidSales)) {
+            dischargeCollection = data.lastPaidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
+        } else {
+            dischargeCollection = finalPaidAmount
+        }
+
+        const prevPaid = printMode === 'full' ? Math.max(0, sumPaid - dischargeCollection) : 0
+
         return {
             subtotal: sumSubtotal,
             discount: sumDiscount,
             netPayable: sumNet,
-            previouslyPaid: 0,
-            currentPayment: sumPaid,
+            previouslyPaid: prevPaid,
+            currentPayment: printMode === 'full' ? dischargeCollection : sumPaid,
             totalPaid: sumPaid,
             due: sumNet - sumPaid,
             isPartial: printMode === 'last'
