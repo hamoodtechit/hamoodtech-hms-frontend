@@ -159,13 +159,13 @@ export function DischargeReceiptDialog({
         }
 
         return {
-            subtotal: sumNet, // using sumNet to avoid item-level discount confusion
-            discount: 0,      // item discounts are baked into netPrice
+            subtotal: sumSubtotal,
+            discount: sumDiscount,
             netPayable: sumNet,
-            previouslyPaid: 0,
+            previouslyPaid: Math.max(0, sumPaid - dischargeCollection),
             currentPayment: dischargeCollection,
-            totalPaid: dischargeCollection,
-            due: Math.max(0, sumNet - dischargeCollection),
+            totalPaid: sumPaid,
+            due: Math.max(0, sumNet - sumPaid),
             isPartial: true
         }
     }, [billsToRender, isSuccessData, data, admission, overallDiscount, finalPaidAmount, printMode])
