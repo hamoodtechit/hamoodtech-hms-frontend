@@ -146,10 +146,19 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                     return (
                         <tr key={idx} style={{ borderBottom: '1px dashed #ccc' }}>
                             <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '700', verticalAlign: 'top' }}>{sale.invoiceNumber}</td>
-                            <td style={{ padding: '6px 4px', fontSize: '10px', fontWeight: '600', color: '#444' }}>
-                                {sale.saleItems && sale.saleItems.length > 0 
-                                    ? sale.saleItems.map((item: any) => item.itemName).join(', ')
-                                    : 'Bulk Settlement'}
+                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '600', color: '#222' }}>
+                                {sale.saleItems && sale.saleItems.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        {sale.saleItems.map((item: any, i: number) => (
+                                            <div key={i}>
+                                                <span style={{ fontWeight: '900', color: 'black', fontSize: '13px' }}>{item.itemName}</span>
+                                                <span style={{ marginLeft: '4px', fontSize: '11px' }}>({Number(item.price).toFixed(2)} ৳ {Number(item.quantity) > 1 ? `x ${item.quantity}` : ''})</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    'Bulk Settlement'
+                                )}
                             </td>
                             <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top' }}>{Number(sale.paidAmount).toFixed(2)}</td>
                             <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top', color: '#dc2626' }}>{sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
@@ -268,9 +277,14 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                         <div className="col-span-7 pr-1">
                             <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{sale.invoiceNumber}</span>
                             {sale.saleItems && sale.saleItems.length > 0 && (
-                                <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
-                                    {sale.saleItems.map((item: any) => item.itemName).join(', ')}
-                                </span>
+                                <div className={`mt-0.5 space-y-0.5 ${isPrinting ? 'text-[8.5px]' : 'text-[11px]'}`}>
+                                    {sale.saleItems.map((item: any, i: number) => (
+                                        <div key={i} className="leading-tight">
+                                            <span className="font-black text-black uppercase">{item.itemName}</span>
+                                            <span className="font-bold ml-1">({Number(item.price).toFixed(2)} ৳)</span>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                         <div className="col-span-2 text-right font-black text-black">
@@ -344,13 +358,18 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
         // --- 80mm THERMAL POS PRINT LOGIC ---
         const rows = paidSales.map((sale: any) => {
             const itemsList = sale.saleItems && sale.saleItems.length > 0 
-                ? sale.saleItems.map((item: any) => item.itemName).join(', ')
+                ? sale.saleItems.map((item: any) => `
+                    <div style="line-height: 1.1; margin-top: 2px;">
+                        <span style="font-weight: 900; color: black; font-size: 9.5px; text-transform: uppercase;">${item.itemName}</span>
+                        <span style="font-weight: bold; font-size: 8.5px; margin-left: 2px;">(${Number(item.price).toFixed(2)} ৳)</span>
+                    </div>
+                `).join('')
                 : '';
             return `
                 <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
                 <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1; width: 60%;">
                     <span style="font-size: 11.5px; display: block;">${sale.invoiceNumber}</span>
-                    ${itemsList ? `<span style="font-size: 7.5px; font-weight: 900; color: black; text-transform: uppercase;">${itemsList}</span>` : ''}
+                    ${itemsList ? `<div>${itemsList}</div>` : ''}
                 </td>
                 <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px; width: 20%;">${Number(sale.paidAmount).toFixed(2)}</td>
                 <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: #b91c1c; font-size: 9.5px; width: 20%;">${sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
