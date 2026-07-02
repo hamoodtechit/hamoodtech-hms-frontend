@@ -229,7 +229,7 @@ export function AddAdmissionServiceDialog({
             if (!val) resetForm()
             onOpenChange(val)
         }}>
-            <DialogContent className="sm:max-w-[1100px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[750px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
                 <DialogHeader className="p-6 pb-4 bg-primary/5 border-b border-primary/10">
                     <DialogTitle className="text-xl font-black tracking-tight text-primary flex items-center gap-3">
                         <Plus className="h-6 w-6" />
@@ -240,7 +240,7 @@ export function AddAdmissionServiceDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+                <div className="p-6 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
                     {/* Add Item Section */}
                     <div className="bg-muted/10 border border-muted-foreground/10 rounded-2xl p-4 space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -500,7 +500,7 @@ export function AddAdmissionServiceDialog({
                     </div>
                 </div>
 
-                <DialogFooter className="p-6 border-t border-primary/10 bg-muted/20">
+                <DialogFooter className="p-6 border-t border-primary/10 bg-muted/20 shrink-0 mt-auto">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving} className="rounded-xl px-6 h-11 font-black uppercase text-xs border-muted-foreground/20">
                         Cancel
                     </Button>
