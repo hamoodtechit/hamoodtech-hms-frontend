@@ -40,6 +40,7 @@ import { formatCurrency } from "@/lib/utils"
 import { AdmissionStatus } from "@/types/patient"
 import { AddAdmissionServiceDialog } from "./add-service-dialog"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "@/i18n/navigation"
 
 interface AdmissionDetailsDialogProps {
     open: boolean
@@ -49,6 +50,7 @@ interface AdmissionDetailsDialogProps {
 
 export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: AdmissionDetailsDialogProps) {
     const queryClient = useQueryClient()
+    const router = useRouter()
     const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
     const { data: initDataRes } = useDischargeInitiate(res?.data?.patientAdmission?.patientId || "")
 
@@ -435,11 +437,9 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
                         refetch()
                         
-                        if (sale) {
-                            setTimeout(() => {
-                                setSelectedSaleForPrint(sale)
-                                setReceiptDialogOpen(true)
-                            }, 500)
+                        if (sale && admission?.patientId) {
+                            router.push(`/patients/${admission.patientId}/due-payment`)
+                            onOpenChange(false)
                         }
                     }}
                 />
