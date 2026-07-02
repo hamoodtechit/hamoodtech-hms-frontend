@@ -443,36 +443,59 @@ export function DischargeReceiptDialog({
                                         </thead>
                                         <tbody>
                                             {billsToRender.map((bill: any, bi: number) => {
-                                                return bill.saleItems?.map((item: any, ii: number) => {
+                                                const discountDetail = data?.discountDetails?.find((d: any) => d.saleId === bill.id || d.invoiceNumber === bill.invoiceNumber) || null;
+                                                const billDiscountAmt = discountDetail ? Number(discountDetail.discountAmount) : Number(bill.discountAmount || 0);
+                                                
+                                                const itemsOutput = bill.saleItems?.map((item: any, ii: number) => {
                                                     const discAmt = Number(item.discountAmount) || (Number(item.discountPercentage || 0) ? (Number(item.price) * Number(item.quantity || 1) * Number(item.discountPercentage)) / 100 : 0)
                                                     const itemTotal = (Number(item.price) * Number(item.quantity || 1)) - discAmt
-                                                    const isLastInBill = ii === bill.saleItems.length - 1
+                                                    const isLastInBill = ii === bill.saleItems.length - 1 && billDiscountAmt === 0
                                                     
                                                     const borderClass = isLastInBill ? 'border-b border-dashed border-gray-300' : ''
                                                     
                                                     return (
                                                         <tr key={item.id}>
-                                                            <td className={`${borderClass} py-1.5 text-[9px] font-black pl-2 w-24 align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[9px] font-black pl-2 w-24 align-top`}>
                                                                 {ii === 0 ? bill.invoiceNumber : ''}
                                                             </td>
-                                                            <td className={`${borderClass} py-1.5 text-[10px] font-bold align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[10px] font-bold align-top`}>
                                                                 {item.itemName}
                                                             </td>
-                                                            <td className={`${borderClass} py-1.5 text-[10px] font-bold text-right w-14 align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[10px] font-bold text-right w-14 align-top`}>
                                                                 {item.quantity || 1}
                                                             </td>
-                                                            <td className={`${borderClass} py-1.5 text-[10px] font-bold text-right w-20 align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[10px] font-bold text-right w-20 align-top`}>
                                                                 {formatCurrency(Number(item.price))}
                                                             </td>
-                                                            <td className={`${borderClass} py-1.5 text-[10px] font-bold text-right w-20 align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[10px] font-bold text-right w-20 align-top`}>
                                                                 {discAmt > 0 ? formatCurrency(discAmt) : '—'}
                                                             </td>
-                                                            <td className={`${borderClass} py-1.5 text-[10px] font-black text-right w-24 align-top`}>
+                                                            <td className={`${borderClass} py-1 text-[10px] font-black text-right w-24 align-top`}>
                                                                 {formatCurrency(itemTotal)}
                                                             </td>
                                                         </tr>
                                                     )
-                                                })
+                                                }) || [];
+
+                                                if (billDiscountAmt > 0) {
+                                                    const billNet = discountDetail ? Number(discountDetail.netPrice) : Number(bill.netPrice || 0);
+                                                    itemsOutput.push(
+                                                        <tr key={`disc-${bill.id}`}>
+                                                            <td className="border-b border-dashed border-gray-300 py-1 text-[9px] font-black pl-2 w-24 align-top"></td>
+                                                            <td colSpan={3} className="border-b border-dashed border-gray-300 py-1 text-[10px] font-bold text-right italic text-gray-500 pr-2">
+                                                                Invoice Discount (-):
+                                                            </td>
+                                                            <td className="border-b border-dashed border-gray-300 py-1 text-[10px] font-bold text-right text-gray-500">
+                                                                {formatCurrency(billDiscountAmt)}
+                                                            </td>
+                                                            <td className="border-b border-dashed border-gray-300 py-1 text-[10px] font-black text-right text-gray-700">
+                                                                {formatCurrency(billNet)}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                }
+
+                                                return itemsOutput;
                                             })}
                                             {billsToRender.length > 0 && (
                                                 <tr>
