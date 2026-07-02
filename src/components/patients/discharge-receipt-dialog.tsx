@@ -97,14 +97,36 @@ export function DischargeReceiptDialog({
         const activeAdmission = data?.admission || data?.patientAdmission || admission
 
         if (printMode === 'full') {
+            if (data?.grandTotal) {
+                const gt = data.grandTotal
+                const sub = Number(gt.totalPrice || (Number(gt.netPrice || 0) + Number(gt.discountAmount || 0)))
+                const net = Number(gt.netPrice || 0)
+                const admDiscount = Number(gt.discountAmount || 0)
+                const paid = Number(gt.paidAmount || 0)
+                const due = Number(gt.dueAmount || 0)
+                const prevPaid = Math.max(0, paid - dischargeCollection)
+
+                return {
+                    subtotal: sub,
+                    discount: admDiscount,
+                    netPayable: net,
+                    previouslyPaid: prevPaid,
+                    currentPayment: dischargeCollection,
+                    totalPaid: paid,
+                    due: due,
+                    isPartial: false
+                }
+            }
+
             const net = Number(activeAdmission?.totalAmount || sumNet)
             const admDiscount = Number(activeAdmission?.discountAmount || 0)
             const paid = Number(activeAdmission?.paidAmount || sumPaid)
             const due = Number(activeAdmission?.dueAmount || Math.max(0, net - paid))
             const prevPaid = Math.max(0, paid - dischargeCollection)
+            const sub = sumSubtotal > 0 ? sumSubtotal : net + admDiscount
 
             return {
-                subtotal: net + admDiscount,
+                subtotal: sub,
                 discount: admDiscount,
                 netPayable: net,
                 previouslyPaid: prevPaid,
