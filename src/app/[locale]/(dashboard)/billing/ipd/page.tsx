@@ -7,7 +7,6 @@ import { AdmissionFilters } from "@/components/patients/admission-filters"
 import { AdmissionPrintDialog } from "@/components/patients/admission-print-dialog"
 import { AddAdmissionServiceDialog } from "@/components/patients/add-service-dialog"
 import { FilterPopover } from "@/components/shared/filter-popover"
-import { HospitalReceiptDialog } from "@/components/patients/hospital-receipt-dialog"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,8 +75,6 @@ export default function IPDBillingPage() {
     const [addServiceDialogOpen, setAddServiceDialogOpen] = useState(false)
     const [printDialogOpen, setPrintDialogOpen] = useState(false)
     const [deleteId, setDeleteId] = useState<string | null>(null)
-    const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
-    const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
 
     const router = useRouter()
     const { formatCurrency } = useCurrency()
@@ -465,22 +462,11 @@ export default function IPDBillingPage() {
                     admission={selectedAdmission}
                     onSuccess={(sale) => {
                         refetch()
-                        if (sale) {
-                            setTimeout(() => {
-                                setSelectedSaleForPrint(sale)
-                                setReceiptDialogOpen(true)
-                            }, 500)
+                        if (sale && selectedAdmission?.patientId) {
+                            router.push(`/patients/${selectedAdmission.patientId}/due-payment`)
+                            setAddServiceDialogOpen(false)
                         }
                     }}
-                />
-
-                <HospitalReceiptDialog 
-                    open={receiptDialogOpen}
-                    onOpenChange={setReceiptDialogOpen}
-                    transaction={selectedSaleForPrint}
-                    patient={selectedAdmission?.patient}
-                    bed={selectedAdmission?.bed}
-                    admission={selectedAdmission}
                 />
 
                 <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
