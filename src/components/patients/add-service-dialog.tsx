@@ -229,7 +229,7 @@ export function AddAdmissionServiceDialog({
             if (!val) resetForm()
             onOpenChange(val)
         }}>
-            <DialogContent className="sm:max-w-[900px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[1100px] border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-4 bg-primary/5 border-b border-primary/10">
                     <DialogTitle className="text-xl font-black tracking-tight text-primary flex items-center gap-3">
                         <Plus className="h-6 w-6" />
@@ -240,7 +240,7 @@ export function AddAdmissionServiceDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
                     {/* Add Item Section */}
                     <div className="bg-muted/10 border border-muted-foreground/10 rounded-2xl p-4 space-y-4">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
