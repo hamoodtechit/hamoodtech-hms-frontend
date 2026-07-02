@@ -82,7 +82,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     return (
         <>
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-card/95 backdrop-blur-xl">
+            <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-card/95 backdrop-blur-xl">
                 <DialogHeader className="p-8 pb-4 bg-primary/5">
                     <div className="flex items-center justify-between mb-4">
                         <DialogTitle className="text-2xl font-black tracking-tight text-primary">Admission Details</DialogTitle>
@@ -314,19 +314,23 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                 </div>
 
                                 {/* Financial Summary Dashboard */}
-                                {grandTotal && (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                {admission && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                         <div className="bg-muted/30 p-4 rounded-xl border border-white/5 space-y-1">
                                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bill</span>
-                                            <div className="text-xl font-black">{formatCurrency(grandTotal.netPrice || 0)}</div>
+                                            <div className="text-xl font-black">{formatCurrency(Number(admission.totalAmount) || 0)}</div>
+                                        </div>
+                                        <div className="bg-muted/30 p-4 rounded-xl border border-white/5 space-y-1">
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Discount</span>
+                                            <div className="text-xl font-black text-foreground/70">{formatCurrency(Number(admission.discountAmount) || 0)}</div>
                                         </div>
                                         <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 space-y-1">
                                             <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Paid Amount</span>
-                                            <div className="text-xl font-black text-emerald-600">{formatCurrency(grandTotal.paidAmount || 0)}</div>
+                                            <div className="text-xl font-black text-emerald-600">{formatCurrency(Number(admission.paidAmount) || 0)}</div>
                                         </div>
                                         <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20 space-y-1">
                                             <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">Due Amount</span>
-                                            <div className="text-xl font-black text-rose-600">{formatCurrency(grandTotal.dueAmount || 0)}</div>
+                                            <div className="text-xl font-black text-rose-600">{formatCurrency(Number(admission.dueAmount) || 0)}</div>
                                         </div>
                                     </div>
                                 )}
