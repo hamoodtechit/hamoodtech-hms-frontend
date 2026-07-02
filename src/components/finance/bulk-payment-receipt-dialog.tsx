@@ -51,6 +51,12 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
   const paymentData = data?.data || data || {}
   const paidSales = paymentData.updatedSales || paymentData.paidSales || []
   
+  const transactions = paymentData.transactions || []
+  const txnNotes = [...new Set(transactions.map((t: any) => t.note).filter(Boolean))]
+  const combinedNote = txnNotes.length > 0 ? txnNotes.join(" | ") : paymentData.note
+
+  const txnMethods = [...new Set(transactions.map((t: any) => t.paymentMethod).filter(Boolean))]
+  const derivedPaymentMethod = txnMethods.length > 0 ? txnMethods.join(" / ") : paymentData.paymentMethod
   const firstPatient = paidSales[0]?.patient
   const derivedPatientUhid = patientUhid && patientUhid !== "N/A" ? patientUhid : (firstPatient?.uhid || firstPatient?.patientNumber || "N/A")
   const derivedPatientName = patientName && patientName !== "N/A" ? patientName : (firstPatient?.name || "N/A")
@@ -120,13 +126,13 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
             <div className="grid grid-cols-1 border-b border-black">
                 <div className="p-1 px-3 font-bold flex items-center">
                     <span className="shrink-0 w-32">Payment Mode :</span>
-                    <span className="uppercase text-[12px]">{paymentData.paymentMethod || "CASH"}</span>
+                    <span className="uppercase text-[12px]">{derivedPaymentMethod || "CASH"}</span>
                 </div>
             </div>
-            {paymentData.note && (
+            {combinedNote && (
             <div className="p-1 px-3 font-bold flex items-center border-b border-black">
                 <span className="shrink-0 w-32 uppercase">Remarks :</span>
-                <span className="italic">{paymentData.note}</span>
+                <span className="italic">{combinedNote}</span>
             </div>
             )}
         </div>
@@ -333,11 +339,11 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
         <Separator className="border-black/20" />
         
         {/* Payment Note Section */}
-        {paymentData.note && (
+        {combinedNote && (
             <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
                 <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
                 <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
-                    {paymentData.note}
+                    {combinedNote}
                 </span>
             </div>
         )}
@@ -480,10 +486,10 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                         </tr>` : ''}
                     </table>
 
-                    ${paymentData.note ? `
+                    ${combinedNote ? `
                     <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
                         <span style="text-transform: uppercase; font-size: 9px; font-weight: 900; color: black;">Note:</span>
-                        <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${paymentData.note}</span>
+                        <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${combinedNote}</span>
                     </div>` : ''}
 
                     <div class="footer">
