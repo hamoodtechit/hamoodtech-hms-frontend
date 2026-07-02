@@ -88,7 +88,9 @@ export function DischargeReceiptDialog({
 
         // Success mode calculation
         let dischargeCollection = 0
-        if (data?.lastPaidSales && Array.isArray(data.lastPaidSales)) {
+        if (data?.totalPaidAmountNow !== undefined) {
+            dischargeCollection = Number(data.totalPaidAmountNow)
+        } else if (data?.lastPaidSales && Array.isArray(data.lastPaidSales)) {
             dischargeCollection = data.lastPaidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
         } else {
             dischargeCollection = finalPaidAmount
@@ -544,11 +546,23 @@ export function DischargeReceiptDialog({
                                                 <span className="text-sm font-bold">{formatCurrency(receiptTotals.discount)}</span>
                                             </div>
                                         )}
+                                        {receiptTotals.previouslyPaid > 0 && (
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-xs font-black uppercase italic text-gray-600">Previously Paid:</span>
+                                                <span className="text-xs font-bold text-gray-600">{formatCurrency(receiptTotals.previouslyPaid)}</span>
+                                            </div>
+                                        )}
                                         <div className="border-b border-black w-full mb-1 mt-1"></div>
                                         <div className="flex justify-between items-center mb-1 mt-1">
                                             <span className="text-base font-black uppercase">Amount Collected:</span>
                                             <span className="text-lg font-black">{formatCurrency(receiptTotals.currentPayment)}</span>
                                         </div>
+                                        {receiptTotals.due > 0 && (
+                                            <div className="flex justify-between items-center mt-1">
+                                                <span className="text-xs font-black uppercase text-gray-600">Due Left:</span>
+                                                <span className="text-sm font-black text-gray-600">{formatCurrency(receiptTotals.due)}</span>
+                                            </div>
+                                        )}
                                     </>
                                 ) : (
                                     <>
