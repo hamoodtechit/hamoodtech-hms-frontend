@@ -135,9 +135,10 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
         <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2 text-[13px]">
             <thead>
                 <tr style={{ borderBottom: '2px solid black' }} className="font-black">
-                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Invoice Number</th>
+                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Invoice No</th>
                     <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items Details</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount Paid</th>
+                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amt Paid</th>
+                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rem. Due</th>
                 </tr>
             </thead>
             <tbody>
@@ -151,6 +152,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                                     : 'Bulk Settlement'}
                             </td>
                             <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top' }}>{Number(sale.paidAmount).toFixed(2)}</td>
+                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top', color: '#dc2626' }}>{sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
                         </tr>
                     )
                 })}
@@ -162,13 +164,25 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
             <div className="pt-2 pl-4">
             </div>
             <div className="w-[300px]">
-                <div className="flex justify-between py-1 px-2 font-black text-[14px]" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
-                    <span>Total Paid:</span>
+                {paymentData.totalDueAmount !== undefined && (
+                    <div className="flex justify-between py-1 px-2 font-bold mt-1 text-[12px]" style={{ color: '#444', borderBottom: '1px solid #eee' }}>
+                        <span>Prior Due Amount:</span>
+                        <span>{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
+                    </div>
+                )}
+                <div className="flex justify-between py-1 px-2 font-black text-[14px] mt-1" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
+                    <span>Paid Amount:</span>
                     <span>{totalPaid.toFixed(2)} ৳</span>
                 </div>
-                {paymentData.newPatientBalance !== undefined && (
-                <div className="flex justify-between py-1 px-2 font-black mt-1" style={{ color: '#444', borderBottom: '1px solid #ccc' }}>
-                    <span>New Account Balance:</span>
+                {paymentData.totalDueAmount !== undefined && (
+                    <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#b91c1c', borderBottom: '1px solid #ccc' }}>
+                        <span>Remaining Due:</span>
+                        <span>{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
+                    </div>
+                )}
+                {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
+                <div className="flex justify-between py-1 px-2 font-black mt-1" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
+                    <span>Advance Balance Added:</span>
                     <span>{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
                 </div>
                 )}
@@ -244,13 +258,14 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
         {/* Items Table */}
         <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
             <div className={`grid grid-cols-12 ${isPrinting ? 'text-[7.5px] mt-0.5' : 'text-[10px] mt-1'} font-bold border-b border-black/40 pb-0.5 uppercase tracking-tighter`}>
-                <div className="col-span-8">INVOICE & ITEMS</div>
-                <div className="col-span-4 text-right">AMT PAID</div>
+                <div className="col-span-7">INVOICE & ITEMS</div>
+                <div className="col-span-2 text-right">PAID</div>
+                <div className="col-span-3 text-right">DUE</div>
             </div>
             {paidSales.map((sale: any, idx: number) => {
                   return (
                     <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
-                        <div className="col-span-8 pr-1">
+                        <div className="col-span-7 pr-1">
                             <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{sale.invoiceNumber}</span>
                             {sale.saleItems && sale.saleItems.length > 0 && (
                                 <span className={`block ${isPrinting ? 'text-[6.5px]' : 'text-[9px]'} font-black text-black uppercase leading-tight`}>
@@ -258,8 +273,11 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                                 </span>
                             )}
                         </div>
-                        <div className="col-span-4 text-right font-black text-black">
+                        <div className="col-span-2 text-right font-black text-black">
                             {Number(sale.paidAmount).toFixed(2)}
+                        </div>
+                        <div className="col-span-3 text-right font-black text-red-600">
+                            {sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}
                         </div>
                     </div>
                 )
@@ -270,15 +288,28 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
 
         {/* Totals Section */}
         <div className={`${isPrinting ? 'space-y-0.5 text-[8.5px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-bold`}>
-             <div className="flex">
-                 <span className={isPrinting ? "w-24" : "w-32"}>Total Paid</span>
+             {paymentData.totalDueAmount !== undefined && (
+                 <div className="flex">
+                     <span className={isPrinting ? "w-24" : "w-32"}>Prior Due</span>
+                     <span className="w-4">:</span>
+                     <span className="flex-1 text-right">{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
+                 </div>
+             )}
+             <div className="flex text-black font-black bg-gray-100 p-0.5 mt-0.5 border-y border-black border-dashed">
+                 <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
                  <span className="w-4">:</span>
                  <span className="flex-1 text-right">{totalPaid.toFixed(2)} ৳</span>
              </div>
-             
-             {paymentData.newPatientBalance !== undefined && (
-                  <div className="flex">
-                      <span className={isPrinting ? "w-24" : "w-32"}>New Balance</span>
+             {paymentData.totalDueAmount !== undefined && (
+                 <div className="flex mt-0.5 text-red-600">
+                     <span className={isPrinting ? "w-24" : "w-32"}>Remaining Due</span>
+                     <span className="w-4">:</span>
+                     <span className="flex-1 text-right">{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
+                 </div>
+             )}
+             {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
+                  <div className="flex mt-0.5 text-green-700">
+                      <span className={isPrinting ? "w-24" : "w-32"}>Adv. Balance</span>
                       <span className="w-4">:</span>
                       <span className="flex-1 text-right">{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
                   </div>
@@ -317,11 +348,12 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 : '';
             return `
                 <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
-                <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1; width: 70%;">
+                <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1; width: 60%;">
                     <span style="font-size: 11.5px; display: block;">${sale.invoiceNumber}</span>
                     ${itemsList ? `<span style="font-size: 7.5px; font-weight: 900; color: black; text-transform: uppercase;">${itemsList}</span>` : ''}
                 </td>
-                <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px; width: 30%;">${Number(sale.paidAmount).toFixed(2)}</td>
+                <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: black; font-size: 9.5px; width: 20%;">${Number(sale.paidAmount).toFixed(2)}</td>
+                <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: #b91c1c; font-size: 9.5px; width: 20%;">${sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
                 </tr>
             `;
         }).join('');
@@ -388,8 +420,9 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                     <table class="items-table">
                         <thead>
                             <tr>
-                                <th style="width: 70%;">INVOICE & ITEMS</th>
-                                <th style="width: 30%; text-align: right;">AMT PAID</th>
+                                <th style="width: 60%;">INVOICE & ITEMS</th>
+                                <th style="width: 20%; text-align: right;">PAID</th>
+                                <th style="width: 20%; text-align: right;">DUE</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -400,14 +433,29 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                     <div style="border-top: 1px dashed black; margin-top: 5px;"></div>
 
                     <table class="totals-table">
-                        <tr style="font-size: 15px; color: black;">
-                            <td class="label-col">Total Paid</td>
+                        ${paymentData.totalDueAmount !== undefined ? `
+                        <tr style="font-size: 11px; color: black; font-weight: bold;">
+                            <td class="label-col">Prior Due</td>
+                            <td class="colon-col">:</td>
+                            <td class="value-col">${Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</td>
+                        </tr>` : ''}
+
+                        <tr style="font-size: 14px; color: black; font-weight: 900; background: #f3f4f6; border-top: 1px dashed black; border-bottom: 1px dashed black;">
+                            <td class="label-col">Paid Amount</td>
                             <td class="colon-col">:</td>
                             <td class="value-col">${totalPaid.toFixed(2)} ৳</td>
                         </tr>
-                        ${paymentData.newPatientBalance !== undefined ? `
-                        <tr>
-                            <td class="label-col">New Balance</td>
+
+                        ${paymentData.totalDueAmount !== undefined ? `
+                        <tr style="font-size: 11px; color: #b91c1c; font-weight: bold;">
+                            <td class="label-col">Remaining Due</td>
+                            <td class="colon-col">:</td>
+                            <td class="value-col">${Number(paymentData.totalDueAmount).toFixed(2)} ৳</td>
+                        </tr>` : ''}
+
+                        ${paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 ? `
+                        <tr style="font-size: 11px; color: #15803d; font-weight: bold;">
+                            <td class="label-col">Adv. Balance</td>
                             <td class="colon-col">:</td>
                             <td class="value-col">${Number(paymentData.newPatientBalance).toFixed(2)} ৳</td>
                         </tr>` : ''}
