@@ -221,9 +221,15 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                     </div>
                                     <div className="bg-muted/20 p-5 rounded-2xl space-y-4 border border-white/5 shadow-inner">
                                         <div className="space-y-1">
-                                            <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Admission Date</span>
-                                            <span className="text-sm font-black text-foreground/90">{format(new Date(admission.admissionDate), "PPPP")}</span>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Admission Date & Time</span>
+                                            <span className="text-sm font-black text-foreground/90">{format(new Date(admission.admissionDate), "dd MMM, yyyy - p")}</span>
                                         </div>
+                                        {admission.dischargeDate && (
+                                            <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Discharge Date & Time</span>
+                                                <span className="text-sm font-black text-foreground/90">{format(new Date(admission.dischargeDate), "dd MMM, yyyy - p")}</span>
+                                            </div>
+                                        )}
                                         <div className="space-y-1">
                                             <span className="text-[10px] font-bold text-muted-foreground uppercase block opacity-50">Primary Reason / Diagnosis</span>
                                             <p className="text-xs font-medium leading-relaxed bg-white/5 p-3 rounded-lg italic opacity-80">
