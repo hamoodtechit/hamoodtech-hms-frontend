@@ -21,7 +21,7 @@ import {
 import { SearchableSelect } from "@/components/shared/searchable-select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { useFinanceAccounts } from "@/hooks/finance-queries"
-import { useAddSalePayment } from "@/hooks/sales-queries"
+
 import { usePayPharmacyDues, useProcessHospitalPayment } from "@/hooks/patient-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Sale } from "@/types/sales"

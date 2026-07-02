@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format } from "date-fns"
-import { Receipt, AlertCircle, ShoppingBag, ArrowRight } from "lucide-react"
+import { Receipt, AlertCircle, ShoppingBag, ArrowRight, ActivitySquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { AdmissionDetailsDialog } from "@/components/patients/admission-details-dialog"
 
 interface PatientSalesHistoryProps {
     patientId: string
@@ -22,8 +24,10 @@ interface PatientSalesHistoryProps {
 
 export function PatientSalesHistory({ patientId }: PatientSalesHistoryProps) {
     const { formatCurrency } = useCurrency()
-    const { data: salesRes, isLoading } = useSales({ patientId, type: "pos", limit: 100 })
+    const { data: salesRes, isLoading } = useSales({ patientId, limit: 100 })
     const sales = salesRes?.data?.data || salesRes?.data?.sales || []
+    
+    const [selectedAdmissionId, setSelectedAdmissionId] = useState<string | null>(null)
 
     if (isLoading) {
         return (
@@ -67,6 +71,7 @@ export function PatientSalesHistory({ patientId }: PatientSalesHistoryProps) {
                         <TableRow className="hover:bg-transparent border-none">
                             <TableHead className="text-[10px] font-black uppercase tracking-widest pl-8 py-5">Invoice</TableHead>
                             <TableHead className="text-[10px] font-black uppercase tracking-widest">Date</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-widest">Type</TableHead>
                             <TableHead className="text-[10px] font-black uppercase tracking-widest">Status</TableHead>
                             <TableHead className="text-[10px] font-black uppercase tracking-widest">Payment</TableHead>
                             <TableHead className="text-[10px] font-black uppercase tracking-widest text-right pr-8">Total Amount</TableHead>
@@ -85,6 +90,14 @@ export function PatientSalesHistory({ patientId }: PatientSalesHistoryProps) {
                                     <span className="text-sm font-bold text-muted-foreground">
                                         {format(new Date(sale.createdAt), "dd MMM, yyyy")}
                                     </span>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge 
+                                        variant="outline" 
+                                        className={`uppercase font-black text-[9px] tracking-widest px-2 py-0.5 rounded-lg bg-primary/10 text-primary border-primary/20`}
+                                    >
+                                        {sale.type}
+                                    </Badge>
                                 </TableCell>
                                 <TableCell>
                                     <Badge 
@@ -116,12 +129,31 @@ export function PatientSalesHistory({ patientId }: PatientSalesHistoryProps) {
                                             {formatCurrency(sale.dueAmount)} Due
                                         </p>
                                     )}
+                                    {sale.type === 'admission' && sale.patientAdmissionId && (
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-7 text-[9px] font-black uppercase tracking-widest mt-1 text-primary hover:bg-primary/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setSelectedAdmissionId(sale.patientAdmissionId || null)
+                                            }}
+                                        >
+                                            <ActivitySquare className="h-3 w-3 mr-1" /> View Admission
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
+            
+            <AdmissionDetailsDialog 
+                open={!!selectedAdmissionId}
+                onOpenChange={(open) => !open && setSelectedAdmissionId(null)}
+                admissionId={selectedAdmissionId || ''}
+            />
         </div>
     )
 }
