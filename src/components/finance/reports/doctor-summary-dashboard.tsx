@@ -74,13 +74,13 @@ export function DoctorSummaryDashboard() {
     // Summary
     csvContent += "DOCTOR SUMMARY REPORT\n"
     csvContent += `Total Patients,${summary?.totalPatientVisited || 0}\n`
-    csvContent += `Total Consultation Charges,${summary?.totalConsultationCharge || 0}\n`
+    csvContent += `Total Consultation Commission,${summary?.totalConsultationCharge || 0}\n`
     csvContent += `Total Appointment Sales,${summary?.totalAppointmentSale || 0}\n`
     csvContent += `Total Amount Paid,${summary?.totalAmountPaid || 0}\n`
     csvContent += `Total Amount Due,${summary?.totalAmountDue || 0}\n\n`
 
     // Details
-    csvContent += "Doctor Name,Patients Visited,Consultation Charges,Appointment Sales,Amount Paid,Amount Due\n"
+    csvContent += "Doctor Name,Patients Visited,Consultation Commission,Appointment Sales,Amount Paid,Amount Due\n"
     doctors.forEach((doctor) => {
         csvContent += `"${doctor.doctorName}",${doctor.patientVisited},${doctor.consultationChargeGot},${doctor.appointmentSale},${doctor.amountPaid},${doctor.amountDue}\n`
     })
@@ -180,7 +180,7 @@ export function DoctorSummaryDashboard() {
 
             <Card className="border-l-4 border-l-emerald-500 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Consultation</CardTitle>
+                    <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Consultation Commission</CardTitle>
                     <Stethoscope className="h-4 w-4 text-emerald-500" />
                 </CardHeader>
                 <CardContent>
@@ -227,7 +227,7 @@ export function DoctorSummaryDashboard() {
                                     <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Doctor Name</th>
                                     <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-center">Patients</th>
                                     <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Appt. Sales</th>
-                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Consultation</th>
+                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Consultation Commission</th>
                                     <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Paid</th>
                                     <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Due</th>
                                 </tr>
@@ -283,7 +283,7 @@ export function DoctorSummaryDashboard() {
                     </div>
                     <div className="grid grid-cols-2">
                         <div className="p-2 border-r border-black flex gap-4">
-                            <span>Total Consultation: <span className="text-emerald-600">{formatCurrency(summary?.totalConsultationCharge || 0)}</span></span>
+                            <span>Total Consultation Commission: <span className="text-emerald-600">{formatCurrency(summary?.totalConsultationCharge || 0)}</span></span>
                             <span>Total Due: <span className="text-red-600">{formatCurrency(summary?.totalAmountDue || 0)}</span></span>
                         </div>
                         <div className="p-2">
@@ -299,7 +299,7 @@ export function DoctorSummaryDashboard() {
                             <th className="p-2 border-r border-black">Doctor Name</th>
                             <th className="p-2 border-r border-black text-center">Patients</th>
                             <th className="p-2 border-r border-black text-right">Appt. Sales</th>
-                            <th className="p-2 border-r border-black text-right">Consultation</th>
+                            <th className="p-2 border-r border-black text-right">Consultation Commission</th>
                             <th className="p-2 border-r border-black text-right">Paid</th>
                             <th className="p-2 text-right">Due</th>
                         </tr>
