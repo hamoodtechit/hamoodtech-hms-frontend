@@ -541,23 +541,6 @@ export function AddAdmissionServiceDialog({
                                 </div>
                             </div>
                             
-                            {/* Toggle Billing Mode */}
-                            <div className="bg-primary/5 rounded-2xl p-1.5 flex gap-1 border border-primary/10">
-                                <Button
-                                    variant={billingMode === 'make-bill' ? 'default' : 'ghost'}
-                                    className={`flex-1 rounded-xl h-10 text-xs font-black uppercase tracking-widest ${billingMode === 'make-bill' ? 'shadow-sm' : 'opacity-60 hover:opacity-100'}`}
-                                    onClick={() => setBillingMode('make-bill')}
-                                >
-                                    Make Bill
-                                </Button>
-                                <Button
-                                    variant={billingMode === 'bill-and-pay' ? 'default' : 'ghost'}
-                                    className={`flex-1 rounded-xl h-10 text-xs font-black uppercase tracking-widest ${billingMode === 'bill-and-pay' ? 'shadow-sm' : 'opacity-60 hover:opacity-100'}`}
-                                    onClick={() => setBillingMode('bill-and-pay')}
-                                >
-                                    Bill & Pay Other Bills
-                                </Button>
-                            </div>
 
                             {/* Payment Section (Conditional) */}
                             {billingMode === 'make-bill' && (
@@ -637,17 +620,33 @@ export function AddAdmissionServiceDialog({
                     </div>
                 </div>
 
-                <DialogFooter className="p-6 border-t border-primary/10 bg-muted/20 shrink-0 mt-auto">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving} className="rounded-xl px-6 h-11 font-black uppercase text-xs border-muted-foreground/20">
+                <DialogFooter className="p-4 border-t border-primary/10 bg-muted/20 shrink-0 mt-auto flex flex-row items-center justify-between w-full">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving} className="rounded-xl px-4 h-11 font-black uppercase text-[10px] md:text-xs border-muted-foreground/20 shrink-0">
                         Cancel
                     </Button>
+                    <div className="flex gap-2 flex-1 mx-4 max-w-sm">
+                        <Button
+                            variant={billingMode === 'make-bill' ? 'default' : 'ghost'}
+                            className={`flex-1 rounded-xl h-11 text-[9px] md:text-[10px] font-black uppercase tracking-widest ${billingMode === 'make-bill' ? 'shadow-sm bg-primary text-primary-foreground' : 'opacity-60 hover:opacity-100 bg-primary/5 text-foreground'}`}
+                            onClick={() => setBillingMode('make-bill')}
+                        >
+                            Make Bill
+                        </Button>
+                        <Button
+                            variant={billingMode === 'bill-and-pay' ? 'default' : 'ghost'}
+                            className={`flex-1 rounded-xl h-11 text-[9px] md:text-[10px] font-black uppercase tracking-widest ${billingMode === 'bill-and-pay' ? 'shadow-sm bg-primary text-primary-foreground' : 'opacity-60 hover:opacity-100 bg-primary/5 text-foreground'}`}
+                            onClick={() => setBillingMode('bill-and-pay')}
+                        >
+                            Bill & Pay Due
+                        </Button>
+                    </div>
                     <Button
                         onClick={handleFinalizeBill}
                         disabled={isSaving || cart.length === 0}
-                        className="rounded-xl px-8 h-11 font-black uppercase text-xs gap-2 shadow-lg shadow-primary/20"
+                        className="rounded-xl px-6 h-11 font-black uppercase text-[10px] md:text-xs gap-2 shadow-lg shadow-primary/20 shrink-0"
                     >
                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                        Submit Bill Invoice
+                        Submit
                     </Button>
                 </DialogFooter>
             </DialogContent>
