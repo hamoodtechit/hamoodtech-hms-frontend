@@ -240,12 +240,10 @@ export function AddAdmissionServiceDialog({
                                 accountId: selectedAccountId,
                                 amount: activePaidAmount,
                                 paymentMethod: paymentMethod,
+                                note: note,
                             }
                         })
-                        // Use updated sale from payment response if available
-                        if (paymentRes?.data) {
-                            processedSale = paymentRes.data
-                        }
+                        // We rely on the HospitalReceiptDialog to refetch the sale data via saleId
                         toast.success(dueAmount > 0 
                             ? `Bill created with ${formatCurrency(activePaidAmount)} paid, ${formatCurrency(dueAmount)} due`
                             : "Services added and payment processed!"
