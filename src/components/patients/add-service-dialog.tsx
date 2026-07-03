@@ -39,7 +39,7 @@ interface AddAdmissionServiceDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     admission: Admission | null
-    onSuccess?: (sale?: any) => void
+    onSuccess?: (sale?: any, action?: 'make-bill' | 'bill-and-pay') => void
 }
 
 interface CartItem {
@@ -60,6 +60,10 @@ export function AddAdmissionServiceDialog({
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const { mutateAsync: createSale, isPending: isSaving } = useCreateSale()
+    const addPaymentMutation = useAddSalePayment()
+    
+    const { data: accountsRes } = useFinanceAccounts({ limit: 100 })
+    const accounts = accountsRes?.data || []
 
     // Cart State
     const [cart, setCart] = useState<CartItem[]>([])
@@ -82,6 +86,22 @@ export function AddAdmissionServiceDialog({
 
     // Note State
     const [note, setNote] = useState("")
+
+    type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer'
+    const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
+
+    const [billingMode, setBillingMode] = useState<'make-bill' | 'bill-and-pay'>('make-bill')
+    const [paidAmount, setPaidAmount] = useState(0)
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
+    const [selectedAccountId, setSelectedAccountId] = useState("")
+    const [receiptSale, setReceiptSale] = useState<any>(null)
+
+    useEffect(() => {
+        if (open && accounts.length > 0 && !selectedAccountId) {
+            const defaultAccount = accounts.find((a: any) => a.name?.toLowerCase().includes('hospital')) || accounts[0]
+            if (defaultAccount) setSelectedAccountId(defaultAccount.id)
+        }
+    }, [open, accounts, selectedAccountId])
 
     const { data: labServicesRes, isLoading: isLoadingLabServices } = useDiagnosticTests({
         branchId: activeStoreId || undefined,
@@ -165,7 +185,16 @@ export function AddAdmissionServiceDialog({
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     const discountAmount = discountFixedAmount > 0 ? discountFixedAmount : (subtotal * discountPercentage) / 100
     const totalBill = Math.max(0, subtotal - discountAmount)
-    const dueAmount = totalBill
+    const activePaidAmount = billingMode === 'make-bill' ? paidAmount : 0
+    const dueAmount = Math.max(0, totalBill - activePaidAmount)
+
+    useEffect(() => {
+        if (billingMode === 'make-bill') {
+            setPaidAmount(totalBill)
+        } else {
+            setPaidAmount(0)
+        }
+    }, [totalBill, billingMode])
 
     const handleFinalizeBill = async () => {
         if (!admission || cart.length === 0) return
@@ -175,9 +204,9 @@ export function AddAdmissionServiceDialog({
             patientId: admission.patientId,
             patientAdmissionId: admission.id,
             type: "admission",
-            status: "pending",
-            paymentMethod: "cash",
-            paidAmount: 0,
+            status: dueAmount > 0 ? "pending" : "completed",
+            paymentMethod: billingMode === 'make-bill' ? paymentMethod : "cash",
+            paidAmount: activePaidAmount,
             dueAmount: dueAmount,
             discountPercentage: discountPercentage,
             discountAmount: discountAmount,
@@ -199,11 +228,45 @@ export function AddAdmissionServiceDialog({
 
         try {
             const saleRes = await createSale(payload)
-            toast.success("Services added to hospital bill successfully")
+            const saleId = saleRes?.data?.id
+            let processedSale = saleRes.data || saleRes
 
-            resetForm()
-            onSuccess?.(saleRes.data || saleRes)
-            onOpenChange(false)
+            if (billingMode === 'make-bill') {
+                if (saleId && activePaidAmount > 0 && selectedAccountId) {
+                    try {
+                        const paymentRes = await addPaymentMutation.mutateAsync({
+                            id: saleId,
+                            data: {
+                                accountId: selectedAccountId,
+                                amount: activePaidAmount,
+                                paymentMethod: paymentMethod,
+                            }
+                        })
+                        // Use updated sale from payment response if available
+                        if (paymentRes?.data) {
+                            processedSale = paymentRes.data
+                        }
+                        toast.success(dueAmount > 0 
+                            ? `Bill created with ${formatCurrency(activePaidAmount)} paid, ${formatCurrency(dueAmount)} due`
+                            : "Services added and payment processed!"
+                        )
+                    } catch (pError) {
+                        console.error("Payment failed:", pError)
+                        toast.warning("Bill created, but payment recording failed. Please collect manually.")
+                    }
+                } else {
+                    toast.success("Services added to hospital bill successfully")
+                }
+                
+                // For 'make-bill', we show the receipt instead of redirecting
+                setReceiptSale(processedSale)
+                // Don't close parent modal yet, wait for receipt to close
+            } else {
+                toast.success("Services added to hospital bill successfully")
+                resetForm()
+                onSuccess?.(processedSale, 'bill-and-pay')
+                onOpenChange(false)
+            }
         } catch (error: any) {
             if (!error?.response?.data?.message) {
                 toast.error("Failed to submit bill")
@@ -221,11 +284,13 @@ export function AddAdmissionServiceDialog({
         setDiscountPercentage(0)
         setDiscountFixedAmount(0)
         setNote("")
+        setPaidAmount(0)
+        setSelectedAccountId("")
     }
 
     return (
         <>
-        <Dialog open={open} onOpenChange={(val) => {
+        <Dialog open={open && !receiptSale} onOpenChange={(val) => {
             if (!val) resetForm()
             onOpenChange(val)
         }}>
@@ -476,6 +541,78 @@ export function AddAdmissionServiceDialog({
                                 </div>
                             </div>
                             
+                            {/* Toggle Billing Mode */}
+                            <div className="bg-primary/5 rounded-2xl p-1.5 flex gap-1 border border-primary/10">
+                                <Button
+                                    variant={billingMode === 'make-bill' ? 'default' : 'ghost'}
+                                    className={`flex-1 rounded-xl h-10 text-xs font-black uppercase tracking-widest ${billingMode === 'make-bill' ? 'shadow-sm' : 'opacity-60 hover:opacity-100'}`}
+                                    onClick={() => setBillingMode('make-bill')}
+                                >
+                                    Make Bill
+                                </Button>
+                                <Button
+                                    variant={billingMode === 'bill-and-pay' ? 'default' : 'ghost'}
+                                    className={`flex-1 rounded-xl h-10 text-xs font-black uppercase tracking-widest ${billingMode === 'bill-and-pay' ? 'shadow-sm' : 'opacity-60 hover:opacity-100'}`}
+                                    onClick={() => setBillingMode('bill-and-pay')}
+                                >
+                                    Bill & Pay Other Bills
+                                </Button>
+                            </div>
+
+                            {/* Payment Section (Conditional) */}
+                            {billingMode === 'make-bill' && (
+                                <div className="space-y-3 bg-muted/20 border border-border/50 p-4 rounded-2xl">
+                                    <div className="flex items-center gap-2">
+                                        <Wallet className="h-4 w-4 text-primary" />
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Payment</Label>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-bold text-muted-foreground ml-1">Account *</Label>
+                                            <SearchableSelect
+                                                value={selectedAccountId}
+                                                onChange={setSelectedAccountId}
+                                                options={accounts.filter((a: any) => a.isActive).map((a: any) => ({
+                                                    id: a.id,
+                                                    name: `${a.name} (${formatCurrency(Number(a.currentBalance))})`
+                                                }))}
+                                                placeholder="Select account..."
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-bold text-muted-foreground ml-1">Method</Label>
+                                            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                                                <SelectTrigger className="h-9 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {paymentMethods.map(m => (
+                                                        <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-bold text-muted-foreground ml-1">Paid Amount</Label>
+                                            <SmartNumberInput
+                                                value={paidAmount}
+                                                onChange={(v) => setPaidAmount(v || 0)}
+                                                className="h-9 text-xs font-bold rounded-lg"
+                                                min={0}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[9px] font-bold text-muted-foreground ml-1">Due Amount</Label>
+                                            <div className={`h-9 flex items-center px-3 rounded-lg border text-sm font-black tabular-nums ${dueAmount > 0 ? 'text-rose-500 bg-rose-50/50 border-rose-200' : 'text-emerald-600 bg-emerald-50/50 border-emerald-200'}`}>
+                                                {formatCurrency(dueAmount)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Bill Note / Remarks</Label>
                                 <Input 
@@ -515,6 +652,19 @@ export function AddAdmissionServiceDialog({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <HospitalReceiptDialog
+            open={!!receiptSale}
+            onOpenChange={(op) => {
+                if (!op) {
+                    setReceiptSale(null)
+                    resetForm()
+                    onSuccess?.(receiptSale, 'make-bill')
+                    onOpenChange(false)
+                }
+            }}
+            transaction={receiptSale}
+        />
 
         </>
     )

@@ -432,13 +432,15 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                     open={addServiceOpen}
                     onOpenChange={setAddServiceOpen}
                     admission={admission || null}
-                    onSuccess={(sale) => {
+                    onSuccess={(sale, action) => {
                         queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.admissions })
                         queryClient.invalidateQueries({ queryKey: SALES_KEYS.all })
                         refetch()
                         
                         if (sale && admission?.patientId) {
-                            router.push(`/patients/${admission.patientId}/due-payment`)
+                            if (action === 'bill-and-pay') {
+                                router.push(`/patients/${admission.patientId}/due-payment`)
+                            }
                             onOpenChange(false)
                         }
                     }}

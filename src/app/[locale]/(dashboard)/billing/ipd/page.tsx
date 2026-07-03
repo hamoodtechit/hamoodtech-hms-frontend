@@ -460,10 +460,12 @@ export default function IPDBillingPage() {
                     open={addServiceDialogOpen}
                     onOpenChange={setAddServiceDialogOpen}
                     admission={selectedAdmission}
-                    onSuccess={(sale) => {
+                    onSuccess={(sale, action) => {
                         refetch()
                         if (sale && selectedAdmission?.patientId) {
-                            router.push(`/patients/${selectedAdmission.patientId}/due-payment`)
+                            if (action === 'bill-and-pay') {
+                                router.push(`/patients/${selectedAdmission.patientId}/due-payment`)
+                            }
                             setAddServiceDialogOpen(false)
                         }
                     }}
