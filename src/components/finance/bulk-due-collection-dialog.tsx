@@ -110,13 +110,14 @@ export function BulkDueCollectionDialog({
                 
             console.log("Bulk Payment Response:", response)
             
-            // Inject saleItems from the GET API into the POST API response so the receipt can print item details!
+            // Inject saleItems and original bill note from the GET API into the POST API response
             if (response?.data?.paidSales) {
                 response.data.paidSales = response.data.paidSales.map((ps: any) => {
                     const originalSale = sales.find(s => s.id === ps.saleId);
                     return {
                         ...ps,
-                        saleItems: originalSale?.saleItems || []
+                        saleItems: originalSale?.saleItems || [],
+                        saleNote: originalSale?.note || null,
                     };
                 });
             }

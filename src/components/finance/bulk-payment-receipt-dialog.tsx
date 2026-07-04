@@ -53,7 +53,9 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
   
   const transactions = paymentData.transactions || []
   const txnNotes = [...new Set(transactions.map((t: any) => t.note).filter(Boolean))]
-  const combinedNote = paymentData.note || (txnNotes.length > 0 ? txnNotes.join(" | ") : "")
+  // Priority: 1) Note typed in payment dialog, 2) Original bill remarks from sale creation, 3) Auto-generated txn notes
+  const saleNotes = [...new Set(paidSales.map((s: any) => s.saleNote || s.note).filter(Boolean))]
+  const combinedNote = paymentData.note || (saleNotes.length > 0 ? saleNotes.join(" | ") : (txnNotes.length > 0 ? txnNotes.join(" | ") : ""))
 
   const txnMethods = [...new Set(transactions.map((t: any) => t.paymentMethod).filter(Boolean))]
   const derivedPaymentMethod = txnMethods.length > 0 ? txnMethods.join(" / ") : paymentData.paymentMethod

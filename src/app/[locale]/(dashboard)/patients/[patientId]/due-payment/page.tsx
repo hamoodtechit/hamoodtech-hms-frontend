@@ -126,6 +126,17 @@ export default function HospitalDuePaymentPage({
             onSuccess: (res) => {
                 if (res.success) {
                     toast.success("Payment successful!")
+                    // Inject original sale data (items + note) into response for receipt
+                    if (res?.data?.paidSales) {
+                        res.data.paidSales = res.data.paidSales.map((ps: any) => {
+                            const originalSale = sales.find((s: any) => s.id === ps.saleId)
+                            return {
+                                ...ps,
+                                saleItems: originalSale?.saleItems || [],
+                                saleNote: originalSale?.note || null,
+                            }
+                        })
+                    }
                     setPaymentResult(res)
                     // Deselect if it was selected
                     setSelectedIds(prev => {
