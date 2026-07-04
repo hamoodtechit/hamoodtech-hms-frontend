@@ -53,7 +53,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
   
   const transactions = paymentData.transactions || []
   const txnNotes = [...new Set(transactions.map((t: any) => t.note).filter(Boolean))]
-  const combinedNote = txnNotes.length > 0 ? txnNotes.join(" | ") : paymentData.note
+  const combinedNote = paymentData.note || (txnNotes.length > 0 ? txnNotes.join(" | ") : "")
 
   const txnMethods = [...new Set(transactions.map((t: any) => t.paymentMethod).filter(Boolean))]
   const derivedPaymentMethod = txnMethods.length > 0 ? txnMethods.join(" / ") : paymentData.paymentMethod
@@ -189,6 +189,12 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                     <span>Paid Amount:</span>
                     <span>{totalPaid.toFixed(2)} ৳</span>
                 </div>
+                {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
+                    <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
+                        <span>Total Discount:</span>
+                        <span>{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
+                    </div>
+                )}
                 {paymentData.totalDueAmount !== undefined && (
                     <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#b91c1c', borderBottom: '1px solid #ccc' }}>
                         <span>Remaining Due:</span>
@@ -320,6 +326,13 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                  <span className="w-4">:</span>
                  <span className="flex-1 text-right">{totalPaid.toFixed(2)} ৳</span>
              </div>
+             {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
+                  <div className="flex mt-0.5 text-green-700">
+                      <span className={isPrinting ? "w-24" : "w-32"}>Total Discount</span>
+                      <span className="w-4">:</span>
+                      <span className="flex-1 text-right">{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
+                  </div>
+             )}
              {paymentData.totalDueAmount !== undefined && (
                  <div className="flex mt-0.5 text-red-600">
                      <span className={isPrinting ? "w-24" : "w-32"}>Remaining Due</span>
@@ -470,6 +483,13 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                             <td class="colon-col">:</td>
                             <td class="value-col">${totalPaid.toFixed(2)} ৳</td>
                         </tr>
+
+                        ${paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 ? `
+                        <tr style="font-size: 11px; color: #15803d; font-weight: bold;">
+                            <td class="label-col">Total Discount</td>
+                            <td class="colon-col">:</td>
+                            <td class="value-col">${Number(paymentData.totalDiscount).toFixed(2)} ৳</td>
+                        </tr>` : ''}
 
                         ${paymentData.totalDueAmount !== undefined ? `
                         <tr style="font-size: 11px; color: #b91c1c; font-weight: bold;">
