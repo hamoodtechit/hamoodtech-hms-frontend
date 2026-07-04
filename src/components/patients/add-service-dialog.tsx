@@ -90,7 +90,6 @@ export function AddAdmissionServiceDialog({
     type PaymentMethod = 'cash' | 'card' | 'online' | 'cheque' | 'bKash' | 'Nagad' | 'Rocket' | 'Bank Transfer'
     const paymentMethods: PaymentMethod[] = ['cash', 'card', 'online', 'cheque', 'bKash', 'Nagad', 'Rocket', 'Bank Transfer']
 
-    const [billingMode, setBillingMode] = useState<'make-bill' | 'bill-and-pay'>('make-bill')
     const [paidAmount, setPaidAmount] = useState(0)
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash")
     const [selectedAccountId, setSelectedAccountId] = useState("")
@@ -185,19 +184,16 @@ export function AddAdmissionServiceDialog({
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     const discountAmount = discountFixedAmount > 0 ? discountFixedAmount : (subtotal * discountPercentage) / 100
     const totalBill = Math.max(0, subtotal - discountAmount)
-    const activePaidAmount = billingMode === 'make-bill' ? paidAmount : 0
-    const dueAmount = Math.max(0, totalBill - activePaidAmount)
 
     useEffect(() => {
-        if (billingMode === 'make-bill') {
-            setPaidAmount(totalBill)
-        } else {
-            setPaidAmount(0)
-        }
-    }, [totalBill, billingMode])
+        setPaidAmount(totalBill)
+    }, [totalBill])
 
-    const handleFinalizeBill = async () => {
+    const handleFinalizeBill = async (mode: 'make-bill' | 'bill-and-pay') => {
         if (!admission || cart.length === 0) return
+
+        const activePaidAmount = mode === 'make-bill' ? paidAmount : 0
+        const dueAmount = Math.max(0, totalBill - activePaidAmount)
 
         const payload: SalePayload = {
             branchId: activeStoreId || "",
@@ -205,7 +201,7 @@ export function AddAdmissionServiceDialog({
             patientAdmissionId: admission.id,
             type: "admission",
             status: dueAmount > 0 ? "pending" : "completed",
-            paymentMethod: billingMode === 'make-bill' ? paymentMethod : "cash",
+            paymentMethod: mode === 'make-bill' ? paymentMethod : "cash",
             paidAmount: activePaidAmount,
             dueAmount: dueAmount,
             discountPercentage: discountPercentage,
@@ -231,7 +227,7 @@ export function AddAdmissionServiceDialog({
             const saleId = saleRes?.data?.id
             let processedSale = saleRes.data || saleRes
 
-            if (billingMode === 'make-bill') {
+            if (mode === 'make-bill') {
                 if (saleId && activePaidAmount > 0 && selectedAccountId) {
                     try {
                         const paymentRes = await addPaymentMutation.mutateAsync({
@@ -540,10 +536,9 @@ export function AddAdmissionServiceDialog({
                             </div>
                             
 
-                            {/* Payment Section (Conditional) */}
-                            {billingMode === 'make-bill' && (
-                                <div className="space-y-3 bg-muted/20 border border-border/50 p-4 rounded-2xl">
-                                    <div className="flex items-center gap-2">
+                            {/* Payment Section */}
+                            <div className="space-y-3 bg-muted/20 border border-border/50 p-4 rounded-2xl">
+                                <div className="flex items-center gap-2">
                                         <Wallet className="h-4 w-4 text-primary" />
                                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Payment</Label>
                                     </div>
@@ -586,13 +581,12 @@ export function AddAdmissionServiceDialog({
                                         </div>
                                         <div className="space-y-1">
                                             <Label className="text-[9px] font-bold text-muted-foreground ml-1">Due Amount</Label>
-                                            <div className={`h-9 flex items-center px-3 rounded-lg border text-sm font-black tabular-nums ${dueAmount > 0 ? 'text-rose-500 bg-rose-50/50 border-rose-200' : 'text-emerald-600 bg-emerald-50/50 border-emerald-200'}`}>
-                                                {formatCurrency(dueAmount)}
+                                            <div className={`h-9 flex items-center px-3 rounded-lg border text-sm font-black tabular-nums ${Math.max(0, totalBill - paidAmount) > 0 ? 'text-rose-500 bg-rose-50/50 border-rose-200' : 'text-emerald-600 bg-emerald-50/50 border-emerald-200'}`}>
+                                                {formatCurrency(Math.max(0, totalBill - paidAmount))}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            )}
                             
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Bill Note / Remarks</Label>
@@ -622,30 +616,25 @@ export function AddAdmissionServiceDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving} className="rounded-xl px-4 h-11 font-black uppercase text-[10px] md:text-xs border-muted-foreground/20 shrink-0">
                         Cancel
                     </Button>
-                    <div className="flex gap-2 flex-1 mx-4 max-w-sm">
+                    <div className="flex gap-3 flex-1 justify-end ml-4">
                         <Button
-                            variant={billingMode === 'make-bill' ? 'default' : 'ghost'}
-                            className={`flex-1 rounded-xl h-11 text-[9px] md:text-[10px] font-black uppercase tracking-widest ${billingMode === 'make-bill' ? 'shadow-sm bg-primary text-primary-foreground' : 'opacity-60 hover:opacity-100 bg-primary/5 text-foreground'}`}
-                            onClick={() => setBillingMode('make-bill')}
+                            onClick={() => handleFinalizeBill('bill-and-pay')}
+                            disabled={isSaving || cart.length === 0}
+                            variant="outline"
+                            className="rounded-xl px-6 h-11 font-black uppercase text-[10px] md:text-xs gap-2 border-primary/20 hover:bg-primary/5 text-primary shrink-0"
                         >
-                            Make Bill
-                        </Button>
-                        <Button
-                            variant={billingMode === 'bill-and-pay' ? 'default' : 'ghost'}
-                            className={`flex-1 rounded-xl h-11 text-[9px] md:text-[10px] font-black uppercase tracking-widest ${billingMode === 'bill-and-pay' ? 'shadow-sm bg-primary text-primary-foreground' : 'opacity-60 hover:opacity-100 bg-primary/5 text-foreground'}`}
-                            onClick={() => setBillingMode('bill-and-pay')}
-                        >
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                             Bill & Pay Due
                         </Button>
+                        <Button
+                            onClick={() => handleFinalizeBill('make-bill')}
+                            disabled={isSaving || cart.length === 0}
+                            className="rounded-xl px-6 h-11 font-black uppercase text-[10px] md:text-xs gap-2 shadow-lg shadow-primary/20 shrink-0"
+                        >
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                            Make Bill
+                        </Button>
                     </div>
-                    <Button
-                        onClick={handleFinalizeBill}
-                        disabled={isSaving || cart.length === 0}
-                        className="rounded-xl px-6 h-11 font-black uppercase text-[10px] md:text-xs gap-2 shadow-lg shadow-primary/20 shrink-0"
-                    >
-                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                        Submit
-                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
