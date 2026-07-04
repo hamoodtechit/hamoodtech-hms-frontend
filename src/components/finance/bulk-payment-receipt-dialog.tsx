@@ -129,6 +129,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 <div className="p-1 px-3 font-bold flex items-center">
                     <span className="shrink-0 w-32">Payment Mode :</span>
                     <span className="uppercase text-[12px]">{derivedPaymentMethod || "CASH"}</span>
+                </div>
             </div>
         </div>
 
