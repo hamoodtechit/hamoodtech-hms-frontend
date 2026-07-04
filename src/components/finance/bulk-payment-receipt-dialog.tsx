@@ -129,14 +129,7 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 <div className="p-1 px-3 font-bold flex items-center">
                     <span className="shrink-0 w-32">Payment Mode :</span>
                     <span className="uppercase text-[12px]">{derivedPaymentMethod || "CASH"}</span>
-                </div>
             </div>
-            {combinedNote && (
-            <div className="p-1 px-3 font-bold flex items-center border-b border-black">
-                <span className="shrink-0 w-32 uppercase">Remarks :</span>
-                <span className="italic">{combinedNote}</span>
-            </div>
-            )}
         </div>
 
         {/* Items Table */}
@@ -219,6 +212,16 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 <span className="uppercase">{amountInWords}</span>
             </div>
         </div>
+
+        {/* Remarks */}
+        {combinedNote && (
+            <div className="mt-2 px-8 relative z-10">
+                <div className="border border-black border-dashed p-2 bg-gray-50/30 font-bold text-[12px]">
+                    <span className="uppercase opacity-50 font-black">Remarks: </span>
+                    <span className="italic uppercase">{combinedNote}</span>
+                </div>
+            </div>
+        )}
 
         {/* Signature */}
         <div className="mt-12 flex justify-between px-8 relative z-10">
