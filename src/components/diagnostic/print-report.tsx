@@ -161,7 +161,7 @@ export function PrintReport({ report }: PrintReportProps) {
     };
 
     return (
-        <div id="print-report" className="bg-white text-black font-['Times_New_Roman',serif]">
+        <div id="print-report" className="bg-white text-black font-sans">
             {groupReports.map((group, gIdx) => (
                 <div 
                     key={gIdx} 
@@ -173,25 +173,7 @@ export function PrintReport({ report }: PrintReportProps) {
                 >
 
                     <div className="px-4 md:px-6 pb-[0.6in] relative z-10 min-h-[13in] flex flex-col">
-                        {/* Barcodes at Top Left and Top Right */}
-                        <div className="flex justify-between items-start mb-1 px-1">
-                            <div className="flex flex-col items-center">
-                                <svg className="h-10 w-40" viewBox="0 0 100 20" preserveAspectRatio="none">
-                                    {[2, 5, 8, 12, 15, 20, 22, 25, 30, 32, 35, 40, 42, 45, 50, 52, 55, 60, 62, 65, 70, 72, 75, 80, 82, 85, 90, 92, 95].map((x, i) => (
-                                        <rect key={i} x={`${x}%`} y="0" width={i % 3 === 0 ? "2" : "1"} height="20" fill="black" />
-                                    ))}
-                                </svg>
-                                <span className="text-[7pt] font-mono font-bold mt-0.5">{barcode.toUpperCase()}</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <svg className="h-10 w-40" viewBox="0 0 100 20" preserveAspectRatio="none">
-                                    {[3, 6, 9, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98].map((x, i) => (
-                                        <rect key={i} x={`${x}%`} y="0" width={i % 2 === 0 ? "2.5" : "1"} height="20" fill="black" />
-                                    ))}
-                                </svg>
-                                <span className="text-[7pt] font-mono font-bold mt-0.5">{barcode.toUpperCase()}</span>
-                            </div>
-                        </div>
+                        {/* Barcodes removed as per request */}
 
                         {/* 
                          * HOSPITAL HEADER REMOVED 
@@ -213,7 +195,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 return (
                                     <>
                                         {/* Standardized Boxed Patient Info (Unified across all modes) */}
-                                        <div className="py-0 mb-1 bg-white text-black text-[11pt] font-serif">
+                                        <div className="py-0 mb-1 bg-white text-black text-[11pt]">
                                             <table className="w-full border-collapse text-[11pt]">
                                                 <tbody>
                                                     <tr >
@@ -268,7 +250,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                     </div>
 
                                     {/* Standard Style: Boxed Patient Info */}
-                                    <div className="py-6 mb-10 bg-white text-black text-[11pt] font-serif">
+                                    <div className="py-2 mb-4 bg-white text-black text-[11pt]">
                                         <table className="w-full border-collapse text-[11pt]">
                                             <tbody>
                                                 <tr >
@@ -354,7 +336,7 @@ export function PrintReport({ report }: PrintReportProps) {
                             );
                             
                             return (
-                                <div className="text-center mb-2 italic text-[11.5pt] text-black font-serif leading-tight">
+                                <div className="text-center mb-2 italic text-[11.5pt] text-black leading-tight">
                                     {uniqueMachines.map((m, idx) => (
                                         <div key={idx} className="mb-0.5">
                                             (Tests are carried out by {m})
@@ -378,7 +360,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                         .replace(/&amp;/g, '&');
                                         
                                     return (
-                                        <div key={bIdx} className={cn("py-1 mb-1", block.type === 'impression' && "mt-4 pt-2 border-t-2 border-black font-serif")}>
+                                        <div key={bIdx} className={cn("py-1 mb-1", block.type === 'impression' && "mt-4 pt-2 border-t-2 border-black")}>
                                             {block.type === 'impression' && (
                                                 <span className="font-black underline text-[12pt] mr-3 uppercase text-black italic">INTERPRETATION / CONCLUSION:</span>
                                             )}
@@ -411,7 +393,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                 const preparedByName = result?.preparedBy || (detail as any)?.medicalTechnologist?.fullName || "—";
 
                                 return (
-                                    <div className="grid grid-cols-3 items-start font-serif text-black gap-4">
+                                    <div className="grid grid-cols-3 items-start text-black gap-4">
                                         {/* COLUMN 1: LEFT - Always CHECKED BY label for signature */}
                                         <div className="text-left">
                                             <div className="flex flex-col items-start gap-0">
