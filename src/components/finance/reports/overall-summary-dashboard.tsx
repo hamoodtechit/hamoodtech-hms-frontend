@@ -40,13 +40,10 @@ export function OverallSummaryDashboard() {
     })
   }, [])
 
-  const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined
-  const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined
-
   const { data: reportData, isLoading } = useOverallSummaryReport({
     branchId: activeStoreId || undefined,
-    startDate,
-    endDate
+    startDate: date?.from ? date.from.toISOString() : undefined,
+    endDate: date?.to ? endOfDay(date.to).toISOString() : undefined,
   })
 
   if (isLoading) {

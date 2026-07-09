@@ -34,8 +34,8 @@ export function DoctorSummaryDashboard() {
 
   const { data: reportData, isLoading } = useDoctorSummaryReport({
     branchId: activeStoreId || undefined,
-    startDate,
-    endDate
+    startDate: date?.from ? date.from.toISOString() : undefined,
+    endDate: date?.to ? endOfDay(date.to).toISOString() : undefined
   }, { enabled: !!date?.from && !!date?.to })
 
   if (isLoading) {
