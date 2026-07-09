@@ -99,7 +99,7 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
             <div class="receipt-container">
                 <div class="header">
                     <img src="${activeBranch?.logoUrl || '/Logo.png'}" alt="Logo" class="hospital-logo" />
-                    <h1 class="hospital-name">${activeBranch?.name || 'PATWARY GENERAL HOSPITAL'}</h1>
+                    <h1 class="hospital-name">PATWARY GENERAL HOSPITAL</h1>
                     <p class="hospital-info">${activeBranch?.address || ''}</p>
                     <p class="hospital-info">Ph: ${activeBranch?.phone || ''}</p>
                     <div class="slip-tag">Appointment Slip</div>

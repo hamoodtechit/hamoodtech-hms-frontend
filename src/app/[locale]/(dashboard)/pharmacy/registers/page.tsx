@@ -241,7 +241,7 @@ export default function CashRegisterHistoryPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-background/50 border-primary/20">
-                            {session.branch?.name || 'Main Branch'}
+                            {session.branch?.name || 'PATWARY GENERAL HOSPITAL'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm font-medium">

@@ -236,7 +236,7 @@ export function RegisterDetailsDialog({ id, open, onOpenChange }: RegisterDetail
                                                 <InfoItem 
                                                     icon={<Store className="h-4 w-4" />}
                                                     label="Branch"
-                                                    value={session?.branch?.name || "Main Branch"}
+                                                    value={session?.branch?.name || "PATWARY GENERAL HOSPITAL"}
                                                 />
                                                 <InfoItem 
                                                     icon={<Calendar className="h-4 w-4" />}

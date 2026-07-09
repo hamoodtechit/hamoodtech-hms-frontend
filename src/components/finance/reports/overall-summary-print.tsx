@@ -27,7 +27,7 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
         <div className="text-center">
-            <h1 className="text-2xl font-bold uppercase">{activeBranch?.name || 'PATWARY GENERAL HOSPITAL'}</h1>
+            <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
             <h2 className="text-xl font-bold mt-1">Overall Financial Summary Report</h2>
             <p className="text-sm mt-2 font-medium">
                 Period: {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}
