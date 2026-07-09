@@ -60,7 +60,13 @@ export default function AppointmentHistoryPage() {
         limit: 10,
         search,
         branchId: activeStoreId || undefined,
-        ...filters
+        ...filters,
+        startDate: filters.startDate ? new Date(filters.startDate + 'T00:00:00').toISOString() : undefined,
+        endDate: filters.endDate ? (() => {
+            const d = new Date(filters.endDate + 'T00:00:00');
+            d.setHours(23, 59, 59, 999);
+            return d.toISOString();
+        })() : undefined,
     })
 
     const { data: deptsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
