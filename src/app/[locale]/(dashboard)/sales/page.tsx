@@ -40,13 +40,15 @@ import { useEmployees } from "@/hooks/hr-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
-import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet } from "lucide-react"
+import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet, Undo2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 import { useAuthStore } from "@/store/use-auth-store"
+import { usePermissions } from "@/hooks/use-permissions"
+import { CreateReturnDialog } from "@/components/pharmacy/pos/create-return-dialog"
 
 export default function SalesHistoryPage() {
   const router = useRouter()
@@ -67,6 +69,7 @@ export default function SalesHistoryPage() {
   const [maxAmount, setMaxAmount] = useState("")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const { user } = useAuthStore()
+  const { hasPermission } = usePermissions()
   const roleName = user?.role?.name?.toLowerCase() || ""
   const isPharmacist = roleName === "pharmacist"
   const isReceptionist = roleName === "receptionist"
@@ -138,6 +141,8 @@ export default function SalesHistoryPage() {
   const [initialAddPayment, setInitialAddPayment] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDueDialogOpen, setBulkDueDialogOpen] = useState(false)
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false)
+  const [selectedReturnSale, setSelectedReturnSale] = useState<Sale | null>(null)
 
   const { data: salesRes, isLoading, isFetching, refetch } = useSales({
     page,
@@ -675,6 +680,20 @@ export default function SalesHistoryPage() {
                                >
                                   <FileText className="h-4 w-4" />
                                </Button>
+                               {hasPermission('sale-return:create') && sale.status === 'completed' && (
+                                 <Button 
+                                   variant="ghost" 
+                                   size="icon" 
+                                   className="h-8 w-8 hover:bg-orange-500/20 hover:text-orange-600 transition-all text-muted-foreground"
+                                   title="Return Items"
+                                   onClick={() => {
+                                      setSelectedReturnSale(sale)
+                                      setReturnDialogOpen(true)
+                                   }}
+                                 >
+                                    <Undo2 className="h-4 w-4" />
+                                 </Button>
+                               )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -770,6 +789,17 @@ export default function SalesHistoryPage() {
                  setSelectedIds(new Set())
                  refetch()
              }}
+          />
+
+          <CreateReturnDialog 
+            open={returnDialogOpen}
+            onOpenChange={setReturnDialogOpen}
+            sale={selectedReturnSale}
+            onSuccess={() => {
+                setReturnDialogOpen(false)
+                setSelectedReturnSale(null)
+                refetch()
+            }}
           />
         </div>
     </PermissionGuard>
