@@ -631,6 +631,7 @@ export default function DiagnosticReportsPage() {
                                 <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-extrabold">
                                     <TableRow>
                                         <TableHead className="pl-6">Barcode / ID</TableHead>
+                                        <TableHead>Patient ID</TableHead>
                                         <TableHead>Patient</TableHead>
                                         <TableHead>Age</TableHead>
                                         <TableHead>Consultant</TableHead>
@@ -645,7 +646,7 @@ export default function DiagnosticReportsPage() {
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={10} className="h-64 text-center">
+                                            <TableCell colSpan={11} className="h-64 text-center">
                                                 <div className="flex flex-col items-center gap-2 opacity-50">
                                                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                                                     <p className="text-sm font-bold">Fetching worklist...</p>
@@ -654,7 +655,7 @@ export default function DiagnosticReportsPage() {
                                         </TableRow>
                                     ) : reports.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={10} className="h-96 text-center">
+                                            <TableCell colSpan={11} className="h-96 text-center">
                                                 <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-50">
                                                     <div className={cn("p-6 rounded-full mb-4",
                                                         activeTab === 'pending' ? "bg-amber-500/10" :
@@ -675,6 +676,9 @@ export default function DiagnosticReportsPage() {
                                                         <div className="w-1 h-6 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
                                                         {report.barcode || `REQ-${report.id.substring(0, 8)}`}
                                                     </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-mono font-bold text-sm tracking-tight">{report.patient?.patientNumber || '—'}</span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col gap-0.5">
