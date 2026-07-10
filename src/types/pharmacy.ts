@@ -466,6 +466,7 @@ export interface SaleReturnItemPayload {
 export interface SaleReturnPayload {
   saleId: string;
   status?: 'pending' | 'completed' | 'rejected';
+  note?: string;
   saleReturnItems: SaleReturnItemPayload[];
 }
 

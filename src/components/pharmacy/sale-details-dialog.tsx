@@ -521,7 +521,14 @@ export function SaleDetailsDialog({
                   <TableBody>
                     {saleReturns.map((sr) => (
                       <TableRow key={sr.id}>
-                        <TableCell className="font-medium text-xs">{sr.invoiceNumber}</TableCell>
+                        <TableCell className="font-medium text-xs">
+                          <div>{sr.invoiceNumber}</div>
+                          {sr.note && (
+                              <div className="text-[10px] text-muted-foreground font-normal italic mt-0.5 truncate max-w-[150px]" title={sr.note}>
+                                  Note: {sr.note}
+                              </div>
+                          )}
+                        </TableCell>
                         <TableCell className="text-xs">{new Date(sr.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right text-xs font-semibold">{formatCurrency(sr.totalPrice)}</TableCell>
                         <TableCell className="text-right">

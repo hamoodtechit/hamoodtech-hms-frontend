@@ -11,6 +11,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import {
     Table,
     TableBody,
@@ -37,6 +39,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
   const [loading, setLoading] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({}) // Record<saleItemId, boolean>
   const [returnQuantities, setReturnQuantities] = useState<Record<string, number>>({}) // Record<saleItemId, quantity>
+  const [note, setNote] = useState("")
   const { formatCurrency } = useCurrency()
 
   if (!sale) return null
@@ -102,6 +105,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
       const payload: SaleReturnPayload = {
         saleId: sale.id,
         status: 'completed',
+        note: note || undefined,
         saleReturnItems
       }
 
@@ -192,8 +196,17 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
             </Table>
           </div>
 
-          <div className="flex justify-end mt-4">
-            <div className="text-lg font-bold">
+          <div className="flex flex-col md:flex-row justify-between mt-4 gap-4">
+            <div className="flex-1 space-y-2">
+              <Label>Return Note (Optional)</Label>
+              <Textarea 
+                placeholder="Reason for return..." 
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="resize-none h-20"
+              />
+            </div>
+            <div className="text-lg font-bold flex items-end">
                 Total Refund: {formatCurrency(totalRefund)}
             </div>
           </div>

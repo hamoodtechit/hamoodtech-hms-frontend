@@ -153,6 +153,7 @@ export interface SaleReturn {
   paymentMethod?: PaymentMethod;
   discountPercentage?: number | string;
   discountAmount?: number | string;
+  note?: string;
   saleReturnItems: SaleReturnItemDetails[];
   createdAt: string;
   updatedAt: string;
@@ -169,6 +170,7 @@ export interface SaleReturnItemDetails extends SaleReturnItem {
 export interface SaleReturnPayload {
   saleId: string;
   status?: 'pending' | 'completed' | 'rejected';
+  note?: string;
   saleReturnItems: SaleReturnItem[];
 }
 
