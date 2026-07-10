@@ -89,7 +89,8 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
         const price = Number(item.price)
         
         return {
-          ...(sale.type === 'pos' ? { medicineId: item.medicineId || "" } : { serviceId: item.serviceId || undefined }),
+          medicineId: sale.type === 'pos' ? (item.medicineId || "") : "",
+          serviceId: sale.type !== 'pos' ? (item.serviceId || "") : "",
           itemName: item.itemName,
           itemDescription: item.itemDescription || undefined,
           unit: item.unit,
