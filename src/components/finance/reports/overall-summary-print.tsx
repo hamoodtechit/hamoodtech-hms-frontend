@@ -64,11 +64,7 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
                   <tbody>
                       <tr>
                           <td className="border border-black p-2 font-medium">Refunded Amount</td>
-                          <td className="border border-black p-2 text-right font-bold">{formatCurrency(returns?.saleReturnAmount || 0)}</td>
-                      </tr>
-                      <tr>
-                          <td className="border border-black p-2 font-medium">Returns Processed</td>
-                          <td className="border border-black p-2 text-right">{returns?.saleReturnCount || 0}</td>
+                          <td className="border border-black p-2 text-right font-bold">{formatCurrency(summary?.totalReturned || returns?.saleReturnAmount || 0)}</td>
                       </tr>
                   </tbody>
               </table>
@@ -81,10 +77,6 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
                       <tr>
                           <td className="border border-black p-2 font-medium">Refunded Amount</td>
                           <td className="border border-black p-2 text-right font-bold">{formatCurrency(returns?.purchaseReturnAmount || 0)}</td>
-                      </tr>
-                      <tr>
-                          <td className="border border-black p-2 font-medium">Returns Processed</td>
-                          <td className="border border-black p-2 text-right">{returns?.purchaseReturnCount || 0}</td>
                       </tr>
                   </tbody>
               </table>

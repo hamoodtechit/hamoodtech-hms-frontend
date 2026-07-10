@@ -12,6 +12,7 @@ export interface IOverallSummaryData {
     totalDiscount: number;
     totalDues: number;
     totalPaid: number;
+    totalReturned?: number;
     totalExpenses: number;
     totalPurchases: number;
     totalPurchasesPaid: number;

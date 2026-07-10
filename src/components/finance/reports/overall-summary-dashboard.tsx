@@ -212,8 +212,8 @@ export function OverallSummaryDashboard() {
                     <ArrowDownRight className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{formatCurrency(returns?.saleReturnAmount || 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">{returns?.saleReturnCount || 0} return(s) processed</p>
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{formatCurrency(summary?.totalReturned || returns?.saleReturnAmount || 0)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Total refunded amount</p>
                 </CardContent>
             </Card>
 
@@ -224,7 +224,7 @@ export function OverallSummaryDashboard() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{formatCurrency(returns?.purchaseReturnAmount || 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">{returns?.purchaseReturnCount || 0} return(s) processed</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total returned amount</p>
                 </CardContent>
             </Card>
         </div>
