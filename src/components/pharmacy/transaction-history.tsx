@@ -191,11 +191,7 @@ export function TransactionHistory() {
   }, [isOpen, activeStoreId, debouncedSearch, page, activeTab, filters])
 
   const handleReprint = (tx: UnifiedTransaction) => {
-    if (tx.type === 'return') {
-        toast.info("Return receipt printing coming soon")
-        return
-    }
-    if (tx.type !== 'sale') {
+    if (tx.type === 'purchase') {
         toast.info("Purchase order printing integration coming soon")
         return
     }
@@ -605,7 +601,7 @@ export function TransactionHistory() {
         onOpenChange={setReturnDetailsDialogOpen}
     />
 
-    {selectedTransactionForReceipt?.type === 'pos' ? (
+    {selectedTransactionForReceipt?.type === 'pos' || selectedTransactionForReceipt?.sale?.type === 'pos' ? (
       <ReceiptDialog 
           open={receiptDialogOpen}
           onOpenChange={setReceiptDialogOpen}
