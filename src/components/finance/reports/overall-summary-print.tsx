@@ -19,7 +19,7 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
   const consultations = reportData?.consultations
   const referrals = reportData?.referrals
   const salesByType = reportData?.salesByType || []
-  const returns = reportData?.returns
+  const returns = reportData?.returns || summary?.returns
 
   return (
     <div id="overall-summary-report" className="p-8 bg-white text-black font-serif print:p-0">

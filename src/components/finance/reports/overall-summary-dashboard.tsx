@@ -75,7 +75,7 @@ export function OverallSummaryDashboard() {
   const consultations = response?.consultations
   const referrals = response?.referrals
   const salesByType = response?.salesByType || []
-  const returns = response?.returns
+  const returns = response?.returns || summary?.returns
 
   const handlePrintReport = () => {
     if (!date?.from || !date?.to || !response) {

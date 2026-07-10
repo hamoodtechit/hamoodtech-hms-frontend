@@ -17,6 +17,12 @@ export interface IOverallSummaryData {
     totalPurchasesPaid: number;
     grossProfit: number;
     netProfit: number;
+    returns?: {
+      saleReturnAmount: number;
+      saleReturnCount: number;
+      purchaseReturnAmount: number;
+      purchaseReturnCount: number;
+    };
   };
   consultations: {
     chargePaid: number;
