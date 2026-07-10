@@ -75,6 +75,7 @@ export function OverallSummaryDashboard() {
   const consultations = response?.consultations
   const referrals = response?.referrals
   const salesByType = response?.salesByType || []
+  const returns = response?.returns
 
   const handlePrintReport = () => {
     if (!date?.from || !date?.to || !response) {
@@ -203,7 +204,32 @@ export function OverallSummaryDashboard() {
             </Card>
         </div>
 
-        {/* Row 3 (Profits) */}
+        {/* Row 3 (Returns) */}
+        <div className="grid gap-4 md:grid-cols-2">
+            <Card className="bg-red-50 dark:bg-red-950 border-l-4 border-l-red-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Sales Returns</CardTitle>
+                    <ArrowDownRight className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{formatCurrency(returns?.saleReturnAmount || 0)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{returns?.saleReturnCount || 0} return(s) processed</p>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-orange-50 dark:bg-orange-950 border-l-4 border-l-orange-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Purchase Returns</CardTitle>
+                    <ArrowUpRight className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{formatCurrency(returns?.purchaseReturnAmount || 0)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{returns?.purchaseReturnCount || 0} return(s) processed</p>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Row 4 (Profits) */}
         <div className="grid gap-4 md:grid-cols-2">
             <Card className="bg-indigo-50 dark:bg-indigo-950 border-l-4 border-l-indigo-500">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

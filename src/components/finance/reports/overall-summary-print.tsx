@@ -19,6 +19,7 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
   const consultations = reportData?.consultations
   const referrals = reportData?.referrals
   const salesByType = reportData?.salesByType || []
+  const returns = reportData?.returns
 
   return (
     <div id="overall-summary-report" className="p-8 bg-white text-black font-serif print:p-0">
@@ -55,6 +56,40 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
         </div>
       </div>
 
+      {/* Returns Section */}
+      <div className="grid grid-cols-2 gap-8 mb-6">
+          <div>
+              <h3 className="font-bold border-b border-black mb-3 uppercase text-sm">Sales Returns</h3>
+              <table className="w-full border-collapse border border-black text-sm">
+                  <tbody>
+                      <tr>
+                          <td className="border border-black p-2 font-medium">Refunded Amount</td>
+                          <td className="border border-black p-2 text-right font-bold">{formatCurrency(returns?.saleReturnAmount || 0)}</td>
+                      </tr>
+                      <tr>
+                          <td className="border border-black p-2 font-medium">Returns Processed</td>
+                          <td className="border border-black p-2 text-right">{returns?.saleReturnCount || 0}</td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+
+          <div>
+              <h3 className="font-bold border-b border-black mb-3 uppercase text-sm">Purchase Returns</h3>
+              <table className="w-full border-collapse border border-black text-sm">
+                  <tbody>
+                      <tr>
+                          <td className="border border-black p-2 font-medium">Refunded Amount</td>
+                          <td className="border border-black p-2 text-right font-bold">{formatCurrency(returns?.purchaseReturnAmount || 0)}</td>
+                      </tr>
+                      <tr>
+                          <td className="border border-black p-2 font-medium">Returns Processed</td>
+                          <td className="border border-black p-2 text-right">{returns?.purchaseReturnCount || 0}</td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
 
       {/* Two Column Section for Consultations and Referrals */}
       <div className="grid grid-cols-2 gap-8 mb-8">

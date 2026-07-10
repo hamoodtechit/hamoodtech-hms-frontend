@@ -29,6 +29,12 @@ export interface IOverallSummaryData {
     commissionDue: number;
   };
   salesByType: ISalesByType[];
+  returns?: {
+    saleReturnAmount: number;
+    saleReturnCount: number;
+    purchaseReturnAmount: number;
+    purchaseReturnCount: number;
+  };
 }
 
 export interface IOverallSummaryResponse {
