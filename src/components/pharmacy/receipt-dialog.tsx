@@ -231,11 +231,11 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
         <Separator className="border-black/20" />
         
         {/* Payment Note Section */}
-        {(data?.payments?.[0]?.note || (data as any)?.note) && (
+        {((transaction as any)?.note || data?.payments?.[0]?.note || (data as any)?.note) && (
             <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
                 <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
                 <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
-                    {(data as any)?.note || data?.payments?.[0]?.note}
+                    {(transaction as any)?.note || (data as any)?.note || data?.payments?.[0]?.note}
                 </span>
             </div>
         )}
@@ -414,10 +414,10 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
                             </tr>` : ''}
                         </table>
 
-                        ${(data?.payments?.[0]?.note || (data as any)?.note) ? `
+                        ${((transaction as any)?.note || data?.payments?.[0]?.note || (data as any)?.note) ? `
                         <div style="margin-top: 10px; padding: 5px; border: 1px dotted black; background: #fafafa; width: 100%; box-sizing: border-box; font-size: 11px;">
                             <span style="text-transform: uppercase; font-size: 9px; font-weight: 900; color: black;">Note:</span>
-                            <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${(data as any)?.note || data?.payments?.[0]?.note}</span>
+                            <span style="font-style: italic; font-weight: 900; color: black; text-transform: uppercase;">${(transaction as any)?.note || (data as any)?.note || data?.payments?.[0]?.note}</span>
                         </div>` : ''}
 
                         <div class="footer">
