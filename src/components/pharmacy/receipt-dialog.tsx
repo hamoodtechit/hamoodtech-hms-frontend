@@ -33,12 +33,13 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
   const fetchedData = (saleRes?.data as any)?.data?.sale || (saleRes?.data as any)?.sale || (saleRes?.data as any)?.data || saleRes?.data
-  const data = fetchedData || transaction
+  const isReturnReceipt = !!(transaction as any)?.saleReturnItems
+  const data = isReturnReceipt ? transaction : (fetchedData || transaction)
 
   if (!transaction && !isLoading) return null
   if (!data && !isLoading) return null
 
-  const items = (data as any)?.saleItems || (data as any)?.items || []
+  const items = isReturnReceipt ? ((data as any)?.saleReturnItems || []) : ((data as any)?.saleItems || (data as any)?.items || [])
   
   const mergedMeta = (() => {
     let meta: any = {}
@@ -90,7 +91,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
       return sum + (item.discountAmount || (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0))
   }, 0)
 
-  const netTotal = Number((data as any)?.netPrice || (data as any)?.total || 0)
+  const netTotal = isReturnReceipt ? Number((data as any)?.totalPrice || 0) : Number((data as any)?.netPrice || (data as any)?.total || 0)
   
   const apiPaid = Number((data as any)?.paidAmount || 0)
   const localPaid = Number((transaction as any)?.paidAmount || 0)
@@ -119,7 +120,9 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
               </div>
              {copyTitle && <div className="uppercase text-[9px] font-bold border border-black inline-block px-2 py-0.5 rounded-sm mb-1 leading-none">{copyTitle}</div>}
             <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{general?.hospitalName || branch?.name || "Hospital Name"}</h2>
-            <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Pharmacy</div>
+            <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>
+              {isReturnReceipt ? "Return Receipt" : "Pharmacy"}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{general?.address || branch?.address || "Hospital Address"}</p>
                 <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {general?.phone || branch?.phone || "Phone"}</p>

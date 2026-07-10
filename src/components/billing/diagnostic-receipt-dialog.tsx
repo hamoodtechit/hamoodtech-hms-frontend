@@ -58,19 +58,20 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   
   // Combine prop/initial data with fetched rich data
   const initialData = transaction?.data?.sale || transaction?.sale || transaction?.data || transaction
-  const data = saleRes?.data || initialData
+  const isReturnReceipt = !!(transaction as any)?.sale?.saleReturnItems || !!(transaction as any)?.saleReturnItems
+  const data = isReturnReceipt ? (transaction?.sale || transaction) : (saleRes?.data || initialData)
   
   if (!data && !isLoading) return null
   
-  const items = data?.saleItems || []
+  const items = isReturnReceipt ? (data?.saleReturnItems || []) : (data?.saleItems || [])
   
-  const netTotal = Number(data?.netPrice || data?.totalPrice || 0)
+  const netTotal = isReturnReceipt ? Number(data?.totalPrice || 0) : Number(data?.netPrice || data?.totalPrice || 0)
   const grossTotal = items.length > 0 
       ? items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0)
       : netTotal
   
-  const paidAmount = Number(data?.paidAmount || 0)
-  const dueAmount = Number(data?.dueAmount || 0)
+  const paidAmount = isReturnReceipt ? netTotal : Number(data?.paidAmount || 0) // for returns, assume paid amount is the return total
+  const dueAmount = isReturnReceipt ? 0 : Number(data?.dueAmount || 0)
   const taxAmount = Number(data?.taxAmount || 0)
   const discountAmount = Number(data?.discountAmount || data?.discount || 0)
   
@@ -168,7 +169,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
             </div>
 
             <div className="mt-2 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
-                {copyTitle}
+                {isReturnReceipt ? "RETURN RECEIPT" : copyTitle}
             </div>
         </div>
 
