@@ -208,12 +208,25 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
                 </div>
             </div>
             {/* Row 4 */}
-            <div className="grid grid-cols-1 font-sans">
+            <div className={cn("grid grid-cols-1 font-sans", data?.appointment ? "border-b border-black" : "")}>
                 <div className="p-1 px-3 font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
                         <span className="uppercase text-[12px]">{consultantName}</span>
                 </div>
             </div>
+            {/* Row 5 (Appointment Details) */}
+            {data?.appointment && (
+                <div className="grid grid-cols-2 font-sans">
+                    <div className="p-1 px-3 border-r border-black font-bold flex items-center gap-1">
+                        <span className="shrink-0">Room No :</span>
+                        <span className="uppercase text-[12px]">{data.appointment.chamberOrRoomNumber || "N/A"}</span>
+                    </div>
+                    <div className="p-1 px-3 font-bold flex items-center gap-1">
+                        <span className="shrink-0">Serial No :</span>
+                        <span className="uppercase text-[12px]">{data.appointment.serialNumber ? data.appointment.serialNumber.split('-').pop() : "N/A"}</span>
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* Items Table */}
