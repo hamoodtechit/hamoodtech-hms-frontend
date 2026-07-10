@@ -89,7 +89,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
         const price = Number(item.price)
         
         return {
-          medicineId: item.medicineId || "", // fallback to empty string if undefined for non-pharmacy items
+          ...(sale.type === 'pos' ? { medicineId: item.medicineId || "" } : { serviceId: item.serviceId || undefined }),
           itemName: item.itemName,
           itemDescription: item.itemDescription || undefined,
           unit: item.unit,
