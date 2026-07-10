@@ -200,7 +200,7 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                 </div>
             </div>
             {/* Row 4 */}
-            <div className="grid grid-cols-1 font-sans">
+            <div className={cn("grid grid-cols-1 font-sans", (data?.appointment || transaction?.serialNumber) ? "border-b border-black" : "")}>
                 <div className="p-1 px-3 font-bold flex items-start gap-1">
                     <span className="shrink-0">Consultant :</span>
                     <div className="flex flex-wrap items-baseline gap-1 pt-0.5">
@@ -213,6 +213,19 @@ export function AppointmentReceiptDialog({ open, onOpenChange, transaction, doct
                     </div>
                 </div>
             </div>
+            {/* Row 5 (Appointment Details) */}
+            {(data?.appointment || transaction?.serialNumber) && (
+                <div className="grid grid-cols-2 font-sans">
+                    <div className="p-1 px-3 border-r border-black font-bold flex items-center gap-1">
+                        <span className="shrink-0">Room No :</span>
+                        <span className="uppercase text-[12px]">{data?.appointment?.chamberOrRoomNumber || transaction?.chamberOrRoomNumber || data?.chamberOrRoomNumber || "N/A"}</span>
+                    </div>
+                    <div className="p-1 px-3 font-bold flex items-center gap-1">
+                        <span className="shrink-0">Serial No :</span>
+                        <span className="uppercase text-[12px]">{aptSerial && aptSerial !== "N/A" ? aptSerial.split('-').pop() : "N/A"}</span>
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* Items Table */}
