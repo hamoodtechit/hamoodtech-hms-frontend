@@ -1,5 +1,7 @@
 "use client"
 
+import { DiagnosticReceiptDialog } from "@/components/billing/diagnostic-receipt-dialog"
+import { ReceiptDialog } from "@/components/pharmacy/receipt-dialog"
 import { SaleReturnDetailsDialog } from "@/components/pharmacy/sale-return-details-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,6 +35,7 @@ import {
     Eye,
     Filter,
     Loader2,
+    Printer,
     RefreshCcw,
     Search,
     X,
@@ -70,6 +73,9 @@ export default function SalesReturnsPage() {
   }, [urlType])
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [selectedReturnForReceipt, setSelectedReturnForReceipt] = useState<SaleReturn | null>(null)
   const [selectedReturn, setSelectedReturn] = useState<SaleReturn | null>(null)
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
 
@@ -173,6 +179,10 @@ export default function SalesReturnsPage() {
                     <SelectItem value="appointment">Appointment</SelectItem>
                     <SelectItem value="pathology">Pathology</SelectItem>
                     <SelectItem value="radiology">Radiology</SelectItem>
+                    <SelectItem value="usg">USG / Ultrasound</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                    <SelectItem value="ipd">IPD / Admission</SelectItem>
+                    <SelectItem value="opd">OPD</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -417,6 +427,17 @@ export default function SalesReturnsPage() {
                            >
                               <Eye className="h-4 w-4" />
                            </Button>
+                           <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all"
+                              onClick={() => {
+                                  setSelectedReturnForReceipt(item)
+                                  setReceiptOpen(true)
+                              }}
+                           >
+                              <Printer className="h-4 w-4" />
+                           </Button>
                            {item.status === 'pending' && (
                              <>
                                <Button 
@@ -479,6 +500,22 @@ export default function SalesReturnsPage() {
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
       />
+      
+      {(selectedReturnForReceipt as any)?.sale?.type === 'pos' || (selectedReturnForReceipt as any)?.sale?.type === 'pharmacy' ? (
+        <ReceiptDialog 
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            transaction={selectedReturnForReceipt as any}
+        />
+      ) : (
+        <DiagnosticReceiptDialog 
+            open={receiptOpen}
+            onOpenChange={setReceiptOpen}
+            transaction={selectedReturnForReceipt ? { 
+                sale: selectedReturnForReceipt 
+            } : null}
+        />
+      )}
     </div>
   )
 }

@@ -29,7 +29,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   const { formatCurrency } = useCurrency()
   const { user } = useAuthStore()
   
-  const saleId = transaction?.id || (transaction as any)?.sale?.id || (transaction as any)?.data?.sale?.id
+  const saleId = (transaction as any)?.sale?.saleId || (transaction as any)?.saleId || transaction?.id || (transaction as any)?.sale?.id || (transaction as any)?.data?.sale?.id
   const { data: saleRes, isLoading } = useSale(saleId || "")
   
   const fetchedData = (saleRes?.data as any)?.data?.sale || (saleRes?.data as any)?.sale || (saleRes?.data as any)?.data || saleRes?.data

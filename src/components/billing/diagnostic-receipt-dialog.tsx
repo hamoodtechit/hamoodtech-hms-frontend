@@ -51,7 +51,7 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   const activeStore = stores.find(s => s.id === activeStoreId)
   
   // Get sale ID - transaction might be the sale itself or have a nested sale object
-  const saleId = transaction?.id || transaction?.sale?.id || transaction?.data?.sale?.id || transaction?.data?.id
+  const saleId = transaction?.sale?.saleId || transaction?.saleId || transaction?.id || transaction?.sale?.id || transaction?.data?.sale?.id || transaction?.data?.id
   
   // Use useSale hook to get full details (branch, patient, doctor etc.)
   const { data: saleRes, isLoading } = useSale(saleId)
