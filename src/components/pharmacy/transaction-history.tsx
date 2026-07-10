@@ -130,7 +130,7 @@ export function TransactionHistory() {
 
 
         if (activeTab === 'all' || activeTab === 'return') {
-            promises.push(salesService.getSaleReturns(baseParams).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
+            promises.push(salesService.getSaleReturns({ ...baseParams, type: 'pos' }).then(res => ({ type: 'return', data: res.data.data, meta: res.data.pagination })))
         } else {
              promises.push(Promise.resolve({ type: 'return', data: [], meta: { totalPages: 0 } }))
         }

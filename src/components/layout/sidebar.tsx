@@ -274,6 +274,11 @@ export function Sidebar() {
               permission: ["sale:read", "sale:create"],
             },
             {
+              label: "Return Requests",
+              href: "/sales/returns",
+              permission: "sale-return:read",
+            },
+            {
               label: "Doctor Payment",
               href: "/finance/doctor-payment",
               permission: ["account:read", "sale:update", "sale:create"],
