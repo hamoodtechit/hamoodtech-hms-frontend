@@ -175,14 +175,11 @@ export default function SalesReturnsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Return Type: All</SelectItem>
-                    <SelectItem value="pos">POS</SelectItem>
+                    <SelectItem value="pos">Pharmacy (POS)</SelectItem>
+                    <SelectItem value="hospital">Hospital Sales</SelectItem>
+                    <SelectItem value="admission">Admission</SelectItem>
                     <SelectItem value="appointment">Appointment</SelectItem>
-                    <SelectItem value="pathology">Pathology</SelectItem>
-                    <SelectItem value="radiology">Radiology</SelectItem>
-                    <SelectItem value="usg">USG / Ultrasound</SelectItem>
                     <SelectItem value="emergency">Emergency</SelectItem>
-                    <SelectItem value="ipd">IPD / Admission</SelectItem>
-                    <SelectItem value="opd">OPD</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
