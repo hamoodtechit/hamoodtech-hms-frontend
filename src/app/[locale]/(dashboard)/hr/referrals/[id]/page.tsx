@@ -189,7 +189,7 @@ export default function ReferralDetailPage() {
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
                                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Earnings</p>
-                                <p className="text-xl font-black text-primary">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || (referral.yearlyStats as any)?.totalCommissionValue || 0)}</p>
+                                <p className="text-xl font-black text-primary">{formatCurrency(commissionsRes?.data?.summary?.monthly?.totalCommission || referral.yearlyStats?.totalCommissionEarned || 0)}</p>
                             </div>
                             <Separator orientation="vertical" className="h-10 mx-2 hidden sm:block" />
                             <Badge className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground shadow-lg shadow-primary/20">
@@ -586,7 +586,7 @@ export default function ReferralDetailPage() {
                                             </div>
                                             <div>
                                                 <h3 className="text-sm font-black text-emerald-900 dark:text-emerald-400">Total Settled Amount</h3>
-                                                <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-widest">{formatCurrency(referral.yearlyStats?.totalCommissionEarned || 0)}</p>
+                                                <p className="text-xs font-bold text-emerald-600/70 uppercase tracking-widest">{formatCurrency(commissionsRes?.data?.summary?.monthly?.totalPaid || referral.yearlyStats?.totalCommissionEarned || 0)}</p>
                                             </div>
                                         </div>
                                         <Badge variant="outline" className="bg-white font-black text-emerald-600 border-emerald-500/20">
