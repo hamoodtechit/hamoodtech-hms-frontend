@@ -1,8 +1,8 @@
 "use client";
 
 import { usePermissions } from "@/hooks/use-permissions";
-import { AlertCircle } from "lucide-react";
-import React from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface PermissionGuardProps {
     permission?: string | string[];
@@ -20,6 +20,11 @@ export function PermissionGuard({
     mode = 'page'
 }: PermissionGuardProps) {
     const { hasPermission, hasModuleAccess } = usePermissions();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     let hasAccess = true;
 
@@ -38,6 +43,17 @@ export function PermissionGuard({
     }
 
     if (!hasAccess) {
+        if (!isMounted) {
+            if (mode === 'page') {
+                return (
+                    <div className="h-[400px] flex flex-col items-center justify-center p-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground opacity-50" />
+                    </div>
+                );
+            }
+            return null;
+        }
+
         if (fallback) return <>{fallback}</>;
 
         // Handle different modes
@@ -57,6 +73,10 @@ export function PermissionGuard({
         // Default "page" mode - "Access Denied" view
         return (
             <div className="h-[400px] flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="mb-6 pointer-events-none select-none">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/Logo.png" alt="Logo" className="h-20 w-auto opacity-70 drop-shadow-sm" />
+                </div>
                 <div className="bg-destructive/10 p-4 rounded-full mb-4 ring-2 ring-destructive/5">
                     <AlertCircle className="h-10 w-10 text-destructive" />
                 </div>
