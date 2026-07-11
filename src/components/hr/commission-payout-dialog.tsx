@@ -27,6 +27,7 @@ import { useAuthStore } from "@/store/use-auth-store"
 import { Loader2, Wallet, CreditCard, Banknote } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { hrService } from "@/services/hr-service"
 import { CommissionReceiptDialog } from "./commission-receipt-dialog"
 
 interface CommissionPayoutDialogProps {
@@ -104,10 +105,26 @@ export function CommissionPayoutDialog({
                 note
             })
             
-            // Use the snapshot data for receipt (immune to query invalidation)
+            // Fetch the fully populated payment record from the backend so it has accurate totalPrice/discountAmount
+            // (The pending API doesn't return them, but the payments API does)
+            let actualCommissions = snapshotCommissions;
+            try {
+                const latestPaymentsRes = await hrService.getReferralPayments({ referralId, limit: 1 });
+                if (latestPaymentsRes.success && latestPaymentsRes.data.length > 0) {
+                    const latestPayment = latestPaymentsRes.data[0];
+                    const fullDetailsRes = await hrService.getReferralPaymentDetails(latestPayment.id);
+                    if (fullDetailsRes.success && fullDetailsRes.data.referralCommissions) {
+                        actualCommissions = fullDetailsRes.data.referralCommissions;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch full payment details for receipt", err);
+            }
+
+            // Use the actual data for receipt (immune to query invalidation)
             setPayoutResult({
                 referral: referralObj,
-                commissions: snapshotCommissions,
+                commissions: actualCommissions,
                 totalAmount: snapshotTotal,
                 paymentMethod,
                 date: new Date().toISOString(),
