@@ -54,7 +54,21 @@ export function SaleReturnDetailsDialog({ saleReturn: initialSaleReturn, open, o
         setLoading(true)
         const res = await salesService.getSaleReturn(id)
         if (res.success) {
-            setSaleReturn(res.data as any)
+            let returnData = res.data as any;
+            if (returnData.saleId) {
+                try {
+                    const saleRes = await salesService.getSale(returnData.saleId);
+                    if (saleRes.success && saleRes.data) {
+                        returnData = {
+                            ...returnData,
+                            referralPerson: saleRes.data.referralPerson || returnData.referralPerson
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch original sale for referral person", e)
+                }
+            }
+            setSaleReturn(returnData)
         }
     } catch (error) {
         console.error("Failed to fetch sale return details", error)
@@ -114,6 +128,12 @@ export function SaleReturnDetailsDialog({ saleReturn: initialSaleReturn, open, o
                 {saleReturn.status}
               </Badge>
             </div>
+            {(saleReturn as any).referralPerson && (
+                <div className="col-span-2 pt-2 border-t border-black/5">
+                  <p className="text-sm text-muted-foreground">Referral Person</p>
+                  <p className="font-medium">{(saleReturn as any).referralPerson.name}</p>
+                </div>
+            )}
             {saleReturn.note && (
               <div className="col-span-2 mt-2 pt-2 border-t border-black/5">
                 <p className="text-[10px] font-black uppercase text-muted-foreground opacity-60">Return Note:</p>

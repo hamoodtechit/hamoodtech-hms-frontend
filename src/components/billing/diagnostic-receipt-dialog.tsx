@@ -59,7 +59,23 @@ export function DiagnosticReceiptDialog({ open, onOpenChange, transaction, docto
   // Combine prop/initial data with fetched rich data
   const initialData = transaction?.data?.sale || transaction?.sale || transaction?.data || transaction
   const isReturnReceipt = !!(transaction as any)?.sale?.saleReturnItems || !!(transaction as any)?.saleReturnItems
-  const data = isReturnReceipt ? (transaction?.sale || transaction) : (saleRes?.data || initialData)
+  
+  let data = isReturnReceipt ? (transaction?.sale || transaction) : (saleRes?.data || initialData)
+  
+  // If it is a return receipt, the basic list data is missing rich patient info and referral info.
+  // We merge those from the original sale (`saleRes.data`) into `data`.
+  if (isReturnReceipt && saleRes?.data) {
+      const richSale = saleRes.data as any;
+      data = {
+          ...data,
+          patient: richSale.patient || data.patient,
+          referralPerson: richSale.referralPerson || data.referralPerson,
+          doctor: richSale.doctor || data.doctor,
+          doctorId: richSale.doctorId || data.doctorId,
+          patientAdmission: richSale.patientAdmission || data.patientAdmission,
+          staffId: richSale.staffId || data.staffId
+      }
+  }
   
   if (!data && !isLoading) return null
   
