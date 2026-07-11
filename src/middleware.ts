@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
   // 3. Check Authentication for Dashboard
   const token = request.cookies.get('accessToken')?.value
   const isAuthPage = pathname.includes('/auth/login') || pathname.includes('/setup')
+  const isRootPage = pathname === '/' || pathname === '/en' || pathname === '/bn'
   
   // If no token and trying to access any protected route - redirect to login
   if (!token && !isAuthPage && !pathname.includes('/public')) {
@@ -35,8 +36,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url))
   }
 
-  // If token exists and trying to access login page, redirect to dashboard
-  if (token && pathname.includes('/auth/login')) {
+  // If token exists and trying to access login page or the landing page, redirect to dashboard
+  if (token && (pathname.includes('/auth/login') || isRootPage)) {
       const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
       return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
   }
