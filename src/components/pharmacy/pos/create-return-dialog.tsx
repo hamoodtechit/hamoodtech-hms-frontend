@@ -119,8 +119,8 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
       onOpenChange(false)
     } catch (error: any) {
       console.error("Failed to create return", error)
-      const errorMessage = error.response?.data?.message || error.response?.data?.error?.message || error.message || "Failed to create return"
-      toast.error(errorMessage)
+      // The global API interceptor (src/lib/api.ts) already displays the backend error message in a toast,
+      // so we don't need to show a second generic or duplicate toast here.
     } finally {
       setLoading(false)
     }
