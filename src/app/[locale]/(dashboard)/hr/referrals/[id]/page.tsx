@@ -240,13 +240,6 @@ export default function ReferralDetailPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div className="pt-4 border-t flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Designated Branch</p>
-                                            <p className="text-sm font-medium">{referral.branch?.name || referral.branchId}</p>
-                                        </div>
-                                    </div>
                                 </CardContent>
                                 {referral.employee && (
                                     <CardFooter className="bg-primary/5 dark:bg-primary/10 border-t border-primary/10 p-4">
