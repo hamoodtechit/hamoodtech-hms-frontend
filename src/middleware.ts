@@ -29,14 +29,10 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value
   const isAuthPage = pathname.includes('/auth/login') || pathname.includes('/setup')
   
-  // If no token and trying to access dashboard/protected routes
+  // If no token and trying to access any protected route - redirect to login
   if (!token && !isAuthPage && !pathname.includes('/public')) {
-      // Exclude root path if it redirects to dashboard?
-      // Just protecting /dashboard or /pharmacy etc
-      if (pathname.includes('/dashboard') || pathname.includes('/pharmacy') || pathname.includes('/patients')) {
-        const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
-        return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url))
-      }
+      const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
+      return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url))
   }
 
   // If token exists and trying to access login page, redirect to dashboard
