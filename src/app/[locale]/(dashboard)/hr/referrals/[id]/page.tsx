@@ -50,7 +50,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Filter, MoreVertical, CheckCircle2, XCircle, Clock4, History, Receipt } from "lucide-react"
+import { Filter, MoreVertical, CheckCircle2, XCircle, Clock4, History, Receipt, FlaskConical } from "lucide-react"
 import { Commission } from "@/types/hr"
 import { format } from "date-fns"
 import { DateRange } from "react-day-picker"
@@ -118,11 +118,11 @@ export default function ReferralDetailPage() {
     }
 
     const toggleAll = () => {
-        const unpaidCommissions = commissions.filter((c: Commission) => !c.isPaid).map((c: Commission) => c.id)
-        if (selectedIds.length === unpaidCommissions.length && unpaidCommissions.length > 0) {
+        const selectableCommissions = commissions.filter((c: Commission) => !c.isPaid && c.testStatus !== 'pending').map((c: Commission) => c.id)
+        if (selectedIds.length === selectableCommissions.length && selectableCommissions.length > 0) {
             setSelectedIds([])
         } else {
-            setSelectedIds(unpaidCommissions)
+            setSelectedIds(selectableCommissions)
         }
     }
 
@@ -496,12 +496,14 @@ export default function ReferralDetailPage() {
                                                             </TableCell>
                                                         </TableRow>
                                                     ) : (
-                                                        commissions.map((comm) => (
-                                                            <TableRow key={comm.id} className="hover:bg-muted/20 border-muted transition-colors group">
+                                                        commissions.map((comm) => {
+                                                            const isTestPending = (comm as any).testStatus === 'pending';
+                                                            return (
+                                                            <TableRow key={comm.id} className={cn("hover:bg-muted/20 border-muted transition-colors group", isTestPending && "opacity-70 bg-amber-50/30 dark:bg-amber-950/10")}>
                                                                 <TableCell>
                                                                     <Checkbox 
                                                                         checked={selectedIds.includes(comm.id)}
-                                                                        disabled={comm.isPaid}
+                                                                        disabled={comm.isPaid || isTestPending}
                                                                         onCheckedChange={() => toggleSelection(comm.id)}
                                                                         className="rounded-md border-muted-foreground/30 disabled:opacity-30"
                                                                     />
@@ -558,6 +560,14 @@ export default function ReferralDetailPage() {
                                                                             <CheckCircle2 className="w-3 h-3 mr-1" />
                                                                             PAID
                                                                         </Badge>
+                                                                    ) : isTestPending ? (
+                                                                        <div className="flex flex-col items-center gap-1">
+                                                                            <Badge className="bg-orange-50 text-orange-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none dark:bg-orange-500/10">
+                                                                                <FlaskConical className="w-3 h-3 mr-1" />
+                                                                                TEST PENDING
+                                                                            </Badge>
+                                                                            <span className="text-[8px] text-orange-500/70 font-medium">Payment locked</span>
+                                                                        </div>
                                                                     ) : (
                                                                         <Badge className="bg-amber-50 text-amber-600 border-none shadow-none font-bold text-[10px] px-2 h-6 pointer-events-none">
                                                                             <Clock4 className="w-3 h-3 mr-1" />
@@ -570,7 +580,8 @@ export default function ReferralDetailPage() {
                                                                     <p className="text-[10px] text-muted-foreground">{format(new Date(comm.createdAt), 'hh:mm a')}</p>
                                                                 </TableCell>
                                                             </TableRow>
-                                                        ))
+                                                            );
+                                                        })
                                                     )}
                                                 </TableBody>
                                             </Table>

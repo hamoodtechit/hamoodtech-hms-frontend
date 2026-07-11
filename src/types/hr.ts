@@ -396,6 +396,7 @@ export interface Commission {
   commissionPercentage?: number;
   commissionAmount?: number;
   isPaid: boolean;
+  testStatus?: string;
   createdAt: string;
   updatedAt: string;
   referral?: {
