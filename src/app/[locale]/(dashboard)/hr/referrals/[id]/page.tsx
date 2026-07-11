@@ -246,7 +246,6 @@ export default function ReferralDetailPage() {
                                             <p className="text-[10px] text-muted-foreground uppercase font-black">Designated Branch</p>
                                             <p className="text-sm font-medium">{referral.branch?.name || referral.branchId}</p>
                                         </div>
-                                        <Badge variant="secondary" className="rounded-md">Branch ID: {referral.branchId.slice(0, 8)}</Badge>
                                     </div>
                                 </CardContent>
                                 {referral.employee && (

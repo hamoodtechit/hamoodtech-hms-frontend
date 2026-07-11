@@ -31,6 +31,8 @@ export function Header() {
   const activeSession = sessionResponse?.data
   const [openRegisterOpen, setOpenRegisterOpen] = useState(false)
 
+  const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-slate-900/95">
       <div className="flex h-16 items-center px-4 md:px-8 gap-2 md:gap-4">
@@ -50,6 +52,7 @@ export function Header() {
                         const href = `/${arr.slice(0, index + 1).join('/')}`;
                         const isLast = index === arr.length - 1;
                         const isSecondToLast = index === arr.length - 2;
+                        const displayPath = isUUID(path) ? "Details" : path;
                         
                         return (
                             <div key={path} className="flex items-center">
@@ -62,10 +65,10 @@ export function Header() {
                                     isSecondToLast && "hidden sm:block"
                                 )}>
                                     {isLast ? (
-                                        <BreadcrumbPage className="capitalize font-semibold text-primary max-w-[120px] truncate sm:max-w-none">{path}</BreadcrumbPage>
+                                        <BreadcrumbPage className="capitalize font-semibold text-primary max-w-[120px] truncate sm:max-w-none">{displayPath}</BreadcrumbPage>
                                     ) : (
                                         <BreadcrumbLink asChild>
-                                            <Link href={href} className="capitalize">{path}</Link>
+                                            <Link href={href} className="capitalize">{displayPath}</Link>
                                         </BreadcrumbLink>
                                     )}
                                 </BreadcrumbItem>
