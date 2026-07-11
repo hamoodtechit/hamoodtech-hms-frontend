@@ -117,9 +117,10 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
       toast.success("Return created successfully")
       onSuccess()
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create return", error)
-      toast.error("Failed to create return")
+      const errorMessage = error.response?.data?.message || error.response?.data?.error?.message || error.message || "Failed to create return"
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
