@@ -87,6 +87,12 @@ export function CommissionPayoutDialog({
             return
         }
 
+        // Deep-clone commission data BEFORE the mutation so query invalidation can't wipe it
+        const snapshotCommissions = JSON.parse(JSON.stringify(selectedCommissions)) as Commission[]
+        const snapshotTotal = totalAmount
+        const firstComm = snapshotCommissions[0]
+        const referralObj = firstComm?.referral || { id: referralId, name: "Referral Partner" }
+
         setLoading(true)
         try {
             await processPayment.mutateAsync({
@@ -98,20 +104,17 @@ export function CommissionPayoutDialog({
                 note
             })
             
-            // Prepare data for receipt
-            const firstComm = selectedCommissions[0]
-            const referralObj = firstComm?.referral || { id: referralId, name: "Referral Partner" }
-            
+            // Use the snapshot data for receipt (immune to query invalidation)
             setPayoutResult({
                 referral: referralObj,
-                commissions: selectedCommissions,
-                totalAmount,
+                commissions: snapshotCommissions,
+                totalAmount: snapshotTotal,
                 paymentMethod,
                 date: new Date().toISOString(),
                 note
             })
             
-            toast.success(`Successfully processed payout of ${formatCurrency(totalAmount)}`)
+            toast.success(`Successfully processed payout of ${formatCurrency(snapshotTotal)}`)
             setReceiptOpen(true)
             onSuccess?.()
             onOpenChange(false)

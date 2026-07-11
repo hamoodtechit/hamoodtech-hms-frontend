@@ -533,6 +533,9 @@ export default function ReferralDetailPage() {
                                                                         </p>
                                                                         <div className="flex items-center gap-2 flex-wrap">
                                                                             <Badge variant="outline" className="text-[9px] font-black h-4 px-1.5 border-muted-foreground/20 text-muted-foreground uppercase">{comm.patientName || (comm as any).sale?.patientName || (comm as any).sale?.patient?.name || "N/A"}</Badge>
+                                                                            {(comm as any).sale?.patient?.patientNumber && (
+                                                                                <Badge variant="outline" className="text-[9px] font-bold h-4 px-1.5 border-primary/20 text-primary/70">{(comm as any).sale.patient.patientNumber}</Badge>
+                                                                            )}
                                                                             <span className="text-[10px] text-muted-foreground/50">#{(comm as any).invoiceNumber || (comm as any).sale?.invoiceNumber || "N/A"}</span>
                                                                             <span className="text-[10px] text-muted-foreground/40 font-medium">({comm.serviceName})</span>
                                                                         </div>
