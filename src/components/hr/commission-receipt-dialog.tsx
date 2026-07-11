@@ -277,9 +277,9 @@ export function CommissionReceiptDialog({ open, onOpenChange, payoutData }: Comm
                             if (patUhid) patName = `${patName} [${patUhid}]`;
                             
                             // Use actual sale data directly from the API
-                            const saleTotalPrice = Number((comm.sale as any)?.totalPrice || 0);
-                            const saleDiscountAmount = Number((comm.sale as any)?.discountAmount || 0);
                             const saleNetPrice = Number((comm.sale as any)?.netPrice || comm.sale?.netPrice || 0);
+                            const saleTotalPrice = Number((comm.sale as any)?.totalPrice || saleNetPrice);
+                            const saleDiscountAmount = Number((comm.sale as any)?.discountAmount || 0);
 
                             // Department columns show commission amounts per department
                             const deptValues: Record<string, number> = {};
