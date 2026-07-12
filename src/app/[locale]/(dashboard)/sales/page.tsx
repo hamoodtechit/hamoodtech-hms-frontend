@@ -543,7 +543,7 @@ export default function SalesHistoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(isLoading || isFetching) ? (
+                    {isLoading ? (
                       <TableRow>
                         <TableCell colSpan={12} className="h-24 text-center">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
