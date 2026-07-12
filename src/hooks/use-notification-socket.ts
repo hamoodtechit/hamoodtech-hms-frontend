@@ -63,6 +63,23 @@ export const useNotificationSocket = () => {
             });
         });
 
+        // When a new sale is created, refresh diagnostic reports & sales data
+        socket.on('sale:created', (data) => {
+            console.log('[Socket] sale:created event received:', data);
+            
+            // Forcefully refetch diagnostic reports to show new tests
+            queryClient.refetchQueries({ queryKey: ['diagnostic', 'reports'] });
+            
+            // Forcefully refetch sales queries
+            queryClient.refetchQueries({ queryKey: ['sales'] });
+            
+            toast.success('New Sale Created', {
+                description: data?.invoiceNumber 
+                    ? `Sale ${data.invoiceNumber} has been created. Reports updated.`
+                    : 'A new sale has been created. Reports updated.',
+            });
+        });
+
         socket.on('error', (error) => {
             console.error('Socket error:', error);
         });
