@@ -33,7 +33,7 @@ export default function ReferralsPage() {
 
     const { data: referralsRes, isLoading, refetch } = useReferrals({ 
         page, 
-        limit: 10, 
+        limit: 100, 
         search, 
         branchId: activeStoreId || undefined
     })
