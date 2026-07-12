@@ -165,7 +165,6 @@ export default function SalesHistoryPage() {
     doctorId: doctorId !== "all" ? doctorId : undefined
   })
 
-  })
 
   const { data: usersRes } = useUsers({ limit: 1000 })
   const { data: staffsRes } = useEmployees({ 
