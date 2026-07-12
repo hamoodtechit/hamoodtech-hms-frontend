@@ -137,7 +137,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Return - {sale.invoiceNumber}</DialogTitle>
           <DialogDescription>
@@ -146,7 +146,7 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
         </DialogHeader>
 
         <div className="py-4">
-          <div className="border rounded-md max-h-[400px] overflow-auto">
+          <div className="border rounded-md max-h-[300px] sm:max-h-[400px] overflow-auto">
             <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
