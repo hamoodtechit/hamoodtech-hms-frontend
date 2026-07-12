@@ -3,6 +3,8 @@ import { io, Socket } from 'socket.io-client';
 import Cookies from 'js-cookie';
 import { useNotificationStore } from '@/store/use-notification-store';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { DIAGNOSTIC_KEYS } from './diagnostic-queries';
 
 // Use standard API URL but without the /api/v1 suffix for socket
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://hms-srv-dev.genify.live';
@@ -10,6 +12,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://hms-srv-dev.ge
 export const useNotificationSocket = () => {
     const socketRef = useRef<Socket | null>(null);
     const { addNotification } = useNotificationStore();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         const token = Cookies.get('accessToken');
@@ -43,6 +46,23 @@ export const useNotificationSocket = () => {
             });
         });
 
+        // When a sale is returned, refresh diagnostic reports & sales data
+        socket.on('sale:returned', (data) => {
+            console.log('[Socket] sale:returned event received:', data);
+            
+            // Invalidate diagnostic reports so they reflect the return
+            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
+            
+            // Invalidate sales queries
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
+            
+            toast.info('Sale Return Processed', {
+                description: data?.invoiceNumber 
+                    ? `Sale ${data.invoiceNumber} has been returned. Reports updated.`
+                    : 'A sale return has been processed. Reports updated.',
+            });
+        });
+
         socket.on('error', (error) => {
             console.error('Socket error:', error);
         });
@@ -54,7 +74,8 @@ export const useNotificationSocket = () => {
         return () => {
             socket.disconnect();
         };
-    }, [addNotification]);
+    }, [addNotification, queryClient]);
 
     return socketRef.current;
 };
+
