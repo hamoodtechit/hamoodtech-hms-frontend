@@ -7,8 +7,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DIAGNOSTIC_KEYS } from './diagnostic-queries';
 import { SALES_KEYS } from './sales-queries';
 
-// Use standard API URL but without the /api/v1 suffix for socket
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL 
+// Derive the socket URL from the API URL by removing the /api/v1 suffix
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || (process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') || 'https://hms-srv-dev.genify.live');
 
 export const useNotificationSocket = () => {
     const socketRef = useRef<Socket | null>(null);
