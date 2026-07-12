@@ -318,7 +318,7 @@ export default function DiagnosticReportsPage() {
 
     return (
         <PermissionGuard permission={["pathology:read", "radiology:read"]}>
-            <div className="flex flex-col gap-6 p-6 min-h-screen bg-muted/20">
+            <div className="flex flex-col gap-4 md:gap-6 p-4 md:p-6 min-h-screen bg-muted/20">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -626,8 +626,8 @@ export default function DiagnosticReportsPage() {
                                 )}
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
+                        <CardContent className="p-0 overflow-x-auto">
+                            <Table className="min-w-[1200px]">
                                 <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider font-extrabold">
                                     <TableRow>
                                         <TableHead className="pl-6">Barcode / ID</TableHead>
