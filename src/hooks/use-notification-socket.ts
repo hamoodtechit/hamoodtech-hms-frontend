@@ -50,11 +50,11 @@ export const useNotificationSocket = () => {
         socket.on('sale:returned', (data) => {
             console.log('[Socket] sale:returned event received:', data);
             
-            // Forcefully refetch diagnostic reports immediately
-            queryClient.refetchQueries({ queryKey: ['diagnostic', 'reports'] });
+            // Forcefully invalidate diagnostic reports immediately
+            queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
             
-            // Forcefully refetch sales queries immediately
-            queryClient.refetchQueries({ queryKey: ['sales'] });
+            // Forcefully invalidate sales queries immediately
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
             
             toast.info('Sale Return Processed', {
                 description: data?.invoiceNumber 
@@ -67,11 +67,11 @@ export const useNotificationSocket = () => {
         socket.on('sale:created', (data) => {
             console.log('[Socket] sale:created event received:', data);
             
-            // Forcefully refetch diagnostic reports to show new tests
-            queryClient.refetchQueries({ queryKey: ['diagnostic', 'reports'] });
+            // Forcefully invalidate diagnostic reports to show new tests
+            queryClient.invalidateQueries({ queryKey: ['diagnostic'] });
             
-            // Forcefully refetch sales queries
-            queryClient.refetchQueries({ queryKey: ['sales'] });
+            // Forcefully invalidate sales queries
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
             
             toast.success('New Sale Created', {
                 description: data?.invoiceNumber 
