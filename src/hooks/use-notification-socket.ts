@@ -51,11 +51,14 @@ export const useNotificationSocket = () => {
         socket.on('sale:returned', (data) => {
             console.log('[Socket] sale:returned event received:', data);
             
-            // Forcefully invalidate diagnostic reports immediately
-            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
-            
-            // Forcefully invalidate sales queries immediately
-            queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+            // Add a small delay to ensure backend database transaction is fully committed
+            setTimeout(() => {
+                // Forcefully invalidate diagnostic reports immediately
+                queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
+                
+                // Forcefully invalidate sales queries immediately
+                queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+            }, 500);
             
             toast.info('Sale Return Processed', {
                 description: data?.invoiceNumber 
@@ -68,11 +71,14 @@ export const useNotificationSocket = () => {
         socket.on('sale:created', (data) => {
             console.log('[Socket] sale:created event received:', data);
             
-            // Forcefully invalidate diagnostic reports to show new tests
-            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
-            
-            // Forcefully invalidate sales queries
-            queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+            // Add a small delay to ensure backend database transaction is fully committed
+            setTimeout(() => {
+                // Forcefully invalidate diagnostic reports to show new tests
+                queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
+                
+                // Forcefully invalidate sales queries
+                queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
+            }, 500);
             
             toast.success('New Sale Created', {
                 description: data?.invoiceNumber 
