@@ -38,6 +38,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/hr-queries"
 import { usePatients } from "@/hooks/patient-queries"
+import { useUsers } from "@/hooks/user-queries"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
 import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet, Undo2 } from "lucide-react"
@@ -164,10 +165,9 @@ export default function SalesHistoryPage() {
     doctorId: doctorId !== "all" ? doctorId : undefined
   })
 
-  const { data: doctorsRes } = useEmployees({ 
-    limit: 1000, 
-    branchId: branchId !== "all" ? branchId : undefined 
   })
+
+  const { data: usersRes } = useUsers({ limit: 1000 })
   const { data: staffsRes } = useEmployees({ 
     limit: 1000, 
     branchId: branchId !== "all" ? branchId : undefined 
@@ -179,10 +179,9 @@ export default function SalesHistoryPage() {
   })
 
   const sales = salesRes?.data?.sales || []
-  const doctors = (doctorsRes?.data || []).filter((emp: any) => 
-    emp.designation?.name?.toLowerCase().includes('doctor') || 
-    emp.role?.name?.toLowerCase().includes('doctor')
-  )
+  const doctors = (usersRes?.data || [])
+    .filter((u: any) => u.role?.name?.toLowerCase().includes('doctor') || u.role?.name?.toLowerCase().includes('consultant'))
+    .map((u: any) => ({ id: u.id, name: u.fullName }))
   const staffs = staffsRes?.data || []
   const patients = patientsRes?.data || []
   const branches = branchesRes?.data?.branches || []
@@ -348,17 +347,13 @@ export default function SalesHistoryPage() {
 
                            <div className="grid gap-2">
                              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Doctor</Label>
-                             <Select value={doctorId} onValueChange={(v) => { setDoctorId(v); setPage(1); }}>
-                               <SelectTrigger className="h-9">
-                                 <SelectValue placeholder="All Doctors" />
-                               </SelectTrigger>
-                               <SelectContent>
-                                 <SelectItem value="all">All Doctors</SelectItem>
-                                 {doctors.map((d: any) => (
-                                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                 ))}
-                               </SelectContent>
-                             </Select>
+                             <SearchableSelect
+                               value={doctorId === "all" ? "" : doctorId}
+                               onChange={(v) => { setDoctorId(v || "all"); setPage(1); }}
+                               options={doctors}
+                               placeholder="Search doctor..."
+                               allLabel="All Doctors"
+                             />
                            </div>
 
                            <div className="grid gap-2">
