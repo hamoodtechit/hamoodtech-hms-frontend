@@ -11,9 +11,11 @@ import { DateRange } from "react-day-picker"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DoctorSummary } from "@/types/finance"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Check, ChevronsUpDown, Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope, Printer } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope, Printer } from "lucide-react"
 import { useSettingsStore } from "@/store/use-settings-store"
 import { useUsers } from "@/hooks/user-queries"
 
@@ -24,6 +26,7 @@ export function DoctorSummaryDashboard() {
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all')
+  const [openDoctor, setOpenDoctor] = useState(false)
 
   const { data: usersRes } = useUsers({ limit: 1000 })
   const doctorsList = usersRes?.data?.filter((u: any) => u.role?.name?.toLowerCase().includes('doctor') || u.role?.name?.toLowerCase().includes('consultant')) || []
@@ -151,17 +154,54 @@ export function DoctorSummaryDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Doctor Analytics</h2>
             <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-                <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
-                    <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="All Doctors" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Doctors</SelectItem>
-                        {doctorsList.map((doc: any) => (
-                            <SelectItem key={doc.id} value={doc.id}>{doc.fullName}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <Popover open={openDoctor} onOpenChange={setOpenDoctor}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openDoctor}
+                            className="w-[250px] justify-between"
+                        >
+                            {selectedDoctorId === 'all'
+                                ? "All Doctors"
+                                : doctorsList.find((doc: any) => doc.id === selectedDoctorId)?.fullName || "All Doctors"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[250px] p-0" align="start">
+                        <Command>
+                            <CommandInput placeholder="Search doctor..." />
+                            <CommandList>
+                                <CommandEmpty>No doctor found.</CommandEmpty>
+                                <CommandGroup>
+                                    <CommandItem
+                                        value="all"
+                                        onSelect={() => {
+                                            setSelectedDoctorId('all')
+                                            setOpenDoctor(false)
+                                        }}
+                                    >
+                                        <Check className={cn("mr-2 h-4 w-4", selectedDoctorId === 'all' ? "opacity-100" : "opacity-0")} />
+                                        All Doctors
+                                    </CommandItem>
+                                    {doctorsList.map((doc: any) => (
+                                        <CommandItem
+                                            key={doc.id}
+                                            value={doc.fullName}
+                                            onSelect={() => {
+                                                setSelectedDoctorId(doc.id)
+                                                setOpenDoctor(false)
+                                            }}
+                                        >
+                                            <Check className={cn("mr-2 h-4 w-4", selectedDoctorId === doc.id ? "opacity-100" : "opacity-0")} />
+                                            {doc.fullName}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
                 <DatePickerWithRange date={date} setDate={setDate} />
                 <Button variant="outline" className="gap-2" onClick={handleExportCSV} disabled={!doctors.length}>
                     <FileDown className="h-4 w-4" />
