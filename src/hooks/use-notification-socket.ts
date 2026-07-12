@@ -50,11 +50,11 @@ export const useNotificationSocket = () => {
         socket.on('sale:returned', (data) => {
             console.log('[Socket] sale:returned event received:', data);
             
-            // Invalidate diagnostic reports specifically so they reflect the return
-            queryClient.invalidateQueries({ queryKey: ['diagnostic', 'reports'] });
+            // Forcefully refetch diagnostic reports immediately
+            queryClient.refetchQueries({ queryKey: ['diagnostic', 'reports'] });
             
-            // Invalidate sales queries
-            queryClient.invalidateQueries({ queryKey: ['sales'] });
+            // Forcefully refetch sales queries immediately
+            queryClient.refetchQueries({ queryKey: ['sales'] });
             
             toast.info('Sale Return Processed', {
                 description: data?.invoiceNumber 
