@@ -60,7 +60,7 @@ export default function AuditLogsPage() {
 
     const { data: response, isLoading, isFetching } = useAuditLogs({
         page,
-        limit: 10,
+        limit: 100,
         search: debouncedSearch,
         module: filters.module,
         action: filters.action,
@@ -239,9 +239,9 @@ export default function AuditLogsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    {log.deviceInfo.mobile ? <Smartphone className="h-4 w-4 text-muted-foreground" /> : <Monitor className="h-4 w-4 text-muted-foreground" />}
+                                                    {log.deviceInfo?.mobile ? <Smartphone className="h-4 w-4 text-muted-foreground" /> : <Monitor className="h-4 w-4 text-muted-foreground" />}
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold">{log.deviceInfo.platform?.replace(/"/g, '') || "Unknown"}</span>
+                                                        <span className="text-[10px] font-bold">{log.deviceInfo?.platform?.replace(/"/g, '') || "Unknown"}</span>
                                                         <span className="text-[10px] text-muted-foreground font-mono">{log.ipAddress}</span>
                                                     </div>
                                                 </div>
@@ -294,7 +294,7 @@ export default function AuditLogsPage() {
 
                 {/* Log Details Dialog */}
                 <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
-                    <DialogContent className="sm:max-w-[500px] rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+                    <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
                         <DialogHeader className="p-8 bg-primary/5">
                             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center border-b-4 border-primary/30 shadow-lg">
@@ -333,12 +333,37 @@ export default function AuditLogsPage() {
                                 </div>
                             </div>
 
+                            {/* Data Changes: Old vs New Values */}
+                            {(selectedLog?.oldValues || selectedLog?.newValues) && (
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Data Changes</p>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {selectedLog.oldValues && (
+                                            <div className="space-y-2">
+                                                <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-200">Before (Old)</Badge>
+                                                <pre className="text-[10px] font-mono bg-muted/30 p-4 rounded-xl overflow-auto max-h-[300px] border border-muted-foreground/10 text-muted-foreground">
+                                                    {JSON.stringify(selectedLog.oldValues, null, 2)}
+                                                </pre>
+                                            </div>
+                                        )}
+                                        {selectedLog.newValues && (
+                                            <div className="space-y-2">
+                                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200">After (New)</Badge>
+                                                <pre className="text-[10px] font-mono bg-emerald-500/5 p-4 rounded-xl overflow-auto max-h-[300px] border border-emerald-500/10 text-emerald-700/80">
+                                                    {JSON.stringify(selectedLog.newValues, null, 2)}
+                                                </pre>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-4">
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Environment Context</p>
                                 <div className="grid grid-cols-2 gap-4 text-xs font-medium">
                                     <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/10 border border-secondary/20">
                                         <Monitor className="h-4 w-4 text-primary/60" />
-                                        <span>{selectedLog?.deviceInfo.platform?.replace(/"/g, '') || "Unknown"}</span>
+                                        <span>{selectedLog?.deviceInfo?.platform?.replace(/"/g, '') || "Unknown"}</span>
                                     </div>
                                     <div className="flex items-center gap-2 p-3 rounded-xl bg-secondary/10 border border-secondary/20">
                                         <Activity className="h-4 w-4 text-primary/60" />
@@ -347,6 +372,9 @@ export default function AuditLogsPage() {
                                 </div>
                                 <div className="p-3 rounded-xl bg-muted/30 text-[10px] font-mono text-muted-foreground leading-relaxed break-all">
                                     {selectedLog?.userAgent}
+                                </div>
+                                <div className="text-[10px] font-mono text-muted-foreground">
+                                    <span className="font-bold text-foreground">Endpoint:</span> {selectedLog?.method} {selectedLog?.endpoint}
                                 </div>
                             </div>
 
