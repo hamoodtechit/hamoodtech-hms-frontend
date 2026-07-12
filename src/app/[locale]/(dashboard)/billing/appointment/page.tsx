@@ -57,7 +57,7 @@ export default function AppointmentHistoryPage() {
     // Fetch Lists
     const { data, isLoading, refetch } = useAppointments({
         page,
-        limit: 10,
+        limit: 100,
         search,
         branchId: activeStoreId || undefined,
         ...filters,
