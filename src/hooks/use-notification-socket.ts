@@ -50,8 +50,8 @@ export const useNotificationSocket = () => {
         socket.on('sale:returned', (data) => {
             console.log('[Socket] sale:returned event received:', data);
             
-            // Invalidate diagnostic reports so they reflect the return
-            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
+            // Invalidate diagnostic reports specifically so they reflect the return
+            queryClient.invalidateQueries({ queryKey: ['diagnostic', 'reports'] });
             
             // Invalidate sales queries
             queryClient.invalidateQueries({ queryKey: ['sales'] });
