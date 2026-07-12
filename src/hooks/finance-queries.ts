@@ -154,7 +154,7 @@ export function useFinanceExpenseReport(params?: { branchId?: string; startDate?
     });
 }
 
-export function useDoctorSummaryReport(params?: { branchId?: string; startDate?: string; endDate?: string }, options: { enabled?: boolean } = {}) {
+export function useDoctorSummaryReport(params?: { branchId?: string; startDate?: string; endDate?: string; doctorId?: string }, options: { enabled?: boolean } = {}) {
     return useQuery({
         queryKey: FINANCE_KEYS.doctorSummaryReport(params),
         queryFn: () => financeService.getDoctorSummaryReport(params),

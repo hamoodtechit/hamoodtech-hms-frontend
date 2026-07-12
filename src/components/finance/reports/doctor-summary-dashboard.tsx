@@ -11,9 +11,11 @@ import { DateRange } from "react-day-picker"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DoctorSummary } from "@/types/finance"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Users, FileDown, Activity, DollarSign, Wallet, CreditCard, Stethoscope, Printer } from "lucide-react"
 import { useSettingsStore } from "@/store/use-settings-store"
+import { useUsers } from "@/hooks/user-queries"
 
 export function DoctorSummaryDashboard() {
   const { activeStoreId, stores } = useStoreContext()
@@ -21,6 +23,10 @@ export function DoctorSummaryDashboard() {
   const { general } = useSettingsStore()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all')
+
+  const { data: usersRes } = useUsers({ limit: 1000 })
+  const doctorsList = usersRes?.data?.filter((u: any) => u.role?.name?.toLowerCase().includes('doctor') || u.role?.name?.toLowerCase().includes('consultant')) || []
 
   useEffect(() => {
     setDate({
@@ -34,8 +40,9 @@ export function DoctorSummaryDashboard() {
 
   const { data: reportData, isLoading } = useDoctorSummaryReport({
     branchId: activeStoreId || undefined,
-    startDate: date?.from ? date.from.toISOString() : undefined,
-    endDate: date?.to ? endOfDay(date.to).toISOString() : undefined
+    startDate: startDate,
+    endDate: endDate,
+    doctorId: selectedDoctorId === 'all' ? undefined : selectedDoctorId
   }, { enabled: !!date?.from && !!date?.to })
 
   if (isLoading) {
@@ -143,7 +150,18 @@ export function DoctorSummaryDashboard() {
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold tracking-tight">Doctor Analytics</h2>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+                <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+                    <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All Doctors" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Doctors</SelectItem>
+                        {doctorsList.map((doc: any) => (
+                            <SelectItem key={doc.id} value={doc.id}>{doc.fullName}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                 <DatePickerWithRange date={date} setDate={setDate} />
                 <Button variant="outline" className="gap-2" onClick={handleExportCSV} disabled={!doctors.length}>
                     <FileDown className="h-4 w-4" />
