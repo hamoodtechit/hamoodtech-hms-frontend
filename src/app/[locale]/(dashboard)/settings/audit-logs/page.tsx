@@ -35,7 +35,7 @@ import {
     Info,
     History
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { format } from "date-fns"
 
 import {
@@ -294,8 +294,8 @@ export default function AuditLogsPage() {
 
                 {/* Log Details Dialog */}
                 <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
-                    <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
-                        <DialogHeader className="p-8 bg-primary/5">
+                    <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
+                        <DialogHeader className="p-8 bg-primary/5 sticky top-0 z-10">
                             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center border-b-4 border-primary/30 shadow-lg">
                                     <History className="h-6 w-6 text-primary" />
@@ -321,9 +321,15 @@ export default function AuditLogsPage() {
                             </div>
 
                             <div className="p-4 rounded-2xl bg-muted/50 border border-dashed border-muted-foreground/20 space-y-4">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Target Module</p>
-                                    <p className="font-black text-primary">{selectedLog?.module}</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Target Module</p>
+                                        <p className="font-black text-primary">{selectedLog?.module}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Note</p>
+                                        <p className="font-semibold text-sm">{selectedLog?.note || '—'}</p>
+                                    </div>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Record ID</p>
@@ -333,28 +339,119 @@ export default function AuditLogsPage() {
                                 </div>
                             </div>
 
-                            {/* Data Changes: Old vs New Values */}
-                            {(selectedLog?.oldValues || selectedLog?.newValues) && (
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Data Changes</p>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        {selectedLog.oldValues && (
-                                            <div className="space-y-2">
-                                                <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-200">Before (Old)</Badge>
-                                                <pre className="text-[10px] font-mono bg-muted/30 p-4 rounded-xl overflow-auto max-h-[300px] border border-muted-foreground/10 text-muted-foreground">
-                                                    {JSON.stringify(selectedLog.oldValues, null, 2)}
-                                                </pre>
+                            {/* Data Changes: Diff Table */}
+                            {selectedLog?.oldValues && selectedLog?.newValues && (() => {
+                                const allKeys = Array.from(new Set([...Object.keys(selectedLog.oldValues), ...Object.keys(selectedLog.newValues)]));
+                                const changedKeys = allKeys.filter(key => {
+                                    const oldVal = JSON.stringify(selectedLog.oldValues[key]);
+                                    const newVal = JSON.stringify(selectedLog.newValues[key]);
+                                    return oldVal !== newVal;
+                                });
+                                const unchangedKeys = allKeys.filter(key => {
+                                    const oldVal = JSON.stringify(selectedLog.oldValues[key]);
+                                    const newVal = JSON.stringify(selectedLog.newValues[key]);
+                                    return oldVal === newVal;
+                                });
+                                return (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                                Data Changes — <span className="text-amber-600">{changedKeys.length} field(s) modified</span>
+                                            </p>
+                                        </div>
+                                        {changedKeys.length > 0 && (
+                                            <div className="rounded-xl border overflow-hidden">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-muted/50">
+                                                            <TableHead className="w-[200px] text-[10px] font-black uppercase">Field</TableHead>
+                                                            <TableHead className="text-[10px] font-black uppercase text-rose-600">Before</TableHead>
+                                                            <TableHead className="text-[10px] font-black uppercase text-emerald-600">After</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {changedKeys.map(key => {
+                                                            const oldVal = selectedLog.oldValues[key];
+                                                            const newVal = selectedLog.newValues[key];
+                                                            const formatVal = (v: any) => {
+                                                                if (v === null || v === undefined) return <span className="italic text-muted-foreground">null</span>;
+                                                                if (typeof v === 'object') return <code className="text-[10px] font-mono break-all">{JSON.stringify(v, null, 2)}</code>;
+                                                                return String(v);
+                                                            };
+                                                            return (
+                                                                <TableRow key={key} className="hover:bg-amber-500/5">
+                                                                    <TableCell className="font-bold text-xs text-primary/80 align-top">{key}</TableCell>
+                                                                    <TableCell className="bg-rose-500/5 text-xs font-mono align-top">
+                                                                        <div className="max-w-[300px] break-all">{formatVal(oldVal)}</div>
+                                                                    </TableCell>
+                                                                    <TableCell className="bg-emerald-500/5 text-xs font-mono align-top">
+                                                                        <div className="max-w-[300px] break-all">{formatVal(newVal)}</div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
                                             </div>
                                         )}
-                                        {selectedLog.newValues && (
-                                            <div className="space-y-2">
-                                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200">After (New)</Badge>
-                                                <pre className="text-[10px] font-mono bg-emerald-500/5 p-4 rounded-xl overflow-auto max-h-[300px] border border-emerald-500/10 text-emerald-700/80">
-                                                    {JSON.stringify(selectedLog.newValues, null, 2)}
-                                                </pre>
-                                            </div>
+                                        {unchangedKeys.length > 0 && (
+                                            <details className="text-xs">
+                                                <summary className="cursor-pointer text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors">
+                                                    Show {unchangedKeys.length} unchanged field(s)
+                                                </summary>
+                                                <div className="mt-2 rounded-xl border overflow-hidden">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow className="bg-muted/30">
+                                                                <TableHead className="w-[200px] text-[10px] font-black uppercase">Field</TableHead>
+                                                                <TableHead className="text-[10px] font-black uppercase">Value</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {unchangedKeys.map(key => {
+                                                                const val = selectedLog.oldValues[key];
+                                                                const formatVal = (v: any) => {
+                                                                    if (v === null || v === undefined) return <span className="italic text-muted-foreground">null</span>;
+                                                                    if (typeof v === 'object') return <code className="text-[10px] font-mono break-all">{JSON.stringify(v)}</code>;
+                                                                    return String(v);
+                                                                };
+                                                                return (
+                                                                    <TableRow key={key} className="text-muted-foreground">
+                                                                        <TableCell className="font-medium text-xs align-top">{key}</TableCell>
+                                                                        <TableCell className="text-xs font-mono align-top">
+                                                                            <div className="max-w-[600px] break-all">{formatVal(val)}</div>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                );
+                                                            })}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </details>
                                         )}
                                     </div>
+                                );
+                            })()}
+
+                            {/* CREATE / DELETE: show newValues or oldValues only */}
+                            {selectedLog && !selectedLog.oldValues && selectedLog.newValues && (
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        Created Data
+                                    </p>
+                                    <pre className="text-[10px] font-mono bg-emerald-500/5 p-4 rounded-xl overflow-auto max-h-[400px] border border-emerald-500/10 text-emerald-700/80">
+                                        {JSON.stringify(selectedLog.newValues, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
+                            {selectedLog && selectedLog.oldValues && !selectedLog.newValues && (
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        Deleted Data
+                                    </p>
+                                    <pre className="text-[10px] font-mono bg-rose-500/5 p-4 rounded-xl overflow-auto max-h-[400px] border border-rose-500/10 text-rose-700/80">
+                                        {JSON.stringify(selectedLog.oldValues, null, 2)}
+                                    </pre>
                                 </div>
                             )}
 
