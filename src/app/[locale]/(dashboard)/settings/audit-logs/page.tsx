@@ -294,8 +294,8 @@ export default function AuditLogsPage() {
 
                 {/* Log Details Dialog */}
                 <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
-                    <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-[2rem] border-none shadow-2xl p-0">
-                        <DialogHeader className="p-8 bg-primary/5 sticky top-0 z-10">
+                    <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0">
+                        <DialogHeader className="p-8 bg-background border-b sticky top-0 z-10">
                             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center border-b-4 border-primary/30 shadow-lg">
                                     <History className="h-6 w-6 text-primary" />
