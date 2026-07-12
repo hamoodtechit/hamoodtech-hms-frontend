@@ -8,7 +8,7 @@ import { DIAGNOSTIC_KEYS } from './diagnostic-queries';
 import { SALES_KEYS } from './sales-queries';
 
 // Use standard API URL but without the /api/v1 suffix for socket
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://hms-srv-dev.genify.live';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL 
 
 export const useNotificationSocket = () => {
     const socketRef = useRef<Socket | null>(null);
