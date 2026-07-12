@@ -5,6 +5,7 @@ import { useNotificationStore } from '@/store/use-notification-store';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { DIAGNOSTIC_KEYS } from './diagnostic-queries';
+import { SALES_KEYS } from './sales-queries';
 
 // Use standard API URL but without the /api/v1 suffix for socket
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'https://hms-srv-dev.genify.live';
@@ -50,11 +51,11 @@ export const useNotificationSocket = () => {
         socket.on('sale:returned', (data) => {
             console.log('[Socket] sale:returned event received:', data);
             
-            // Forcefully refetch diagnostic reports immediately
-            queryClient.refetchQueries({ queryKey: ['diagnostic'] });
+            // Forcefully invalidate diagnostic reports immediately
+            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
             
-            // Forcefully refetch sales queries immediately
-            queryClient.refetchQueries({ queryKey: ['sales'] });
+            // Forcefully invalidate sales queries immediately
+            queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
             
             toast.info('Sale Return Processed', {
                 description: data?.invoiceNumber 
@@ -67,11 +68,11 @@ export const useNotificationSocket = () => {
         socket.on('sale:created', (data) => {
             console.log('[Socket] sale:created event received:', data);
             
-            // Forcefully refetch diagnostic reports to show new tests
-            queryClient.refetchQueries({ queryKey: ['diagnostic'] });
+            // Forcefully invalidate diagnostic reports to show new tests
+            queryClient.invalidateQueries({ queryKey: DIAGNOSTIC_KEYS.all });
             
-            // Forcefully refetch sales queries
-            queryClient.refetchQueries({ queryKey: ['sales'] });
+            // Forcefully invalidate sales queries
+            queryClient.invalidateQueries({ queryKey: SALES_KEYS.all });
             
             toast.success('New Sale Created', {
                 description: data?.invoiceNumber 
