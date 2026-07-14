@@ -135,6 +135,7 @@ export const pharmacyService = {
   // Stock APIs
   getStocks: async (params?: { 
     medicineId?: string; 
+    medicineManufacturerId?: string;
     branchId?: string;
     page?: number; 
     limit?: number; 

@@ -23,7 +23,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { useStocks } from "@/hooks/pharmacy-queries"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useStocks, useManufacturers } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useStoreContext } from "@/store/use-store-context"
@@ -46,12 +47,17 @@ export function StockTable() {
   // Filter State
   const [filterBatch, setFilterBatch] = useState("")
   const [filterRack, setFilterRack] = useState("")
+  const [filterManufacturer, setFilterManufacturer] = useState("")
   const [expiryRange, setExpiryRange] = useState<DateRange | undefined>(undefined)
 
   const expiryStartDate = expiryRange?.from ? format(expiryRange.from, 'yyyy-MM-dd') : undefined
   const expiryEndDate   = expiryRange?.to   ? format(expiryRange.to,   'yyyy-MM-dd') : undefined
 
-  const activeFilterCount = [filterBatch, filterRack, expiryRange].filter(Boolean).length
+  const activeFilterCount = [filterBatch, filterRack, filterManufacturer, expiryRange].filter(Boolean).length
+
+  // Fetch manufacturers for filter dropdown
+  const { data: manufacturersRes } = useManufacturers({ limit: 500 })
+  const manufacturers = manufacturersRes?.data || []
 
   const { data: stocksRes, isLoading: loading } = useStocks({
     page,
@@ -60,6 +66,7 @@ export function StockTable() {
     branchId: activeStoreId || undefined,
     batchNumber: filterBatch || undefined,
     rackNumber: filterRack || undefined,
+    medicineManufacturerId: (filterManufacturer && filterManufacturer !== 'none') ? filterManufacturer : undefined,
     expiryStartDate,
     expiryEndDate,
   })
@@ -97,6 +104,7 @@ export function StockTable() {
   const resetFilters = () => {
     setFilterBatch("")
     setFilterRack("")
+    setFilterManufacturer("")
     setExpiryRange(undefined)
     setSearch("")
     setPage(1)
@@ -142,6 +150,20 @@ export function StockTable() {
                         <div className="space-y-2">
                             <Label htmlFor="filRack">Rack Number</Label>
                             <Input id="filRack" value={filterRack} onChange={e => setFilterRack(e.target.value)} placeholder="Filter by rack" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Manufacturer</Label>
+                            <Select value={filterManufacturer} onValueChange={setFilterManufacturer}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Manufacturers" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">All Manufacturers</SelectItem>
+                                    {manufacturers.map((m: any) => (
+                                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry Date Range</Label>
