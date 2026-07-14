@@ -42,7 +42,7 @@ import { useSettingsStore } from "@/store/use-settings-store"
 import { useStoreContext } from "@/store/use-store-context"
 import { Sale, SaleReturn } from "@/types/sales"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, DollarSign, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, Filter, History, Printer, RotateCcw, Search, ShoppingBag, ShoppingCart, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
@@ -510,7 +510,7 @@ export function TransactionHistory() {
                                                         setDetailsDialogOpen(true)
                                                     }}
                                                 >
-                                                    <DollarSign className="h-4 w-4" />
+                                                    <span className="font-bold text-sm">৳</span>
                                                 </Button>
                                             )}
                                             <Button 

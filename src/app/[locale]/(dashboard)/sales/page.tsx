@@ -41,7 +41,7 @@ import { usePatients } from "@/hooks/patient-queries"
 import { useUsers } from "@/hooks/user-queries"
 import { Sale } from "@/types/sales"
 import { format } from "date-fns"
-import { DollarSign, Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet, Undo2 } from "lucide-react"
+import { Eye, FileText, Filter, Loader2, Search, ShoppingCart, X, Wallet, Undo2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
@@ -660,7 +660,7 @@ export default function SalesHistoryPage() {
                                       setDetailsOpen(true)
                                    }}
                                  >
-                                    <DollarSign className="h-4 w-4" />
+                                    <span className="font-bold text-sm">৳</span>
                                  </Button>
                                )}
                                <Button 
