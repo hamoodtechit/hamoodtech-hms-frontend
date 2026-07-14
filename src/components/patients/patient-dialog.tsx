@@ -106,7 +106,43 @@ export function PatientDialog({
 
   const dobValue = form.watch("dob");
 
-  const exactAgeText = useMemo(() => calculateExactAge(dobValue), [dobValue]);
+  const ageParts = useMemo(() => {
+     if (!dobValue) return { y: "", m: "", d: "" };
+     const birthDate = new Date(dobValue);
+     if (isNaN(birthDate.getTime())) return { y: "", m: "", d: "" };
+     const today = new Date();
+     let years = today.getFullYear() - birthDate.getFullYear();
+     let months = today.getMonth() - birthDate.getMonth();
+     let days = today.getDate() - birthDate.getDate();
+     if (days < 0) { months--; const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0); days += lastMonth.getDate(); }
+     if (months < 0) { years--; months += 12; }
+     if (years < 0) return { y: "", m: "", d: "" };
+     return { y: years ? years.toString() : "", m: months ? months.toString() : "", d: days ? days.toString() : "" };
+  }, [dobValue]);
+
+  const handleAgePartsChange = (y: string, m: string, d: string) => {
+      const yy = parseInt(y || "0");
+      const mm = parseInt(m || "0");
+      const dd = parseInt(d || "0");
+
+      if (yy === 0 && mm === 0 && dd === 0 && !y && !m && !d) {
+          form.setValue('dob', undefined, { shouldValidate: true, shouldDirty: true });
+          form.setValue('age', 0, { shouldValidate: true, shouldDirty: true });
+          return;
+      }
+
+      const today = new Date();
+      today.setFullYear(today.getFullYear() - yy);
+      today.setMonth(today.getMonth() - mm);
+      today.setDate(today.getDate() - dd);
+      
+      const paddedDay = today.getDate().toString().padStart(2, '0');
+      const paddedMonth = (today.getMonth() + 1).toString().padStart(2, '0');
+      const dateString = `${today.getFullYear()}-${paddedMonth}-${paddedDay}`;
+      
+      form.setValue('dob', dateString, { shouldValidate: true, shouldDirty: true });
+      form.setValue('age', yy, { shouldValidate: true, shouldDirty: true });
+  }
 
   useEffect(() => {
     if (patient) {
@@ -117,7 +153,7 @@ export function PatientDialog({
         gender: patient.gender,
         phone: patient.phone,
         address: patient.address,
-        bloodGroup: patient.bloodGroup,
+        bloodGroup: patient.bloodGroup || undefined,
         visitType: patient.visitType || "opd",
         village: patient.village || "",
         union: patient.union || "",
@@ -126,7 +162,7 @@ export function PatientDialog({
         district: patient.district || "",
         religion: patient.religion || "",
         occupation: patient.occupation || "",
-        maritalStatus: patient.maritalStatus,
+        maritalStatus: patient.maritalStatus || undefined,
         nationality: patient.nationality || "Bangladeshi",
         dob: patient.dob || undefined
       })
@@ -238,12 +274,43 @@ export function PatientDialog({
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel className="flex items-center justify-between">
-                              <span>Age *</span>
-                              {exactAgeText && <span className="text-[10px] text-muted-foreground font-bold tracking-tight text-primary">{exactAgeText}</span>}
+                              <span>Age (Years, Months, Days) *</span>
                             </FormLabel>
                             <FormControl>
-                                <div className="relative flex items-center">
-                                  <SmartNumberInput placeholder="e.g. 30" {...field} onChange={(val: number | undefined) => field.onChange(val)} className="pr-10" />
+                                <div className="relative flex items-center gap-1">
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent">
+                                      <input 
+                                        type="number" 
+                                        placeholder="YY" 
+                                        className="w-full bg-transparent outline-none text-center text-sm" 
+                                        value={ageParts.y} 
+                                        onChange={(e) => handleAgePartsChange(e.target.value, ageParts.m, ageParts.d)} 
+                                        min="0" max="120"
+                                      />
+                                      <span className="text-xs text-muted-foreground select-none">Y</span>
+                                  </div>
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent">
+                                      <input 
+                                        type="number" 
+                                        placeholder="MM" 
+                                        className="w-full bg-transparent outline-none text-center text-sm" 
+                                        value={ageParts.m} 
+                                        onChange={(e) => handleAgePartsChange(ageParts.y, e.target.value, ageParts.d)} 
+                                        min="0" max="11"
+                                      />
+                                      <span className="text-xs text-muted-foreground select-none">M</span>
+                                  </div>
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent pr-8">
+                                      <input 
+                                        type="number" 
+                                        placeholder="DD" 
+                                        className="w-full bg-transparent outline-none text-center text-sm" 
+                                        value={ageParts.d} 
+                                        onChange={(e) => handleAgePartsChange(ageParts.y, ageParts.m, e.target.value)} 
+                                        min="0" max="31"
+                                      />
+                                      <span className="text-xs text-muted-foreground select-none">D</span>
+                                  </div>
                                   <DobPicker 
                                     value={dobValue}
                                     onChange={(dateString) => {
