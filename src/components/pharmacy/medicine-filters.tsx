@@ -35,22 +35,22 @@ export function MedicineFilters({ values, onChange, onReset, showActiveStatus = 
     // Search States
     const [catSearch, setCatSearch] = useState("")
     const [debouncedCatSearch] = useDebounce(catSearch, 500)
-    const { data: categoriesRes, isLoading: loadingCats } = usePharmacyEntities('categories', { search: debouncedCatSearch, limit: 20 })
+    const { data: categoriesRes, isLoading: loadingCats } = usePharmacyEntities('categories', { search: debouncedCatSearch, limit: 500 })
     const categories = categoriesRes?.data || []
 
     const [genSearch, setGenSearch] = useState("")
     const [debouncedGenSearch] = useDebounce(genSearch, 500)
-    const { data: genericsRes, isLoading: loadingGens } = usePharmacyEntities('generics', { search: debouncedGenSearch, limit: 20 })
+    const { data: genericsRes, isLoading: loadingGens } = usePharmacyEntities('generics', { search: debouncedGenSearch, limit: 500 })
     const generics = genericsRes?.data || []
 
     const [grpSearch, setGrpSearch] = useState("")
     const [debouncedGrpSearch] = useDebounce(grpSearch, 500)
-    const { data: groupsRes, isLoading: loadingGrps } = usePharmacyEntities('groups', { search: debouncedGrpSearch, limit: 20 })
+    const { data: groupsRes, isLoading: loadingGrps } = usePharmacyEntities('groups', { search: debouncedGrpSearch, limit: 500 })
     const groups = groupsRes?.data || []
 
     const [mfgSearch, setMfgSearch] = useState("")
     const [debouncedMfgSearch] = useDebounce(mfgSearch, 500)
-    const { data: manufacturersRes, isLoading: loadingMfgs } = useManufacturers({ search: debouncedMfgSearch, limit: 20 })
+    const { data: manufacturersRes, isLoading: loadingMfgs } = useManufacturers({ search: debouncedMfgSearch, limit: 500 })
     const manufacturers = manufacturersRes?.data || []
 
     const handleFieldChange = (field: keyof MedicineFilterValues, value: any) => {
