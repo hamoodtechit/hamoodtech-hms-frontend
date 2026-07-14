@@ -70,7 +70,6 @@ export function SaleDetailsDialog({
   const [discountAmount, setDiscountAmount] = useState(0)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [selectedReferralPersonId, setSelectedReferralPersonId] = useState<string>('')
-  const [note, setNote] = useState<string>('')
   const [saleReturns, setSaleReturns] = useState<SaleReturn[]>([])
   const [fetchingReturns, setFetchingReturns] = useState(false)
 
@@ -105,7 +104,6 @@ export function SaleDetailsDialog({
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setIsEditMode(false)
       setSelectedReferralPersonId(sale.referralPersonId || '')
-      setNote(sale.note || '')
       fetchSaleReturns()
       
       if (initialAddPayment && Number(sale.dueAmount) > 0) {
@@ -192,7 +190,6 @@ export function SaleDetailsDialog({
             paymentStatus: paymentStatus,
             patientId: selectedPatient?.id,
             referralPersonId: selectedReferralPersonId || undefined,
-            note: note || undefined,
             totalPrice: subtotal,
             netPrice: total,
             dueAmount: currentDueAmount
@@ -219,7 +216,6 @@ export function SaleDetailsDialog({
       setDiscountAmount(Number(sale.discountAmount) || 0)
       setPaymentStatus(sale.paymentStatus || 'due')
       setSelectedReferralPersonId(sale.referralPersonId || '')
-      setNote(sale.note || '')
     }
     setIsEditMode(false)
   }
@@ -508,15 +504,6 @@ export function SaleDetailsDialog({
                       }}
                     />
                   </div>
-                </div>
-
-                <div>
-                  <Label>Sale Note (Optional)</Label>
-                  <Input
-                    placeholder="Add a note or reason for edit..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                  />
                 </div>
               </>
             )}
