@@ -23,7 +23,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 import { useStocks, useManufacturers } from "@/hooks/pharmacy-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -153,17 +153,17 @@ export function StockTable() {
                         </div>
                         <div className="space-y-2">
                             <Label>Manufacturer</Label>
-                            <Select value={filterManufacturer} onValueChange={setFilterManufacturer}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="All Manufacturers" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">All Manufacturers</SelectItem>
-                                    {manufacturers.map((m: any) => (
-                                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                value={filterManufacturer === "none" ? "" : filterManufacturer}
+                                onChange={(val) => setFilterManufacturer(val || "none")}
+                                options={manufacturers.map((m: any) => ({
+                                    id: m.id,
+                                    name: m.name
+                                }))}
+                                placeholder="Search manufacturer..."
+                                allLabel="All Manufacturers"
+                                showAll={true}
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expiry Date Range</Label>
