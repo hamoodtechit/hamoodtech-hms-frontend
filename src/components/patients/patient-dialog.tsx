@@ -31,10 +31,10 @@ import { patientService } from "@/services/patient-service"
 import { DobPicker } from "./dob-picker"
 import { calculateExactAge } from "@/lib/age-calculator"
 import { Patient } from "@/types/pharmacy"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Patient } from "@/types/pharmacy"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Loader2, User, Phone, MapPin, Activity, FileText } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -229,15 +229,43 @@ export function PatientDialog({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Basic Info & Address</TabsTrigger>
-                <TabsTrigger value="details">Other Details</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="basic" className="space-y-4 pt-4">
-                <ScrollArea className="h-[450px] pr-4">
-                  <div className="space-y-4 pb-4">
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6 pb-2">
+                
+                {/* Registration Details section */}
+                <div className="bg-secondary/20 p-4 rounded-xl border border-secondary/30 space-y-4">
+                    <h3 className="text-sm font-bold text-primary flex items-center gap-2 mb-2 uppercase tracking-wider">
+                        <Activity className="w-4 h-4" /> Registration Type
+                    </h3>
+                    <FormField
+                    control={form.control}
+                    name="visitType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Visit Type *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                            <SelectTrigger className="bg-background">
+                                <SelectValue placeholder="Select visit type" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="opd">OPD (Out-Patient)</SelectItem>
+                                <SelectItem value="ipd">IPD (In-Patient)</SelectItem>
+                                <SelectItem value="emergency">Emergency</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
+
+                {/* Personal Information section */}
+                <div className="bg-muted/30 p-4 rounded-xl border space-y-4">
+                    <h3 className="text-sm font-bold flex items-center gap-2 mb-2 uppercase tracking-wider text-muted-foreground">
+                        <User className="w-4 h-4" /> Personal Information
+                    </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                         control={form.control}
@@ -246,7 +274,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Name *</FormLabel>
                             <FormControl>
-                                <Input placeholder="John Doe" {...field} />
+                                <Input placeholder="John Doe" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -259,7 +287,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Name (Bangla)</FormLabel>
                             <FormControl>
-                                <Input placeholder="নাম (বাংলা)" {...field} />
+                                <Input placeholder="নাম (বাংলা)" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -278,7 +306,7 @@ export function PatientDialog({
                             </FormLabel>
                             <FormControl>
                                 <div className="relative flex items-center gap-1">
-                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent">
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-background">
                                       <input 
                                         type="number" 
                                         placeholder="YY" 
@@ -289,7 +317,7 @@ export function PatientDialog({
                                       />
                                       <span className="text-xs text-muted-foreground select-none">Y</span>
                                   </div>
-                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent">
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-background">
                                       <input 
                                         type="number" 
                                         placeholder="MM" 
@@ -300,7 +328,7 @@ export function PatientDialog({
                                       />
                                       <span className="text-xs text-muted-foreground select-none">M</span>
                                   </div>
-                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-transparent pr-8">
+                                  <div className="flex-1 flex items-center border rounded-md px-2 focus-within:ring-1 focus-within:ring-ring h-9 bg-background pr-8">
                                       <input 
                                         type="number" 
                                         placeholder="DD" 
@@ -344,7 +372,7 @@ export function PatientDialog({
                             <FormLabel>Gender *</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
                                 </FormControl>
@@ -359,6 +387,13 @@ export function PatientDialog({
                         )}
                         />
                     </div>
+                </div>
+
+                {/* Contact & Address section */}
+                <div className="bg-muted/30 p-4 rounded-xl border space-y-4">
+                    <h3 className="text-sm font-bold flex items-center gap-2 mb-2 uppercase tracking-wider text-muted-foreground">
+                        <MapPin className="w-4 h-4" /> Contact & Location
+                    </h3>
                     
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
@@ -366,9 +401,12 @@ export function PatientDialog({
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Phone *</FormLabel>
+                            <FormLabel className="flex items-center gap-2">Phone *</FormLabel>
                             <FormControl>
-                                <Input placeholder="017..." {...field} />
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input placeholder="017..." {...field} className="pl-9 bg-background" />
+                                </div>
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -382,7 +420,7 @@ export function PatientDialog({
                             <FormLabel>Blood Group</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 </FormControl>
@@ -406,7 +444,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>District</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Dhaka" {...field} />
+                                <Input placeholder="e.g. Dhaka" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -419,7 +457,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Thana / Upazila</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Uttara" {...field} />
+                                <Input placeholder="e.g. Uttara" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -435,7 +473,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Post Office</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Sector 4" {...field} />
+                                <Input placeholder="e.g. Sector 4" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -448,7 +486,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Union / Ward</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Ward 1" {...field} />
+                                <Input placeholder="e.g. Ward 1" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -464,30 +502,8 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Village / Area</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Uttara Sector 4" {...field} />
+                                <Input placeholder="e.g. Uttara Sector 4" {...field} className="bg-background" />
                             </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="visitType"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Visit Type *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select visit type" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="opd">OPD (Out-Patient)</SelectItem>
-                                    <SelectItem value="ipd">IPD (In-Patient)</SelectItem>
-                                    <SelectItem value="emergency">Emergency</SelectItem>
-                                </SelectContent>
-                            </Select>
                             <FormMessage />
                             </FormItem>
                         )}
@@ -501,20 +517,20 @@ export function PatientDialog({
                         <FormItem>
                           <FormLabel>Full Address</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Street address, house number..." {...field} className="h-20" />
+                            <Textarea placeholder="Street address, house number..." {...field} className="h-16 resize-none bg-background" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                </ScrollArea>
-              </TabsContent>
+                </div>
 
-              <TabsContent value="details" className="space-y-4 pt-4">
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 pt-2">
+                {/* Additional Demographics section */}
+                <div className="bg-muted/30 p-4 rounded-xl border space-y-4">
+                    <h3 className="text-sm font-bold flex items-center gap-2 mb-2 uppercase tracking-wider text-muted-foreground">
+                        <FileText className="w-4 h-4" /> Additional Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
                         <FormField
                         control={form.control}
                         name="religion"
@@ -523,7 +539,7 @@ export function PatientDialog({
                             <FormLabel>Religion</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 </FormControl>
@@ -547,7 +563,7 @@ export function PatientDialog({
                             <FormItem>
                             <FormLabel>Occupation</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g. Service" {...field} />
+                                <Input placeholder="e.g. Service" {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -564,7 +580,7 @@ export function PatientDialog({
                             <FormLabel>Marital Status</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 </FormControl>
@@ -587,7 +603,7 @@ export function PatientDialog({
                             <FormLabel>Nationality</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 </FormControl>
@@ -603,10 +619,9 @@ export function PatientDialog({
                         )}
                         />
                     </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
+                </div>
+              </div>
+            </ScrollArea>
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
