@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
 import { DobPicker } from "./dob-picker"
 import { Patient } from "@/types/pharmacy"
-import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon, Loader2, User, Phone, MapPin, Activity, FileText } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
@@ -217,7 +217,7 @@ export function PatientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Update Patient Details' : 'Register New Patient'}</DialogTitle>
           <DialogDescription>
@@ -226,8 +226,8 @@ export function PatientDialog({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 space-y-4">
-            <ScrollArea className="flex-1 -mx-6 px-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 space-y-4 overflow-hidden">
+            <div className="flex-1 overflow-y-auto -mx-6 px-6 custom-scrollbar">
               <div className="space-y-6 pb-4 pr-2">
                 
                 {/* Registration Details section */}
@@ -619,7 +619,7 @@ export function PatientDialog({
                     </div>
                 </div>
               </div>
-            </ScrollArea>
+            </div>
 
             <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t mt-auto">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
