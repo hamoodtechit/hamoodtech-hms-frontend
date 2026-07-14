@@ -726,7 +726,7 @@ export default function SalesHistoryPage() {
           </Card>
 
           <SaleDetailsDialog 
-            sale={selectedSale}
+            sale={sales.find((s: Sale) => s.id === selectedSale?.id) || selectedSale}
             open={detailsOpen}
             onOpenChange={setDetailsOpen}
             onSuccess={() => refetch()}

@@ -116,10 +116,16 @@ export function SaleDetailsDialog({
 
       if (initialAddPayment && calcDue > 0) {
         setIsAddingPayment(true)
+      }
+      
+      if (calcDue > 0) {
+        // Automatically update the payment field to the new due amount when the sale is updated
         setPaymentAmount(calcDue)
       } else {
         setIsAddingPayment(false)
+        setPaymentAmount(0)
       }
+      
       setEditedItemPrices({})
     }
   }, [sale, initialAddPayment])
