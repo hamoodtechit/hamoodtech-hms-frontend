@@ -165,6 +165,15 @@ export function SaleDetailsDialog({
     })
   }
 
+  // Use existing netPrice/totalPrice if available, or calculate from items if they exist
+  const items = sale?.saleItems || []
+  const subtotal = items.length > 0 
+    ? items.reduce((sum, item) => sum + Number(item.totalPrice), 0)
+    : Number(sale?.totalPrice || 0)
+    
+  const discount = discountAmount || (subtotal * discountPercentage) / 100
+  const total = subtotal - discount
+
   const handleSave = async () => {
     if (!sale) return
 
@@ -175,12 +184,15 @@ export function SaleDetailsDialog({
         data: {
             status,
             paymentMethod,
-            discountPercentage: discountPercentage || undefined,
-            discountAmount: discountAmount || undefined,
+            discountPercentage: discountPercentage || 0,
+            discountAmount: discountAmount || 0,
             paymentStatus: paymentStatus,
             patientId: selectedPatient?.id,
             referralPersonId: selectedReferralPersonId || undefined,
-        }
+            totalPrice: subtotal,
+            netPrice: total,
+            dueAmount: Math.max(0, total - Number(sale.paidAmount || 0))
+        } as any
       }, {
         onSuccess: () => {
             setIsEditMode(false)
@@ -261,14 +273,7 @@ export function SaleDetailsDialog({
     }
   }
   
-  // Use existing netPrice/totalPrice if available, or calculate from items if they exist
-  const items = sale?.saleItems || []
-  const subtotal = items.length > 0 
-    ? items.reduce((sum, item) => sum + Number(item.totalPrice), 0)
-    : Number(sale.totalPrice || 0)
-    
-  const discount = discountAmount || (subtotal * discountPercentage) / 100
-  const total = subtotal - discount
+  // Subtotal and total are now calculated above handleSave
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -478,8 +483,10 @@ export function SaleDetailsDialog({
                       max="100"
                       value={discountPercentage || ''}
                       onChange={(e) => {
-                        setDiscountPercentage(Number(e.target.value) || 0)
-                        setDiscountAmount(0)
+                        const pct = Number(e.target.value) || 0
+                        setDiscountPercentage(pct)
+                        const amt = (subtotal * pct) / 100
+                        setDiscountAmount(parseFloat(amt.toFixed(2)))
                       }}
                     />
                     <span className="text-sm self-center text-muted-foreground">or</span>
@@ -489,8 +496,10 @@ export function SaleDetailsDialog({
                       min="0"
                       value={discountAmount || ''}
                       onChange={(e) => {
-                        setDiscountAmount(Number(e.target.value) || 0)
-                        setDiscountPercentage(0)
+                        const amt = Number(e.target.value) || 0
+                        setDiscountAmount(amt)
+                        const pct = subtotal > 0 ? (amt / subtotal) * 100 : 0
+                        setDiscountPercentage(parseFloat(pct.toFixed(2)))
                       }}
                     />
                   </div>
