@@ -106,9 +106,17 @@ export function SaleDetailsDialog({
       setSelectedReferralPersonId(sale.referralPersonId || '')
       fetchSaleReturns()
       
-      if (initialAddPayment && Number(sale.dueAmount) > 0) {
+      const items = sale.saleItems || []
+      const sub = items.length > 0 
+        ? items.reduce((sum, item) => sum + Number(item.totalPrice), 0)
+        : Number(sale.totalPrice || 0)
+      const disc = Number(sale.discountAmount) || (sub * Number(sale.discountPercentage || 0)) / 100
+      const tot = sub - disc + Number(sale.taxAmount || 0)
+      const calcDue = Math.max(0, tot - Number(sale.paidAmount || 0))
+
+      if (initialAddPayment && calcDue > 0) {
         setIsAddingPayment(true)
-        setPaymentAmount(Number(sale.dueAmount))
+        setPaymentAmount(calcDue)
       } else {
         setIsAddingPayment(false)
       }
@@ -592,7 +600,7 @@ export function SaleDetailsDialog({
           </div>
 
           {/* Add Payment UI */}
-          {Number(sale.dueAmount) > 0 && !isEditMode && (
+          {currentDueAmount > 0 && !isEditMode && (
             <div className="mt-4 p-4 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-primary flex items-center gap-2">
@@ -602,7 +610,7 @@ export function SaleDetailsDialog({
                 {!isAddingPayment ? (
                   <Button size="sm" onClick={() => {
                     setIsAddingPayment(true)
-                    setPaymentAmount(Number(sale.dueAmount))
+                    setPaymentAmount(currentDueAmount)
                   }}>
                     Settlement
                   </Button>
@@ -621,7 +629,7 @@ export function SaleDetailsDialog({
                       type="number" 
                       value={paymentAmount} 
                       onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                      max={Number(sale.dueAmount)}
+                      max={currentDueAmount}
                       min={0.01}
                       step="0.01"
                     />
