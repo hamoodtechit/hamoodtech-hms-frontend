@@ -53,3 +53,13 @@ export function useDeleteAppointment() {
     },
   });
 }
+
+export function useCancelAppointment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => appointmentService.cancelAppointment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all });
+    },
+  });
+}

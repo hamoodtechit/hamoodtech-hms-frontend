@@ -9,6 +9,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     Select,
@@ -18,7 +29,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { useAppointment, useUpdateAppointment } from "@/hooks/appointment-queries"
+import { useAppointment, useUpdateAppointment, useCancelAppointment } from "@/hooks/appointment-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { useQueryClient } from "@tanstack/react-query"
@@ -50,6 +61,7 @@ interface AppointmentDetailsDialogProps {
 export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: AppointmentDetailsDialogProps) {
     const { data: response, isLoading } = useAppointment(appointmentId || "")
     const updateMutation = useUpdateAppointment()
+    const cancelMutation = useCancelAppointment()
     const { stores, activeStoreId } = useStoreContext()
     const activeBranch = stores.find(s => s.id === activeStoreId) || stores[0]
     
@@ -79,6 +91,16 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
             setIsEditing(false)
         } catch (error) {
             toast.error("Failed to update appointment")
+        }
+    }
+
+    const handleCancel = async () => {
+        try {
+            await cancelMutation.mutateAsync(appointmentId)
+            toast.success("Appointment cancelled successfully")
+            onOpenChange(false)
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to cancel appointment")
         }
     }
 
@@ -282,6 +304,41 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 no-print">
+                                {appointment && appointment.status !== 'cancelled' && appointment.status !== 'completed' && !isEditing && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button 
+                                                variant="destructive"
+                                                size="sm" 
+                                                className="h-11 px-5 rounded-2xl gap-2 font-black text-xs uppercase tracking-widest shadow-lg shadow-destructive/20"
+                                            >
+                                                <X className="h-4 w-4" /> Cancel
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="sm:max-w-[450px]">
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure you want to cancel this appointment?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action will permanently refund the patient, deduct the amount from your cash register, return consumed stock, and delete doctor/referral commissions. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel disabled={cancelMutation.isPending}>Keep Appointment</AlertDialogCancel>
+                                                <AlertDialogAction 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleCancel();
+                                                    }}
+                                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                                    disabled={cancelMutation.isPending}
+                                                >
+                                                    {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                    Yes, Cancel
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
                                 <Button 
                                     onClick={handlePrint} 
                                     variant="outline" 

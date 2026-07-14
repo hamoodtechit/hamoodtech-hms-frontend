@@ -36,4 +36,9 @@ export const appointmentService = {
   deleteAppointment: async (id: string): Promise<void> => {
     await api.delete(`/appointments/${id}`);
   },
+
+  cancelAppointment: async (id: string): Promise<{ success: boolean; message: string; data: Appointment }> => {
+    const response = await api.patch(`/appointments/${id}/cancel`);
+    return response.data;
+  },
 };
