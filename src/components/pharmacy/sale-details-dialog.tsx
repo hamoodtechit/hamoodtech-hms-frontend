@@ -172,7 +172,8 @@ export function SaleDetailsDialog({
     : Number(sale?.totalPrice || 0)
     
   const discount = discountAmount || (subtotal * discountPercentage) / 100
-  const total = subtotal - discount
+  const total = subtotal - discount + Number(sale?.taxAmount || 0)
+  const currentDueAmount = Math.max(0, total - Number(sale?.paidAmount || 0))
 
   const handleSave = async () => {
     if (!sale) return
@@ -191,7 +192,7 @@ export function SaleDetailsDialog({
             referralPersonId: selectedReferralPersonId || undefined,
             totalPrice: subtotal,
             netPrice: total,
-            dueAmount: Math.max(0, total - Number(sale.paidAmount || 0))
+            dueAmount: currentDueAmount
         } as any
       }, {
         onSuccess: () => {
@@ -576,7 +577,7 @@ export function SaleDetailsDialog({
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span className="text-primary">{formatCurrency(sale.totalPrice)}</span>
+              <span className="text-primary">{formatCurrency(total)}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-dashed">
                 <div className="flex justify-between text-sm">
@@ -585,7 +586,7 @@ export function SaleDetailsDialog({
                 </div>
                 <div className="flex justify-between text-sm p-2 bg-red-50 rounded-lg border border-red-100">
                     <span className="text-red-600 font-bold uppercase tracking-wider text-xs">Total Due</span>
-                    <span className="font-black text-red-600 text-lg">{formatCurrency(sale.dueAmount || 0)}</span>
+                    <span className="font-black text-red-600 text-lg">{formatCurrency(currentDueAmount)}</span>
                 </div>
             </div>
           </div>
