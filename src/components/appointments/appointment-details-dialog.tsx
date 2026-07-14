@@ -46,7 +46,8 @@ import {
     Save,
     Stethoscope,
     User,
-    X
+    X,
+    AlertTriangle
 } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { toast } from "sonner"
@@ -315,27 +316,32 @@ export function AppointmentDetailsDialog({ open, onOpenChange, appointmentId }: 
                                                 <X className="h-4 w-4" /> Cancel
                                             </Button>
                                         </AlertDialogTrigger>
-                                        <AlertDialogContent className="sm:max-w-[450px]">
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure you want to cancel this appointment?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This action will permanently refund the patient, deduct the amount from your cash register, return consumed stock, and delete doctor/referral commissions. This action cannot be undone.
+                                        <AlertDialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] rounded-3xl">
+                                            <div className="bg-destructive/5 px-6 pt-10 pb-8 flex flex-col items-center justify-center text-center relative">
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-destructive/20" />
+                                                <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6 ring-8 ring-destructive/5">
+                                                    <AlertTriangle className="h-10 w-10 text-destructive" />
+                                                </div>
+                                                <AlertDialogTitle className="text-2xl font-black text-foreground tracking-tight">Cancel Appointment?</AlertDialogTitle>
+                                                <AlertDialogDescription className="text-sm font-medium text-muted-foreground mt-3 text-center max-w-[300px] leading-relaxed">
+                                                    This will permanently <strong className="text-foreground">refund the patient</strong>, deduct cash, return stock, and remove commissions.
                                                 </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel disabled={cancelMutation.isPending}>Keep Appointment</AlertDialogCancel>
+                                            </div>
+                                            <div className="p-6 bg-background flex flex-col-reverse sm:flex-row justify-end gap-3 border-t">
+                                                <AlertDialogCancel disabled={cancelMutation.isPending} className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] w-full sm:w-auto mt-0 border-primary/20 hover:bg-primary/5">
+                                                    No, Keep It
+                                                </AlertDialogCancel>
                                                 <AlertDialogAction 
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         handleCancel();
                                                     }}
-                                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                                    className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20 w-full sm:w-auto"
                                                     disabled={cancelMutation.isPending}
                                                 >
-                                                    {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                                    Yes, Cancel
+                                                    {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Cancel"}
                                                 </AlertDialogAction>
-                                            </AlertDialogFooter>
+                                            </div>
                                         </AlertDialogContent>
                                     </AlertDialog>
                                 )}

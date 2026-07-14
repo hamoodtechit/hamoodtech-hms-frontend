@@ -19,14 +19,23 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { useAppointments, useDeleteAppointment } from "@/hooks/appointment-queries"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useAppointments, useCancelAppointment } from "@/hooks/appointment-queries"
 import { useDepartments } from "@/hooks/hr-queries"
 import { useUsers } from "@/hooks/user-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Appointment, AppointmentStatus } from "@/types/appointment"
 import { format } from "date-fns"
-import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, ShoppingCart, Stethoscope, Trash2, Printer, Wallet } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, Edit, Eye, Loader2, Plus, Search, ShoppingCart, Stethoscope, Trash2, Printer, Wallet, X, AlertTriangle } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -73,16 +82,14 @@ export default function AppointmentHistoryPage() {
     const { data: usersRes } = useUsers({ branchId: activeStoreId || undefined, limit: 1000 })
     const { data: patsRes } = usePatients({ limit: 100 })
 
-    const deleteMutation = useDeleteAppointment()
+    const cancelMutation = useCancelAppointment()
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm("Are you sure you want to cancel and delete this appointment?")) {
-            try {
-                await deleteMutation.mutateAsync(id)
-                toast.success("Appointment deleted successfully")
-            } catch (error) {
-                toast.error("Failed to delete appointment")
-            }
+    const handleCancel = async (id: string) => {
+        try {
+            await cancelMutation.mutateAsync(id)
+            toast.success("Appointment cancelled successfully")
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to cancel appointment")
         }
     }
 
@@ -293,16 +300,46 @@ export default function AppointmentHistoryPage() {
                                                             )}
                                                         </>
                                                     )}
-                                                    {hasPermission('appointment:delete') && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon"
-                                                            className="h-8 w-8 rounded-lg hover:bg-destructive/5 hover:text-destructive text-muted-foreground"
-                                                            onClick={() => handleDelete(apt.id)}
-                                                            disabled={deleteMutation.isPending}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                    {hasPermission('appointment:update') && apt.status !== 'cancelled' && apt.status !== 'completed' && (
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon"
+                                                                    className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-colors"
+                                                                    title="Cancel Appointment"
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] rounded-3xl">
+                                                                <div className="bg-destructive/5 px-6 pt-10 pb-8 flex flex-col items-center justify-center text-center relative">
+                                                                    <div className="absolute top-0 left-0 w-full h-1 bg-destructive/20" />
+                                                                    <div className="h-20 w-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6 ring-8 ring-destructive/5">
+                                                                        <AlertTriangle className="h-10 w-10 text-destructive" />
+                                                                    </div>
+                                                                    <AlertDialogTitle className="text-2xl font-black text-foreground tracking-tight">Cancel Appointment?</AlertDialogTitle>
+                                                                    <AlertDialogDescription className="text-sm font-medium text-muted-foreground mt-3 text-center max-w-[300px] leading-relaxed">
+                                                                        This will permanently <strong className="text-foreground">refund the patient</strong>, deduct cash, return stock, and remove commissions.
+                                                                    </AlertDialogDescription>
+                                                                </div>
+                                                                <div className="p-6 bg-background flex flex-col-reverse sm:flex-row justify-end gap-3 border-t">
+                                                                    <AlertDialogCancel className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] w-full sm:w-auto mt-0 border-primary/20 hover:bg-primary/5">
+                                                                        No, Keep It
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            handleCancel(apt.id);
+                                                                        }}
+                                                                        className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20 w-full sm:w-auto"
+                                                                        disabled={cancelMutation.isPending}
+                                                                    >
+                                                                        {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Yes, Cancel"}
+                                                                    </AlertDialogAction>
+                                                                </div>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     )}
                                                 </div>
                                             </TableCell>
