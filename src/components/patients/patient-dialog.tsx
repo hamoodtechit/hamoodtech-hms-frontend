@@ -217,7 +217,7 @@ export function PatientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Update Patient Details' : 'Register New Patient'}</DialogTitle>
           <DialogDescription>
@@ -226,9 +226,9 @@ export function PatientDialog({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ScrollArea className="max-h-[60vh] pr-4">
-              <div className="space-y-6 pb-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 space-y-4">
+            <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="space-y-6 pb-4 pr-2">
                 
                 {/* Registration Details section */}
                 <div className="bg-secondary/20 p-4 rounded-xl border border-secondary/30 space-y-4">
@@ -621,7 +621,7 @@ export function PatientDialog({
               </div>
             </ScrollArea>
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t mt-auto">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
                 Cancel
               </Button>
