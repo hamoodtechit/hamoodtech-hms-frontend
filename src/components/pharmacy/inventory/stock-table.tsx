@@ -61,7 +61,7 @@ export function StockTable() {
 
   const { data: stocksRes, isLoading: loading } = useStocks({
     page,
-    limit: 10,
+    limit: 500,
     search: debouncedSearch,
     branchId: activeStoreId || undefined,
     batchNumber: filterBatch || undefined,
