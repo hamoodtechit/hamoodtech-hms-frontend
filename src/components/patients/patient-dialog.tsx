@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SmartNumberInput } from "@/components/ui/smart-number-input"
+
 import { Textarea } from "@/components/ui/textarea"
 import { patientService } from "@/services/patient-service"
 import { DobPicker } from "./dob-picker"
