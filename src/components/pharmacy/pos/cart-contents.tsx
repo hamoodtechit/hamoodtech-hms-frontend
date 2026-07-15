@@ -103,9 +103,57 @@ export function CartContents({
 
     const vatPercentage = pharmacy?.vatPercentage || 0
 
+    const allocateBatches = (requestedQty: number, stocks: any[], preferredBatchNumber?: string) => {
+        let remaining = requestedQty;
+        const allocated = [];
+        
+        if (preferredBatchNumber) {
+            const preferredStock = stocks.find(s => s.batchNumber === preferredBatchNumber);
+            if (preferredStock && (Number(preferredStock.quantity) || 0) > 0) {
+                const available = Number(preferredStock.quantity) || 0;
+                const take = Math.min(remaining, available);
+                allocated.push({
+                    quantity: take,
+                    price: Number(preferredStock.unitPrice) || 0
+                });
+                remaining -= take;
+            }
+        }
+
+        if (remaining > 0) {
+            const sortedStocks = [...(stocks || [])]
+                .filter(s => s.batchNumber !== preferredBatchNumber)
+                .sort((a, b) => {
+                    if (!a.expiryDate) return 1;
+                    if (!b.expiryDate) return -1;
+                    return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+                });
+
+            for (const stock of sortedStocks) {
+                if (remaining <= 0) break;
+                const available = Number(stock.quantity) || 0;
+                if (available <= 0) continue;
+
+                const take = Math.min(remaining, available);
+                allocated.push({
+                    quantity: take,
+                    price: Number(stock.unitPrice) || 0
+                });
+                remaining -= take;
+            }
+        }
+
+        return allocated;
+    };
+
     // Calculations: Discount Applied FIRST, then Tax on the discounted amount
     const subtotal = cart.reduce((sum, item) => {
-        const itemSubtotal = item.price * item.quantity
+        let itemSubtotal = item.price * item.quantity;
+        if (item.stocks && item.stocks.length > 0) {
+            const allocations = allocateBatches(item.quantity, item.stocks, item.batchNumber);
+            itemSubtotal = allocations.reduce((acc, alloc) => acc + (alloc.price || item.price) * alloc.quantity, 0);
+        }
+        
         const itemDiscountAmount = item.discountAmount || 
             (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
         return sum + (itemSubtotal - itemDiscountAmount)
@@ -141,7 +189,12 @@ export function CartContents({
                 ) : (
                     <div className="space-y-2">
                         {cart.map((item) => {
-                            const itemSubtotal = item.price * item.quantity
+                            let itemSubtotal = item.price * item.quantity;
+                            if (item.stocks && item.stocks.length > 0) {
+                                const allocations = allocateBatches(item.quantity, item.stocks, item.batchNumber);
+                                itemSubtotal = allocations.reduce((acc, alloc) => acc + (alloc.price || item.price) * alloc.quantity, 0);
+                            }
+                            
                             const itemDiscountAmount = item.discountAmount || 
                                 (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
                             const itemTotal = itemSubtotal - itemDiscountAmount

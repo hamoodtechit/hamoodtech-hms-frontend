@@ -164,7 +164,12 @@ export default function POSPage() {
   const { formatCurrency } = useCurrency()
   const vatPercentage = pharmacy?.vatPercentage || 0
   const subtotal = cart.reduce((sum, item) => {
-    const itemSubtotal = item.price * item.quantity
+    let itemSubtotal = item.price * item.quantity;
+    if (item.stocks && item.stocks.length > 0) {
+        const allocations = allocateBatches(item.quantity, item.stocks, item.batchNumber);
+        itemSubtotal = allocations.reduce((acc, alloc) => acc + (alloc.price || item.price) * alloc.quantity, 0);
+    }
+    
     const itemDiscountAmount = item.discountAmount || 
       (item.discountPercentage ? (itemSubtotal * item.discountPercentage) / 100 : 0)
     return sum + (itemSubtotal - itemDiscountAmount)
