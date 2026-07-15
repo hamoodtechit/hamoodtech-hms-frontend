@@ -61,7 +61,7 @@ export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSl
                     dateEmployeeMap[dateKey].forEach(id => conflictSet.add(Number(id)))
                 }
 
-                const empName = uidToName.get(sch.uid) || `UID: ${sch.uid}`
+                const empName = uidToName.get(sch.uid) || uidToName.get(Number(sch.uid)) || uidToName.get(String(sch.uid)) || `UID: ${sch.uid}`
 
                 eventsList.push({
                     id: sch.id,
@@ -150,7 +150,7 @@ export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSl
                 </div>
             </div>
 
-            <div className="h-175 w-full bg-background rounded-xl border shadow-sm calendar-container overflow-auto printable-roster">
+            <div className="print:h-auto print:max-h-none print:overflow-visible h-175 w-full bg-background rounded-xl border shadow-sm calendar-container overflow-auto printable-roster">
                 <Calendar
                     localizer={localizer}
                     events={events}

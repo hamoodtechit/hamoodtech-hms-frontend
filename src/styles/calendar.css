@@ -142,6 +142,9 @@
     display: flex !important;
     flex-direction: column !important;
     min-height: 420px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     transform: scale(0.95) !important; /* Precision Scaling to fit 1 page */
     transform-origin: top center !important;
   }
@@ -163,6 +166,7 @@
     max-width: 14.285% !important;
     min-width: 14.285% !important;
     flex: 0 0 14.285% !important;
+    overflow: visible !important;
   }
 
   .rbc-header {
@@ -182,6 +186,7 @@
     top: 0; left: 0; right: 0; bottom: 0 !important;
     z-index: 1 !important;
     width: 100% !important;
+    overflow: visible !important;
   }
 
   .rbc-day-bg {

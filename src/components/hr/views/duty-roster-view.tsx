@@ -58,9 +58,10 @@ export function DutyRosterView() {
     }
     
     // Data Queries - Pass branchId but handle existing null records if needed
+    // Data Queries - Pass branchId but handle existing null records if needed
     const queryParams = { 
         branchId: activeStoreId || undefined, // Use undefined if empty to avoid filtering by ""
-        limit: 100 
+        limit: 5000 
     }
     const { data: shiftsRes } = useShifts({ limit: 100 })
     const { data: schedulesRes } = useSchedules({})
@@ -151,7 +152,7 @@ export function DutyRosterView() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="board" className="border-none p-0 outline-none">
+                <TabsContent value="board" className="border-none p-0 outline-none print:w-full print:block print:h-auto">
                     <RosterCalendar 
                         schedules={schedules}
                         employees={employees}
