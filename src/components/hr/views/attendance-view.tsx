@@ -52,7 +52,8 @@ import {
     Plus, 
     Search, 
     Trash2,
-    User 
+    User,
+    Info
 } from "lucide-react"
 import { useState } from "react"
 import { format } from "date-fns"
@@ -221,18 +222,19 @@ export function AttendanceView() {
                                         <TableHead>Punch Time</TableHead>
                                         <TableHead>Verify Type</TableHead>
                                         <TableHead>Status</TableHead>
+                                        <TableHead className="w-[80px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
+                                            <TableCell colSpan={6} className="h-24 text-center">
                                                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                             </TableCell>
                                         </TableRow>
                                     ) : attendanceRecords.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                            <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                 No attendance records found.
                                             </TableCell>
                                         </TableRow>
@@ -272,6 +274,22 @@ export function AttendanceView() {
                                                     ) : (
                                                         <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">Valid</Badge>
                                                     )}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleView(record)}>
+                                                                <Info className="mr-2 h-4 w-4" />
+                                                                Details
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ))
