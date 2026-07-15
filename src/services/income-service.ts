@@ -9,7 +9,7 @@ import {
 import { api } from "@/lib/api";
 
 const BASE_PATH = "/finance/incomes";
-const CATEGORY_PATH = "/finance/income-categories";
+const CATEGORY_PATH = "/finance/incomes/categories";
 
 export const incomeService = {
     // Categories

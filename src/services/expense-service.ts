@@ -13,22 +13,22 @@ import {
 export const expenseService = {
     // Expense Categories
     getCategories: async (params?: ExpenseCategoryQueryParams): Promise<ExpenseCategoryListResponse> => {
-        const response = await api.get<ExpenseCategoryListResponse>("/finance/expense-categories", { params });
+        const response = await api.get<ExpenseCategoryListResponse>("/finance/expenses/categories", { params });
         return response.data;
     },
 
     createCategory: async (data: CreateExpenseCategoryPayload): Promise<any> => {
-        const response = await api.post("/finance/expense-categories", data);
+        const response = await api.post("/finance/expenses/categories", data);
         return response.data;
     },
 
     updateCategory: async (id: string, data: UpdateExpenseCategoryPayload): Promise<any> => {
-        const response = await api.patch(`/finance/expense-categories/${id}`, data);
+        const response = await api.patch(`/finance/expenses/categories/${id}`, data);
         return response.data;
     },
 
     deleteCategory: async (id: string): Promise<void> => {
-        await api.delete(`/finance/expense-categories/${id}`);
+        await api.delete(`/finance/expenses/categories/${id}`);
     },
 
     // Expenses
