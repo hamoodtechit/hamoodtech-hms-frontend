@@ -71,24 +71,17 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
 
         setLoading(true)
         try {
+            const payload: any = { name, nameBangla, description };
+            if (parentId && parentId !== " ") payload.parentId = parentId;
+
             if (isEdit && category) {
                 await updateMutation.mutateAsync({
                     id: category.id,
-                    data: {
-                        name,
-                        nameBangla,
-                        description,
-                        parentId: parentId || null
-                    }
+                    data: payload
                 })
                 toast.success("Category updated successfully")
             } else {
-                await createMutation.mutateAsync({
-                    name,
-                    nameBangla,
-                    description,
-                    parentId: parentId || null
-                })
+                await createMutation.mutateAsync(payload)
                 toast.success("Category created successfully")
             }
             onSuccess?.()

@@ -86,10 +86,12 @@ export function IncomeCategoryDialog({
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
-            const payload = {
+            const payload: any = {
                 ...values,
-                parentId: values.parentId === " " ? null : values.parentId
             };
+            if (values.parentId === " " || !values.parentId) {
+                delete payload.parentId;
+            }
             if (category) {
                 await updateMutation.mutateAsync({
                     id: category.id,
