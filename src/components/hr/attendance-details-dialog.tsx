@@ -20,6 +20,7 @@ import {
     Timer, 
     User as UserIcon 
 } from "lucide-react"
+import { format } from "date-fns"
 
 interface AttendanceDetailsDialogProps {
     open: boolean
@@ -93,7 +94,7 @@ export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: Atte
                                 <h3 className="uppercase tracking-widest">Punch Information</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl bg-secondary/20 border border-secondary/50">
-                                <DetailItem icon={Calendar} label="Punch Date & Time" value={new Date(attendance.punchTime).toLocaleString()} />
+                                <DetailItem icon={Calendar} label="Punch Date & Time" value={format(new Date(attendance.punchTime), "dd MMM yyyy, hh:mm a")} />
                                 <DetailItem icon={Fingerprint} label="Verify Type" value={getVerifyTypeString(attendance.verifyType)} />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-5 rounded-xl bg-background border shadow-sm">
@@ -103,16 +104,7 @@ export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: Atte
                             </div>
                         </section>
 
-                        {/* Additional info */}
-                        <section className="space-y-4">
-                            <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                                <Info className="h-4 w-4" />
-                                <h3 className="uppercase tracking-widest">Raw Data</h3>
-                            </div>
-                            <div className="p-5 rounded-xl bg-muted/20 border border-muted-foreground/20 font-mono text-xs overflow-x-auto text-muted-foreground">
-                                {attendance.rawData || "No raw data available"}
-                            </div>
-                        </section>
+
 
                         <Separator />
                         

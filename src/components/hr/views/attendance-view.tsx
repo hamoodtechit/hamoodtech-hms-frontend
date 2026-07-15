@@ -55,6 +55,7 @@ import {
     User 
 } from "lucide-react"
 import { useState } from "react"
+import { format } from "date-fns"
 import { toast } from "sonner"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 
@@ -256,7 +257,7 @@ export function AttendanceView() {
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        {new Date(record.punchTime).toLocaleString()}
+                                                        {format(new Date(record.punchTime), "dd MMM yyyy, hh:mm a")}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
