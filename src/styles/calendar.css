@@ -115,13 +115,15 @@
 
   /* Aggressively hide all non-roster elements */
   nav, header, aside, footer, [role="tablist"], .no-print, button, 
-  .sidebar, .dashboard-header, .bg-muted\/30, .inline-flex, .flex-wrap {
+  .sidebar, .dashboard-header, .bg-muted\/30, .inline-flex, .flex-wrap,
+  div[class*="md:fixed"][class*="z-40"] {
     display: none !important;
   }
 
   /* Fix main containers */
-  main, .main-content, .container, .space-y-6 {
+  main, .main-content, .container, .space-y-6, main[class*="md:ml-"] {
     margin: 0 !important;
+    margin-left: 0 !important;
     padding: 0 !important;
     display: block !important;
     width: 100% !important;
