@@ -94,7 +94,7 @@ export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: Atte
                                 <h3 className="uppercase tracking-widest">Punch Information</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl bg-secondary/20 border border-secondary/50">
-                                <DetailItem icon={Calendar} label="Punch Date & Time" value={format(new Date(attendance.punchTime.endsWith('Z') ? attendance.punchTime.slice(0, -1) : attendance.punchTime), "dd MMM yyyy, hh:mm a")} />
+                                <DetailItem icon={Calendar} label="Punch Date & Time" value={format(new Date(attendance.punchTime), "dd MMM yyyy, hh:mm a")} />
                                 <DetailItem icon={Fingerprint} label="Verify Type" value={getVerifyTypeString(attendance.verifyType)} />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-5 rounded-xl bg-background border shadow-sm">
