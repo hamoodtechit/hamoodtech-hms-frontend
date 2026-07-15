@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, CalendarRange, User } from "lucide-react"
+import { Loader2, CalendarRange, User, Check, ChevronsUpDown } from "lucide-react"
 
 import {
   Dialog,
@@ -24,6 +24,20 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { useCreateLeave, useLeaveTypes, useEmployees } from "@/hooks/hr-queries"
 import { useBranches } from "@/hooks/pharmacy-queries"
 import { toast } from "sonner"
@@ -106,8 +120,8 @@ export function LeaveDialog({ open, onOpenChange }: LeaveDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-background gap-0">
-        <div className="grid md:grid-cols-[1fr_320px] divide-y md:divide-y-0 md:divide-x h-full max-h-[85vh]">
+      <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden bg-background gap-0">
+        <div className="grid md:grid-cols-[1fr_350px] divide-y md:divide-y-0 md:divide-x h-full max-h-[85vh]">
           
           {/* Left Column: Form */}
           <div className="p-6 overflow-y-auto">
@@ -125,20 +139,63 @@ export function LeaveDialog({ open, onOpenChange }: LeaveDialogProps) {
                   control={form.control}
                   name="employeeId"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col mt-2">
                       <FormLabel>Employee</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="bg-muted/50 border-border/50">
-                            <SelectValue placeholder="Select Employee" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {employees.map((emp) => (
-                            <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "justify-between bg-muted/50 border-border/50 font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? employees.find(
+                                    (emp) => emp.id === field.value
+                                  )?.name
+                                : "Search and select employee..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] sm:w-[400px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search employee..." />
+                            <CommandList>
+                              <CommandEmpty>No employee found.</CommandEmpty>
+                              <CommandGroup>
+                                {employees.map((emp) => (
+                                  <CommandItem
+                                    value={emp.name}
+                                    key={emp.id}
+                                    onSelect={() => {
+                                      form.setValue("employeeId", emp.id)
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4 text-primary",
+                                        emp.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span>{emp.name}</span>
+                                      {emp.designation?.name && (
+                                        <span className="text-[10px] text-muted-foreground uppercase">{emp.designation.name}</span>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
