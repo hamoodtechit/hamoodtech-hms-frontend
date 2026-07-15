@@ -258,7 +258,7 @@ export function AttendanceView() {
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        {format(new Date(record.punchTime), "dd MMM yyyy, hh:mm a")}
+                                                        {format(new Date(record.punchTime.endsWith('Z') ? record.punchTime.slice(0, -1) : record.punchTime), "dd MMM yyyy, hh:mm a")}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
