@@ -111,7 +111,7 @@ export function AttendanceView() {
     // Data fetching
     const { data: attendanceRes, isLoading, refetch } = useAttendance({
         page,
-        limit: 10,
+        limit: 100,
         ...filters
     })
 
