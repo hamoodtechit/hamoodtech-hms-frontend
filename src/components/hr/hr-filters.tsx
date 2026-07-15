@@ -162,85 +162,45 @@ export function EmployeeFilters({
 
 // --- Attendance Filters ---
 export interface AttendanceFilterValues {
-    branchId?: string
-    employeeId?: string
-    departmentId?: string
-    shift?: string
-    startDate?: string
-    endDate?: string
+    uid?: string
+    dateFrom?: string
+    dateTo?: string
+    excludeDuplicates?: boolean
 }
 
 interface AttendanceFiltersProps {
     values: AttendanceFilterValues
     onChange: (values: AttendanceFilterValues) => void
-    employees: { id: string; name: string }[]
-    departments: { id: string; name: string }[]
-    branches: { id: string; name: string }[]
+    employees: { id: string; name: string; employeeNumber?: string | null }[]
 }
 
 export function AttendanceFilters({ 
     values, 
     onChange, 
     employees, 
-    departments,
-    branches
 }: AttendanceFiltersProps) {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
-            <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Branch</Label>
-                <SearchableSelect
-                    value={values.branchId}
-                    onChange={(val) => onChange({ ...values, branchId: val })}
-                    options={branches.map(b => ({ id: b.id, name: b.name }))}
-                    placeholder="All Branches"
-                    allLabel="All Branches"
-                />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
             <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold uppercase text-muted-foreground">Employee</Label>
                 <SearchableSelect
-                    value={values.employeeId}
-                    onChange={(val) => onChange({ ...values, employeeId: val })}
-                    options={employees.map(e => ({ id: e.id, name: e.name }))}
+                    value={values.uid}
+                    onChange={(val) => onChange({ ...values, uid: val })}
+                    options={employees.map(e => {
+                        const u = e.employeeNumber?.replace(/\D/g, '') || e.id
+                        return { id: u.toString(), name: e.name }
+                    })}
                     placeholder="All Employees"
                     allLabel="All Employees"
                 />
-            </div>
-            <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Department</Label>
-                <SearchableSelect
-                    value={values.departmentId}
-                    onChange={(val) => onChange({ ...values, departmentId: val })}
-                    options={departments.map(d => ({ id: d.id, name: d.name }))}
-                    placeholder="All Departments"
-                    allLabel="All Departments"
-                />
-            </div>
-            <div className="space-y-1.5">
-                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Shift</Label>
-                <Select 
-                    value={values.shift || "all"} 
-                    onValueChange={(v) => onChange({ ...values, shift: v === "all" ? "" : v })}
-                >
-                    <SelectTrigger className="h-9 text-xs">
-                        <SelectValue placeholder="All Shifts" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Shifts</SelectItem>
-                        <SelectItem value="morning">Morning</SelectItem>
-                        <SelectItem value="evening">Evening</SelectItem>
-                        <SelectItem value="night">Night</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
             <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold uppercase text-muted-foreground">Start Date</Label>
                 <Input 
                     type="date"
                     className="h-9 text-xs"
-                    value={values.startDate || ""}
-                    onChange={(e) => onChange({ ...values, startDate: e.target.value })}
+                    value={values.dateFrom || ""}
+                    onChange={(e) => onChange({ ...values, dateFrom: e.target.value })}
                 />
             </div>
             <div className="space-y-1.5">
@@ -248,9 +208,23 @@ export function AttendanceFilters({
                 <Input 
                     type="date"
                     className="h-9 text-xs"
-                    value={values.endDate || ""}
-                    onChange={(e) => onChange({ ...values, endDate: e.target.value })}
+                    value={values.dateTo || ""}
+                    onChange={(e) => onChange({ ...values, dateTo: e.target.value })}
                 />
+            </div>
+            <div className="space-y-1.5 flex flex-col justify-end">
+                <div className="flex items-center space-x-2 h-9 border rounded-md px-3 bg-muted/20">
+                    <input
+                        type="checkbox"
+                        id="excludeDuplicates"
+                        checked={values.excludeDuplicates || false}
+                        onChange={(e) => onChange({ ...values, excludeDuplicates: e.target.checked })}
+                        className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="excludeDuplicates" className="text-xs font-medium cursor-pointer">
+                        Hide Duplicates
+                    </Label>
+                </div>
             </div>
         </div>
     )

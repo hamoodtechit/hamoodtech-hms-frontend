@@ -50,37 +50,10 @@ export function AttendanceDialog({
 
     // Form State based on the provided schema
     const [formData, setFormData] = useState({
-        slNo: "",
-        employeeId: "",
-        employeeNumber: "",
-        employeeName: "",
-        autoAssign: "",
-        date: new Date().toISOString().split('T')[0],
-        isoDate: new Date().toISOString(),
-        shift: "",
-        onDuty: "",
-        offDuty: "",
-        clockIn: "",
-        clockOut: "",
-        normal: "",
-        realTime: "",
-        late: "",
-        early: "",
-        absent: "",
-        otTime: "",
-        workTime: "",
-        exception: "",
-        mustClockIn: "",
-        mustClockOut: "",
-        department: "",
-        nDays: "",
-        weekEnd: "",
-        holiday: "",
-        attTime: "",
-        nDaysOt: "",
-        weekEndOt: "",
-        holidayOt: "",
-        branchId: activeStoreId || ""
+        uid: "",
+        deviceSn: "MANUAL_ENTRY",
+        punchTime: new Date().toISOString().slice(0, 16), // YYYY-MM-DDThh:mm format for datetime-local
+        verifyType: 1
     })
 
     const { data: employeesRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
@@ -88,79 +61,62 @@ export function AttendanceDialog({
     useEffect(() => {
         if (open) {
             if (attendance) {
+                const dateObj = new Date(attendance.punchTime)
+                // Adjust for local timezone offset for datetime-local input
+                const offset = dateObj.getTimezoneOffset()
+                const localDate = new Date(dateObj.getTime() - (offset*60*1000))
+                
                 setFormData({
-                    slNo: attendance.slNo || "",
-                    employeeId: attendance.employeeId || "",
-                    employeeNumber: attendance.employeeNumber || "",
-                    employeeName: attendance.employeeName || "",
-                    autoAssign: attendance.autoAssign || "",
-                    date: attendance.date || "",
-                    isoDate: typeof attendance.isoDate === 'string' ? attendance.isoDate : attendance.isoDate?.toISOString() || "",
-                    shift: attendance.shift || "",
-                    onDuty: attendance.onDuty || "",
-                    offDuty: attendance.offDuty || "",
-                    clockIn: attendance.clockIn || "",
-                    clockOut: attendance.clockOut || "",
-                    normal: attendance.normal || "",
-                    realTime: attendance.realTime || "",
-                    late: attendance.late || "",
-                    early: attendance.early || "",
-                    absent: attendance.absent || "",
-                    otTime: attendance.otTime || "",
-                    workTime: attendance.workTime || "",
-                    exception: attendance.exception || "",
-                    mustClockIn: attendance.mustClockIn || "",
-                    mustClockOut: attendance.mustClockOut || "",
-                    department: attendance.department || "",
-                    nDays: attendance.nDays || "",
-                    weekEnd: attendance.weekEnd || "",
-                    holiday: attendance.holiday || "",
-                    attTime: attendance.attTime || "",
-                    nDaysOt: attendance.nDaysOt || "",
-                    weekEndOt: attendance.weekEndOt || "",
-                    holidayOt: attendance.holidayOt || "",
-                    branchId: attendance.branchId
+                    uid: attendance.uid?.toString() || "",
+                    deviceSn: attendance.deviceSn || "MANUAL_ENTRY",
+                    punchTime: localDate.toISOString().slice(0, 16),
+                    verifyType: attendance.verifyType || 1
                 })
             } else {
-                setFormData(prev => ({
-                    ...prev,
-                    branchId: activeStoreId || "",
-                    date: new Date().toISOString().split('T')[0],
-                    isoDate: new Date().toISOString()
-                }))
+                const dateObj = new Date()
+                const offset = dateObj.getTimezoneOffset()
+                const localDate = new Date(dateObj.getTime() - (offset*60*1000))
+                
+                setFormData({
+                    uid: "",
+                    deviceSn: "MANUAL_ENTRY",
+                    punchTime: localDate.toISOString().slice(0, 16),
+                    verifyType: 1
+                })
             }
         }
     }, [open, attendance, activeStoreId])
 
-    const handleEmployeeChange = (empId: string) => {
-        const emp = employeesRes?.data?.find(e => e.id === empId)
-        if (emp) {
-            setFormData(prev => ({
-                ...prev,
-                employeeId: empId,
-                employeeNumber: emp.employeeNumber || "",
-                employeeName: emp.name,
-                department: emp.department?.name || ""
-            }))
-        }
+    const handleEmployeeChange = (uid: string) => {
+        setFormData(prev => ({
+            ...prev,
+            uid
+        }))
     }
 
     const handleSave = async () => {
-        if (!formData.employeeName || !formData.branchId) {
-            toast.error("Employee and Branch are required")
+        if (!formData.uid || !formData.punchTime) {
+            toast.error("Employee and Punch Time are required")
             return
+        }
+
+        const payload = {
+            uid: formData.uid,
+            deviceSn: formData.deviceSn,
+            punchTime: new Date(formData.punchTime).toISOString(),
+            verifyType: Number(formData.verifyType)
         }
 
         setLoading(true)
         try {
             if (isEdit) {
                 await updateMutation.mutateAsync({
-                    id: attendance?.id || "",
-                    data: formData
+                    id: attendance?.id?.toString() || "",
+                    data: payload
                 })
                 toast.success("Attendance record updated successfully")
             } else {
-                await createMutation.mutateAsync(formData)
+                await createMutation.mutateAsync(payload)
                 toast.success("Attendance record created successfully")
             }
             onSuccess?.()
@@ -189,58 +145,23 @@ export function AttendanceDialog({
                             <h3 className="text-sm font-semibold border-b pb-2 flex items-center gap-2">
                                 <User className="h-4 w-4" /> Employee Information
                             </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label>Employee *</Label>
                                     <Select 
-                                        value={formData.employeeId} 
+                                        value={formData.uid} 
                                         onValueChange={handleEmployeeChange}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Employee" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {employeesRes?.data?.map(emp => (
-                                                <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
-                                            ))}
+                                            {employeesRes?.data?.map(emp => {
+                                                const uid = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+                                                return <SelectItem key={emp.id} value={uid}>{emp.name}</SelectItem>
+                                            })}
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Employee Name</Label>
-                                    <Input value={formData.employeeName} disabled className="bg-muted" />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Employee ID</Label>
-                                    <Input value={formData.employeeNumber} disabled className="bg-muted" />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Department</Label>
-                                    <Input value={formData.department} disabled className="bg-muted" />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Branch *</Label>
-                                    <Select 
-                                        value={formData.branchId} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, branchId: val }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Branch" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {branches.map(b => (
-                                                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Shift</Label>
-                                    <Input 
-                                        value={formData.shift} 
-                                        onChange={(e) => setFormData(prev => ({ ...prev, shift: e.target.value }))}
-                                        placeholder="Morning/Evening"
-                                    />
                                 </div>
                             </div>
                         </div>
@@ -248,158 +169,41 @@ export function AttendanceDialog({
                         {/* Section: Date & Time */}
                         <div className="space-y-4">
                             <h3 className="text-sm font-semibold border-b pb-2 flex items-center gap-2">
-                                <Calendar className="h-4 w-4" /> Date & Duty Timings
+                                <Calendar className="h-4 w-4" /> Punch Information
                             </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
-                                    <Label>Date</Label>
+                                    <Label>Punch Time *</Label>
                                     <Input 
-                                        type="date"
-                                        value={formData.date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                                        type="datetime-local"
+                                        value={formData.punchTime}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, punchTime: e.target.value }))}
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Clock In</Label>
-                                    <Input 
-                                        type="time"
-                                        value={formData.clockIn}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, clockIn: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Clock Out</Label>
-                                    <Input 
-                                        type="time"
-                                        value={formData.clockOut}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, clockOut: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Shift On Duty</Label>
-                                    <Input 
-                                        type="time"
-                                        value={formData.onDuty}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, onDuty: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Shift Off Duty</Label>
-                                    <Input 
-                                        type="time"
-                                        value={formData.offDuty}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, offDuty: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section: Metrics & Calculations */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-semibold border-b pb-2 flex items-center gap-2">
-                                <Clock className="h-4 w-4" /> Working Hour Metrics
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Work Time</Label>
-                                    <Input 
-                                        value={formData.workTime}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, workTime: e.target.value }))}
-                                        placeholder="e.g. 08:00"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Late (Min)</Label>
-                                    <Input 
-                                        value={formData.late}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, late: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Early (Min)</Label>
-                                    <Input 
-                                        value={formData.early}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, early: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>OT Time</Label>
-                                    <Input 
-                                        value={formData.otTime}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, otTime: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Real Time</Label>
-                                    <Input 
-                                        value={formData.realTime}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, realTime: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Att Time</Label>
-                                    <Input 
-                                        value={formData.attTime}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, attTime: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section: Flags & Exceptions */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-semibold border-b pb-2">Flags & Exceptions</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Absent</Label>
+                                    <Label>Verify Type</Label>
                                     <Select 
-                                        value={formData.absent} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, absent: val }))}
+                                        value={formData.verifyType.toString()} 
+                                        onValueChange={(val) => setFormData(prev => ({ ...prev, verifyType: Number(val) }))}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="No" />
+                                            <SelectValue placeholder="Select Verify Type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="True">Yes</SelectItem>
-                                            <SelectItem value="False">No</SelectItem>
+                                            <SelectItem value="1">Fingerprint</SelectItem>
+                                            <SelectItem value="3">Password</SelectItem>
+                                            <SelectItem value="4">Card</SelectItem>
+                                            <SelectItem value="15">Face</SelectItem>
+                                            <SelectItem value="0">Other</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Holiday</Label>
-                                    <Select 
-                                        value={formData.holiday} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, holiday: val }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="No" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="True">Yes</SelectItem>
-                                            <SelectItem value="False">No</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Weekend</Label>
-                                    <Select 
-                                        value={formData.weekEnd} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, weekEnd: val }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="No" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="True">Yes</SelectItem>
-                                            <SelectItem value="False">No</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Exception</Label>
+                                    <Label>Device SN</Label>
                                     <Input 
-                                        value={formData.exception}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, exception: e.target.value }))}
+                                        value={formData.deviceSn}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, deviceSn: e.target.value }))}
+                                        placeholder="e.g. MANUAL_ENTRY"
                                     />
                                 </div>
                             </div>

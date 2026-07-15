@@ -109,48 +109,42 @@ export function AttendanceView() {
 
     // Data fetching
     const { data: attendanceRes, isLoading, refetch } = useAttendance({
-        page,
-        limit: 10,
-        searchTerm,
-        branchId: filters.branchId || activeStoreId || undefined,
+        limit: 100, // No pagination in new API (or we can pass large limit)
         ...filters
     })
 
     const { data: branchesRes } = useBranches({ limit: 100 })
     const { data: employeesRes } = useEmployees({ 
-        branchId: filters.branchId || activeStoreId || undefined, 
+        branchId: activeStoreId || undefined, 
         limit: 1000 
     })
-    const { data: departmentsRes } = useDepartments({ 
-        branchId: filters.branchId || activeStoreId || undefined, 
-        limit: 100 
-    })
+   
 
     const attendanceRecords = attendanceRes?.data || []
-    const branches = branchesRes?.data || []
-    const meta = attendanceRes?.meta
+    
+    // Provide a map for uid to Employee Name
+    const employees = employeesRes?.data || []
+    const uidToName = new Map<string | number, string>()
+    employees.forEach((e: any) => {
+        const uid = e.employeeNumber?.replace(/\D/g, '') || e.id
+        uidToName.set(Number(uid), e.name)
+        uidToName.set(uid.toString(), e.name)
+    })
+
     const activeFilterCount = Object.values(filters).filter(v => !!v).length
 
     const resetFilters = () => {
         setFilters({})
-        setSearchTerm("")
-        setPage(1)
     }
 
-    const getStatusBadge = (record: Attendance) => {
-        if (record.absent === "True") return <Badge variant="destructive">Absent</Badge>
-        if (record.holiday === "True") return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Holiday</Badge>
-        if (record.weekEnd === "True") return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Weekend</Badge>
-        
-        const isLate = record.late && record.late !== "0" && record.late !== ""
-        return (
-            <Badge variant="outline" className={cn(
-                "capitalize font-semibold",
-                isLate ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
-            )}>
-                {isLate ? `Late (${record.late}m)` : "On Time"}
-            </Badge>
-        )
+    const getVerifyTypeBadge = (type: number) => {
+        switch(type) {
+            case 1: return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Fingerprint</Badge>
+            case 3: return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Password</Badge>
+            case 4: return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">Card</Badge>
+            case 15: return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Face</Badge>
+            default: return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Other ({type})</Badge>
+        }
     }
 
     return (
@@ -206,13 +200,8 @@ export function AttendanceView() {
                                 >
                                     <AttendanceFilters 
                                         values={filters}
-                                        onChange={(v) => {
-                                            setFilters(v)
-                                            setPage(1)
-                                        }}
-                                        employees={employeesRes?.data || []}
-                                        departments={departmentsRes?.data || []}
-                                        branches={branches}
+                                        onChange={(v) => setFilters(v)}
+                                        employees={employees}
                                     />
                                 </FilterPopover>
                             </div>
@@ -224,24 +213,22 @@ export function AttendanceView() {
                                 <TableHeader>
                                     <TableRow className="bg-muted/50">
                                         <TableHead>Employee</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Clock In/Out</TableHead>
-                                        <TableHead>Shift Info</TableHead>
-                                        <TableHead>Work Time</TableHead>
+                                        <TableHead>Device SN</TableHead>
+                                        <TableHead>Punch Time</TableHead>
+                                        <TableHead>Verify Type</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="h-24 text-center">
+                                            <TableCell colSpan={5} className="h-24 text-center">
                                                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                             </TableCell>
                                         </TableRow>
                                     ) : attendanceRecords.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                                 No attendance records found.
                                             </TableCell>
                                         </TableRow>
@@ -255,79 +242,32 @@ export function AttendanceView() {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-semibold text-sm leading-tight hover:text-primary cursor-pointer transition-colors">
-                                                                {record.employeeName}
+                                                                {uidToName.get(record.uid) || "Unknown Employee"}
                                                             </span>
                                                             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                                                                {record.employeeNumber || record.department || 'N/A'}
+                                                                UID: {record.uid}
                                                             </span>
                                                         </div>
                                                     </div>
+                                                </TableCell>
+                                                <TableCell className="font-medium text-xs">
+                                                    {record.deviceSn}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        {record.date}
+                                                        {new Date(record.punchTime).toLocaleString()}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center gap-2 text-sm font-medium">
-                                                            <Clock className="h-3.5 w-3.5 text-emerald-500" />
-                                                            {record.clockIn || '--:--'}
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-sm font-medium">
-                                                            <Clock className="h-3.5 w-3.5 text-amber-500" />
-                                                            {record.clockOut || '--:--'}
-                                                        </div>
-                                                    </div>
+                                                    {getVerifyTypeBadge(record.verifyType)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="flex flex-col text-xs text-muted-foreground">
-                                                        <span>Shift: {record.shift || 'Default'}</span>
-                                                        <span>Duty: {record.onDuty || '-'} to {record.offDuty || '-'}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <span className="font-bold text-sm text-primary">
-                                                            {record.workTime || '00:00'}
-                                                        </span>
-                                                        {record.otTime && record.otTime !== "0" && (
-                                                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-1 rounded border border-emerald-100 self-start">
-                                                                OT: {record.otTime}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {getStatusBadge(record)}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEdit(record)}>
-                                                            <Pencil className="mr-2 h-4 w-4" />
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleView(record)}>
-                                                            <Search className="mr-2 h-4 w-4" />
-                                                            View Details
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem 
-                                                            className="text-destructive focus:text-destructive"
-                                                            onClick={() => handleDeleteClick(record.id)}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                    {record.isDuplicate ? (
+                                                        <Badge variant="outline" className="text-gray-400 bg-gray-50 border-gray-200">Duplicate</Badge>
+                                                    ) : (
+                                                        <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">Valid</Badge>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))
@@ -335,55 +275,14 @@ export function AttendanceView() {
                                 </TableBody>
                             </Table>
                         </div>
-
-                        {/* Pagination */}
-                        {meta && meta.totalPages > 1 && (
-                            <div className="flex items-center justify-between pt-4">
-                                <p className="text-sm text-muted-foreground">
-                                    Showing <span className="font-medium">{(page - 1) * 10 + 1}</span> to <span className="font-medium">{Math.min(page * 10, meta.totalItems)}</span> of <span className="font-medium">{meta.totalItems}</span> records
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={!meta.hasPreviousPage}
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(meta.totalPages)].map((_, i) => (
-                                            <Button
-                                                key={i}
-                                                variant={page === i + 1 ? "default" : "outline"}
-                                                size="sm"
-                                                className="h-8 w-8 p-0"
-                                                onClick={() => setPage(i + 1)}
-                                            >
-                                                {i + 1}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage(p => p + 1)}
-                                        disabled={!meta.hasNextPage}
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
 
                 <AttendanceDialog 
                     open={dialogOpen}
                     onOpenChange={setDialogOpen}
-                    attendance={selectedAttendance}
+                    attendance={selectedAttendance as any} // Might not be compatible with new attendance model, but keeping prop
                     onSuccess={() => refetch()}
-                    branches={branches}
                 />
 
                 <AttendanceDetailsDialog 
@@ -395,7 +294,7 @@ export function AttendanceView() {
                 <ImportAttendanceDialog 
                     open={importOpen}
                     onOpenChange={setImportOpen}
-                    branchId={filters.branchId || activeStoreId || ""}
+                    branchId={activeStoreId || ""}
                     onSuccess={() => refetch()}
                 />
 

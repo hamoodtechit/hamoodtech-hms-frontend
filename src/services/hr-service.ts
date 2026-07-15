@@ -1,4 +1,13 @@
+import axios from "axios";
 import { api } from "@/lib/api";
+
+const zkApi = axios.create({
+  baseURL: "https://attendance.genify.live/api/v1",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": process.env.NEXT_PUBLIC_API_KEY || "",
+  }
+});
 import {
     Department,
     DepartmentPayload,
@@ -31,12 +40,10 @@ import {
     Shift,
     ShiftPayload,
     ShiftFilters,
-    Roster,
-    RosterPayload,
-    RosterFilters,
-    AssignedRoster,
-    AssignedRosterPayload,
-    AssignedRosterFilters
+    Schedule,
+    SchedulePayload,
+    ScheduleBulkPayload,
+    ScheduleFilters
 } from "@/types/hr";
 
 export const hrService = {
@@ -182,35 +189,35 @@ export const hrService = {
   },
 
   // Attendance APIs
-  getAttendance: async (params?: AttendanceFilters): Promise<HRPaginatedResponse<Attendance>> => {
-    const response = await api.get<HRPaginatedResponse<Attendance>>("/hr/attendance", { params });
+  getAttendance: async (params?: AttendanceFilters): Promise<{ success: boolean; data: Attendance[]; message: string }> => {
+    const response = await zkApi.get<{ success: boolean; data: Attendance[]; message: string }>("/attendance", { params });
     return response.data;
   },
 
   createAttendance: async (data: AttendancePayload): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await api.post<{ success: boolean; data: Attendance }>("/hr/attendance", data);
+    const response = await zkApi.post<{ success: boolean; data: Attendance }>("/attendance", data);
     return response.data;
   },
 
   getAttendanceById: async (id: string): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await api.get<{ success: boolean; data: Attendance }>(`/hr/attendance/${id}`);
+    const response = await zkApi.get<{ success: boolean; data: Attendance }>(`/attendance/${id}`);
     return response.data;
   },
 
   updateAttendance: async (id: string, data: Partial<AttendancePayload>): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await api.patch<{ success: boolean; data: Attendance }>(`/hr/attendance/${id}`, data);
+    const response = await zkApi.patch<{ success: boolean; data: Attendance }>(`/attendance/${id}`, data);
     return response.data;
   },
 
   deleteAttendance: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.delete<{ success: boolean; message: string }>(`/hr/attendance/${id}`);
+    const response = await zkApi.delete<{ success: boolean; message: string }>(`/attendance/${id}`);
     return response.data;
   },
 
   importAttendance: async (branchId: string, file: File): Promise<{ success: boolean; message: string }> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await api.post<{ success: boolean; message: string }>(`/hr/attendance/import/${branchId}`, formData, {
+    const response = await zkApi.post<{ success: boolean; message: string }>(`/attendance/import/${branchId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -319,70 +326,44 @@ export const hrService = {
   },
 
   // Shift APIs
-  getShifts: async (params?: ShiftFilters): Promise<HRPaginatedResponse<Shift>> => {
-    const response = await api.get<HRPaginatedResponse<Shift>>("/hr/shifts", { params });
+  getShifts: async (params?: ShiftFilters): Promise<{ success: boolean; data: Shift[] }> => {
+    const response = await zkApi.get<{ success: boolean; data: Shift[] }>("/shifts", { params });
     return response.data;
   },
 
   createShift: async (data: ShiftPayload): Promise<{ success: boolean; data: Shift }> => {
-    const response = await api.post<{ success: boolean; data: Shift }>("/hr/shifts", data);
+    const response = await zkApi.post<{ success: boolean; data: Shift }>("/shifts", data);
     return response.data;
   },
 
   getShiftById: async (id: string): Promise<{ success: boolean; data: Shift }> => {
-    const response = await api.get<{ success: boolean; data: Shift }>(`/hr/shifts/${id}`);
+    const response = await zkApi.get<{ success: boolean; data: Shift }>(`/shifts/${id}`);
     return response.data;
   },
 
   updateShift: async (id: string, data: Partial<ShiftPayload>): Promise<{ success: boolean; data: Shift }> => {
-    const response = await api.patch<{ success: boolean; data: Shift }>(`/hr/shifts/${id}`, data);
+    const response = await zkApi.patch<{ success: boolean; data: Shift }>(`/shifts/${id}`, data);
     return response.data;
   },
 
   deleteShift: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.delete<{ success: boolean; message: string }>(`/hr/shifts/${id}`);
+    const response = await zkApi.delete<{ success: boolean; message: string }>(`/shifts/${id}`);
     return response.data;
   },
 
-  // Roster APIs
-  getRosters: async (params?: RosterFilters): Promise<HRPaginatedResponse<Roster>> => {
-    const response = await api.get<HRPaginatedResponse<Roster>>("/hr/rosters", { params });
+  // Schedule APIs
+  getSchedules: async (params?: ScheduleFilters): Promise<{ success: boolean; data: Schedule[] }> => {
+    const response = await zkApi.get<{ success: boolean; data: Schedule[] }>("/schedules", { params });
     return response.data;
   },
 
-  createRoster: async (data: RosterPayload): Promise<{ success: boolean; data: Roster }> => {
-    const response = await api.post<{ success: boolean; data: Roster }>("/hr/rosters", data);
+  createBulkSchedules: async (data: ScheduleBulkPayload): Promise<{ success: boolean; message: string }> => {
+    const response = await zkApi.post<{ success: boolean; message: string }>("/schedules/bulk", data);
     return response.data;
   },
 
-  getRosterById: async (id: string): Promise<{ success: boolean; data: Roster }> => {
-    const response = await api.get<{ success: boolean; data: Roster }>(`/hr/rosters/${id}`);
-    return response.data;
-  },
-
-  updateRoster: async (id: string, data: Partial<RosterPayload>): Promise<{ success: boolean; data: Roster }> => {
-    const response = await api.patch<{ success: boolean; data: Roster }>(`/hr/rosters/${id}`, data);
-    return response.data;
-  },
-
-  deleteRoster: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.delete<{ success: boolean; message: string }>(`/hr/rosters/${id}`);
-    return response.data;
-  },
-
-  // Assigned Roster APIs
-  getAssignedRosters: async (params?: AssignedRosterFilters): Promise<HRPaginatedResponse<AssignedRoster>> => {
-    const response = await api.get<HRPaginatedResponse<AssignedRoster>>("/hr/assigned-rosters", { params });
-    return response.data;
-  },
-
-  createAssignedRoster: async (data: AssignedRosterPayload): Promise<{ success: boolean; data: AssignedRoster }> => {
-    const response = await api.post<{ success: boolean; data: AssignedRoster }>("/hr/assigned-rosters", data);
-    return response.data;
-  },
-
-  deleteAssignedRoster: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const response = await api.delete<{ success: boolean; message: string }>(`/hr/assigned-rosters/${id}`);
+  deleteSchedule: async (id: number | string): Promise<{ success: boolean; message: string }> => {
+    const response = await zkApi.delete<{ success: boolean; message: string }>(`/schedules/${id}`);
     return response.data;
   },
 };

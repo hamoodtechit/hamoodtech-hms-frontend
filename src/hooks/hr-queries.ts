@@ -17,10 +17,8 @@ import {
   CommissionPaymentPayload,
   ShiftFilters,
   ShiftPayload,
-  RosterFilters,
-  RosterPayload,
-  AssignedRosterFilters,
-  AssignedRosterPayload
+  ScheduleFilters,
+  ScheduleBulkPayload
 } from "@/types/hr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "./use-permissions";
@@ -44,9 +42,7 @@ export const HR_KEYS = {
   commissions: (params?: CommissionFilters) => params ? [...HR_KEYS.all, "commissions", params] as const : [...HR_KEYS.all, "commissions"] as const,
   shifts: (params?: ShiftFilters) => params ? [...HR_KEYS.all, "shifts", params] as const : [...HR_KEYS.all, "shifts"] as const,
   shift: (id: string) => [...HR_KEYS.all, "shift", id] as const,
-  rosters: (params?: RosterFilters) => params ? [...HR_KEYS.all, "rosters", params] as const : [...HR_KEYS.all, "rosters"] as const,
-  roster: (id: string) => [...HR_KEYS.all, "roster", id] as const,
-  assignedRosters: (params?: AssignedRosterFilters) => params ? [...HR_KEYS.all, "assignedRosters", params] as const : [...HR_KEYS.all, "assignedRosters"] as const,
+  schedules: (params?: ScheduleFilters) => params ? [...HR_KEYS.all, "schedules", params] as const : [...HR_KEYS.all, "schedules"] as const,
   leaveSummary: (employeeId?: string) => employeeId ? [...HR_KEYS.all, "leaveSummary", employeeId] as const : [...HR_KEYS.all, "leaveSummary"] as const,
 };
 
@@ -521,77 +517,30 @@ export function useDeleteShift() {
   });
 }
 
-// Roster Hooks
-export function useRosters(params?: RosterFilters) {
+// Schedule Hooks
+export function useSchedules(params?: ScheduleFilters) {
   return useQuery({
-    queryKey: HR_KEYS.rosters(params),
-    queryFn: () => hrService.getRosters(params),
+    queryKey: HR_KEYS.schedules(params),
+    queryFn: () => hrService.getSchedules(params),
   });
 }
 
-export function useRoster(id?: string) {
-  return useQuery({
-    queryKey: HR_KEYS.roster(id!),
-    queryFn: () => hrService.getRosterById(id!),
-    enabled: !!id,
-  });
-}
-
-export function useCreateRoster() {
+export function useCreateBulkSchedules() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: RosterPayload) => hrService.createRoster(data),
+    mutationFn: (data: ScheduleBulkPayload) => hrService.createBulkSchedules(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.schedules() });
     },
   });
 }
 
-export function useUpdateRoster() {
+export function useDeleteSchedule() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<RosterPayload> }) => 
-      hrService.updateRoster(id, data),
+    mutationFn: (id: number | string) => hrService.deleteSchedule(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
-    },
-  });
-}
-
-export function useDeleteRoster() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => hrService.deleteRoster(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.rosters() });
-    },
-  });
-}
-
-// Assigned Roster Hooks
-export function useAssignedRosters(params?: AssignedRosterFilters) {
-  return useQuery({
-    queryKey: HR_KEYS.assignedRosters(params),
-    queryFn: () => hrService.getAssignedRosters(params),
-  });
-}
-
-export function useCreateAssignedRoster() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: AssignedRosterPayload) => hrService.createAssignedRoster(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.assignedRosters() });
-    },
-  });
-}
-
-export function useDeleteAssignedRoster() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => hrService.deleteAssignedRoster(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HR_KEYS.assignedRosters() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.schedules() });
     },
   });
 }

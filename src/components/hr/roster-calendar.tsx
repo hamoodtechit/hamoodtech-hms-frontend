@@ -5,12 +5,12 @@ import { format, parse, startOfWeek, getDay, addMonths, subMonths, isSameDay } f
 import { enUS } from "date-fns/locale"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import "@/styles/calendar.css"
-import { AssignedRoster, AssignedRosterPayload } from "@/types/hr"
+import { Schedule, Employee, ScheduleBulkPayload } from "@/types/hr"
 import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Copy, Printer, AlertTriangle, Loader2 } from "lucide-react"
-import { useCreateAssignedRoster } from "@/hooks/hr-queries"
+import { useCreateBulkSchedules } from "@/hooks/hr-queries"
 import { toast } from "sonner"
 
 const locales = { "en-US": enUS }
@@ -25,40 +25,51 @@ const getShiftColor = (shiftName: string = "") => {
 }
 
 interface RosterCalendarProps {
-    assignments: AssignedRoster[]
-    onSelectEvent: (assignment: AssignedRoster) => void
+    schedules: Schedule[]
+    employees: Employee[]
+    onSelectEvent: (schedule: Schedule) => void
     onSelectSlot?: (slotInfo: { start: Date; end: Date }) => void
-    branchId: string
 }
 
-export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branchId }: RosterCalendarProps) {
+export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSlot }: RosterCalendarProps) {
     const [currentDate, setCurrentDate] = useState(new Date())
-    const createMutation = useCreateAssignedRoster()
+    const createMutation = useCreateBulkSchedules()
 
     // 1. Prepare Events and Detect Conflicts
     const { events, conflicts } = useMemo(() => {
         const eventsList: any[] = []
-        const dateEmployeeMap: Record<string, string[]> = {} // "date_iso:employeeId" -> [rosterIds]
-        const conflictSet = new Set<string>() // Store assignment IDs that have conflicts
+        const dateEmployeeMap: Record<string, string[]> = {} // "date_iso:uid" -> [scheduleIds]
+        const conflictSet = new Set<number>() // Store schedule IDs that have conflicts
 
-        if (Array.isArray(assignments)) {
-            assignments.forEach((asgn) => {
-                const dateKey = `${asgn.startDate.split('T')[0]}:${asgn.employeeId}`
+        // Build a uid -> name map
+        const uidToName = new Map<string | number, string>()
+        employees.forEach(emp => {
+            const uid = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+            uidToName.set(Number(uid), emp.name)
+            uidToName.set(uid.toString(), emp.name)
+        })
+
+        if (Array.isArray(schedules)) {
+            schedules.forEach((sch) => {
+                const dateKey = `${sch.scheduleDate.split('T')[0]}:${sch.uid}`
                 if (!dateEmployeeMap[dateKey]) {
                     dateEmployeeMap[dateKey] = []
                 }
-                dateEmployeeMap[dateKey].push(asgn.id)
+                dateEmployeeMap[dateKey].push(sch.id.toString())
                 
                 if (dateEmployeeMap[dateKey].length > 1) {
-                    dateEmployeeMap[dateKey].forEach(id => conflictSet.add(id))
+                    dateEmployeeMap[dateKey].forEach(id => conflictSet.add(Number(id)))
                 }
 
+                const empName = uidToName.get(sch.uid) || `UID: ${sch.uid}`
+
                 eventsList.push({
-                    id: asgn.id,
-                    title: `${asgn.employee?.name} - ${asgn.roster?.shift?.name}`,
-                    start: new Date(asgn.startDate),
-                    end: new Date(asgn.endDate),
-                    resource: asgn,
+                    id: sch.id,
+                    title: `${empName} - ${sch.timetable?.name}`,
+                    start: new Date(sch.scheduleDate),
+                    end: new Date(sch.scheduleDate),
+                    resource: sch,
+                    empName: empName,
                     hasConflict: false // Will update below
                 })
             })
@@ -72,52 +83,42 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
         })
 
         return { events: eventsList, conflicts: conflictSet.size > 0 }
-    }, [assignments])
+    }, [schedules, employees])
 
     // 2. Cloning Logic
     const handleClonePreviousMonth = async () => {
         const prevMonth = subMonths(currentDate, 1)
-        const prevMonthAssignments = Array.isArray(assignments) 
-            ? assignments.filter(asgn => 
-                new Date(asgn.startDate).getMonth() === prevMonth.getMonth() &&
-                new Date(asgn.startDate).getFullYear() === prevMonth.getFullYear()
-            )
+        const prevMonthSchedules = Array.isArray(schedules) 
+            ? schedules.filter(sch => {
+                const d = new Date(sch.scheduleDate)
+                return d.getMonth() === prevMonth.getMonth() && d.getFullYear() === prevMonth.getFullYear()
+            })
             : []
 
-        if (prevMonthAssignments.length === 0) {
-            toast.info("No assignments found in the previous month to copy.")
+        if (prevMonthSchedules.length === 0) {
+            toast.info("No schedules found in the previous month to copy.")
             return
         }
 
-        const confirm = window.confirm(`Copy ${prevMonthAssignments.length} assignments from ${format(prevMonth, 'MMMM yyyy')}?`)
+        const confirm = window.confirm(`Copy ${prevMonthSchedules.length} schedules from ${format(prevMonth, 'MMMM yyyy')}?`)
         if (!confirm) return
 
-        let successCount = 0
         try {
-            for (const asgn of prevMonthAssignments) {
-                const newStart = addMonths(new Date(asgn.startDate), 1)
-                const newEnd = addMonths(new Date(asgn.endDate), 1)
+            const bulkPayload: ScheduleBulkPayload = { schedules: [] }
 
-                const payload: AssignedRosterPayload = {
-                    branchId, // Ensure branchId is saved during cloning
-                    employeeId: asgn.employeeId,
-                    rosterId: asgn.rosterId,
-                    buildingId: asgn.buildingId,
-                    floorId: asgn.floorId,
-                    sectionId: asgn.sectionId,
-                    startDate: newStart.toISOString(),
-                    endDate: newEnd.toISOString(),
-                    buildingName: asgn.buildingName,
-                    floorName: asgn.floorName,
-                    sectionName: asgn.sectionName,
-                    assignedBy: "Cloned"
-                }
-                await createMutation.mutateAsync(payload)
-                successCount++
+            for (const sch of prevMonthSchedules) {
+                const newDate = addMonths(new Date(sch.scheduleDate), 1)
+                bulkPayload.schedules.push({
+                    uid: Number(sch.uid),
+                    timetableId: Number(sch.timetableId),
+                    scheduleDate: format(newDate, 'yyyy-MM-dd')
+                })
             }
-            toast.success(`Successfully cloned ${successCount} assignments.`)
+
+            await createMutation.mutateAsync(bulkPayload)
+            toast.success(`Successfully cloned ${bulkPayload.schedules.length} schedules.`)
         } catch (error) {
-            toast.error(`Cloning stopped after ${successCount} items due to an error.`)
+            toast.error(`Failed to clone schedules.`)
         }
     }
 
@@ -159,7 +160,7 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
                     defaultView={Views.MONTH}
                     date={currentDate}
                     onNavigate={(date) => setCurrentDate(date)}
-                    onSelectEvent={(event: any) => onSelectEvent(event.resource as AssignedRoster)}
+                    onSelectEvent={(event: any) => onSelectEvent(event.resource as Schedule)}
                     onSelectSlot={onSelectSlot}
                     selectable={!!onSelectSlot}
                     popup
@@ -171,7 +172,7 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
                             event.hasConflict && " ring-2 ring-destructive ring-offset-1 border-l-destructive"
                         ),
                         style: {
-                            backgroundColor: getShiftColor(event.resource.roster?.shift?.name),
+                            backgroundColor: getShiftColor(event.resource.timetable?.name),
                             opacity: event.hasConflict ? 0.9 : 1
                         }
                     })}
@@ -187,9 +188,9 @@ export function RosterCalendar({ assignments, onSelectEvent, onSelectSlot, branc
                             <div className="flex flex-col truncate px-1 py-0.5">
                                 <div className="flex items-center gap-1">
                                     {event.hasConflict && <AlertTriangle className="h-3 w-3 text-white" />}
-                                    <span className="font-bold text-[11px] leading-tight">{event.resource.employee?.name}</span>
+                                    <span className="font-bold text-[11px] leading-tight">{event.empName}</span>
                                 </div>
-                                <span className="text-[9px] opacity-90">{event.resource.roster?.shift?.name}</span>
+                                <span className="text-[9px] opacity-90">{event.resource.timetable?.name}</span>
                             </div>
                         ),
                     }}

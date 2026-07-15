@@ -19,31 +19,36 @@ import { toast } from "sonner"
 // Hooks & Services
 import { 
     useShifts, 
-    useRosters, 
-    useAssignedRosters, 
+    useSchedules, 
+    useEmployees,
     useDeleteShift, 
-    useDeleteRoster, 
-    useDeleteAssignedRoster 
+    useDeleteSchedule 
 } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 
 // Components
 import { ShiftDialog } from "@/components/hr/shift-dialog"
-import { RosterDialog } from "@/components/hr/roster-dialog"
 import { AssignmentDialog } from "@/components/hr/assignment-dialog"
 import { RosterCalendar } from "@/components/hr/roster-calendar"
-import { Shift, Roster } from "@/types/hr"
+import { Shift, Schedule } from "@/types/hr"
 
 export function DutyRosterView() {
     const { activeStoreId } = useStoreContext()
     
     // State for Dialogs
     const [shiftOpen, setShiftOpen] = useState(false)
-    const [rosterOpen, setRosterOpen] = useState(false)
     const [assignmentOpen, setAssignmentOpen] = useState(false)
     const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
-    const [selectedRoster, setSelectedRoster] = useState<Roster | null>(null)
     const [initialAssignmentDate, setInitialAssignmentDate] = useState<string | undefined>()
+
+    // Helper to format HH:mm to hh:mm a
+    const formatTimeStr = (timeStr?: string) => {
+        if (!timeStr) return "-";
+        const [h, m] = timeStr.split(':');
+        const d = new Date();
+        d.setHours(parseInt(h, 10), parseInt(m, 10));
+        return format(d, "hh:mm a");
+    }
 
     // Helper to robustly extract an array
     const getArrayData = (res: any) => {
@@ -57,18 +62,17 @@ export function DutyRosterView() {
         branchId: activeStoreId || undefined, // Use undefined if empty to avoid filtering by ""
         limit: 100 
     }
-    const { data: shiftsRes } = useShifts(queryParams)
-    const { data: rostersRes } = useRosters(queryParams)
-    const { data: assignmentsRes } = useAssignedRosters(queryParams)
+    const { data: shiftsRes } = useShifts({ limit: 100 })
+    const { data: schedulesRes } = useSchedules({})
+    const { data: employeesRes } = useEmployees(queryParams)
 
     const shifts = getArrayData(shiftsRes)
-    const rosters = getArrayData(rostersRes)
-    const assignments = getArrayData(assignmentsRes)
+    const schedules = getArrayData(schedulesRes)
+    const employees = getArrayData(employeesRes)
 
     // Mutations
     const deleteShiftMutation = useDeleteShift()
-    const deleteRosterMutation = useDeleteRoster()
-    const deleteAssignmentMutation = useDeleteAssignedRoster()
+    const deleteScheduleMutation = useDeleteSchedule()
 
     // Handlers
     const handleAddShift = () => {
@@ -81,23 +85,18 @@ export function DutyRosterView() {
         setShiftOpen(true)
     }
 
-    const handleAddRoster = () => {
-        setSelectedRoster(null)
-        setRosterOpen(true)
-    }
 
     const handleAddAssignment = (date?: Date) => {
         setInitialAssignmentDate(date ? format(date, 'yyyy-MM-dd') : undefined)
         setAssignmentOpen(true)
     }
 
-    const handleDelete = async (type: 'shift' | 'roster' | 'assignment', id: string) => {
+    const handleDelete = async (type: 'shift' | 'assignment', id: string | number) => {
         if (!window.confirm(`Are you sure you want to delete this ${type}?`)) return
         
         try {
-            if (type === 'shift') await deleteShiftMutation.mutateAsync(id)
-            else if (type === 'roster') await deleteRosterMutation.mutateAsync(id)
-            else await deleteAssignmentMutation.mutateAsync(id)
+            if (type === 'shift') await deleteShiftMutation.mutateAsync(id as string)
+            else await deleteScheduleMutation.mutateAsync(id)
             toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`)
         } catch {
             toast.error(`Failed to delete ${type}`)
@@ -132,10 +131,7 @@ export function DutyRosterView() {
                         <Clock className="mr-2 h-4 w-4" />
                         Manage Shifts
                     </Button>
-                    <Button variant="outline" onClick={handleAddRoster}>
-                        <Layers className="mr-2 h-4 w-4" />
-                        New Period
-                    </Button>
+
                     <Button onClick={() => handleAddAssignment()}>
                         <Plus className="mr-2 h-4 w-4" />
                         Assign Shift
@@ -153,16 +149,12 @@ export function DutyRosterView() {
                         <Clock className="h-4 w-4" />
                         Shift Templates
                     </TabsTrigger>
-                    <TabsTrigger value="periods" className="flex items-center gap-2">
-                        <Layers className="h-4 w-4" />
-                        Roster Periods
-                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="board" className="border-none p-0 outline-none">
                     <RosterCalendar 
-                        assignments={assignments}
-                        branchId={activeStoreId || ""}
+                        schedules={schedules}
+                        employees={employees}
                         onSelectEvent={(asgn) => {
                             if (window.confirm("Do you want to delete this assignment?")) {
                                 handleDelete('assignment', asgn.id)
@@ -179,7 +171,7 @@ export function DutyRosterView() {
                                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                                     <TableHead>Shift Name</TableHead>
                                     <TableHead>Working Hours</TableHead>
-                                    <TableHead>Description</TableHead>
+                                    <TableHead>Rules</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -189,11 +181,11 @@ export function DutyRosterView() {
                                         <TableCell className="font-semibold">{shift.name}</TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className="font-mono">
-                                                {format(new Date(shift.startTime), "hh:mm a")} - {format(new Date(shift.endTime), "hh:mm a")}
+                                                {formatTimeStr(shift.shiftStartTime)} - {formatTimeStr(shift.shiftEndTime)}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-muted-foreground text-sm">
-                                            {shift.description || "-"}
+                                            Grace: {shift.graceMinutes || 0}m | Break: {shift.breakMinutes || 0}m | OT: {shift.overtimeThresholdMinutes || 0}m
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
@@ -218,42 +210,6 @@ export function DutyRosterView() {
                         </Table>
                     </div>
                 </TabsContent>
-
-                <TabsContent value="periods" className="space-y-4">
-                    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                    <TableHead>Shift</TableHead>
-                                    <TableHead>Start Date</TableHead>
-                                    <TableHead>End Date</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {rosters.map((roster: any) => (
-                                    <TableRow key={roster.id}>
-                                        <TableCell className="font-medium">{roster.shift?.name}</TableCell>
-                                        <TableCell>{format(new Date(roster.startDate), "PPP")}</TableCell>
-                                        <TableCell>{format(new Date(roster.endDate), "PPP")}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete('roster', roster.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {rosters.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            No roster periods defined.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TabsContent>
             </Tabs>
 
             <ShiftDialog 
@@ -261,13 +217,6 @@ export function DutyRosterView() {
                 onOpenChange={setShiftOpen} 
                 shift={selectedShift}
                 onSuccess={() => setShiftOpen(false)}
-            />
-            <RosterDialog
-                open={rosterOpen}
-                onOpenChange={setRosterOpen}
-                branchId={activeStoreId || ""}
-                roster={selectedRoster}
-                onSuccess={() => setRosterOpen(false)}
             />
             <AssignmentDialog
                 open={assignmentOpen}

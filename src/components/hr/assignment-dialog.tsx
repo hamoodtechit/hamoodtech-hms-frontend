@@ -29,18 +29,15 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { AssignedRosterPayload } from "@/types/hr"
-import { useCreateAssignedRoster, useEmployees, useRosters } from "@/hooks/hr-queries"
-import { useBuildings, useFloors, useSections } from "@/hooks/facility-queries"
-import { useEffect, useState } from "react"
+import { ScheduleBulkPayload } from "@/types/hr"
+import { useCreateBulkSchedules, useEmployees, useShifts } from "@/hooks/hr-queries"
+import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { addDays, differenceInDays, format } from "date-fns"
 
 const assignmentSchema = z.object({
     employeeId: z.string().min(1, "Employee is required"),
-    rosterId: z.string().min(1, "Roster is required"),
-    buildingId: z.string().min(1, "Building is required"),
-    floorId: z.string().min(1, "Floor is required"),
-    sectionId: z.string().optional(),
+    timetableId: z.string().min(1, "Shift is required"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
 })
@@ -62,16 +59,11 @@ export function AssignmentDialog({
     initialDate,
     onSuccess,
 }: AssignmentDialogProps) {
-    const createMutation = useCreateAssignedRoster()
-    const [selectedBuildingId, setSelectedBuildingId] = useState<string>("")
-    const [selectedFloorId, setSelectedFloorId] = useState<string>("")
+    const createMutation = useCreateBulkSchedules()
 
     // Data Fetching
     const { data: employeesRes } = useEmployees({ branchId, limit: 200 })
-    const { data: rostersRes } = useRosters({ branchId, limit: 100 })
-    const { data: buildingsRes } = useBuildings({ branchId, limit: 100 })
-    const { data: floorsRes } = useFloors({ buildingId: selectedBuildingId, limit: 100 })
-    const { data: sectionsRes } = useSections({ floorId: selectedFloorId, limit: 100 })
+    const { data: shiftsRes } = useShifts({ limit: 100 })
 
     // Helper to robustly extract an array from various API response structures
     const getArrayData = (res: any) => {
@@ -81,19 +73,13 @@ export function AssignmentDialog({
     }
     
     const employees = getArrayData(employeesRes)
-    const rosters = getArrayData(rostersRes)
-    const buildings = getArrayData(buildingsRes)
-    const floors = getArrayData(floorsRes)
-    const sections = getArrayData(sectionsRes)
+    const shifts = getArrayData(shiftsRes)
 
     const form = useForm<AssignmentFormValues>({
         resolver: zodResolver(assignmentSchema),
         defaultValues: {
             employeeId: "",
-            rosterId: "",
-            buildingId: "",
-            floorId: "",
-            sectionId: "",
+            timetableId: "",
             startDate: initialDate || "",
             endDate: initialDate || "",
         },
@@ -103,38 +89,53 @@ export function AssignmentDialog({
         if (open) {
             form.reset({
                 employeeId: "",
-                rosterId: "",
-                buildingId: "",
-                floorId: "",
-                sectionId: "",
+                timetableId: "",
                 startDate: initialDate || "",
                 endDate: initialDate || "",
             })
-            setSelectedBuildingId("")
-            setSelectedFloorId("")
         }
     }, [open, initialDate, form])
 
     const onSubmit = async (values: AssignmentFormValues) => {
-        // Find names for building/floor/section to satisfy legacy/guide requirements
-        const buildingName = buildings.find((b: any) => b.id === values.buildingId)?.name
-        const floorName = floors.find((f: any) => f.id === values.floorId)?.name
-        const sectionName = sections.find((s: any) => s.id === values.sectionId)?.name
-
-        const payload: AssignedRosterPayload = {
-            ...values,
-            branchId, // Ensure branchId is saved
-            buildingName,
-            floorName,
-            sectionName,
-            startDate: new Date(`${values.startDate}T00:00:00.000Z`).toISOString(),
-            endDate: new Date(`${values.endDate}T23:59:59.999Z`).toISOString(),
-            assignedBy: "System Admin" 
+        const emp = employees.find((e: any) => e.id === values.employeeId)
+        if (!emp) {
+            toast.error("Employee not found")
+            return
         }
+        
+        // Parse the uid from employeeNumber
+        const uidStr = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+        const uid = Number(uidStr)
+
+        if (isNaN(uid)) {
+            toast.error("Invalid Employee ID for attendance system")
+            return
+        }
+
+        const start = new Date(values.startDate)
+        const end = new Date(values.endDate)
+        const diff = differenceInDays(end, start)
+        const schedules = []
+
+        if (diff < 0) {
+            toast.error("End date cannot be before start date")
+            return
+        }
+
+        for (let i = 0; i <= diff; i++) {
+            const d = addDays(start, i)
+            schedules.push({
+                uid,
+                timetableId: Number(values.timetableId),
+                scheduleDate: format(d, 'yyyy-MM-dd')
+            })
+        }
+
+        const payload: ScheduleBulkPayload = { schedules }
 
         try {
             await createMutation.mutateAsync(payload)
-            toast.success("Employee assigned successfully")
+            toast.success(`Employee assigned successfully for ${schedules.length} days`)
             onSuccess?.()
             onOpenChange(false)
         } catch {
@@ -182,20 +183,20 @@ export function AssignmentDialog({
                             />
                             <FormField
                                 control={form.control}
-                                name="rosterId"
+                                name="timetableId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Roster Period *</FormLabel>
+                                        <FormLabel>Shift *</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select Period" />
+                                                    <SelectValue placeholder="Select Shift" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {(rosters || []).map((r: any) => (
-                                                    <SelectItem key={r.id} value={r.id}>
-                                                        {r.shift?.name} ({r.startDate ? new Date(r.startDate).toLocaleDateString('en-GB') : 'N/A'})
+                                                {(shifts || []).map((s: any) => (
+                                                    <SelectItem key={s.id} value={s.id.toString()}>
+                                                        {s.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -206,90 +207,6 @@ export function AssignmentDialog({
                             />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
-                            <FormField
-                                control={form.control}
-                                name="buildingId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Building *</FormLabel>
-                                        <Select 
-                                            onValueChange={(val) => {
-                                                field.onChange(val)
-                                                setSelectedBuildingId(val)
-                                                form.setValue("floorId", "")
-                                                form.setValue("sectionId", "")
-                                            }} 
-                                            value={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Building" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {(buildings || []).map((b: any) => (
-                                                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="floorId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Floor *</FormLabel>
-                                        <Select 
-                                            onValueChange={(val) => {
-                                                field.onChange(val)
-                                                setSelectedFloorId(val)
-                                                form.setValue("sectionId", "")
-                                            }} 
-                                            value={field.value}
-                                            disabled={!selectedBuildingId}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Floor" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {(floors || []).map((f: any) => (
-                                                    <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="sectionId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Section</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedFloorId}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Section" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {(sections || []).map((s: any) => (
-                                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <FormField

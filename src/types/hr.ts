@@ -167,85 +167,25 @@ export interface ReferralPersonPayload {
 }
 
 export interface Attendance {
-  id: string;
-  slNo?: string;
-  employeeId?: string;
-  employeeNumber?: string;
-  employeeName: string;
-  autoAssign?: string;
-  date?: string;
-  isoDate?: string | Date;
-  shift?: string;
-  onDuty?: string;
-  offDuty?: string;
-  clockIn?: string;
-  clockOut?: string;
-  normal?: string;
-  realTime?: string;
-  late?: string;
-  early?: string;
-  absent?: string;
-  otTime?: string;
-  workTime?: string;
-  exception?: string;
-  mustClockIn?: string;
-  mustClockOut?: string;
-  department?: string;
-  nDays?: string;
-  weekEnd?: string;
-  holiday?: string;
-  attTime?: string;
-  nDaysOt?: string;
-  weekEndOt?: string;
-  holidayOt?: string;
-  branchId: string;
+  id: number;
+  deviceSn: string;
+  uid: string | number;
+  punchTime: string;
+  status: number | null;
+  verifyType: number;
+  source: string;
+  forwarded: boolean;
+  isDuplicate: boolean;
+  rawData?: string | null;
   createdAt: string;
-  updatedAt: string;
-  employee?: {
-    id: string;
-    branchId: string;
-    employeeNumber: string;
-    employeeType: string;
-    name: string;
-    nameBangla?: string;
-    photoUrl?: string;
-    age: number;
-    gender: string;
-    phone: string;
-    email?: string;
-    dob?: string;
-    bloodGroup?: string;
-    address: string;
-    designationId?: string;
-    departmentId?: string;
-    grossSalary?: string | number;
-    joiningDate?: string;
-    leavingDate?: string | null;
-    chamberOrRoomNumber?: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-    department?: {
-      name: string;
-    };
-    designation?: {
-      name: string;
-    };
-  };
 }
 
-export type AttendancePayload = Omit<Attendance, 'id' | 'createdAt' | 'updatedAt'>;
-
 export interface AttendanceFilters {
-  page?: number;
-  limit?: number;
-  searchTerm?: string;
-  employeeId?: string;
-  branchId?: string;
-  department?: string;
-  shift?: string;
-  startDate?: string;
-  endDate?: string;
+  uid?: string | number;
+  dateFrom?: string;
+  dateTo?: string;
+  excludeDuplicates?: string | boolean;
+  limit?: string | number;
 }
 
 export interface AnnualCalendar {
@@ -485,96 +425,72 @@ export interface ReferralPayment {
 
 // Duty Roster Types
 export interface Shift {
-  id: string;
-  branchId: string;
+  id: string | number;
   name: string;
-  startTime: string;
-  endTime: string;
-  totalHours?: number;
-  description?: string;
+  shiftStartTime: string;
+  shiftEndTime: string;
+  checkInStartTime: string;
+  checkInEndTime: string;
+  checkOutStartTime: string;
+  checkOutEndTime: string;
+  graceMinutes: number;
+  overtimeThresholdMinutes: number;
+  breakMinutes: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ShiftPayload {
-  branchId: string;
   name: string;
-  startTime: string;
-  endTime: string;
-  description?: string;
+  shiftStartTime: string;
+  shiftEndTime: string;
+  checkInStartTime: string;
+  checkInEndTime: string;
+  checkOutStartTime: string;
+  checkOutEndTime: string;
+  graceMinutes: number;
+  overtimeThresholdMinutes: number;
+  breakMinutes: number;
+  isActive?: boolean;
 }
 
 export interface ShiftFilters {
   page?: number | string;
   limit?: number | string;
   searchTerm?: string;
-  branchId?: string;
 }
 
-export interface Roster {
-  id: string;
-  shiftId: string;
-  startDate: string;
-  endDate: string;
+export interface Schedule {
+  id: number;
+  uid: number | string;
+  timetableId: number | string;
+  scheduleDate: string;
   createdAt: string;
   updatedAt: string;
-  shift?: Shift;
+  timetable?: Shift;
 }
 
-export interface RosterPayload {
-  branchId: string;
-  shiftId: string;
-  startDate: string;
-  endDate: string;
+export interface SchedulePayload {
+  uid: number;
+  timetableId: number;
+  scheduleDate: string; // YYYY-MM-DD
 }
 
-export interface RosterFilters {
-  page?: number | string;
-  limit?: number | string;
-  shiftId?: string;
-  branchId?: string;
+export interface ScheduleBulkPayload {
+  schedules: SchedulePayload[];
 }
 
-export interface AssignedRoster {
-  id: string;
-  rosterId: string;
-  employeeId: string;
-  startDate: string;
-  endDate: string;
-  buildingName?: string;
-  floorName?: string;
-  sectionName?: string;
-  buildingId?: string; // For facility integration
-  floorId?: string;    // For facility integration
-  sectionId?: string;  // For facility integration
-  assignedBy?: string;
-  createdAt: string;
-  updatedAt: string;
-  roster?: Roster;
-  employee?: Employee;
+export interface ScheduleFilters {
+  date?: string;
+  uid?: number | string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
-export interface AssignedRosterPayload {
-  branchId: string;
-  rosterId: string;
-  employeeId: string;
-  startDate: string;
-  endDate: string;
-  buildingName?: string;
-  floorName?: string;
-  sectionName?: string;
-  buildingId?: string;
-  floorId?: string;
-  sectionId?: string;
-  assignedBy?: string;
-}
-
-export interface AssignedRosterFilters {
-  page?: number | string;
-  limit?: number | string;
-  rosterId?: string;
-  employeeId?: string;
-  branchId?: string;
-  startDate?: string;
-  endDate?: string;
+export interface AttendancePayload {
+  uid: string | number;
+  deviceSn?: string;
+  punchTime: string;
+  verifyType?: number;
 }
