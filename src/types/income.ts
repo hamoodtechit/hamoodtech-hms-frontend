@@ -5,6 +5,8 @@ export interface IncomeCategory {
     name: string;
     nameBangla?: string;
     description?: string;
+    parentId?: string | null;
+    parent?: IncomeCategory | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -13,6 +15,7 @@ export interface IncomeCategoryPayload {
     name: string;
     nameBangla?: string;
     description?: string;
+    parentId?: string | null;
 }
 
 export interface IncomeCategoryListResponse {
@@ -27,6 +30,7 @@ export interface Income {
     id: string;
     incomeNumber: string;
     categoryId: string;
+    subCategoryId?: string | null;
     branchId: string;
     accountId: string;
     amount: string;
@@ -44,6 +48,7 @@ export interface Income {
 
 export interface IncomePayload {
     categoryId: string;
+    subCategoryId?: string | null;
     branchId: string;
     accountId: string;
     amount: number;

@@ -17,7 +17,14 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useCreateIncomeCategory, useUpdateIncomeCategory } from "@/hooks/income-queries"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { useCreateIncomeCategory, useUpdateIncomeCategory, useIncomeCategories } from "@/hooks/income-queries"
 import { IncomeCategory, IncomeCategoryPayload } from "@/types/income"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
@@ -30,6 +37,7 @@ const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
     nameBangla: z.string().optional(),
     description: z.string().optional(),
+    parentId: z.string().optional(),
 })
 
 interface IncomeCategoryDialogProps {
@@ -45,6 +53,8 @@ export function IncomeCategoryDialog({
 }: IncomeCategoryDialogProps) {
     const createMutation = useCreateIncomeCategory()
     const updateMutation = useUpdateIncomeCategory()
+    const { data: categoriesRes, isLoading: categoriesLoading } = useIncomeCategories({ limit: 100 })
+    const parentCategories = categoriesRes?.categories?.filter(c => c.id !== category?.id) || []
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -52,6 +62,7 @@ export function IncomeCategoryDialog({
             name: "",
             nameBangla: "",
             description: "",
+            parentId: " ",
         },
     })
 
@@ -61,26 +72,32 @@ export function IncomeCategoryDialog({
                 name: category.name,
                 nameBangla: category.nameBangla || "",
                 description: category.description || "",
+                parentId: category.parentId || " ",
             })
         } else if (open) {
             form.reset({
                 name: "",
                 nameBangla: "",
                 description: "",
+                parentId: " ",
             })
         }
     }, [category, open, form])
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
+            const payload = {
+                ...values,
+                parentId: values.parentId === " " ? null : values.parentId
+            };
             if (category) {
                 await updateMutation.mutateAsync({
                     id: category.id,
-                    payload: values,
+                    payload: payload,
                 })
                 toast.success("Category updated successfully")
             } else {
-                await createMutation.mutateAsync(values as IncomeCategoryPayload)
+                await createMutation.mutateAsync(payload as IncomeCategoryPayload)
                 toast.success("Category created successfully")
             }
             onOpenChange(false)
@@ -109,6 +126,32 @@ export function IncomeCategoryDialog({
                                     <FormControl>
                                         <Input placeholder="e.g. Consultation Fees" {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="parentId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Parent Category (Optional)</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger disabled={categoriesLoading}>
+                                                <SelectValue placeholder="Select a parent category" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value=" ">None (Main Category)</SelectItem>
+                                            {parentCategories.map((c) => (
+                                                <SelectItem key={c.id} value={c.id}>
+                                                    {c.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}

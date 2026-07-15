@@ -3,6 +3,8 @@ export interface ExpenseCategory {
     name: string;
     nameBangla?: string;
     description?: string;
+    parentId?: string | null;
+    parent?: ExpenseCategory | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -10,6 +12,7 @@ export interface ExpenseCategory {
 export interface Expense {
     id: string;
     categoryId: string;
+    subCategoryId?: string | null;
     branchId: string;
     accountId: string;
     amount: string; // API returns string "100000"
@@ -47,16 +50,19 @@ export interface CreateExpenseCategoryPayload {
     name: string;
     nameBangla?: string;
     description?: string;
+    parentId?: string | null;
 }
 
 export interface UpdateExpenseCategoryPayload {
     name?: string;
     nameBangla?: string;
     description?: string;
+    parentId?: string | null;
 }
 
 export interface CreateExpensePayload {
     categoryId: string;
+    subCategoryId?: string | null;
     branchId: string;
     accountId: string;
     amount: number;

@@ -49,24 +49,30 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
 
     // Form State
     const [categoryId, setCategoryId] = useState("")
+    const [subCategoryId, setSubCategoryId] = useState<string>("")
     const [accountId, setAccountId] = useState("")
     const [amount, setAmount] = useState(0)
     const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
     const [note, setNote] = useState("")
 
     const categories = categoriesRes?.categories || []
+    const mainCategories = categories.filter(c => !c.parentId)
+    const availableSubCategories = categories.filter(c => c.parentId === categoryId)
+
     const accounts = accountsRes?.data || []
 
     useEffect(() => {
         if (open) {
             if (income) {
                 setCategoryId(income.categoryId)
+                setSubCategoryId(income.subCategoryId || "")
                 setAccountId(income.accountId)
                 setAmount(Number(income.amount))
                 setDate(format(new Date(income.date), "yyyy-MM-dd'T'HH:mm"))
                 setNote(income.note || "")
             } else {
                 setCategoryId("")
+                setSubCategoryId("")
                 setAccountId("")
                 setAmount(0)
                 setDate(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
@@ -74,6 +80,13 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
             }
         }
     }, [open, income])
+
+    // Reset sub-category when main category changes
+    useEffect(() => {
+        if (!isEdit) {
+            setSubCategoryId("")
+        }
+    }, [categoryId, isEdit])
 
     const handleSave = async () => {
         if (!categoryId) return toast.error("Please select a category")
@@ -88,6 +101,7 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
             } else {
                 await createMutation.mutateAsync({
                     categoryId,
+                    subCategoryId: subCategoryId || null,
                     accountId,
                     branchId: activeStoreId || "",
                     amount,
@@ -122,12 +136,30 @@ export function IncomeDialog({ open, onOpenChange, income, onSuccess }: IncomeDi
                                 <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                                {categories.map((cat) => (
+                                {mainCategories.map((cat) => (
                                     <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
+                    
+                    {availableSubCategories.length > 0 && (
+                        <div className="grid gap-2 -mt-2">
+                            <Label htmlFor="subCategory">Sub-category (Optional)</Label>
+                            <Select value={subCategoryId} onValueChange={setSubCategoryId} disabled={isEdit}>
+                                <SelectTrigger id="subCategory">
+                                    <SelectValue placeholder="Select sub-category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value=" ">None</SelectItem>
+                                    {availableSubCategories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
                     <div className="grid gap-2">
                         <Label htmlFor="account">Receiving Account *</Label>
                         <Select value={accountId} onValueChange={setAccountId} disabled={isEdit}>

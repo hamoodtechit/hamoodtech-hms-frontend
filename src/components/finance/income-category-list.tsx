@@ -10,6 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import { useDeleteIncomeCategory, useIncomeCategories } from "@/hooks/income-queries"
 import { IncomeCategory } from "@/types/income"
 import { Edit, Loader2, Plus, Trash2 } from "lucide-react"
@@ -85,7 +86,16 @@ export function IncomeCategoryList() {
                         ) : (
                             categories.map((category) => (
                                 <TableRow key={category.id}>
-                                    <TableCell className="font-medium">{category.name}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-medium">{category.name}</span>
+                                            {category.parent && (
+                                                <Badge variant="outline" className="w-fit text-[10px] bg-secondary/50">
+                                                    Parent: {category.parent.name}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{category.nameBangla || "—"}</TableCell>
                                     <TableCell className="max-w-[300px] truncate">
                                         {category.description || "—"}

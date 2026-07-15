@@ -12,8 +12,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useCreateExpenseCategory, useUpdateExpenseCategory } from "@/hooks/expense-queries"
+import { useCreateExpenseCategory, useUpdateExpenseCategory, useExpenseCategories } from "@/hooks/expense-queries"
 import { ExpenseCategory } from "@/types/expense"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -29,6 +36,8 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
     const [loading, setLoading] = useState(false)
     const createMutation = useCreateExpenseCategory()
     const updateMutation = useUpdateExpenseCategory()
+    const { data: categoriesRes, isLoading: categoriesLoading } = useExpenseCategories({ limit: 100 })
+    const parentCategories = categoriesRes?.categories?.filter(c => c.id !== category?.id) || []
 
     const isEdit = !!category
 
@@ -36,6 +45,7 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
     const [name, setName] = useState("")
     const [nameBangla, setNameBangla] = useState("")
     const [description, setDescription] = useState("")
+    const [parentId, setParentId] = useState<string>("")
 
     useEffect(() => {
         if (open) {
@@ -43,10 +53,12 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
                 setName(category.name)
                 setNameBangla(category.nameBangla || "")
                 setDescription(category.description || "")
+                setParentId(category.parentId || "")
             } else {
                 setName("")
                 setNameBangla("")
                 setDescription("")
+                setParentId("")
             }
         }
     }, [open, category])
@@ -65,7 +77,8 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
                     data: {
                         name,
                         nameBangla,
-                        description
+                        description,
+                        parentId: parentId || null
                     }
                 })
                 toast.success("Category updated successfully")
@@ -73,7 +86,8 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
                 await createMutation.mutateAsync({
                     name,
                     nameBangla,
-                    description
+                    description,
+                    parentId: parentId || null
                 })
                 toast.success("Category created successfully")
             }
@@ -104,6 +118,22 @@ export function ExpenseCategoryDialog({ open, onOpenChange, category, onSuccess 
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Buy Medicine, Office Rent"
                         />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="parentId">Parent Category (Optional)</Label>
+                        <Select value={parentId} onValueChange={setParentId}>
+                            <SelectTrigger id="parentId" disabled={categoriesLoading}>
+                                <SelectValue placeholder="Select a parent category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value=" ">None (Main Category)</SelectItem>
+                                {parentCategories.map((c) => (
+                                    <SelectItem key={c.id} value={c.id}>
+                                        {c.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="nameBangla">Bangla Name (Optional)</Label>
