@@ -105,7 +105,7 @@ export function AssignmentDialog({
         }
         
         // Parse the uid from employeeNumber
-        const uidStr = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+        const uidStr = emp.employeeNumber || emp.id
         const uid = Number(uidStr)
 
         if (isNaN(uid)) {

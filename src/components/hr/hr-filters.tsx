@@ -187,7 +187,7 @@ export function AttendanceFilters({
                     value={values.uid}
                     onChange={(val) => onChange({ ...values, uid: val })}
                     options={employees.map(e => {
-                        const u = e.employeeNumber?.replace(/\D/g, '') || e.id
+                        const u = e.employeeNumber || e.id
                         return { id: u.toString(), name: e.name }
                     })}
                     placeholder="All Employees"

@@ -127,7 +127,7 @@ export function AttendanceView() {
     const employees = employeesRes?.data || []
     const uidToName = new Map<string | number, string>()
     employees.forEach((e: any) => {
-        const uid = e.employeeNumber?.replace(/\D/g, '') || e.id
+        const uid = e.employeeNumber || e.id
         uidToName.set(Number(uid), e.name)
         uidToName.set(uid.toString(), e.name)
     })

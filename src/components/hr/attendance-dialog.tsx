@@ -157,7 +157,7 @@ export function AttendanceDialog({
                                         </SelectTrigger>
                                         <SelectContent>
                                             {employeesRes?.data?.map(emp => {
-                                                const uid = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+                                                const uid = emp.employeeNumber || emp.id
                                                 return <SelectItem key={emp.id} value={uid}>{emp.name}</SelectItem>
                                             })}
                                         </SelectContent>

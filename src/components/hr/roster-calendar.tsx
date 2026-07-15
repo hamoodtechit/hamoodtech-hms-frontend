@@ -44,7 +44,7 @@ export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSl
         // Build a uid -> name map
         const uidToName = new Map<string | number, string>()
         employees.forEach(emp => {
-            const uid = emp.employeeNumber?.replace(/\D/g, '') || emp.id
+            const uid = emp.employeeNumber || emp.id
             uidToName.set(Number(uid), emp.name)
             uidToName.set(uid.toString(), emp.name)
         })
