@@ -34,6 +34,7 @@ import { useCreateBulkSchedules, useEmployees, useShifts } from "@/hooks/hr-quer
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { addDays, differenceInDays, format } from "date-fns"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 
 const assignmentSchema = z.object({
     employeeId: z.string().min(1, "Employee is required"),
@@ -163,20 +164,18 @@ export function AssignmentDialog({
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Employee *</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Employee" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {(employees || []).map((emp: any) => (
-                                                    <SelectItem key={emp.id} value={emp.id}>
-                                                        {emp.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <FormControl>
+                                            <SearchableSelect
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                options={(employees || []).map((emp: any) => ({
+                                                    id: emp.id,
+                                                    name: emp.name
+                                                }))}
+                                                placeholder="Select Employee"
+                                                showAll={false}
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
