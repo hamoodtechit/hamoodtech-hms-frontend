@@ -211,7 +211,7 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                                 <Separator orientation="vertical" className="h-8 hidden md:block" />
                                 
                                 {machineStatus === "not-synced" && (
-                                    <Button size="sm" variant="outline" className="h-8 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hidden md:flex" onClick={handleSyncToMachine} disabled={isSyncing || machineStatus === 'checking'}>
+                                    <Button size="sm" variant="outline" className="h-8 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hidden md:flex" onClick={handleSyncToMachine} disabled={isSyncing}>
                                         {isSyncing ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <Fingerprint className="h-3 w-3 mr-1.5" />}
                                         Sync to Machine
                                     </Button>
