@@ -186,6 +186,7 @@ export interface AttendanceFilters {
   dateTo?: string;
   excludeDuplicates?: string | boolean;
   limit?: string | number;
+  page?: string | number;
 }
 
 export interface AnnualCalendar {

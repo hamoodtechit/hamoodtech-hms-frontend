@@ -189,8 +189,8 @@ export const hrService = {
   },
 
   // Attendance APIs
-  getAttendance: async (params?: AttendanceFilters): Promise<{ success: boolean; data: Attendance[]; message: string }> => {
-    const response = await zkApi.get<{ success: boolean; data: Attendance[]; message: string }>("/attendance", { params });
+  getAttendance: async (params?: AttendanceFilters): Promise<{ success: boolean; data: { data: Attendance[]; meta: { total: number; page: number; limit: number; totalPages: number } }; message: string }> => {
+    const response = await zkApi.get<{ success: boolean; data: { data: Attendance[]; meta: { total: number; page: number; limit: number; totalPages: number } }; message: string }>("/attendance", { params });
     return response.data;
   },
 

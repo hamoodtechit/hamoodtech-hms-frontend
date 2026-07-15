@@ -110,7 +110,8 @@ export function AttendanceView() {
 
     // Data fetching
     const { data: attendanceRes, isLoading, refetch } = useAttendance({
-        limit: 100, // No pagination in new API (or we can pass large limit)
+        page,
+        limit: 10,
         ...filters
     })
 
@@ -121,7 +122,7 @@ export function AttendanceView() {
     })
    
 
-    const attendanceRecords = attendanceRes?.data || []
+    const attendanceRecords = attendanceRes?.data?.data || []
     
     // Provide a map for uid to Employee Name
     const employees = employeesRes?.data || []
@@ -275,6 +276,33 @@ export function AttendanceView() {
                                     )}
                                 </TableBody>
                             </Table>
+                        </div>
+                        
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between px-2 py-4">
+                            <div className="text-sm text-muted-foreground">
+                                Showing page {page} of {attendanceRes?.data?.meta?.totalPages || 1} ({attendanceRes?.data?.meta?.total || 0} total records)
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1 || isLoading}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(p => p + 1)}
+                                    disabled={page >= (attendanceRes?.data?.meta?.totalPages || 1) || isLoading}
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
