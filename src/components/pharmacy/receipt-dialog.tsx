@@ -100,7 +100,7 @@ export function ReceiptDialog({ open, onOpenChange, transaction }: ReceiptDialog
   
   const changeReturnFromData = Number(mergedMeta.changeReturn || Math.max(0, finalPaidAmount - netTotal))
   
-  const dueAmount = Number((data as any)?.dueAmount || 0)
+  const dueAmount = Math.max(0, netTotal - finalPaidAmount)
   const taxAmount = Number((data as any)?.taxAmount || (data as any)?.tax || 0)
   const discountAmount = Number((data as any)?.discountAmount || (data as any)?.discount || 0)
   const taxPercentage = Number((data as any)?.taxPercentage || 0)
