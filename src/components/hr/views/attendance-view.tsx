@@ -122,7 +122,9 @@ export function AttendanceView() {
     })
    
 
-    const attendanceRecords = attendanceRes?.data?.data || []
+    const rawData = attendanceRes?.data
+    const attendanceRecords = Array.isArray(rawData) ? rawData : (rawData?.data || [])
+    const meta = !Array.isArray(rawData) ? rawData?.meta : null
     
     // Provide a map for uid to Employee Name
     const employees = employeesRes?.data || []
@@ -235,7 +237,7 @@ export function AttendanceView() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        attendanceRecords.map((record) => (
+                                        attendanceRecords.map((record: any) => (
                                             <TableRow key={record.id} className="group hover:bg-muted/30 transition-colors">
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
@@ -281,7 +283,7 @@ export function AttendanceView() {
                         {/* Pagination */}
                         <div className="flex items-center justify-between px-2 py-4">
                             <div className="text-sm text-muted-foreground">
-                                Showing page {page} of {attendanceRes?.data?.meta?.totalPages || 1} ({attendanceRes?.data?.meta?.total || 0} total records)
+                                Showing page {page} {meta?.totalPages ? `of ${meta.totalPages}` : ""} ({meta?.total || attendanceRecords.length} total records)
                             </div>
                             <div className="flex gap-2">
                                 <Button
@@ -297,7 +299,7 @@ export function AttendanceView() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setPage(p => p + 1)}
-                                    disabled={page >= (attendanceRes?.data?.meta?.totalPages || 1) || isLoading}
+                                    disabled={(meta ? page >= meta.totalPages : attendanceRecords.length < 100) || isLoading}
                                 >
                                     Next
                                     <ChevronRight className="h-4 w-4 ml-1" />

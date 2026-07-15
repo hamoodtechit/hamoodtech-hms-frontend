@@ -166,6 +166,7 @@ export interface AttendanceFilterValues {
     dateFrom?: string
     dateTo?: string
     excludeDuplicates?: boolean
+    order?: "asc" | "desc"
 }
 
 interface AttendanceFiltersProps {
@@ -193,6 +194,21 @@ export function AttendanceFilters({
                     placeholder="All Employees"
                     allLabel="All Employees"
                 />
+            </div>
+            <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase text-muted-foreground">Order</Label>
+                <Select 
+                    value={values.order || "desc"} 
+                    onValueChange={(v) => onChange({ ...values, order: v as "asc" | "desc" })}
+                >
+                    <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Newest First" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="desc">Newest First (Desc)</SelectItem>
+                        <SelectItem value="asc">Oldest First (Asc)</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <div className="space-y-1.5">
                 <Label className="text-[11px] font-bold uppercase text-muted-foreground">Start Date</Label>
