@@ -27,8 +27,10 @@ import {
     User as UserIcon,
     UserPlus
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { UserDialog } from "../../app/[locale]/(dashboard)/settings/users/components/user-dialog"
+import { attendanceMachineService } from "@/services/attendance-machine-service"
+import { toast } from "sonner"
 
 interface EmployeeDetailsDialogProps {
     open: boolean
@@ -40,6 +42,78 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
     const { data: employeeRes, isLoading } = useEmployee(employeeId || "")
     const employee = employeeRes?.data
     const [userDialogOpen, setUserDialogOpen] = useState(false)
+    const [machineStatus, setMachineStatus] = useState<"checking" | "synced" | "not-synced">("checking")
+    const [isSyncing, setIsSyncing] = useState(false)
+
+    const formatMachineUid = (empNumber: string | undefined | null) => {
+        if (!empNumber) return null;
+        return empNumber.replace(/EMP/i, "").replace(/-/g, "").trim();
+    }
+    
+    const uid = formatMachineUid(employee?.employeeNumber);
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            if (!uid) {
+                setMachineStatus("not-synced")
+                return;
+            }
+            setMachineStatus("checking")
+            try {
+                const isSynced = await attendanceMachineService.checkUser(uid);
+                setMachineStatus(isSynced ? "synced" : "not-synced");
+            } catch (error) {
+                console.error(error);
+                setMachineStatus("not-synced");
+            }
+        }
+        
+        if (open && employee) {
+            checkStatus();
+        } else if (!open) {
+            // Reset state when closed
+            setMachineStatus("checking");
+        }
+    }, [open, employee, uid])
+
+    const handleSyncToMachine = async () => {
+        if (!uid || !employee) {
+            toast.error("Invalid Employee ID")
+            return;
+        }
+        setIsSyncing(true)
+        try {
+            const res = await attendanceMachineService.addUser(uid, employee.name);
+            if (res.success !== false) {
+                toast.success("Successfully synced to attendance machine")
+                setMachineStatus("synced")
+            } else {
+                toast.error(res.message || "Failed to sync to machine")
+            }
+        } catch (error: any) {
+            toast.error(error?.message || "Something went wrong")
+        } finally {
+            setIsSyncing(false)
+        }
+    }
+
+    const handleRemoveFromMachine = async () => {
+        if (!uid) return;
+        setIsSyncing(true)
+        try {
+            const res = await attendanceMachineService.removeUser(uid);
+            if (res.success !== false) {
+                toast.success("Removed from attendance machine")
+                setMachineStatus("not-synced")
+            } else {
+                toast.error(res.message || "Failed to remove from machine")
+            }
+        } catch (error: any) {
+            toast.error(error?.message || "Something went wrong")
+        } finally {
+            setIsSyncing(false)
+        }
+    }
 
     if (!employeeId) return null
 
@@ -111,7 +185,7 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                                     <DialogTitle className="text-2xl font-bold tracking-tight">
                                         {employee?.name}
                                     </DialogTitle>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                                         <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest bg-background/50 backdrop-blur-sm">
                                             {employee?.employeeNumber || "NO ID"}
                                         </Badge>
@@ -119,12 +193,35 @@ export function EmployeeDetailsDialog({ open, onOpenChange, employeeId }: Employ
                                         <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider">
                                             {employee?.employeeType}
                                         </span>
+                                        <span className="text-muted-foreground text-xs font-medium">•</span>
+                                        {machineStatus === "checking" && (
+                                            <Badge variant="outline" className="text-[10px] bg-secondary/50 border-secondary">Checking Machine...</Badge>
+                                        )}
+                                        {machineStatus === "synced" && (
+                                            <Badge className="text-[10px] bg-indigo-500 hover:bg-indigo-600">Machine Synced</Badge>
+                                        )}
+                                        {machineStatus === "not-synced" && (
+                                            <Badge variant="outline" className="text-[10px] text-muted-foreground border-dashed">Not in Machine</Badge>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 {employee && getStatusBadge(employee.status)}
                                 <Separator orientation="vertical" className="h-8 hidden md:block" />
+                                
+                                {machineStatus === "not-synced" && (
+                                    <Button size="sm" variant="outline" className="h-8 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hidden md:flex" onClick={handleSyncToMachine} disabled={isSyncing || machineStatus === 'checking'}>
+                                        {isSyncing ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <Fingerprint className="h-3 w-3 mr-1.5" />}
+                                        Sync to Machine
+                                    </Button>
+                                )}
+                                {machineStatus === "synced" && (
+                                    <Button size="sm" variant="outline" className="h-8 border-rose-200 text-rose-600 hover:bg-rose-50 hidden md:flex" onClick={handleRemoveFromMachine} disabled={isSyncing}>
+                                        {isSyncing ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <Fingerprint className="h-3 w-3 mr-1.5" />}
+                                        Remove from Machine
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     )}
