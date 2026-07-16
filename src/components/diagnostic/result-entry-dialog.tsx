@@ -514,7 +514,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-none max-w-none w-screen h-[100dvh] max-h-screen p-0 m-0 !top-0 !left-0 !translate-x-0 !translate-y-0 flex flex-col overflow-hidden border-none shadow-2xl bg-background rounded-none">
+            <DialogContent className="sm:max-w-[98vw] md:max-w-[95vw] w-[98vw] md:w-[95vw] h-[95dvh] max-h-[95dvh] p-0 flex flex-col overflow-hidden border-border shadow-2xl bg-background rounded-2xl">
                 <DialogTitle className="sr-only">Result Entry Manager - {report?.patient?.name}</DialogTitle>
                 <Button 
                     variant="ghost" 
