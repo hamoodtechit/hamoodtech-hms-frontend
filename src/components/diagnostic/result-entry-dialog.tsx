@@ -514,7 +514,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[100vw] w-screen h-screen max-h-screen p-0 flex flex-col overflow-hidden border-none shadow-2xl bg-background rounded-none">
+            <DialogContent className="sm:max-w-none max-w-none w-screen h-[100dvh] max-h-screen p-0 m-0 !top-0 !left-0 !translate-x-0 !translate-y-0 flex flex-col overflow-hidden border-none shadow-2xl bg-background rounded-none">
                 <DialogTitle className="sr-only">Result Entry Manager - {report?.patient?.name}</DialogTitle>
                 <Button 
                     variant="ghost" 
@@ -529,7 +529,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                 <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10 pointer-events-none" />
 
                 {/* Main Content: High-Density Result Table (Standard Scrollable Container) */}
-                <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-muted/20">
+                <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-muted/20 min-h-0">
                     {/* Subtle top shadow on scroll */}
                     <div className="sticky top-0 left-0 w-full h-4 bg-gradient-to-b from-foreground/5 to-transparent z-10 pointer-events-none" />
                     

@@ -293,7 +293,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[100vw] w-screen h-screen max-h-screen p-0 border-none shadow-2xl overflow-hidden bg-background/80 backdrop-blur-xl rounded-none flex flex-col">
+            <DialogContent className="sm:max-w-none max-w-none w-screen h-[100dvh] max-h-screen p-0 m-0 !top-0 !left-0 !translate-x-0 !translate-y-0 border-none shadow-2xl overflow-hidden bg-background/80 backdrop-blur-xl rounded-none flex flex-col">
                 <DialogHeader className="p-8 pb-4 bg-card border-b shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -310,7 +310,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 p-8">
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0">
                     <div className="space-y-8">
                         {/* Section 1: Basic Information */}
                         <div className="space-y-4">
@@ -757,7 +757,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                             </div>
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
 
                 <DialogFooter className="p-8 pt-4 bg-card border-t flex items-center justify-between sm:justify-between">
                     <p className="text-[10px] text-muted-foreground font-medium italic hidden sm:block">* All clinical changes are reflected instantly in pathology/radiology modules.</p>
