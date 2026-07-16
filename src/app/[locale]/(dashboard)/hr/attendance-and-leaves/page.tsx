@@ -1,7 +1,7 @@
 "use client"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays, FileText, ClipboardList, BarChart3, Clock } from "lucide-react"
+import { CalendarDays, FileText, ClipboardList, BarChart3, Clock, Smartphone } from "lucide-react"
 import { useState, useEffect } from "react"
 
 // Import the view components
@@ -11,6 +11,7 @@ import { LeaveTypesView } from "@/components/hr/views/leave-types-view"
 import { AnnualCalendarView } from "@/components/hr/views/annual-calendar-view"
 import { DutyRosterView } from "@/components/hr/views/duty-roster-view"
 import { LeaveSummaryView } from "@/components/hr/views/leave-summary-view"
+import { DevicesView } from "@/components/hr/views/devices-view"
 
 export default function AttendanceAndLeavesPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -76,6 +77,13 @@ export default function AttendanceAndLeavesPage() {
                   <BarChart3 className="h-4 w-4" />
                   <span className="hidden md:inline">Leave Summary</span>
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="devices" 
+                  className="rounded-lg px-5 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md font-bold text-xs flex items-center gap-2 transition-all duration-200"
+                >
+                  <Smartphone className="h-4 w-4" />
+                  <span className="hidden md:inline">Devices</span>
+                </TabsTrigger>
               </TabsList>
           </div>
 
@@ -101,6 +109,10 @@ export default function AttendanceAndLeavesPage() {
 
           <TabsContent value="leave-summary" className="mt-0 border-0 p-0">
             <LeaveSummaryView />
+          </TabsContent>
+
+          <TabsContent value="devices" className="mt-0 border-0 p-0">
+            <DevicesView />
           </TabsContent>
         </Tabs>
       )}

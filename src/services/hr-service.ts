@@ -43,7 +43,9 @@ import {
     Schedule,
     SchedulePayload,
     ScheduleBulkPayload,
-    ScheduleFilters
+    ScheduleFilters,
+    Device,
+    DeviceSyncStatus
 } from "@/types/hr";
 
 export const hrService = {
@@ -364,6 +366,32 @@ export const hrService = {
 
   deleteSchedule: async (id: number | string): Promise<{ success: boolean; message: string }> => {
     const response = await zkApi.delete<{ success: boolean; message: string }>(`/schedules/${id}`);
+    return response.data;
+  },
+
+  // Device APIs
+  getDevices: async (): Promise<{ success: boolean; data: Device[]; message: string }> => {
+    const response = await zkApi.get<{ success: boolean; data: Device[]; message: string }>("/devices");
+    return response.data;
+  },
+
+  getDeviceDetails: async (sn: string): Promise<{ success: boolean; data: Device; message: string }> => {
+    const response = await zkApi.get<{ success: boolean; data: Device; message: string }>(`/devices/${sn}`);
+    return response.data;
+  },
+
+  triggerDeviceSync: async (sn: string): Promise<{ success: boolean; data: Device; message: string }> => {
+    const response = await zkApi.patch<{ success: boolean; data: Device; message: string }>(`/devices/${sn}`);
+    return response.data;
+  },
+
+  getDeviceSyncStatus: async (sn: string): Promise<{ success: boolean; data: DeviceSyncStatus; message: string }> => {
+    const response = await zkApi.get<{ success: boolean; data: DeviceSyncStatus; message: string }>(`/devices/${sn}/sync-status`);
+    return response.data;
+  },
+
+  retryDeviceSync: async (sn: string): Promise<{ success: boolean; data: { queuedCount: number }; message: string }> => {
+    const response = await zkApi.post<{ success: boolean; data: { queuedCount: number }; message: string }>(`/devices/${sn}/retry-sync`);
     return response.data;
   },
 };

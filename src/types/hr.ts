@@ -497,3 +497,22 @@ export interface AttendancePayload {
   verifyType?: number;
   status?: number;
 }
+
+export interface Device {
+  id: number;
+  serialNumber: string;
+  name: string;
+  areaId: number;
+  isOnline: boolean;
+  lastActivity: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeviceSyncStatus {
+  pendingCount: number;
+  pendingUsers: {
+    uid: number;
+    name: string;
+  }[];
+}

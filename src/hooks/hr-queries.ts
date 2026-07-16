@@ -44,6 +44,9 @@ export const HR_KEYS = {
   shift: (id: string) => [...HR_KEYS.all, "shift", id] as const,
   schedules: (params?: ScheduleFilters) => params ? [...HR_KEYS.all, "schedules", params] as const : [...HR_KEYS.all, "schedules"] as const,
   leaveSummary: (employeeId?: string) => employeeId ? [...HR_KEYS.all, "leaveSummary", employeeId] as const : [...HR_KEYS.all, "leaveSummary"] as const,
+  devices: () => [...HR_KEYS.all, "devices"] as const,
+  device: (sn: string) => [...HR_KEYS.all, "device", sn] as const,
+  deviceSyncStatus: (sn: string) => [...HR_KEYS.all, "deviceSyncStatus", sn] as const,
 };
 
 // Annual Calendar Hooks
@@ -541,6 +544,56 @@ export function useDeleteSchedule() {
     mutationFn: (id: number | string) => hrService.deleteSchedule(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HR_KEYS.schedules() });
+    },
+  });
+}
+
+// Device Hooks
+export function useDevices() {
+  const { hasPermission } = usePermissions();
+  return useQuery({
+    queryKey: HR_KEYS.devices(),
+    queryFn: () => hrService.getDevices(),
+    enabled: hasPermission("hr:read"),
+  });
+}
+
+export function useDeviceDetails(sn: string) {
+  const { hasPermission } = usePermissions();
+  return useQuery({
+    queryKey: HR_KEYS.device(sn),
+    queryFn: () => hrService.getDeviceDetails(sn),
+    enabled: !!sn && hasPermission("hr:read"),
+  });
+}
+
+export function useTriggerDeviceSync() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sn: string) => hrService.triggerDeviceSync(sn),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.devices() });
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.device(variables) });
+    },
+  });
+}
+
+export function useDeviceSyncStatus(sn: string) {
+  const { hasPermission } = usePermissions();
+  return useQuery({
+    queryKey: HR_KEYS.deviceSyncStatus(sn),
+    queryFn: () => hrService.getDeviceSyncStatus(sn),
+    enabled: !!sn && hasPermission("hr:read"),
+    refetchInterval: 5000, // Poll every 5 seconds for live sync status
+  });
+}
+
+export function useRetryDeviceSync() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sn: string) => hrService.retryDeviceSync(sn),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: HR_KEYS.deviceSyncStatus(variables) });
     },
   });
 }
