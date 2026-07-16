@@ -26,7 +26,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
 
   return (
-    <div id="pharmacy-sales-report" className="p-8 bg-white text-black font-serif print:p-0">
+    <div id="pharmacy-sales-report" className="p-8 bg-white text-black font-sans print:p-0">
       {/* Header */}
       <div className="flex flex-col items-center mb-6">
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
