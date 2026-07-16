@@ -294,6 +294,14 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-none max-w-none w-screen h-[100dvh] max-h-screen p-0 m-0 !top-0 !left-0 !translate-x-0 !translate-y-0 border-none shadow-2xl overflow-hidden bg-background/80 backdrop-blur-xl rounded-none flex flex-col">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => onOpenChange(false)} 
+                    className="absolute top-4 right-6 h-11 w-11 rounded-2xl bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-all z-50"
+                >
+                    <span className="text-xl font-bold">×</span>
+                </Button>
                 <DialogHeader className="p-8 pb-4 bg-card border-b shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
