@@ -495,4 +495,5 @@ export interface AttendancePayload {
   deviceSn?: string;
   punchTime: string;
   verifyType?: number;
+  status?: number;
 }
