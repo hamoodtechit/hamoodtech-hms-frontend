@@ -52,13 +52,13 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
     const queryClient = useQueryClient()
     const router = useRouter()
     const { data: res, isLoading, refetch } = useAdmission(admissionId || "")
-    const { data: initDataRes } = useDischargeInitiate(res?.data?.patientAdmission?.patientId || "", dischargeReceiptOpen)
-
     const [addServiceOpen, setAddServiceOpen] = useState(false)
     const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false)
     const [dischargeReceiptOpen, setDischargeReceiptOpen] = useState(false)
     const [selectedSaleForPrint, setSelectedSaleForPrint] = useState<any>(null)
     const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
+
+    const { data: initDataRes } = useDischargeInitiate(res?.data?.patientAdmission?.patientId || "", dischargeReceiptOpen)
     
     const admission = res?.data?.patientAdmission
     
