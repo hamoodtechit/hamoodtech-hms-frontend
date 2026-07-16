@@ -61,12 +61,28 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         handleCommand('fontSize', newSize.toString());
     };
 
-    const [lineHeight, setLineHeight] = useState(1.8);
+    const [lineHeight, setLineHeight] = useState(() => {
+        const match = value?.match(/style="[^"]*line-height:\s*([\d.]+)[^"]*"/);
+        return match ? parseFloat(match[1]) : 1.8;
+    });
 
     const handleLineHeight = (increase: boolean) => {
         setLineHeight(prev => {
             const next = increase ? prev + 0.2 : prev - 0.2;
-            return Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+            const newHeight = Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+            
+            if (editorRef.current) {
+                let content = editorRef.current.innerHTML;
+                if (content.includes('class="lh-wrapper"')) {
+                    content = content.replace(/(class="lh-wrapper"[^>]*style="[^"]*)line-height:\s*[\d.]+/g, `$1line-height: ${newHeight}`);
+                    editorRef.current.innerHTML = content;
+                } else {
+                    content = `<div class="lh-wrapper" style="line-height: ${newHeight}">${content}</div>`;
+                    editorRef.current.innerHTML = content;
+                }
+                onChange(content);
+            }
+            return newHeight;
         });
     };
 
@@ -121,7 +137,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
             ) : (
                 <div 
                     ref={editorRef}
-                    className="p-6 min-h-60 outline-none font-medium text-sm overflow-y-auto bg-background prose prose-sm max-w-none"
+                    className="p-4 md:p-6 min-h-60 outline-none font-medium text-sm overflow-y-auto bg-background prose prose-sm max-w-none"
                     style={{ lineHeight: lineHeight }}
                     contentEditable
                     onInput={handleInput}

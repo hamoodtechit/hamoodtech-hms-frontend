@@ -94,12 +94,28 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         handleCommand('fontSize', newSize.toString());
     };
 
-    const [lineHeight, setLineHeight] = useState(2.2);
+    const [lineHeight, setLineHeight] = useState(() => {
+        const match = value?.match(/style="[^"]*line-height:\s*([\d.]+)[^"]*"/);
+        return match ? parseFloat(match[1]) : 2.2;
+    });
 
     const handleLineHeight = (increase: boolean) => {
         setLineHeight(prev => {
             const next = increase ? prev + 0.2 : prev - 0.2;
-            return Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+            const newHeight = Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+            
+            if (editorRef.current) {
+                let content = editorRef.current.innerHTML;
+                if (content.includes('class="lh-wrapper"')) {
+                    content = content.replace(/(class="lh-wrapper"[^>]*style="[^"]*)line-height:\s*[\d.]+/g, `$1line-height: ${newHeight}`);
+                    editorRef.current.innerHTML = content;
+                } else {
+                    content = `<div class="lh-wrapper" style="line-height: ${newHeight}">${content}</div>`;
+                    editorRef.current.innerHTML = content;
+                }
+                onChange(content);
+            }
+            return newHeight;
         });
     };
 
@@ -154,7 +170,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
             ) : (
                 <div 
                     ref={editorRef}
-                    className="p-12 min-h-[500px] outline-none font-medium text-[16px] overflow-y-auto bg-background prose prose-indigo max-w-none dark:prose-invert selection:bg-primary/20"
+                    className="p-4 md:p-6 min-h-[400px] outline-none font-medium text-[16px] overflow-y-auto bg-background prose prose-indigo max-w-none dark:prose-invert selection:bg-primary/20"
                     style={{ lineHeight: lineHeight }}
                     contentEditable
                     onInput={handleInput}
@@ -533,10 +549,10 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                     {/* Subtle top shadow on scroll */}
                     <div className="sticky top-0 left-0 w-full h-4 bg-gradient-to-b from-foreground/5 to-transparent z-10 pointer-events-none" />
                     
-                    <div className="px-8 py-6 pb-24">                        {groups.map((group, gIdx) => (
-                            <div key={gIdx} className="mb-12 last:mb-0">
+                    <div className="px-4 py-4 md:px-6 pb-12">                        {groups.map((group, gIdx) => (
+                            <div key={gIdx} className="mb-8 last:mb-0">
                                 {/* Group Header Badge */}
-                                <div className="flex items-center gap-4 mb-6">
+                                <div className="flex items-center gap-4 mb-4">
                                     <div className="h-px flex-1 bg-border/50" />
                                     <Badge className="bg-primary/5 text-primary border-primary/20 text-[10px] font-black uppercase px-6 py-2 rounded-full tracking-widest shadow-sm">{group.groupName}</Badge>
                                     <div className="h-px flex-1 bg-border/50" />
@@ -617,7 +633,7 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                 Reload Template
                                                                             </Button>
                                                                         </div>
-                                                                        <div className="p-10 bg-background/50 backdrop-blur-md">
+                                                                        <div className="p-4 md:p-6 bg-background/50 backdrop-blur-md">
                                                                             <RichTextEditor 
                                                                                 value={resultsState[testKey]?.['__narrative']?.result || ""}
                                                                                 onChange={(val) => updateParam(testKey, '__narrative', 'result', val, { unit: '', refRange: '' })}
