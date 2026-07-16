@@ -94,6 +94,15 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         handleCommand('fontSize', newSize.toString());
     };
 
+    const [lineHeight, setLineHeight] = useState(2.2);
+
+    const handleLineHeight = (increase: boolean) => {
+        setLineHeight(prev => {
+            const next = increase ? prev + 0.2 : prev - 0.2;
+            return Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+        });
+    };
+
     return (
         <div className="flex flex-col rounded-3xl bg-muted/20 border border-border/50 shadow-inner overflow-hidden">
             <div className="flex items-center justify-between p-3 bg-card border-b border-border/50 shrink-0">
@@ -113,6 +122,13 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleFontSize(false)} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all font-bold text-xs" title="Decrease Font Size">
                         A-
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border/60 mx-1.5" />
+                    <Button variant="ghost" size="sm" onClick={() => handleLineHeight(true)} className="h-9 px-2 rounded-xl hover:bg-primary/10 hover:text-primary transition-all font-bold text-xs flex items-center gap-1" title="Increase Line Height">
+                        ↕+
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleLineHeight(false)} className="h-9 px-2 rounded-xl hover:bg-primary/10 hover:text-primary transition-all font-bold text-xs flex items-center gap-1" title="Decrease Line Height">
+                        ↕-
                     </Button>
                     <div className="w-[1px] h-4 bg-border/60 mx-1.5" />
                     <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-9 w-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
@@ -138,7 +154,8 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
             ) : (
                 <div 
                     ref={editorRef}
-                    className="p-12 min-h-[500px] outline-none font-medium leading-[2.2] text-[16px] overflow-y-auto bg-background prose prose-indigo max-w-none dark:prose-invert selection:bg-primary/20"
+                    className="p-12 min-h-[500px] outline-none font-medium text-[16px] overflow-y-auto bg-background prose prose-indigo max-w-none dark:prose-invert selection:bg-primary/20"
+                    style={{ lineHeight: lineHeight }}
                     contentEditable
                     onInput={handleInput}
                     data-placeholder={placeholder}
@@ -497,47 +514,19 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[1200px] w-[96vw] h-[92vh] p-0 flex flex-col overflow-hidden border-border/60 shadow-2xl bg-background rounded-[2rem]">
+            <DialogContent className="sm:max-w-[100vw] w-screen h-screen max-h-screen p-0 flex flex-col overflow-hidden border-none shadow-2xl bg-background rounded-none">
+                <DialogTitle className="sr-only">Result Entry Manager - {report?.patient?.name}</DialogTitle>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => onOpenChange(false)} 
+                    className="absolute top-4 right-6 h-11 w-11 rounded-2xl bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-all z-50"
+                >
+                    <span className="text-xl font-bold">×</span>
+                </Button>
+                
                 {/* Premium Background Accents */}
                 <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10 pointer-events-none" />
-                
-                {/* Header: Patient Info Card (Adapts to Light/Dark) */}
-                <header className="px-10 py-5 border-b border-border/50 bg-card/30 backdrop-blur-2xl flex items-center justify-between shrink-0">
-                    <DialogTitle className="sr-only">Result Entry Manager - {report?.patient?.name}</DialogTitle>
-                    <div className="flex items-center gap-6">
-                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-xl shadow-primary/5">
-                            <FlaskConical className="h-7 w-7 text-primary" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <h3 className="font-black text-xl tracking-tighter uppercase flex items-center gap-3 text-foreground">
-                                {report?.patient?.name || "ANONYMOUS PATIENT"}
-                                <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/10 text-primary px-3 py-1 uppercase tracking-widest font-black rounded-full">PIN: {report?.patient?.pin || "N/A"}</Badge>
-                            </h3>
-                            <div className="flex items-center gap-4 text-muted-foreground font-bold text-[10px] uppercase tracking-tight opacity-80">
-                                <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {report?.patient?.gender}, {(report?.patient as any)?.dob ? calculateExactAge((report?.patient as any)?.dob) : report?.patient?.age}</span>
-                                <Separator orientation="vertical" className="h-3 bg-border" />
-                                <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> {report?.createdAt ? format(new Date(report.createdAt), 'dd MMM yyyy, hh:mm a') : 'N/A'}</span>
-                                <Separator orientation="vertical" className="h-3 bg-border" />
-                                <span className="text-primary font-black">INV: {report?.barcode || report?.id?.substring(0,8)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-8">
-                        <div className="text-right">
-                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] block mb-1">Technician (Signed)</span>
-                            <div className="flex items-center gap-2.5 justify-end">
-                                <span className="font-black text-sm text-foreground/90">{user?.fullName || "System Admin"}</span>
-                                <div className="h-7 w-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                </div>
-                            </div>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-11 w-11 rounded-2xl bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-all">
-                            <span className="text-xl font-bold">×</span>
-                        </Button>
-                    </div>
-                </header>
 
                 {/* Main Content: High-Density Result Table (Standard Scrollable Container) */}
                 <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-muted/20">

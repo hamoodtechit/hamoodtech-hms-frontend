@@ -61,6 +61,15 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         handleCommand('fontSize', newSize.toString());
     };
 
+    const [lineHeight, setLineHeight] = useState(1.8);
+
+    const handleLineHeight = (increase: boolean) => {
+        setLineHeight(prev => {
+            const next = increase ? prev + 0.2 : prev - 0.2;
+            return Number(Math.min(Math.max(next, 1.0), 4.0).toFixed(1));
+        });
+    };
+
     return (
         <div className="flex flex-col rounded-2xl bg-muted/20 border border-border shadow-inner overflow-hidden">
             <div className="flex items-center justify-between p-2 bg-card border-b border-border shrink-0">
@@ -80,6 +89,13 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleFontSize(false)} className="h-8 w-8 p-0 rounded-md font-bold text-xs" title="Decrease Font Size">
                         A-
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border mx-1" />
+                    <Button variant="ghost" size="sm" onClick={() => handleLineHeight(true)} className="h-8 px-2 rounded-md font-bold text-xs flex items-center gap-1" title="Increase Line Height">
+                        ↕+
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleLineHeight(false)} className="h-8 px-2 rounded-md font-bold text-xs flex items-center gap-1" title="Decrease Line Height">
+                        ↕-
                     </Button>
                     <div className="w-[1px] h-4 bg-border mx-1" />
                     <Button variant="ghost" size="sm" onClick={() => handleCommand('insertUnorderedList')} className="h-8 w-8 p-0 rounded-md">
@@ -105,7 +121,8 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
             ) : (
                 <div 
                     ref={editorRef}
-                    className="p-6 min-h-60 outline-none font-medium leading-[1.8] text-sm overflow-y-auto bg-background prose prose-sm max-w-none"
+                    className="p-6 min-h-60 outline-none font-medium text-sm overflow-y-auto bg-background prose prose-sm max-w-none"
+                    style={{ lineHeight: lineHeight }}
                     contentEditable
                     onInput={handleInput}
                     data-placeholder={placeholder}
@@ -276,8 +293,8 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-4xl p-0 border-none shadow-2xl overflow-hidden bg-background/80 backdrop-blur-xl">
-                <DialogHeader className="p-8 pb-4 bg-card border-b">
+            <DialogContent className="sm:max-w-[100vw] w-screen h-screen max-h-screen p-0 border-none shadow-2xl overflow-hidden bg-background/80 backdrop-blur-xl rounded-none flex flex-col">
+                <DialogHeader className="p-8 pb-4 bg-card border-b shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                             <Microscope className="h-6 w-6 text-primary-foreground" />
@@ -293,7 +310,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[75vh] p-8">
+                <ScrollArea className="flex-1 p-8">
                     <div className="space-y-8">
                         {/* Section 1: Basic Information */}
                         <div className="space-y-4">

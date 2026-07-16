@@ -222,7 +222,7 @@ export default function DiagnosticReportsPage() {
 
     const { data: reportsRes, isLoading, isFetching, refetch } = useDiagnosticReports({
         page,
-        limit: 10,
+        limit: 100,
         branchId: activeStoreId || undefined,
         // Backend status filter — each tab passes its real API value
         // pending tab → status=pending, complete tab → status=completed, all tab → no filter
