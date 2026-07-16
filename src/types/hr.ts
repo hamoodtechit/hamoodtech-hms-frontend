@@ -167,27 +167,32 @@ export interface ReferralPersonPayload {
 }
 
 export interface Attendance {
-  id: number;
-  deviceSn: string;
-  uid: string | number;
-  punchTime: string;
-  status: number | null;
-  verifyType: number;
-  source: string;
-  forwarded: boolean;
-  isDuplicate: boolean;
-  rawData?: string | null;
-  createdAt: string;
+  id: string;
+  employeeId?: string;
+  employeeNumber?: string;
+  employeeName: string;
+  date?: string;
+  clockIn?: string;
+  clockOut?: string;
+  late?: string;
+  early?: string;
+  workTime?: string;
+  otTime?: string;
+  absent?: string;
+  branchId: string;
+  createdAt?: string;
 }
 
 export interface AttendanceFilters {
-  uid?: string | number;
-  dateFrom?: string;
-  dateTo?: string;
-  excludeDuplicates?: string | boolean;
-  limit?: string | number;
   page?: string | number;
-  order?: 'asc' | 'desc';
+  limit?: string | number;
+  searchTerm?: string;
+  employeeId?: string;
+  branchId?: string;
+  department?: string;
+  shift?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface AnnualCalendar {
@@ -491,11 +496,24 @@ export interface ScheduleFilters {
 }
 
 export interface AttendancePayload {
-  uid: string | number;
-  deviceSn?: string;
-  punchTime: string;
-  verifyType?: number;
-  status?: number;
+  employeeName: string;
+  branchId: string;
+  employeeId?: string;
+  employeeNumber?: string;
+  date?: string;
+  clockIn?: string;
+  clockOut?: string;
+  late?: string;
+  workTime?: string;
+  otTime?: string;
+  absent?: string;
+  slNo?: string;
+  autoAssign?: string;
+  shift?: string;
+  onDuty?: string;
+  offDuty?: string;
+  early?: string;
+  department?: string;
 }
 
 export interface Device {

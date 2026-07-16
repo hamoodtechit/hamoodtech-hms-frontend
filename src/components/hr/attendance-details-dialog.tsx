@@ -43,14 +43,8 @@ const DetailItem = ({ icon: Icon, label, value, className = "" }: { icon: any, l
 export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: AttendanceDetailsDialogProps) {
     if (!attendance) return null
 
-    const getVerifyTypeString = (type: number) => {
-        switch(type) {
-            case 1: return "Fingerprint"
-            case 3: return "Password"
-            case 4: return "Card"
-            case 15: return "Face"
-            default: return `Other (${type})`
-        }
+    const getStatusString = (absent?: string) => {
+        return absent === "True" ? "Absent" : "Present"
     }
 
     return (
@@ -66,20 +60,20 @@ export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: Atte
                             </div>
                             <div className="space-y-1">
                                 <DialogTitle className="text-2xl font-bold tracking-tight">
-                                    Attendance Record
+                                    {attendance.employeeName || "Unknown Employee"}
                                 </DialogTitle>
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest bg-background/50 backdrop-blur-sm">
-                                        UID: {attendance.uid}
+                                        ID: {attendance.employeeNumber || attendance.employeeId || "N/A"}
                                     </Badge>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            {attendance.isDuplicate ? (
-                                <Badge variant="outline" className="text-gray-400 bg-gray-50 border-gray-200">Duplicate Log</Badge>
+                            {attendance.absent === "True" ? (
+                                <Badge variant="destructive" className="bg-rose-500 hover:bg-rose-600">Absent</Badge>
                             ) : (
-                                <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">Valid Log</Badge>
+                                <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">Present</Badge>
                             )}
                         </div>
                     </div>
@@ -91,20 +85,24 @@ export function AttendanceDetailsDialog({ open, onOpenChange, attendance }: Atte
                         <section className="space-y-4">
                             <div className="flex items-center gap-2 text-primary font-bold text-sm">
                                 <History className="h-4 w-4" />
-                                <h3 className="uppercase tracking-widest">Punch Information</h3>
+                                <h3 className="uppercase tracking-widest">Attendance Information</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl bg-secondary/20 border border-secondary/50">
-                                <DetailItem icon={Calendar} label="Punch Date & Time" value={format(new Date(attendance.punchTime), "dd MMM yyyy, hh:mm a")} />
-                                <DetailItem icon={Fingerprint} label="Verify Type" value={getVerifyTypeString(attendance.verifyType)} />
+                                <DetailItem icon={Calendar} label="Date" value={attendance.date ? format(new Date(attendance.date), "dd MMM yyyy") : "N/A"} />
+                                <DetailItem icon={Info} label="Status" value={getStatusString(attendance.absent)} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-5 rounded-xl bg-background border shadow-sm">
-                                <DetailItem icon={Info} label="Device SN" value={attendance.deviceSn} />
-                                <DetailItem icon={Info} label="Source" value={attendance.source || "Unknown"} />
-                                <DetailItem icon={Info} label="Status Code" value={attendance.status !== null ? attendance.status.toString() : "N/A"} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl bg-background border shadow-sm">
+                                <DetailItem icon={Clock} label="Clock In" value={attendance.clockIn || "--:--"} className="text-emerald-600" />
+                                <DetailItem icon={Clock} label="Clock Out" value={attendance.clockOut || "--:--"} className="text-rose-600" />
                             </div>
+                            {(attendance.workTime || attendance.late || attendance.otTime) && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-5 rounded-xl bg-background border shadow-sm">
+                                    <DetailItem icon={Timer} label="Work Time" value={attendance.workTime ? `${attendance.workTime} mins` : "0 mins"} className="text-blue-600" />
+                                    <DetailItem icon={Timer} label="Late" value={attendance.late ? `${attendance.late} mins` : "0 mins"} className="text-orange-600" />
+                                    <DetailItem icon={Timer} label="Overtime" value={attendance.otTime ? `${attendance.otTime} mins` : "0 mins"} className="text-purple-600" />
+                                </div>
+                            )}
                         </section>
-
-
 
                         <Separator />
                         

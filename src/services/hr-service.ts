@@ -191,35 +191,35 @@ export const hrService = {
   },
 
   // Attendance APIs
-  getAttendance: async (params?: AttendanceFilters): Promise<{ success: boolean; data: any; message: string }> => {
-    const response = await zkApi.get<{ success: boolean; data: any; message: string }>("/attendance", { params });
+  getAttendance: async (params?: AttendanceFilters): Promise<HRPaginatedResponse<Attendance>> => {
+    const response = await api.get<HRPaginatedResponse<Attendance>>("/hr/attendance", { params });
     return response.data;
   },
 
   createAttendance: async (data: AttendancePayload): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await zkApi.post<{ success: boolean; data: Attendance }>("/attendance", data);
+    const response = await api.post<{ success: boolean; data: Attendance }>("/hr/attendance", data);
     return response.data;
   },
 
   getAttendanceById: async (id: string): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await zkApi.get<{ success: boolean; data: Attendance }>(`/attendance/${id}`);
+    const response = await api.get<{ success: boolean; data: Attendance }>(`/hr/attendance/${id}`);
     return response.data;
   },
 
   updateAttendance: async (id: string, data: Partial<AttendancePayload>): Promise<{ success: boolean; data: Attendance }> => {
-    const response = await zkApi.patch<{ success: boolean; data: Attendance }>(`/attendance/${id}`, data);
+    const response = await api.patch<{ success: boolean; data: Attendance }>(`/hr/attendance/${id}`, data);
     return response.data;
   },
 
   deleteAttendance: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const response = await zkApi.delete<{ success: boolean; message: string }>(`/attendance/${id}`);
+    const response = await api.delete<{ success: boolean; message: string }>(`/hr/attendance/${id}`);
     return response.data;
   },
 
   importAttendance: async (branchId: string, file: File): Promise<{ success: boolean; message: string }> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await zkApi.post<{ success: boolean; message: string }>(`/attendance/import/${branchId}`, formData, {
+    const response = await api.post<{ success: boolean; message: string }>(`/hr/attendance/import/${branchId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/popover"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { format } from "date-fns"
 
 interface AttendanceDialogProps {
     open: boolean
@@ -62,13 +63,14 @@ export function AttendanceDialog({
     
     const isEdit = !!attendance
 
-    // Form State based on the provided schema
     const [formData, setFormData] = useState({
-        uid: "",
-        deviceSn: "MANUAL",
-        punchTime: new Date().toISOString().slice(0, 16), // YYYY-MM-DDThh:mm format for datetime-local
-        verifyType: 1,
-        status: 0
+        employeeId: "",
+        employeeNumber: "",
+        employeeName: "",
+        date: format(new Date(), "yyyy-MM-dd"),
+        clockIn: "09:00",
+        clockOut: "17:00",
+        absent: "False",
     })
 
     const { data: employeesRes } = useEmployees({ branchId: activeStoreId || undefined, limit: 1000 })
@@ -76,53 +78,47 @@ export function AttendanceDialog({
     useEffect(() => {
         if (open) {
             if (attendance) {
-                const dateObj = new Date(attendance.punchTime)
-                // Adjust for local timezone offset for datetime-local input
-                const offset = dateObj.getTimezoneOffset()
-                const localDate = new Date(dateObj.getTime() - (offset*60*1000))
-                
                 setFormData({
-                    uid: attendance.uid?.toString() || "",
-                    deviceSn: attendance.deviceSn || "MANUAL",
-                    punchTime: localDate.toISOString().slice(0, 16),
-                    verifyType: attendance.verifyType || 1,
-                    status: attendance.status ?? 0
+                    employeeId: attendance.employeeId || "",
+                    employeeNumber: attendance.employeeNumber || "",
+                    employeeName: attendance.employeeName || "",
+                    date: attendance.date || format(new Date(), "yyyy-MM-dd"),
+                    clockIn: attendance.clockIn || "",
+                    clockOut: attendance.clockOut || "",
+                    absent: attendance.absent || "False",
                 })
             } else {
-                const dateObj = new Date()
-                const offset = dateObj.getTimezoneOffset()
-                const localDate = new Date(dateObj.getTime() - (offset*60*1000))
-                
                 setFormData({
-                    uid: "",
-                    deviceSn: "MANUAL",
-                    punchTime: localDate.toISOString().slice(0, 16),
-                    verifyType: 1,
-                    status: 0
+                    employeeId: "",
+                    employeeNumber: "",
+                    employeeName: "",
+                    date: format(new Date(), "yyyy-MM-dd"),
+                    clockIn: "09:00",
+                    clockOut: "17:00",
+                    absent: "False",
                 })
             }
         }
     }, [open, attendance, activeStoreId])
 
-    const handleEmployeeChange = (uid: string) => {
+    const handleEmployeeChange = (emp: any) => {
         setFormData(prev => ({
             ...prev,
-            uid
+            employeeId: emp.id,
+            employeeNumber: emp.employeeNumber || "",
+            employeeName: emp.name
         }))
     }
 
     const handleSave = async () => {
-        if (!formData.uid || !formData.punchTime) {
-            toast.error("Employee and Punch Time are required")
+        if (!formData.employeeName || !formData.date) {
+            toast.error("Employee name and Date are required")
             return
         }
 
         const payload = {
-            uid: Number(formData.uid), // API expects integer
-            deviceSn: formData.deviceSn,
-            punchTime: new Date(formData.punchTime).toISOString(),
-            verifyType: Number(formData.verifyType),
-            status: Number(formData.status)
+            ...formData,
+            branchId: activeStoreId || ""
         }
 
         setLoading(true)
@@ -173,13 +169,11 @@ export function AttendanceDialog({
                                                 role="combobox"
                                                 className={cn(
                                                     "justify-between font-normal",
-                                                    !formData.uid && "text-muted-foreground"
+                                                    !formData.employeeId && "text-muted-foreground"
                                                 )}
                                             >
-                                                {formData.uid
-                                                    ? employeesRes?.data?.find(
-                                                        (emp) => (emp.employeeNumber || emp.id) === formData.uid
-                                                    )?.name
+                                                {formData.employeeId
+                                                    ? formData.employeeName
                                                     : "Search employee..."}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
@@ -191,22 +185,21 @@ export function AttendanceDialog({
                                                     <CommandEmpty>No employee found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {employeesRes?.data?.map((emp) => {
-                                                            const uid = emp.employeeNumber || emp.id
                                                             return (
                                                                 <CommandItem
                                                                     value={emp.name}
                                                                     key={emp.id}
-                                                                    onSelect={() => handleEmployeeChange(uid)}
+                                                                    onSelect={() => handleEmployeeChange(emp)}
                                                                 >
                                                                     <Check
                                                                         className={cn(
                                                                             "mr-2 h-4 w-4 text-primary",
-                                                                            uid === formData.uid
+                                                                            emp.id === formData.employeeId
                                                                                 ? "opacity-100"
                                                                                 : "opacity-0"
                                                                         )}
                                                                     />
-                                                                    {emp.name}
+                                                                    {emp.name} {emp.employeeNumber ? `(${emp.employeeNumber})` : ""}
                                                                 </CommandItem>
                                                             )
                                                         })}
@@ -222,60 +215,46 @@ export function AttendanceDialog({
                         {/* Section: Date & Time */}
                         <div className="space-y-4">
                             <h3 className="text-sm font-semibold border-b pb-2 flex items-center gap-2">
-                                <Calendar className="h-4 w-4" /> Punch Information
+                                <Calendar className="h-4 w-4" /> Attendance Information
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
-                                    <Label>Punch Time *</Label>
+                                    <Label>Date *</Label>
                                     <Input 
-                                        type="datetime-local"
-                                        value={formData.punchTime}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, punchTime: e.target.value }))}
+                                        type="date"
+                                        value={formData.date}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Status</Label>
+                                    <Label>Status (Absent)</Label>
                                     <Select 
-                                        value={formData.status.toString()} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, status: Number(val) }))}
+                                        value={formData.absent} 
+                                        onValueChange={(val) => setFormData(prev => ({ ...prev, absent: val }))}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Status" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="0">Check In (0)</SelectItem>
-                                            <SelectItem value="1">Check Out (1)</SelectItem>
-                                            <SelectItem value="2">Break Out (2)</SelectItem>
-                                            <SelectItem value="3">Break In (3)</SelectItem>
-                                            <SelectItem value="4">Overtime In (4)</SelectItem>
-                                            <SelectItem value="5">Overtime Out (5)</SelectItem>
+                                            <SelectItem value="False">Present (False)</SelectItem>
+                                            <SelectItem value="True">Absent (True)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Verify Type</Label>
-                                    <Select 
-                                        value={formData.verifyType.toString()} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, verifyType: Number(val) }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Verify Type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="1">Fingerprint (1)</SelectItem>
-                                            <SelectItem value="3">Password (3)</SelectItem>
-                                            <SelectItem value="4">Card (4)</SelectItem>
-                                            <SelectItem value="15">Face (15)</SelectItem>
-                                            <SelectItem value="0">Other (0)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Device SN</Label>
+                                    <Label>Clock In Time</Label>
                                     <Input 
-                                        value={formData.deviceSn}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, deviceSn: e.target.value }))}
-                                        placeholder="e.g. MANUAL"
+                                        type="time"
+                                        value={formData.clockIn}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, clockIn: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Clock Out Time</Label>
+                                    <Input 
+                                        type="time"
+                                        value={formData.clockOut}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, clockOut: e.target.value }))}
                                     />
                                 </div>
                             </div>

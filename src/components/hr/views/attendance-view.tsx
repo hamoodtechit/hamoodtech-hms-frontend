@@ -123,33 +123,15 @@ export function AttendanceView() {
     })
    
 
-    const rawData = attendanceRes?.data
+    const rawData: any = attendanceRes?.data
     const attendanceRecords = Array.isArray(rawData) ? rawData : (rawData?.data || [])
     const meta = !Array.isArray(rawData) ? rawData?.meta : null
     
-    // Provide a map for uid to Employee Name
     const employees = employeesRes?.data || []
-    const uidToName = new Map<string | number, string>()
-    employees.forEach((e: any) => {
-        const uid = e.employeeNumber || e.id
-        uidToName.set(Number(uid), e.name)
-        uidToName.set(uid.toString(), e.name)
-    })
-
     const activeFilterCount = Object.values(filters).filter(v => !!v).length
 
     const resetFilters = () => {
         setFilters({})
-    }
-
-    const getVerifyTypeBadge = (type: number) => {
-        switch(type) {
-            case 1: return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Fingerprint</Badge>
-            case 3: return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Password</Badge>
-            case 4: return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">Card</Badge>
-            case 15: return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Face</Badge>
-            default: return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Other ({type})</Badge>
-        }
     }
 
     return (
@@ -218,9 +200,10 @@ export function AttendanceView() {
                                 <TableHeader>
                                     <TableRow className="bg-muted/50">
                                         <TableHead>Employee</TableHead>
-                                        <TableHead>Device SN</TableHead>
-                                        <TableHead>Punch Time</TableHead>
-                                        <TableHead>Verify Type</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Clock In</TableHead>
+                                        <TableHead>Clock Out</TableHead>
+                                        <TableHead>Work / Late / OT</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="w-[80px] text-right">Actions</TableHead>
                                     </TableRow>
@@ -248,31 +231,56 @@ export function AttendanceView() {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-semibold text-sm leading-tight hover:text-primary cursor-pointer transition-colors">
-                                                                {uidToName.get(record.uid) || "Unknown Employee"}
+                                                                {record.employeeName || "Unknown Employee"}
                                                             </span>
                                                             <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                                                                UID: {record.uid}
+                                                                ID: {record.employeeNumber || record.employeeId || "N/A"}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-medium text-xs">
-                                                    {record.deviceSn}
-                                                </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                        {format(new Date(record.punchTime), "dd MMM yyyy, hh:mm a")}
+                                                        {record.date ? format(new Date(record.date), "dd MMM yyyy") : "N/A"}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getVerifyTypeBadge(record.verifyType)}
+                                                    <div className="flex items-center gap-1.5 font-medium">
+                                                        <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                                                        {record.clockIn || "--:--"}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {record.isDuplicate ? (
-                                                        <Badge variant="outline" className="text-gray-400 bg-gray-50 border-gray-200">Duplicate</Badge>
+                                                    <div className="flex items-center gap-1.5 font-medium">
+                                                        <Clock className="h-3.5 w-3.5 text-rose-500" />
+                                                        {record.clockOut || "--:--"}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col gap-1">
+                                                        {record.workTime !== "0" && record.workTime && (
+                                                            <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">
+                                                                Work: {record.workTime}m
+                                                            </span>
+                                                        )}
+                                                        {record.late !== "0" && record.late && (
+                                                            <span className="text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full w-fit">
+                                                                Late: {record.late}m
+                                                            </span>
+                                                        )}
+                                                        {record.otTime !== "0" && record.otTime && (
+                                                            <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full w-fit">
+                                                                OT: {record.otTime}m
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {record.absent === "True" ? (
+                                                        <Badge variant="destructive" className="uppercase text-[10px] tracking-wider px-2">Absent</Badge>
                                                     ) : (
-                                                        <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">Valid</Badge>
+                                                        <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 uppercase text-[10px] tracking-wider px-2">Present</Badge>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -288,6 +296,21 @@ export function AttendanceView() {
                                                                 <Info className="mr-2 h-4 w-4" />
                                                                 Details
                                                             </DropdownMenuItem>
+                                                            {hasPermission('attendance:update') && (
+                                                                <DropdownMenuItem onClick={() => handleEdit(record)}>
+                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {hasPermission('attendance:delete') && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onClick={() => handleDeleteClick(record.id)}>
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </TableCell>
