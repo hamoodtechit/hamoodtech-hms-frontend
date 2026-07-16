@@ -128,7 +128,7 @@ export function AdmissionDetailsDialog({ open, onOpenChange, admissionId }: Admi
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-black text-foreground/90">{admission.patient?.name}</span>
                                                 {admission.patient?.nameBangla && (
-                                                    <span className="text-[10px] font-bold text-primary/60 font-serif">{admission.patient.nameBangla}</span>
+                                                    <span className="text-[10px] font-bold text-primary/60 font-sans">{admission.patient.nameBangla}</span>
                                                 )}
                                             </div>
                                             <div className="text-right flex flex-col items-end">

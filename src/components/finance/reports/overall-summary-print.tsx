@@ -22,7 +22,7 @@ export function OverallSummaryPrint({ reportData, dateRange, activeBranch }: Ove
   const returns = reportData?.returns || summary?.returns
 
   return (
-    <div id="overall-summary-report" className="p-8 bg-white text-black font-serif print:p-0">
+    <div id="overall-summary-report" className="p-8 bg-white text-black font-sans print:p-0">
       {/* Header */}
       <div className="flex flex-col items-center mb-6 border-b-2 border-black pb-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}

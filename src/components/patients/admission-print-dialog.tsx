@@ -372,8 +372,8 @@ export function AdmissionPrintDialog({ open, onOpenChange, admissionId }: Admiss
 
                                 {/* Consent Section */}
                                 <div className="mt-8 text-center px-4">
-                                    <h2 className="text-2xl font-black mb-4 font-serif border-b border-black w-fit mx-auto px-4 pb-1">অনুমতি পত্র</h2>
-                                    <p className="text-justify leading-relaxed text-[15px] font-serif tracking-tight text-gray-900 border border-black/5 p-4 rounded bg-gray-50/50">
+                                    <h2 className="text-2xl font-black mb-4 font-sans border-b border-black w-fit mx-auto px-4 pb-1">অনুমতি পত্র</h2>
+                                    <p className="text-justify leading-relaxed text-[15px] font-sans tracking-tight text-gray-900 border border-black/5 p-4 rounded bg-gray-50/50">
                                         আমি প্রতিজ্ঞাপূর্বক ক্লিনিক এর সংশ্লিষ্ট চিকিৎসক দ্বারা আমার রোগীর প্রয়োজনীয় প্রাথমিক চিকিৎসা/ অজ্ঞান করা ইয়া অস্ত্র প্রয়োগ করিতে দিতেছি। ইহাতে রোগীর যদি কোন প্রকার ভালো বা মন্দ হয় তার জন্যে ক্লিনিক কর্তৃপক্ষ অথবা কতব্যরত চিকিৎসক দায়ী থাকিবে না এবং আমি বা রোগীর কোন আত্মীয় কোন প্রকার দাবি করিতে পারিবোনা।
                                         <br/><br/>
                                         আমি স্ব-জ্ঞানে এবং নিম্ন উল্লেখিত সাক্ষীর উপস্থিতিতে অত্র অঙ্গীকার পত্রে দস্তখত করিলাম।

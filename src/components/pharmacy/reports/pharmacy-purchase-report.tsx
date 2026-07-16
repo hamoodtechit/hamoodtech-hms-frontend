@@ -72,7 +72,7 @@ export function PharmacyPurchaseReport({ data, dateRange, activeBranch }: Purcha
   }
 
   return (
-    <div id="pharmacy-purchase-report" className="p-8 bg-white text-black font-serif print:p-0">
+    <div id="pharmacy-purchase-report" className="p-8 bg-white text-black font-sans print:p-0">
       {/* Header */}
       <div className="flex flex-col items-center mb-6">
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
