@@ -116,11 +116,11 @@ export function useDeleteAdmission() {
   });
 }
 
-export function useDischargeInitiate(patientId: string) {
+export function useDischargeInitiate(patientId: string, enabled: boolean = true) {
   return useQuery({
     queryKey: [...PATIENT_KEYS.admissions, "discharge-initiate", patientId],
     queryFn: () => patientService.dischargeInitiate(patientId),
-    enabled: !!patientId,
+    enabled: !!patientId && enabled,
   });
 }
 

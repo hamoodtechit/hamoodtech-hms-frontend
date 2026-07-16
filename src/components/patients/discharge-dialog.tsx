@@ -99,7 +99,7 @@ function BillItemRow({ bill }: { bill: any; refetch: () => void }) {
 
 export function DischargeDialog({ open, onOpenChange, admission, onSuccess }: DischargeDialogProps) {
     const { activeStoreId } = useStoreContext()
-    const { data: res, isLoading, isError, refetch: refetchDischarge } = useDischargeInitiate(admission?.patientId || "")
+    const { data: res, isLoading, isError, refetch: refetchDischarge } = useDischargeInitiate(admission?.patientId || "", open)
     const { mutate: completeDischarge, isPending: isCompleting } = useCompleteDischarge()
     const { data: accountsRes } = useFinanceAccounts({ branchId: activeStoreId, group: 'hospital', isActive: true, limit: 100 })
     const accounts = useMemo(() => accountsRes?.data || [], [accountsRes])

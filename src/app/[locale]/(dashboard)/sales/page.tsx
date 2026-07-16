@@ -575,7 +575,7 @@ export default function SalesHistoryPage() {
                           </TableCell>
                           <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                           <TableCell>
-                            {format(new Date(sale.createdAt), "MMM dd, yyyy HH:mm")}
+                            {format(new Date(sale.createdAt), "MMM dd, yyyy hh:mm a")}
                           </TableCell>
                           <TableCell>
                             <Badge 

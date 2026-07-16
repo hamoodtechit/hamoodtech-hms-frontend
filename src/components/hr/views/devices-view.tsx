@@ -39,7 +39,7 @@ export function DevicesView() {
     const { data: devicesRes, isLoading } = useDevices()
     const triggerSyncMutation = useTriggerDeviceSync()
 
-    const devices: Device[] = devicesRes?.data || []
+    const devices: Device[] = Array.isArray(devicesRes?.data) ? devicesRes.data : []
 
     const handleTriggerSync = async (sn: string) => {
         try {
