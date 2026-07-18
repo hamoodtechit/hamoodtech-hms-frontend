@@ -477,6 +477,7 @@ export function DiagnosticBillingForm({
                                         }))}
                                         placeholder="Enter Service Code or Name..."
                                         showAll={false}
+                                        keepOpenOnSelect
                                     />
                                 </div>
                             </div>
