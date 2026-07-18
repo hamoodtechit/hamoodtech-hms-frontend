@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 interface SearchableSelectProps {
     value?: string
@@ -33,6 +33,7 @@ interface SearchableSelectProps {
     allLabel?: string
     showAll?: boolean
     disabled?: boolean
+    keepOpenOnSelect?: boolean
 }
 
 export function SearchableSelect({
@@ -49,10 +50,13 @@ export function SearchableSelect({
     className,
     allLabel = "All",
     showAll = true,
-    disabled = false
+    disabled = false,
+    keepOpenOnSelect = false
 }: SearchableSelectProps) {
     const [open, setOpen] = useState(false)
     const [selectedLabel, setSelectedLabel] = useState("")
+    const [searchText, setSearchText] = useState("")
+    const inputRef = useRef<HTMLInputElement>(null)
 
     const selectedOption = options.find((opt) => opt.id === value)
     const displayLabel = selectedOption?.name || selectedLabel || (showAll && !value ? allLabel : placeholder)
@@ -74,8 +78,13 @@ export function SearchableSelect({
             <PopoverContent className="w-[250px] p-0" align="start">
                 <Command shouldFilter={!onSearchChange}>
                     <CommandInput 
+                        ref={inputRef}
                         placeholder={searchPlaceholder} 
-                        onValueChange={onSearchChange}
+                        value={searchText}
+                        onValueChange={(val) => {
+                            setSearchText(val)
+                            onSearchChange?.(val)
+                        }}
                     />
                     {onAddClick && (
                         <div className="border-b p-1">
@@ -123,7 +132,13 @@ export function SearchableSelect({
                                                 if (opt.disabled) return
                                                 onChange(opt.id)
                                                 setSelectedLabel(opt.name)
-                                                setOpen(false)
+                                                if (keepOpenOnSelect) {
+                                                    // Clear search and refocus for rapid entry
+                                                    setSearchText("")
+                                                    setTimeout(() => inputRef.current?.focus(), 0)
+                                                } else {
+                                                    setOpen(false)
+                                                }
                                             }}
                                             className={cn(
                                                 opt.disabled && "opacity-50 cursor-not-allowed grayscale"
