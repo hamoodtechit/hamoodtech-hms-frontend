@@ -987,29 +987,16 @@ export function DiagnosticBillingForm({
             />
 
             <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-                <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[3rem]">
-                    <DialogHeader className="p-8 border-b bg-muted/30">
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="space-y-1">
-                                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2 capitalize">
-                                    <History className="h-6 w-6 text-primary" />
-                                    {type} Audit Logs
-                                </DialogTitle>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em]">Financial Transaction History & Retrieval</p>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => setHistoryOpen(false)} className="rounded-full h-10 w-10 bg-muted/50 transition-transform active:scale-75">
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-hidden flex flex-col p-8 pt-0 gap-6">
+                <DialogContent className="sm:max-w-7xl md:max-w-[85vw] lg:max-w-[75vw] w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-4 border-none shadow-2xl rounded-[2rem]">
+                    <DialogTitle className="sr-only">{type} Audit Logs</DialogTitle>
+                    <div className="flex-1 overflow-hidden flex flex-col gap-4">
                         {/* Audit Filters */}
-                        <div className="flex items-center justify-between gap-4 p-4 bg-muted/10 rounded-3xl border border-border/30">
+                        <div className="flex items-center justify-between gap-3 p-3 bg-muted/10 rounded-[1.5rem] border border-border/30">
                             <div className="relative flex-1 min-w-60">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
                                     placeholder="Search invoice or patient..." 
-                                    className="pl-10 h-11 bg-background rounded-2xl border-none shadow-sm"
+                                    className="pl-10 h-11 bg-background rounded-xl border-none shadow-sm"
                                     value={modalSearch}
                                     onChange={(e) => setModalSearch(e.target.value)}
                                 />
@@ -1096,6 +1083,9 @@ export function DiagnosticBillingForm({
                                         </div>
                                     </PopoverContent>
                                 </Popover>
+                                <Button variant="ghost" size="icon" onClick={() => setHistoryOpen(false)} className="rounded-xl h-11 w-11 bg-background hover:bg-rose-500/10 hover:text-rose-500 shadow-sm border border-border/50 transition-colors">
+                                    <X className="h-5 w-5" />
+                                </Button>
                             </div>
                         </div>
 
