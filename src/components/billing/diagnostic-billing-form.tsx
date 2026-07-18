@@ -463,8 +463,13 @@ export function DiagnosticBillingForm({
                                     <SearchableSelect 
                                         value={selectedTestId}
                                         onChange={(val) => {
-                                            setSelectedTestId(val)
-                                            if (val) handleAddTest(val)
+                                            if (val) {
+                                                handleAddTest(val)
+                                                // Clear selection immediately so search resets for next item
+                                                setTimeout(() => setSelectedTestId(""), 0)
+                                            } else {
+                                                setSelectedTestId(val)
+                                            }
                                         }}
                                         options={allTests.map(t => ({ 
                                             id: t.id, 
