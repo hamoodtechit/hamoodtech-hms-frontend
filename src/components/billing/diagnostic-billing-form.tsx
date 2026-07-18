@@ -71,7 +71,9 @@ import {
     Microscope,
     Radiation,
     Loader2,
-    ShoppingCart
+    ShoppingCart,
+    Zap,
+    Siren
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useMemo } from "react"
@@ -402,18 +404,27 @@ export function DiagnosticBillingForm({
     }
 
     return (
-        <div className="flex flex-col gap-4 p-4 lg:p-6 min-h-[calc(100vh-64px)] bg-muted/10 pb-12">
+        <div className="flex flex-col gap-3 p-4 lg:p-5 min-h-[calc(100vh-64px)] bg-muted/10 pb-12">
             {/* Header Suite */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
                     <div className={cn(
-                        "h-12 w-12 rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 animate-pulse-subtle",
-                        type === 'pathology' ? "bg-indigo-600" : "bg-emerald-600"
+                        "h-10 w-10 rounded-xl flex items-center justify-center shadow-lg",
+                        type === 'emergency' ? "bg-gradient-to-br from-amber-500 to-rose-500 shadow-rose-500/20" :
+                        type === 'pathology' ? "bg-indigo-600 shadow-indigo-600/20" : "bg-emerald-600 shadow-emerald-600/20"
                     )}>
-                        {type === 'pathology' ? <Microscope className="h-6 w-6 text-white" /> : <Radiation className="h-6 w-6 text-white" />}
+                        {type === 'emergency' ? <Siren className="h-5 w-5 text-white" /> :
+                         type === 'pathology' ? <Microscope className="h-5 w-5 text-white" /> : <Radiation className="h-5 w-5 text-white" />}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">{title}</h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl font-black tracking-tight text-foreground">{title}</h1>
+                            {cart.length > 0 && (
+                                <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[10px] px-2.5 py-0.5 rounded-lg tabular-nums">
+                                    {cart.length} items • {formatCurrency(total)}
+                                </Badge>
+                            )}
+                        </div>
                         <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2">
                            <LayoutGrid className="w-3 h-3 text-primary" /> {description}
                         </p>
@@ -422,17 +433,17 @@ export function DiagnosticBillingForm({
                 <Button 
                     variant="outline" 
                     size="sm" 
-                    className="gap-2 h-11 px-6 rounded-2xl border-primary/20 hover:bg-primary/5 shadow-sm font-black text-xs uppercase tracking-widest"
+                    className="gap-2 h-9 px-4 rounded-xl border-primary/20 hover:bg-primary/5 shadow-sm font-black text-[10px] uppercase tracking-widest"
                     onClick={() => setHistoryOpen(true)}
                 >
-                    <History className="h-4 w-4 text-primary" />
-                    Transaction Logs
+                    <History className="h-3.5 w-3.5 text-primary" />
+                    Logs
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 {/* Main Workflow Column */}
-                <div className="lg:col-span-8 flex flex-col gap-6">
+                <div className="lg:col-span-8 flex flex-col gap-5">
                     
 
                     {/* Procedure Inventory & Selection */}
@@ -445,8 +456,8 @@ export function DiagnosticBillingForm({
                                 {allTests.length} Valid Services
                             </Badge>
                         </CardHeader>
-                        <CardContent className="p-5 md:p-6 space-y-6">
-                            <div className="flex flex-col lg:flex-row gap-6">
+                        <CardContent className="p-5 md:p-6 space-y-5">
+                            <div className="flex flex-col lg:flex-row gap-4">
                                 <div className="flex-1 space-y-2">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search Catalog</Label>
                                     <SearchableSelect 
@@ -464,6 +475,38 @@ export function DiagnosticBillingForm({
                                     />
                                 </div>
                             </div>
+
+                            {/* Quick Access Service Chips */}
+                            {allTests.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="w-3 h-3 text-amber-500" />
+                                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Quick Add</Label>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {allTests.slice(0, 10).map(t => {
+                                            const isInCart = cart.some(item => item.testId === t.id)
+                                            return (
+                                                <button
+                                                    key={t.id}
+                                                    disabled={isInCart}
+                                                    onClick={() => handleAddTest(t.id)}
+                                                    className={cn(
+                                                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all active:scale-95",
+                                                        isInCart
+                                                            ? "bg-primary/5 border-primary/20 text-primary/40 cursor-not-allowed"
+                                                            : "bg-background border-border/50 text-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary shadow-sm hover:shadow-md"
+                                                    )}
+                                                >
+                                                    {isInCart ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                                                    <span className="truncate max-w-[120px]">{t.name}</span>
+                                                    <span className="text-[8px] font-black text-muted-foreground/50 tabular-nums">{formatCurrency(Number(t.price))}</span>
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                             {cart.length > 0 ? (
                                 <div className="rounded-[2rem] border bg-background shadow-inner max-h-[40vh] overflow-y-auto custom-scrollbar relative">
@@ -559,13 +602,13 @@ export function DiagnosticBillingForm({
                                     </Table>
                                 </div>
                             ) : (
-                                <div className="py-24 text-center border-2 border-dashed rounded-[3rem] bg-muted/5 flex flex-col items-center gap-5 group hover:bg-muted/10 transition-all">
-                                    <div className="h-16 w-16 rounded-[2rem] bg-background flex items-center justify-center border shadow-sm group-hover:scale-110 transition-transform">
-                                        <Plus className="h-7 w-7 text-muted-foreground/40" />
+                                <div className="py-10 text-center border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-4 group hover:bg-muted/10 transition-all">
+                                    <div className="h-12 w-12 rounded-2xl bg-background flex items-center justify-center border shadow-sm group-hover:scale-110 transition-transform">
+                                        <Plus className="h-6 w-6 text-muted-foreground/40" />
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Active queue is empty</p>
-                                        <p className="text-[10px] text-muted-foreground/50 font-medium italic">Pending service selection from the catalog above</p>
+                                        <p className="text-[10px] text-muted-foreground/50 font-medium italic">Search or use quick-add above to add services</p>
                                     </div>
                                 </div>
                             )}
@@ -584,11 +627,36 @@ export function DiagnosticBillingForm({
                             {/* Mini Cart / Summary List */}
                             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                                 {cart.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-3 opacity-40">
-                                        <div className="p-4 bg-muted rounded-2xl">
-                                            <ShoppingCart className="h-8 w-8" />
+                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-5 py-6">
+                                        <div className="space-y-4 w-full max-w-[200px]">
+                                            <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+                                                <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                    <Search className="w-3.5 h-3.5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-primary">Step 1</p>
+                                                    <p className="text-[9px] font-bold text-muted-foreground truncate">Search & Add Services</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30 opacity-50">
+                                                <div className="h-7 w-7 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                                                    <ShoppingCart className="w-3.5 h-3.5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-black uppercase tracking-wider">Step 2</p>
+                                                    <p className="text-[9px] font-bold text-muted-foreground truncate">Review Cart</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/30 opacity-50">
+                                                <div className="h-7 w-7 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                                                    <CreditCard className="w-3.5 h-3.5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[10px] font-black uppercase tracking-wider">Step 3</p>
+                                                    <p className="text-[9px] font-bold text-muted-foreground truncate">Finalize Payment</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest">Cart is empty</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -598,8 +666,8 @@ export function DiagnosticBillingForm({
                                             const itemTotal = item.price - itemDiscountAmount
                                             
                                             return (
-                                                <div key={item.id} className="p-3 bg-muted/20 rounded-2xl border border-border/50 group animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    <div className="flex justify-between items-start gap-3">
+                                                <div key={item.id} className="p-3 bg-muted/20 rounded-2xl border border-border/50 group animate-in fade-in slide-in-from-top-2 duration-300 hover:border-primary/20 transition-colors">
+                                                    <div className="flex justify-between items-start gap-2">
                                                         <div className="flex-1 min-w-0">
                                                             <p className="font-black text-[11px] text-foreground truncate leading-tight uppercase tracking-tight">
                                                                 {item.name}
@@ -608,11 +676,19 @@ export function DiagnosticBillingForm({
                                                                 <Clock className="w-2.5 h-2.5" /> Due: {format(new Date(item.deliveryDate), 'MMM dd')}
                                                             </p>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className="font-black text-xs text-primary">{formatCurrency(itemTotal)}</p>
-                                                            {itemDiscountAmount > 0 && (
-                                                                <p className="text-[8px] text-rose-500 font-bold">-{formatCurrency(itemDiscountAmount)}</p>
-                                                            )}
+                                                        <div className="flex items-start gap-1.5">
+                                                            <div className="text-right">
+                                                                <p className="font-black text-xs text-primary">{formatCurrency(itemTotal)}</p>
+                                                                {itemDiscountAmount > 0 && (
+                                                                    <p className="text-[8px] text-rose-500 font-bold">-{formatCurrency(itemDiscountAmount)}</p>
+                                                                )}
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleRemoveItem(item.id)}
+                                                                className="h-5 w-5 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-rose-500 hover:bg-rose-50 transition-all shrink-0 mt-0.5"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
