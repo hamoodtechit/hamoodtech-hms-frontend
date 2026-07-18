@@ -448,14 +448,6 @@ export function DiagnosticBillingForm({
 
                     {/* Procedure Inventory & Selection */}
                     <Card className="border-none  overflow-hidden rounded-[2rem]">
-                        <CardHeader className="bg-indigo-500/5 border-b p-5 flex flex-row items-center justify-between">
-                            <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700 flex items-center gap-2">
-                                <TestTube2 className="w-4 h-4" /> Lab Procedure Queue
-                            </CardTitle>
-                            <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 uppercase font-black px-3 py-0.5 rounded-lg">
-                                {allTests.length} Valid Services
-                            </Badge>
-                        </CardHeader>
                         <CardContent className="p-5 md:p-6 space-y-5">
                             <div className="flex flex-col lg:flex-row gap-4">
                                 <div className="flex-1 space-y-2">
