@@ -485,7 +485,11 @@ export interface SchedulePayload {
 }
 
 export interface ScheduleBulkPayload {
-  schedules: SchedulePayload[];
+  schedules?: SchedulePayload[];
+  uids?: (number | string)[];
+  timetableId?: number;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface ScheduleFilters {
