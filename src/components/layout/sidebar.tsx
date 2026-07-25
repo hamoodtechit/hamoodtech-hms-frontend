@@ -449,6 +449,7 @@ export function Sidebar() {
               href: "/settings/audit-logs",
               module: "settings",
               permission: "settings:read",
+              roles: ["Super Admin"],
             },
             {
                 label: "Communication",
