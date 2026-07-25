@@ -28,16 +28,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { ScheduleBulkPayload } from "@/types/hr"
 import { useCreateBulkSchedules, useEmployees, useShifts } from "@/hooks/hr-queries"
 import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import { addDays, differenceInDays, format } from "date-fns"
+import { Loader2, X } from "lucide-react"
+import { differenceInDays } from "date-fns"
 import { SearchableSelect } from "@/components/shared/searchable-select"
 
 const assignmentSchema = z.object({
-    employeeId: z.string().min(1, "Employee is required"),
+    employeeIds: z.array(z.string()).min(1, "At least one employee is required"),
     timetableId: z.string().min(1, "Shift is required"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
@@ -66,7 +67,6 @@ export function AssignmentDialog({
     const { data: employeesRes } = useEmployees({ branchId, limit: 200 })
     const { data: shiftsRes } = useShifts({ limit: 100 })
 
-    // Helper to robustly extract an array from various API response structures
     const getArrayData = (res: any) => {
         if (Array.isArray(res?.data?.data)) return res.data.data
         if (Array.isArray(res?.data)) return res.data
@@ -79,7 +79,7 @@ export function AssignmentDialog({
     const form = useForm<AssignmentFormValues>({
         resolver: zodResolver(assignmentSchema),
         defaultValues: {
-            employeeId: "",
+            employeeIds: [],
             timetableId: "",
             startDate: initialDate || "",
             endDate: initialDate || "",
@@ -89,7 +89,7 @@ export function AssignmentDialog({
     useEffect(() => {
         if (open) {
             form.reset({
-                employeeId: "",
+                employeeIds: [],
                 timetableId: "",
                 startDate: initialDate || "",
                 endDate: initialDate || "",
@@ -98,45 +98,43 @@ export function AssignmentDialog({
     }, [open, initialDate, form])
 
     const onSubmit = async (values: AssignmentFormValues) => {
-        const emp = employees.find((e: any) => e.id === values.employeeId)
-        if (!emp) {
-            toast.error("Employee not found")
-            return
-        }
-        
-        // Parse the uid from employeeNumber
-        const uidStr = emp.employeeNumber || emp.id
-        const uid = Number(uidStr)
+        const selectedUids: number[] = []
 
-        if (isNaN(uid)) {
-            toast.error("Invalid Employee ID for attendance system")
+        for (const empId of values.employeeIds) {
+            const emp = employees.find((e: any) => e.id === empId)
+            if (emp) {
+                const uidStr = emp.employeeNumber || emp.id
+                const uid = Number(uidStr)
+                if (!isNaN(uid)) {
+                    selectedUids.push(uid)
+                }
+            }
+        }
+
+        if (selectedUids.length === 0) {
+            toast.error("No valid employees selected.")
             return
         }
 
         const start = new Date(values.startDate)
         const end = new Date(values.endDate)
         const diff = differenceInDays(end, start)
-        const schedules = []
 
         if (diff < 0) {
             toast.error("End date cannot be before start date")
             return
         }
 
-        for (let i = 0; i <= diff; i++) {
-            const d = addDays(start, i)
-            schedules.push({
-                uid,
-                timetableId: Number(values.timetableId),
-                scheduleDate: format(d, 'yyyy-MM-dd')
-            })
+        const payload: ScheduleBulkPayload = {
+            uids: selectedUids,
+            timetableId: Number(values.timetableId),
+            dateFrom: values.startDate,
+            dateTo: values.endDate
         }
-
-        const payload: ScheduleBulkPayload = { schedules }
 
         try {
             await createMutation.mutateAsync(payload)
-            toast.success(`Employee assigned successfully for ${schedules.length} days`)
+            toast.success(`Schedule assigned successfully for ${selectedUids.length} employees`)
             onSuccess?.()
             onOpenChange(false)
         } catch {
@@ -146,40 +144,70 @@ export function AssignmentDialog({
 
     const isLoading = createMutation.isPending
 
+    const removeEmployee = (idToRemove: string) => {
+        const currentIds = form.getValues("employeeIds")
+        form.setValue("employeeIds", currentIds.filter(id => id !== idToRemove), { shouldValidate: true })
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Assign Shift Roster</DialogTitle>
                     <DialogDescription>
-                        Schedule an employee to a shift template at a specific location.
+                        Schedule employees to a shift template at a specific location.
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="employeeId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Employee *</FormLabel>
-                                        <FormControl>
+                        <FormField
+                            control={form.control}
+                            name="employeeIds"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Employees *</FormLabel>
+                                    <FormControl>
+                                        <div className="space-y-2">
                                             <SearchableSelect
-                                                value={field.value}
-                                                onChange={field.onChange}
+                                                value=""
+                                                onChange={(val) => {
+                                                    if (!val) return
+                                                    const current = field.value || []
+                                                    if (!current.includes(val)) {
+                                                        field.onChange([...current, val])
+                                                    }
+                                                }}
                                                 options={(employees || []).map((emp: any) => ({
                                                     id: emp.id,
                                                     name: emp.name
                                                 }))}
-                                                placeholder="Select Employee"
+                                                placeholder="Search and select employees"
                                                 showAll={false}
                                             />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                            {field.value && field.value.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 pt-2">
+                                                    {field.value.map(id => {
+                                                        const emp = employees.find((e: any) => e.id === id)
+                                                        return (
+                                                            <Badge key={id} variant="secondary" className="flex items-center gap-1">
+                                                                {emp?.name || "Unknown"}
+                                                                <X
+                                                                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                                                    onClick={() => removeEmployee(id)}
+                                                                />
+                                                            </Badge>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        
+                        <div className="grid grid-cols-1 gap-4">
                             <FormField
                                 control={form.control}
                                 name="timetableId"
@@ -205,7 +233,6 @@ export function AssignmentDialog({
                                 )}
                             />
                         </div>
-
 
                         <div className="grid grid-cols-2 gap-4">
                             <FormField
@@ -245,7 +272,7 @@ export function AssignmentDialog({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading}>
+                            <Button type="submit" disabled={isLoading || form.getValues("employeeIds").length === 0}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Assign Employee
                             </Button>
