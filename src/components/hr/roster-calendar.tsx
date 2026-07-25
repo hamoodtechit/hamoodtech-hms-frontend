@@ -108,7 +108,7 @@ export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSl
 
             for (const sch of prevMonthSchedules) {
                 const newDate = addMonths(new Date(sch.scheduleDate), 1)
-                bulkPayload.schedules.push({
+                bulkPayload.schedules!.push({
                     uid: Number(sch.uid),
                     timetableId: Number(sch.timetableId),
                     scheduleDate: format(newDate, 'yyyy-MM-dd')
@@ -116,7 +116,7 @@ export function RosterCalendar({ schedules, employees, onSelectEvent, onSelectSl
             }
 
             await createMutation.mutateAsync(bulkPayload)
-            toast.success(`Successfully cloned ${bulkPayload.schedules.length} schedules.`)
+            toast.success(`Successfully cloned ${bulkPayload.schedules!.length} schedules.`)
         } catch (error) {
             toast.error(`Failed to clone schedules.`)
         }
