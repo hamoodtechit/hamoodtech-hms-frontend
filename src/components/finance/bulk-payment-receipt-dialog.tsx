@@ -3,10 +3,10 @@
 
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useCurrency } from "@/hooks/use-currency"
@@ -16,381 +16,382 @@ import { useAuthStore } from "@/store/use-auth-store"
 import { Printer, X } from "lucide-react"
 
 function numberToWords(num: number): string {
-  if (num === 0) return "ZERO";
-  const a = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
-  const b = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
-  const inWords = (n: number): string => {
-    if (n < 20) return a[n];
-    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
-    if (n < 1000) return a[Math.floor(n / 100)] + " HUNDRED" + (n % 100 !== 0 ? " " + inWords(n % 100) : "");
-    if (n < 100000) return inWords(Math.floor(n / 1000)) + " THOUSAND" + (n % 1000 !== 0 ? " " + inWords(n % 1000) : "");
-    if (n < 10000000) return inWords(Math.floor(n / 100000)) + " LAKH" + (n % 100000 !== 0 ? " " + inWords(n % 100000) : "");
-    return inWords(Math.floor(n / 10000000)) + " CRORE" + (n % 10000000 !== 0 ? " " + inWords(n % 10000000) : "");
-  };
-  return inWords(Math.floor(num));
+    if (num === 0) return "ZERO";
+    const a = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
+    const b = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
+    const inWords = (n: number): string => {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
+        if (n < 1000) return a[Math.floor(n / 100)] + " HUNDRED" + (n % 100 !== 0 ? " " + inWords(n % 100) : "");
+        if (n < 100000) return inWords(Math.floor(n / 1000)) + " THOUSAND" + (n % 1000 !== 0 ? " " + inWords(n % 1000) : "");
+        if (n < 10000000) return inWords(Math.floor(n / 100000)) + " LAKH" + (n % 100000 !== 0 ? " " + inWords(n % 100000) : "");
+        return inWords(Math.floor(n / 10000000)) + " CRORE" + (n % 10000000 !== 0 ? " " + inWords(n % 10000000) : "");
+    };
+    return inWords(Math.floor(num));
 }
 
 interface BulkPaymentReceiptDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  data: any
-  patientName: string
-  patientUhid?: string
-  isPharmacy?: boolean
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    data: any
+    patientName: string
+    patientUhid?: string
+    isPharmacy?: boolean
 }
 
 export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName, patientUhid, isPharmacy = false }: BulkPaymentReceiptDialogProps) {
-  const { stores, activeStoreId } = useStoreContext()
-  const { general } = useSettingsStore()
-  const { formatCurrency } = useCurrency()
-  const { user } = useAuthStore()
-  const activeBranch = stores.find(s => s.id === activeStoreId) || stores[0]
+    const { stores, activeStoreId } = useStoreContext()
+    const { general } = useSettingsStore()
+    const { formatCurrency } = useCurrency()
+    const { user } = useAuthStore()
+    const activeBranch = stores.find(s => s.id === activeStoreId) || stores[0]
 
-  if (!data) return null
+    if (!data) return null
 
-  const paymentData = data?.data || data || {}
-  const paidSales = paymentData.updatedSales || paymentData.paidSales || []
-  
-  const transactions = paymentData.transactions || []
-  const txnNotes = [...new Set(transactions.map((t: any) => t.note).filter(Boolean))]
-  // Priority: 1) Note typed in payment dialog, 2) Original bill remarks from sale creation, 3) Auto-generated txn notes
-  const saleNotes = [...new Set(paidSales.map((s: any) => s.saleNote || s.note).filter(Boolean))]
-  const combinedNote = paymentData.note || (saleNotes.length > 0 ? saleNotes.join(" | ") : (txnNotes.length > 0 ? txnNotes.join(" | ") : ""))
+    const paymentData = data?.data || data || {}
+    const paidSales = paymentData.updatedSales || paymentData.paidSales || []
 
-  const txnMethods = [...new Set(transactions.map((t: any) => t.paymentMethod).filter(Boolean))]
-  const derivedPaymentMethod = txnMethods.length > 0 ? txnMethods.join(" / ") : paymentData.paymentMethod
-  const firstPatient = paidSales[0]?.patient
-  const derivedPatientUhid = patientUhid && patientUhid !== "N/A" ? patientUhid : (firstPatient?.uhid || firstPatient?.patientNumber || "N/A")
-  const derivedPatientName = patientName && patientName !== "N/A" ? patientName : (firstPatient?.name || "N/A")
+    const transactions = paymentData.transactions || []
+    const txnNotes = [...new Set(transactions.map((t: any) => t.note).filter(Boolean))]
+    // Priority: 1) Note typed in payment dialog, 2) Original bill remarks from sale creation, 3) Auto-generated txn notes
+    const saleNotes = [...new Set(paidSales.map((s: any) => s.saleNote || s.note).filter(Boolean))]
+    const combinedNote = paymentData.note || (saleNotes.length > 0 ? saleNotes.join(" | ") : (txnNotes.length > 0 ? txnNotes.join(" | ") : ""))
 
-  const totalPaid = paymentData.totalCollected !== undefined 
-      ? Number(paymentData.totalCollected) 
-      : paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
-  
-  const date = new Date().toISOString()
-  const amountInWords = numberToWords(totalPaid) + " TAKA ONLY"
-  
-  const branchLogo = activeBranch?.logoUrl || "/Logo.png"
-  const hospitalName = general?.hospitalName || activeBranch?.name || "HOSPITAL"
-  const address = general?.address || activeBranch?.address || "Hospital Address"
-  const phone = general?.phone || activeBranch?.phone || "Hospital Phone"
-  const email = general?.email || activeBranch?.email || ""
+    const txnMethods = [...new Set(transactions.map((t: any) => t.paymentMethod).filter(Boolean))]
+    const derivedPaymentMethod = txnMethods.length > 0 ? txnMethods.join(" / ") : paymentData.paymentMethod
+    const firstPatient = paidSales[0]?.patient
+    const derivedPatientUhid = patientUhid && patientUhid !== "N/A" ? patientUhid : (firstPatient?.uhid || firstPatient?.patientNumber || "N/A")
+    const derivedPatientName = patientName && patientName !== "N/A" ? patientName : (firstPatient?.name || "N/A")
 
-  // --- A4 HOSPITAL LAYOUT ---
-  const ReceiptContentA4 = ({ copyTitle }: { copyTitle: string }) => (
-    <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
-        <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
+    const totalPaid = paymentData.totalCollected !== undefined
+        ? Number(paymentData.totalCollected)
+        : paidSales.reduce((sum: number, sale: any) => sum + Number(sale.paidAmount || 0), 0)
 
-        {/* PAID/DUE Stamps */}
-        <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
-            <div className="text-[80px] font-black uppercase text-green-600 -rotate-[25deg] border-[8px] border-green-600 px-8 py-2 rounded-[20px] tracking-[10px]">
-                PAID
-            </div>
-        </div>
+    const date = new Date().toISOString()
+    const amountInWords = numberToWords(totalPaid) + " TAKA ONLY"
 
-        {/* Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
-             <div className="flex justify-center" style={{ marginBottom: '2px' }}>
-                 <img src={branchLogo} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
-             </div>
-            <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{hospitalName}</h1>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{address}</p>
-            <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {phone}</p>
-            {email && (
-                <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {email}</p>
-            )}
-            
-            <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
-                {activeBranch?.licenseNumber && <span>License No: {activeBranch?.licenseNumber}</span>}
-                {activeBranch?.taxRegistration && <span>TX Registration No: {activeBranch?.taxRegistration}</span>}
-            </div>
+    const branchLogo = activeBranch?.logoUrl || "/Logo.png"
+    const hospitalName = general?.hospitalName || activeBranch?.name || "HOSPITAL"
+    const address = general?.address || activeBranch?.address || "Hospital Address"
+    const phone = general?.phone || activeBranch?.phone || "Hospital Phone"
+    const email = general?.email || activeBranch?.email || ""
 
-            <div className="mt-2 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
-                {copyTitle}
-            </div>
-        </div>
+    // --- A4 HOSPITAL LAYOUT ---
+    const ReceiptContentA4 = ({ copyTitle }: { copyTitle: string }) => (
+        <div className="relative p-2 md:p-4 pt-[5mm] md:pt-[10mm] flex-1 flex flex-col z-10 w-full mb-0 pb-8 print:mb-0 print:pb-0 text-black">
+            <div className="relative border border-black p-4 text-[12px] font-medium font-sans w-full flex-1 flex flex-col bg-white text-black">
 
-        {/* Info Table Box */}
-        <div className="border border-black mb-2 relative z-10 mt-2 text-[13px]">
-            <div className="grid grid-cols-2 border-b border-black">
-                <div className="p-1 px-3 border-r border-black font-bold flex items-center">
-                    UHID : {derivedPatientUhid}
+                {/* PAID/DUE Stamps */}
+                <div className="absolute top-[20%] right-[10%] pointer-events-none z-0 opacity-[0.15]">
+                    <div className="text-[80px] font-black uppercase text-green-600 -rotate-[25deg] border-[8px] border-green-600 px-8 py-2 rounded-[20px] tracking-[10px]">
+                        PAID
+                    </div>
                 </div>
-                <div className="p-1 px-3 flex items-center font-bold">
-                    <span>Patient : {derivedPatientName}</span>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex flex-wrap items-center">
-                    <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
-                </div>
-            </div>
-            <div className="grid grid-cols-1 border-b border-black">
-                <div className="p-1 px-3 font-bold flex items-center">
-                    <span className="shrink-0 w-32">Payment Mode :</span>
-                    <span className="uppercase text-[12px]">{derivedPaymentMethod || "CASH"}</span>
-                </div>
-            </div>
-        </div>
 
-        {/* Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2 text-[13px]">
-            <thead>
-                <tr style={{ borderBottom: '2px solid black' }} className="font-black">
-                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Invoice No</th>
-                    <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items Details</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amt Paid</th>
-                    <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rem. Due</th>
-                </tr>
-            </thead>
-            <tbody>
-                {paidSales.map((sale: any, idx: number) => {
-                    return (
-                        <tr key={idx} style={{ borderBottom: '1px dashed #ccc' }}>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '700', verticalAlign: 'top' }}>{sale.invoiceNumber}</td>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '600', color: '#222' }}>
-                                {sale.saleItems && sale.saleItems.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                        {sale.saleItems.map((item: any, i: number) => (
-                                            <div key={i}>
-                                                <span style={{ fontWeight: '900', color: 'black', fontSize: '13px' }}>{item.itemName}</span>
-                                                <span style={{ marginLeft: '4px', fontSize: '11px' }}>({Number(item.price).toFixed(2)} ৳ {Number(item.quantity) > 1 ? `x ${item.quantity}` : ''})</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    'Bulk Settlement'
-                                )}
-                            </td>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top' }}>{Number(sale.paidAmount).toFixed(2)}</td>
-                            <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top', color: '#dc2626' }}>{sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
+                {/* Header */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="text-center mb-1 relative z-10">
+                    <div className="flex justify-center" style={{ marginBottom: '2px' }}>
+                        <img src={branchLogo} alt="Logo" style={{ height: '60px', width: 'auto', display: 'block', margin: '0 auto' }} />
+                    </div>
+                    <h1 style={{ margin: '0', padding: '0', fontSize: '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{hospitalName}</h1>
+                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>{address}</p>
+                    <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Ph: {phone}</p>
+                    {email && (
+                        <p style={{ margin: '0', padding: '0', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' }}>Email: {email}</p>
+                    )}
+
+                    <div className="flex justify-center gap-6 text-[11px] font-bold uppercase mt-1">
+                        {activeBranch?.licenseNumber && <span>License No: {activeBranch?.licenseNumber}</span>}
+                        {activeBranch?.taxRegistration && <span>TX Registration No: {activeBranch?.taxRegistration}</span>}
+                    </div>
+
+                    <div className="mt-2 inline-block border border-black rounded-full px-6 py-1 font-bold tracking-wider relative bg-gray-100/50">
+                        {copyTitle}
+                    </div>
+                </div>
+
+                {/* Info Table Box */}
+                <div className="border border-black mb-2 relative z-10 mt-2 text-[13px]">
+                    <div className="grid grid-cols-2 border-b border-black">
+                        <div className="p-1 px-3 border-r border-black font-bold flex items-center">
+                            UHID : {derivedPatientUhid}
+                        </div>
+                        <div className="p-1 px-3 flex items-center font-bold">
+                            <span>Patient : {derivedPatientName}</span>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 border-b border-black">
+                        <div className="p-1 px-3 font-bold flex flex-wrap items-center">
+                            <span className="w-12">Date</span> <span className="mr-2">:</span> {new Date(date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 border-b border-black">
+                        <div className="p-1 px-3 font-bold flex items-center">
+                            <span className="shrink-0 w-32">Payment Mode :</span>
+                            <span className="uppercase text-[12px]">{derivedPaymentMethod || "CASH"}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse' }} className="relative z-10 mb-2 text-[13px]">
+                    <thead>
+                        <tr style={{ borderBottom: '2px solid black' }} className="font-black">
+                            <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Invoice No</th>
+                            <th style={{ textAlign: 'left', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items Details</th>
+                            <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amt Paid</th>
+                            <th style={{ textAlign: 'right', padding: '6px 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rem. Due</th>
                         </tr>
-                    )
-                })}
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        {paidSales.map((sale: any, idx: number) => {
+                            return (
+                                <tr key={idx} style={{ borderBottom: '1px dashed #ccc' }}>
+                                    <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '700', verticalAlign: 'top' }}>{sale.invoiceNumber}</td>
+                                    <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '600', color: '#222' }}>
+                                        {sale.saleItems && sale.saleItems.length > 0 ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                {sale.saleItems.map((item: any, i: number) => (
+                                                    <div key={i}>
+                                                        <span style={{ fontWeight: '900', color: 'black', fontSize: '13px' }}>{item.itemName}</span>
+                                                        <span style={{ marginLeft: '4px', fontSize: '11px' }}>({Number(item.price).toFixed(2)} ৳ {Number(item.quantity) > 1 ? `x ${item.quantity}` : ''})</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            'Bulk Settlement'
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top' }}>{Number(sale.paidAmount).toFixed(2)}</td>
+                                    <td style={{ padding: '6px 4px', fontSize: '11px', fontWeight: '900', textAlign: 'right', verticalAlign: 'top', color: '#dc2626' }}>{sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
 
-        {/* Financial Settlement */}
-        <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
-            <div className="pt-2 pl-4">
-            </div>
-            <div className="w-[300px]">
-                {paymentData.totalDueAmount !== undefined && (
-                    <div className="flex justify-between py-1 px-2 font-bold mt-1 text-[12px]" style={{ color: '#444', borderBottom: '1px solid #eee' }}>
-                        <span>Prior Due Amount:</span>
-                        <span>{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
+                {/* Financial Settlement */}
+                <div className="flex justify-between items-start mt-2 mb-4 relative z-10 text-[13px]">
+                    <div className="pt-2 pl-4">
+                    </div>
+                    <div className="w-[300px]">
+                        {paymentData.totalDueAmount !== undefined && (
+                            <div className="flex justify-between py-1 px-2 font-bold mt-1 text-[12px]" style={{ color: '#444', borderBottom: '1px solid #eee' }}>
+                                <span>Prior Due Amount:</span>
+                                <span>{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between py-1 px-2 font-black text-[14px] mt-1" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
+                            <span>Paid Amount:</span>
+                            <span>{totalPaid.toFixed(2)} ৳</span>
+                        </div>
+                        {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
+                            <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
+                                <span>Total Discount:</span>
+                                <span>{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
+                            </div>
+                        )}
+                        {paymentData.totalDueAmount !== undefined && (
+                            <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#b91c1c', borderBottom: '1px solid #ccc' }}>
+                                <span>Remaining Due:</span>
+                                <span>{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
+                            </div>
+                        )}
+                        {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
+                            <div className="flex justify-between py-1 px-2 font-black mt-1" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
+                                <span>Advance Balance Added:</span>
+                                <span>{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* In Words */}
+                <div className="mt-2 px-8 relative z-10">
+                    <div className="border border-black p-2 bg-gray-50/50 font-black text-[12px]">
+                        <span className="uppercase opacity-50">In Words: </span>
+                        <span className="uppercase">{amountInWords}</span>
+                    </div>
+                </div>
+
+                {/* Remarks */}
+                {combinedNote && (
+                    <div className="mt-2 px-8 relative z-10">
+                        <div className="border border-black border-dashed p-2 bg-gray-50/30 font-bold text-[12px]">
+                            <span className="uppercase opacity-50 font-black">Remarks: </span>
+                            <span className="italic uppercase">{combinedNote}</span>
+                        </div>
                     </div>
                 )}
-                <div className="flex justify-between py-1 px-2 font-black text-[14px] mt-1" style={{ color: 'black', border: '1px solid black', backgroundColor: '#f3f4f6' }}>
-                    <span>Paid Amount:</span>
-                    <span>{totalPaid.toFixed(2)} ৳</span>
-                </div>
-                {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
-                    <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
-                        <span>Total Discount:</span>
-                        <span>{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
+
+                {/* Signature */}
+                <div className="mt-12 flex justify-between px-8 relative z-10">
+                    <div className="text-center space-y-1">
+                        <div className="border-t border-black w-48 mx-auto"></div>
+                        <span className="text-[12px] font-black uppercase">Prepared By</span>
+                        <p className="text-[10px] font-bold text-black italic">{paymentData.createdBy || user?.fullName || 'Staff'}</p>
                     </div>
-                )}
-                {paymentData.totalDueAmount !== undefined && (
-                    <div className="flex justify-between py-1 px-2 font-black mt-1 text-[13px]" style={{ color: '#b91c1c', borderBottom: '1px solid #ccc' }}>
-                        <span>Remaining Due:</span>
-                        <span>{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
+                    <div className="text-center space-y-1">
+                        <div className="border-t border-black w-48 mx-auto"></div>
+                        <span className="text-[12px] font-black uppercase">Authorized By</span>
                     </div>
-                )}
-                {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
-                <div className="flex justify-between py-1 px-2 font-black mt-1" style={{ color: '#15803d', borderBottom: '1px solid #ccc' }}>
-                    <span>Advance Balance Added:</span>
-                    <span>{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
                 </div>
-                )}
-            </div>
-        </div>
 
-        {/* In Words */}
-        <div className="mt-2 px-8 relative z-10">
-            <div className="border border-black p-2 bg-gray-50/50 font-black text-[12px]">
-                <span className="uppercase opacity-50">In Words: </span>
-                <span className="uppercase">{amountInWords}</span>
-            </div>
-        </div>
-
-        {/* Remarks */}
-        {combinedNote && (
-            <div className="mt-2 px-8 relative z-10">
-                <div className="border border-black border-dashed p-2 bg-gray-50/30 font-bold text-[12px]">
-                    <span className="uppercase opacity-50 font-black">Remarks: </span>
-                    <span className="italic uppercase">{combinedNote}</span>
+                <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
+                    <span>*Powered by HamoodTech</span>
+                    <span>Printed: {new Date().toLocaleString('en-GB')}</span>
                 </div>
             </div>
-        )}
-
-        {/* Signature */}
-        <div className="mt-12 flex justify-between px-8 relative z-10">
-            <div className="text-center space-y-1">
-                <div className="border-t border-black w-48 mx-auto"></div>
-                <span className="text-[12px] font-black uppercase">Prepared By</span>
-                <p className="text-[10px] font-bold text-black italic">{paymentData.createdBy || user?.fullName || 'Staff'}</p>
-            </div>
-            <div className="text-center space-y-1">
-                <div className="border-t border-black w-48 mx-auto"></div>
-                <span className="text-[12px] font-black uppercase">Authorized By</span>
-            </div>
         </div>
-        
-        <div className="mt-auto pt-4 border-t border-black/10 text-[8px] text-black/50 font-bold flex justify-between uppercase tracking-widest relative z-10">
-            <span>*Powered by HamoodTech</span>
-            <span>Printed: {new Date().toLocaleString('en-GB')}</span>
-        </div>
-        </div>
-    </div>
-  )
+    )
 
-  // --- 80mm THERMAL POS LAYOUT ---
-  const ReceiptContentThermal = ({ isPrinting = false }: { isPrinting?: boolean }) => {
-    return (
-    <div className={`p-2 ${isPrinting ? 'space-y-1' : 'space-y-3'} pb-6 print:pb-0 relative`}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
-             <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
-                  <img src={branchLogo} alt="Logo" style={{ height: '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
-              </div>
-            <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{hospitalName}</h2>
-            <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Bulk Payment Receipt</div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
-                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{address}</p>
-                <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {phone}</p>
-                {email && (
-                    <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {email}</p>
-                )}
-            </div>
-        </div>
+    // --- 80mm THERMAL POS LAYOUT ---
+    const ReceiptContentThermal = ({ isPrinting = false }: { isPrinting?: boolean }) => {
+        return (
+            <div className={`p-2 ${isPrinting ? 'space-y-1' : 'space-y-3'} pb-6 print:pb-0 relative`}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%', gap: '0' }} className="w-full">
+                    <div className="flex justify-center w-full" style={{ marginBottom: '2px' }}>
+                        <img src={branchLogo} alt="Logo" style={{ height: '65px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+                    </div>
+                    <h2 style={{ margin: '0', padding: '0', fontSize: isPrinting ? '18px' : '22px', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1', width: '100%' }}>{hospitalName}</h2>
+                    <div className={`uppercase ${isPrinting ? 'text-[9px] my-0.5' : 'text-xs my-1'} font-black tracking-[0.2em] text-black/60`}>Bulk Payment Receipt</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', margin: '0', padding: '0', gap: '0' }}>
+                        <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>{address}</p>
+                        <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Phone: {phone}</p>
+                        {email && (
+                            <p style={{ margin: '0', padding: '0', fontWeight: 'bold', fontSize: isPrinting ? '8px' : '11px', lineHeight: '1.2' }}>Email: {email}</p>
+                        )}
+                    </div>
+                </div>
 
-        <Separator className="border-black/20" />
+                <Separator className="border-black/20" />
 
-        {/* Info Grid */}
-        <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
-           <div className="flex justify-between">
-                <span>UHID: {derivedPatientUhid}</span>
-           </div>
-           <div className="flex justify-between">
-                <span>Patient: {derivedPatientName}</span>
-                <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
-           </div>
-           <div className="flex justify-between">
-                <span>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
-           </div>
-        </div>
+                {/* Info Grid */}
+                <div className={`flex flex-col ${isPrinting ? 'text-[8px] gap-0.5 py-1' : 'text-xs gap-1 py-2'} font-semibold border-y border-black/20 leading-tight`}>
+                    <div className="flex justify-between">
+                        <span>UHID: {derivedPatientUhid}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Patient: {derivedPatientName}</span>
+                        <span>Date: {new Date(date).toLocaleDateString('en-GB')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Time: {new Date(date).toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
 
-        <Separator className={isPrinting ? "border-black/40" : "border-black/20"} />
+                <Separator className={isPrinting ? "border-black/40" : "border-black/20"} />
 
-        {/* Items Table */}
-        <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
-            <div className={`grid grid-cols-12 ${isPrinting ? 'text-[7.5px] mt-0.5' : 'text-[10px] mt-1'} font-bold border-b border-black/40 pb-0.5 uppercase tracking-tighter`}>
-                <div className="col-span-7">INVOICE & ITEMS</div>
-                <div className="col-span-2 text-right">PAID</div>
-                <div className="col-span-3 text-right">DUE</div>
-            </div>
-            {paidSales.map((sale: any, idx: number) => {
-                  return (
-                    <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
-                        <div className="col-span-7 pr-1">
-                            <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{sale.invoiceNumber}</span>
-                            {sale.saleItems && sale.saleItems.length > 0 && (
-                                <div className={`mt-0.5 space-y-0.5 ${isPrinting ? 'text-[8.5px]' : 'text-[11px]'}`}>
-                                    {sale.saleItems.map((item: any, i: number) => (
-                                        <div key={i} className="leading-tight">
-                                            <span className="font-black text-black uppercase">{item.itemName}</span>
-                                            <span className="font-bold ml-1">({Number(item.price).toFixed(2)} ৳)</span>
+                {/* Items Table */}
+                <div className={isPrinting ? 'space-y-0.5' : 'space-y-1'}>
+                    <div className={`grid grid-cols-12 ${isPrinting ? 'text-[7.5px] mt-0.5' : 'text-[10px] mt-1'} font-bold border-b border-black/40 pb-0.5 uppercase tracking-tighter`}>
+                        <div className="col-span-7">INVOICE & ITEMS</div>
+                        <div className="col-span-2 text-right">PAID</div>
+                        <div className="col-span-3 text-right">DUE</div>
+                    </div>
+                    {paidSales.map((sale: any, idx: number) => {
+                        return (
+                            <div key={idx} className={`grid grid-cols-12 ${isPrinting ? 'text-[8.5px] py-0.5 leading-none' : 'text-xs py-1 leading-tight'} items-start`}>
+                                <div className="col-span-7 pr-1">
+                                    <span className={`block font-black text-black ${isPrinting ? 'text-[10.5px]' : 'text-sm'}`}>{sale.invoiceNumber}</span>
+                                    {sale.saleItems && sale.saleItems.length > 0 && (
+                                        <div className={`mt-0.5 space-y-0.5 ${isPrinting ? 'text-[8.5px]' : 'text-[11px]'}`}>
+                                            {sale.saleItems.map((item: any, i: number) => (
+                                                <div key={i} className="leading-tight">
+                                                    <span className="font-black text-black uppercase">{item.itemName}</span>
+                                                    <span className="font-bold ml-1">({Number(item.price).toFixed(2)} ৳)</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
-                            )}
+                                <div className="col-span-2 text-right font-black text-black">
+                                    {Number(sale.paidAmount).toFixed(2)}
+                                </div>
+                                <div className="col-span-3 text-right font-black text-red-600">
+                                    {sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <Separator className="border-dashed border-black/20" />
+
+                {/* Totals Section */}
+                <div className={`${isPrinting ? 'space-y-0.5 text-[8.5px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-bold`}>
+                    {paymentData.totalDueAmount !== undefined && (
+                        <div className="flex">
+                            <span className={isPrinting ? "w-24" : "w-32"}>Prior Due</span>
+                            <span className="w-4">:</span>
+                            <span className="flex-1 text-right">{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
                         </div>
-                        <div className="col-span-2 text-right font-black text-black">
-                            {Number(sale.paidAmount).toFixed(2)}
-                        </div>
-                        <div className="col-span-3 text-right font-black text-red-600">
-                            {sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}
-                        </div>
+                    )}
+                    <div className="flex text-black font-black bg-gray-100 p-0.5 mt-0.5 border-y border-black border-dashed">
+                        <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
+                        <span className="w-4">:</span>
+                        <span className="flex-1 text-right">{totalPaid.toFixed(2)} ৳</span>
                     </div>
-                )
-            })}
-        </div>
+                    {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
+                        <div className="flex mt-0.5 text-green-700">
+                            <span className={isPrinting ? "w-24" : "w-32"}>Total Discount</span>
+                            <span className="w-4">:</span>
+                            <span className="flex-1 text-right">{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
+                        </div>
+                    )}
+                    {paymentData.totalDueAmount !== undefined && (
+                        <div className="flex mt-0.5 text-red-600">
+                            <span className={isPrinting ? "w-24" : "w-32"}>Remaining Due</span>
+                            <span className="w-4">:</span>
+                            <span className="flex-1 text-right">{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
+                        </div>
+                    )}
+                    {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
+                        <div className="flex mt-0.5 text-green-700">
+                            <span className={isPrinting ? "w-24" : "w-32"}>Adv. Balance</span>
+                            <span className="w-4">:</span>
+                            <span className="flex-1 text-right">{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
+                        </div>
+                    )}
+                </div>
 
-        <Separator className="border-dashed border-black/20" />
+                <Separator className="border-black/20" />
 
-        {/* Totals Section */}
-        <div className={`${isPrinting ? 'space-y-0.5 text-[8.5px] pt-0.5' : 'space-y-1 text-xs pt-1'} font-bold`}>
-             {paymentData.totalDueAmount !== undefined && (
-                 <div className="flex">
-                     <span className={isPrinting ? "w-24" : "w-32"}>Prior Due</span>
-                     <span className="w-4">:</span>
-                     <span className="flex-1 text-right">{Number((paymentData.totalDueAmount || 0) + totalPaid).toFixed(2)} ৳</span>
-                 </div>
-             )}
-             <div className="flex text-black font-black bg-gray-100 p-0.5 mt-0.5 border-y border-black border-dashed">
-                 <span className={isPrinting ? "w-24" : "w-32"}>Paid Amount</span>
-                 <span className="w-4">:</span>
-                 <span className="flex-1 text-right">{totalPaid.toFixed(2)} ৳</span>
-             </div>
-             {paymentData.totalDiscount !== undefined && paymentData.totalDiscount > 0 && (
-                  <div className="flex mt-0.5 text-green-700">
-                      <span className={isPrinting ? "w-24" : "w-32"}>Total Discount</span>
-                      <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{Number(paymentData.totalDiscount).toFixed(2)} ৳</span>
-                  </div>
-             )}
-             {paymentData.totalDueAmount !== undefined && (
-                 <div className="flex mt-0.5 text-red-600">
-                     <span className={isPrinting ? "w-24" : "w-32"}>Remaining Due</span>
-                     <span className="w-4">:</span>
-                     <span className="flex-1 text-right">{Number(paymentData.totalDueAmount).toFixed(2)} ৳</span>
-                 </div>
-             )}
-             {paymentData.newPatientBalance !== undefined && paymentData.newPatientBalance > 0 && (
-                  <div className="flex mt-0.5 text-green-700">
-                      <span className={isPrinting ? "w-24" : "w-32"}>Adv. Balance</span>
-                      <span className="w-4">:</span>
-                      <span className="flex-1 text-right">{Number(paymentData.newPatientBalance).toFixed(2)} ৳</span>
-                  </div>
-             )}
-        </div>
-        
-        <Separator className="border-black/20" />
-        
-        {/* Payment Note Section */}
-        {combinedNote && (
-            <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
-                <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
-                <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
-                    {combinedNote}
-                </span>
+                {/* Payment Note Section */}
+                {combinedNote && (
+                    <div className={`mt-1 p-1 bg-gray-50 border border-black border-dotted flex gap-1.5 items-start ${isPrinting ? 'mx-1' : ''}`}>
+                        <span className="shrink-0 uppercase text-[8px] font-black text-black mt-0.5">Note:</span>
+                        <span className={`italic font-black text-black uppercase leading-tight ${isPrinting ? 'text-[9px]' : 'text-[11px]'}`}>
+                            {combinedNote}
+                        </span>
+                    </div>
+                )}
+
+                {/* Footer */}
+                <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
+                    <div className={`flex justify-between items-center mb-2 text-left ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
+                        <span className="font-black">Billing By: {paymentData.createdBy || user?.fullName || user?.username || "Staff"}</span>
+                    </div>
+                    <p className="font-black tracking-wider">THANK YOU FOR VISITING!</p>
+                    <p className={`${isPrinting ? 'text-[7px] pt-1' : 'text-[10px] pt-2'} font-black text-black normal-case`}>*Powered by HamoodTech.</p>
+                </div>
             </div>
-        )}
+        )
+    }
 
-        {/* Footer */}
-        <div className={`text-center ${isPrinting ? 'text-[7.5px] space-y-0.5 pt-2 mt-2' : 'text-[10px] space-y-2 pt-4 mt-4'} text-black border-t-2 border-dashed border-black/20 uppercase`}>
-            <div className={`flex justify-between items-center mb-2 text-left ${isPrinting ? 'text-[8px]' : 'text-xs'}`}>
-                <span className="font-black">Billing By: {paymentData.createdBy || user?.fullName || user?.username || "Staff"}</span>
-            </div>
-            <p className="font-black tracking-wider">THANK YOU FOR VISITING!</p>
-            <p className={`${isPrinting ? 'text-[7px] pt-1' : 'text-[10px] pt-2'} font-black text-black normal-case`}>*Powered by HamoodTech.</p>
-        </div>
-    </div>
-  )}
-
-  const handlePrint = () => {
-    if (isPharmacy) {
-        // --- 80mm THERMAL POS PRINT LOGIC ---
-        const rows = paidSales.map((sale: any) => {
-            const itemsList = sale.saleItems && sale.saleItems.length > 0 
-                ? sale.saleItems.map((item: any) => `
+    const handlePrint = () => {
+        if (isPharmacy) {
+            // --- 80mm THERMAL POS PRINT LOGIC ---
+            const rows = paidSales.map((sale: any) => {
+                const itemsList = sale.saleItems && sale.saleItems.length > 0
+                    ? sale.saleItems.map((item: any) => `
                     <div style="line-height: 1.1; margin-top: 2px;">
                         <span style="font-weight: 900; color: black; font-size: 9.5px; text-transform: uppercase;">${item.itemName}</span>
                         <span style="font-weight: bold; font-size: 8.5px; margin-left: 2px;">(${Number(item.price).toFixed(2)} ৳)</span>
                     </div>
                 `).join('')
-                : '';
-            return `
+                    : '';
+                return `
                 <tr style="font-size: 9.5px; border-bottom: 1px dashed #e0e0e0;">
                 <td style="text-align: left; font-weight: 900; padding: 3px 0; vertical-align: top; line-height: 1.1; width: 60%;">
                     <span style="font-size: 11.5px; display: block;">${sale.invoiceNumber}</span>
@@ -400,9 +401,9 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 <td style="text-align: right; vertical-align: top; padding-top: 3px; font-weight: 900; color: #b91c1c; font-size: 9.5px; width: 20%;">${sale.remainingDue !== undefined ? Number(sale.remainingDue).toFixed(2) : '-'}</td>
                 </tr>
             `;
-        }).join('');
+            }).join('');
 
-        const printableHtml = `
+            const printableHtml = `
             <!DOCTYPE html>
             <html>
             <head>
@@ -530,43 +531,43 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
             </html>
         `;
 
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
-        document.body.appendChild(iframe);
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;';
+            document.body.appendChild(iframe);
 
-        const iframeDoc = iframe.contentWindow?.document;
-        if (iframeDoc) {
-            iframeDoc.open();
-            iframeDoc.write(printableHtml);
-            iframeDoc.close();
-            
-            setTimeout(() => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
+            const iframeDoc = iframe.contentWindow?.document;
+            if (iframeDoc) {
+                iframeDoc.open();
+                iframeDoc.write(printableHtml);
+                iframeDoc.close();
+
                 setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 1000);
-            }, 500);
-        }
-    } else {
-        // --- A4 HOSPITAL PRINT LOGIC ---
-        const printContent = document.getElementById('bulk-receipt-content')?.innerHTML;
-        if (!printContent) return
-    
-        const iframe = document.createElement('iframe')
-        iframe.style.position = 'fixed'
-        iframe.style.right = '100%'
-        iframe.style.bottom = '100%'
-        iframe.style.width = '0'
-        iframe.style.height = '0'
-        iframe.style.border = 'none'
-        document.body.appendChild(iframe)
-    
-        const iframeDoc = iframe.contentWindow?.document
-        if (!iframeDoc) return
-    
-        iframeDoc.open()
-        iframeDoc.write(`
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 500);
+            }
+        } else {
+            // --- A4 HOSPITAL PRINT LOGIC ---
+            const printContent = document.getElementById('bulk-receipt-content')?.innerHTML;
+            if (!printContent) return
+
+            const iframe = document.createElement('iframe')
+            iframe.style.position = 'fixed'
+            iframe.style.right = '100%'
+            iframe.style.bottom = '100%'
+            iframe.style.width = '0'
+            iframe.style.height = '0'
+            iframe.style.border = 'none'
+            document.body.appendChild(iframe)
+
+            const iframeDoc = iframe.contentWindow?.document
+            if (!iframeDoc) return
+
+            iframeDoc.open()
+            iframeDoc.write(`
             <html>
                 <head>
                     <title>Bulk Payment Receipt - ${derivedPatientName}</title>
@@ -711,77 +712,77 @@ export function BulkPaymentReceiptDialog({ open, onOpenChange, data, patientName
                 </body>
             </html>
         `)
-        iframeDoc.close()
-    
-        setTimeout(() => {
-            iframe.contentWindow?.focus()
-            iframe.contentWindow?.print()
+            iframeDoc.close()
+
             setTimeout(() => {
-                document.body.removeChild(iframe)
-            }, 1000)
-        }, 800)
+                iframe.contentWindow?.focus()
+                iframe.contentWindow?.print()
+                setTimeout(() => {
+                    document.body.removeChild(iframe)
+                }, 1000)
+            }, 800)
+        }
     }
-  }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={isPharmacy 
-        ? "max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none print:max-w-none print:w-[80mm] print:mx-auto" 
-        : "sm:max-w-[800px] p-0 overflow-hidden bg-white border-none shadow-2xl light max-h-[95vh]"}>
-        
-        {isPharmacy ? (
-            <DialogHeader className="sr-only">
-              <DialogTitle>Receipt</DialogTitle>
-            </DialogHeader>
-        ) : (
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50/80 backdrop-blur text-slate-900">
-                <DialogTitle className="text-xl font-black flex items-center gap-2 text-slate-900">
-                    <Printer className="w-5 h-5 text-blue-600" />
-                    Bulk Payment Receipt
-                </DialogTitle>
-                <div className="flex items-center gap-2">
-                    <Button onClick={handlePrint} size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20">
-                        <Printer className="w-4 h-4 mr-2" />
-                        Print Receipt
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-500 hover:bg-black/5" onClick={() => onOpenChange(false)}>
-                        <X className="w-4 h-4" />
-                    </Button>
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className={isPharmacy
+                ? "max-w-[72mm] w-full p-0 overflow-hidden sm:rounded-none bg-white text-black border-none shadow-none print:max-w-none print:w-[80mm] print:mx-auto"
+                : "sm:max-w-[800px] p-0 overflow-hidden bg-white border-none shadow-2xl light max-h-[95vh]"}>
+
+                {isPharmacy ? (
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Receipt</DialogTitle>
+                    </DialogHeader>
+                ) : (
+                    <div className="p-4 border-b flex justify-between items-center bg-gray-50/80 backdrop-blur text-slate-900">
+                        <DialogTitle className="text-xl font-black flex items-center gap-2 text-slate-900">
+                            <Printer className="w-5 h-5 text-blue-600" />
+                            Bulk Payment Receipt
+                        </DialogTitle>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={handlePrint} size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20">
+                                <Printer className="w-4 h-4 mr-2" />
+                                Print Receipt
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-500 hover:bg-black/5" onClick={() => onOpenChange(false)}>
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                <div className={isPharmacy
+                    ? "p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white"
+                    : "p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 bg-white text-black"}
+                    id={isPharmacy ? "receipt-content" : "bulk-receipt-content"}
+                    style={isPharmacy ? {} : { width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
+
+                    {isPharmacy ? (
+                        <ReceiptContentThermal />
+                    ) : (
+                        <>
+                            <ReceiptContentA4 copyTitle="BULK PAYMENT — OFFICE COPY" />
+                            <div className="page-break" />
+                            <ReceiptContentA4 copyTitle="BULK PAYMENT — CUSTOMER COPY" />
+                        </>
+                    )}
                 </div>
-            </div>
-        )}
-        
-        <div className={isPharmacy 
-            ? "p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 flex flex-col bg-white" 
-            : "p-0 max-h-[85vh] overflow-y-auto print:max-h-none print:p-0 bg-white text-black"} 
-            id={isPharmacy ? "receipt-content" : "bulk-receipt-content"} 
-            style={isPharmacy ? {} : { width: "100%", maxWidth: "210mm", margin: "0 auto" }}>
-            
-            {isPharmacy ? (
-                <ReceiptContentThermal />
-            ) : (
-                <>
-                    <ReceiptContentA4 copyTitle="BULK PAYMENT — OFFICE COPY" />
-                    <div className="page-break" />
-                    <ReceiptContentA4 copyTitle="BULK PAYMENT — CUSTOMER COPY" />
-                </>
-            )}
-        </div>
 
-        {isPharmacy && (
-            <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
-                onClick={handlePrint}
-              >
-                <Printer className="mr-2 h-4 w-4" /> Print Receipt
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-                 Close
-              </Button>
-            </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
+                {isPharmacy && (
+                    <div className="p-4 bg-zinc-50 flex flex-col gap-2 border-t">
+                        <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={handlePrint}
+                        >
+                            <Printer className="mr-2 h-4 w-4" /> Print Receipt
+                        </Button>
+                        <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+                            Close
+                        </Button>
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    )
 }
