@@ -434,5 +434,15 @@ export const pharmacyService = {
     const response = await api.get('/reports/pharmacy/sales-report', { params });
     return response.data;
   },
+
+  getDueCollectionReport: async (params: {
+    branchId?: string;
+    startDate?: string;
+    endDate?: string;
+    searchTerm?: string;
+  }): Promise<any> => {
+    const response = await api.get('/reports/pharmacy/due-collection', { params });
+    return response.data;
+  },
 };
 

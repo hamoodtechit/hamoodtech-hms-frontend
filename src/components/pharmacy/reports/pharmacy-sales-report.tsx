@@ -21,6 +21,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const indoorReturns = data?.indoor?.returns || []
   const indoorSubTotals = data?.indoor?.subTotals || {}
   
+  const dueCollections = data?.dueCollections || []
   const summary = data?.summary || {}
 
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
@@ -210,6 +211,40 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
         </div>
       )}
 
+      {/* ── Due Collections ────────────────────────────────────── */}
+      {dueCollections.length > 0 && (
+        <div className="mb-4">
+          <h3 className="text-center font-bold border-y border-black py-1 mb-2 bg-blue-50 uppercase text-sm text-blue-700">Due Collections</h3>
+          <table className="w-full border-collapse border border-black text-[10px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border border-black px-1 py-1">SL No</th>
+                <th className="border border-black px-1 py-1">Invoice Number</th>
+                <th className="border border-black px-1 py-1">Patient ID</th>
+                <th className="border border-black px-1 py-1 text-right">Collected Amount</th>
+                <th className="border border-black px-1 py-1">Payment Method</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dueCollections.map((col: any, idx: number) => (
+                <tr key={idx}>
+                  <td className="border border-black px-1 py-1 text-center">{col.slNo || idx + 1}</td>
+                  <td className="border border-black px-1 py-1">{col.invoiceNumber}</td>
+                  <td className="border border-black px-1 py-1">{col.patientNumber}</td>
+                  <td className="border border-black px-1 py-1 text-right">{Number(col.collectedAmount).toFixed(2)}</td>
+                  <td className="border border-black px-1 py-1 uppercase">{col.paymentMethod}</td>
+                </tr>
+              ))}
+              <tr className="font-bold bg-blue-50 text-blue-800">
+                <td colSpan={3} className="border border-black px-1 py-1 text-right uppercase">Total Due Collected :</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(summary.totalDueCollected || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* ── Summary ───────────────────────────────────────────── */}
       <div className="flex justify-end mt-4">
         <div className="w-72 border border-black">
@@ -234,6 +269,10 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
             <div className="flex justify-between text-red-600">
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-blue-700">
+              <span>Total Due Collected</span>
+              <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold border-t border-black pt-1">
               <span>Total Collection</span>

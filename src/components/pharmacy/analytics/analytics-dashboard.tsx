@@ -70,6 +70,19 @@ export function AnalyticsDashboard() {
             startDate: format(date.from, 'yyyy-MM-dd'),
             endDate: format(date.to, 'yyyy-MM-dd')
         })
+        
+        const dueCollectionResponse = await pharmacyService.getDueCollectionReport({
+            branchId: activeStoreId || 'default-branch',
+            startDate: format(date.from, 'yyyy-MM-dd'),
+            endDate: format(date.to, 'yyyy-MM-dd')
+        }).catch(err => ({ data: { collections: [], summary: { totalDueCollected: 0 } } }));
+
+        if (data && data.data) {
+            data.data.dueCollections = dueCollectionResponse?.data?.collections || [];
+            if (!data.data.summary) data.data.summary = {};
+            data.data.summary.totalDueCollected = dueCollectionResponse?.data?.summary?.totalDueCollected || 0;
+        }
+
         toast.dismiss(loadingToast)
 
         if (type === 'print') {
@@ -98,6 +111,7 @@ export function AnalyticsDashboard() {
             // Excel/CSV logic — Outdoor Sales
             const outdoorSales = data.data.outdoor?.sales || []
             const outdoorReturns = data.data.outdoor?.returns || []
+            const dueCollections = data.data.dueCollections || []
             const summary = data.data.summary || {}
 
             let csvContent = "data:text/csv;charset=utf-8,"
@@ -120,12 +134,23 @@ export function AnalyticsDashboard() {
                 ).join("\n")
             }
 
+            // Due Collections
+            if (dueCollections.length > 0) {
+                const dueHeaders = ["SL No", "Invoice Number", "Patient Number", "Collected Amount", "Payment Method"]
+                csvContent += "\n\nDUE COLLECTIONS\n"
+                csvContent += dueHeaders.join(",") + "\n"
+                csvContent += dueCollections.map((d: any, idx: number) =>
+                    [d.slNo || idx + 1, d.invoiceNumber, d.patientNumber, d.collectedAmount, d.paymentMethod].join(",")
+                ).join("\n")
+            }
+
             // Summary
             csvContent += "\n\nSUMMARY\n"
             csvContent += `Total Sale,${summary.totalSale || 0}\n`
             csvContent += `Total Return,${summary.totalReturn || 0}\n`
             csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
             csvContent += `Net Sales,${summary.netSales || 0}\n`
+            csvContent += `Total Due Collected,${summary.totalDueCollected || 0}\n`
             csvContent += `Total Collection,${summary.totalCollection || 0}\n`
             csvContent += `Net Collection,${summary.netCollection || 0}\n`
             
