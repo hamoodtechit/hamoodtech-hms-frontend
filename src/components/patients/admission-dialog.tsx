@@ -319,24 +319,27 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
             let resAdmission: any;
             if (admission?.id) {
                 // Update
+                const updateData: any = {
+                    branchId: finalBranchId,
+                    patientId: formData.patientId,
+                    admissionDate: formData.admissionDate,
+                    reason: formData.reason,
+                    note: formData.note,
+                    status: formData.status,
+                    guardianName: formData.guardianName,
+                    guardianPhone: formData.guardianPhone,
+                    guardianRelation: formData.guardianRelation,
+                    refDoctorName: formData.refDoctorName,
+                    departmentId: formData.departmentId || undefined,
+                    doctorId: formData.doctorId || undefined,
+                    referralPersonId: formData.referralPersonId || undefined,
+                }
+                if (formData.bedId) {
+                    updateData.bedId = formData.bedId
+                }
                 resAdmission = await updateMutation.mutateAsync({
                     id: admission.id,
-                    data: {
-                        branchId: finalBranchId,
-                        patientId: formData.patientId,
-                        bedId: formData.bedId || undefined,
-                        admissionDate: formData.admissionDate,
-                        reason: formData.reason,
-                        note: formData.note,
-                        status: formData.status,
-                        guardianName: formData.guardianName,
-                        guardianPhone: formData.guardianPhone,
-                        guardianRelation: formData.guardianRelation,
-                        refDoctorName: formData.refDoctorName,
-                        departmentId: formData.departmentId || undefined,
-                        doctorId: formData.doctorId || undefined,
-                        referralPersonId: formData.referralPersonId || undefined,
-                    }
+                    data: updateData
                 })
                 toast.success("Admission updated successfully")
             } else {
@@ -347,9 +350,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     return
                 }
 
-                resAdmission = await createMutation.mutateAsync({
+                const createData: any = {
                     ...formData,
-                    bedId: formData.bedId || undefined,
                     departmentId: formData.departmentId || undefined,
                     doctorId: formData.doctorId || undefined,
                     referralPersonId: formData.referralPersonId || undefined,
@@ -366,7 +368,12 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     taxPercentage: vatPercentage,
                     taxAmount: tax,
                     type: 'hospital'
-                })
+                }
+                if (!formData.bedId) {
+                    delete createData.bedId
+                }
+
+                resAdmission = await createMutation.mutateAsync(createData)
 
                 // Extract Sale ID from the response (Backend auto-creates the Sale)
                 const saleId = resAdmission?.data?.sale?.id
