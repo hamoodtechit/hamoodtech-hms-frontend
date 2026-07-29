@@ -81,7 +81,11 @@ export function AnalyticsDashboard() {
         if (data && data.data) {
             data.data.dueCollections = dueCollectionResponse?.data?.collections || [];
             if (!data.data.summary) data.data.summary = {};
-            data.data.summary.totalDueCollected = dueCollectionResponse?.data?.summary?.totalDueCollected || 0;
+            
+            const totalDueCollected = dueCollectionResponse?.data?.summary?.totalDueCollected || 0;
+            data.data.summary.totalDueCollected = totalDueCollected;
+            data.data.summary.totalCollection = Number(data.data.summary.totalCollection || 0) + totalDueCollected;
+            data.data.summary.netCollection = Number(data.data.summary.netCollection || 0) + totalDueCollected;
         }
 
         toast.dismiss(loadingToast)
