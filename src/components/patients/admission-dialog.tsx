@@ -267,8 +267,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
     }, [total, admission, open])
 
     const handleSave = async () => {
-        if (!formData.patientId || !formData.bedId) {
-            toast.error("Please fill in required fields (Patient, Bed)")
+        if (!formData.patientId) {
+            toast.error("Please select a patient")
             return
         }
 
@@ -324,7 +324,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                     data: {
                         branchId: finalBranchId,
                         patientId: formData.patientId,
-                        bedId: formData.bedId,
+                        bedId: formData.bedId || undefined,
                         admissionDate: formData.admissionDate,
                         reason: formData.reason,
                         note: formData.note,
@@ -349,6 +349,7 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
 
                 resAdmission = await createMutation.mutateAsync({
                     ...formData,
+                    bedId: formData.bedId || undefined,
                     departmentId: formData.departmentId || undefined,
                     doctorId: formData.doctorId || undefined,
                     referralPersonId: formData.referralPersonId || undefined,
@@ -427,12 +428,12 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Select Bed *</Label>
+                                    <Label>Select Bed (Optional)</Label>
                                     <SearchableSelect 
                                         value={formData.bedId}
                                         onChange={(val) => setFormData(prev => ({ ...prev, bedId: val }))}
                                         options={[
-                                            ...(admission?.bed ? [{ 
+                                            ...(admission?.bed && admission?.bedId ? [{ 
                                                 id: admission.bedId, 
                                                 name: `[CURRENT] ${admission.bed.bedNumber} - ${admission.bed.bedType?.name} (${admission.bed.section?.name}) - Tk ${admission.bed.bedType?.pricePerDay}`,
                                                 disabled: false
@@ -443,7 +444,8 @@ export function AdmissionDialog({ open, onOpenChange, admission, onSuccess }: Ad
                                                 disabled: b.status !== 'available'
                                             })) || [])
                                         ]}
-                                        placeholder="Available beds"
+                                        placeholder="Available beds (Disabled)"
+                                        disabled={true}
                                     />
                                 </div>
                             </div>

@@ -9,7 +9,7 @@ export interface Admission {
   id: string;
   branchId: string;
   patientId: string;
-  bedId: string;
+  bedId?: string;
   admissionDate: string;
   dischargeDate?: string;
   reason: string;
@@ -47,7 +47,7 @@ export interface Admission {
 export interface AdmissionPayload {
   branchId: string;
   patientId: string;
-  bedId: string;
+  bedId?: string;
   admissionDate?: string;
   reason?: string;
   note?: string;
