@@ -270,6 +270,10 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
+            <div className="flex justify-between text-red-600">
+              <span>Remaining Due (New)</span>
+              <span className="font-bold">{Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}</span>
+            </div>
             <div className="flex justify-between text-blue-700">
               <span>Total Due Collected</span>
               <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
