@@ -437,6 +437,26 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
         }))
     }
 
+    const handleResultKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if ((!e.shiftKey && e.key === 'Enter') || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const inputs = Array.from(document.querySelectorAll<HTMLTextAreaElement>('textarea[data-result-input="true"]'));
+            const currentIndex = inputs.indexOf(e.currentTarget);
+            if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+                const nextInput = inputs[currentIndex + 1];
+                nextInput.focus();
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const inputs = Array.from(document.querySelectorAll<HTMLTextAreaElement>('textarea[data-result-input="true"]'));
+            const currentIndex = inputs.indexOf(e.currentTarget);
+            if (currentIndex > 0) {
+                const prevInput = inputs[currentIndex - 1];
+                prevInput.focus();
+            }
+        }
+    };
+
     const handleConfirm = async () => {
         if (!report) return
         if (!user) return toast.error("User not found")
@@ -680,6 +700,8 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
                                                                                     ) : (
                                                                                         <div className="relative w-full">
                                                                                             <Textarea 
+                                                                                                data-result-input="true"
+                                                                                                onKeyDown={handleResultKeyDown}
                                                                                                 value={data.result}
                                                                                                 onChange={e => updateParam(testKey, paramKey, 'result', e.target.value, defaultData)}
                                                                                                 rows={1}
