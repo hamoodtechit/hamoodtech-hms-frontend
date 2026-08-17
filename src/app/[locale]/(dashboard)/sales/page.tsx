@@ -534,6 +534,7 @@ export default function SalesHistoryPage() {
                       <TableHead>Type</TableHead>
                       <TableHead>Patient</TableHead>
                       <TableHead>Amount</TableHead>
+                      <TableHead>Net Amount</TableHead>
                       <TableHead>Paid</TableHead>
                       <TableHead>Due</TableHead>
                       <TableHead>Status</TableHead>
@@ -545,13 +546,13 @@ export default function SalesHistoryPage() {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={12} className="h-24 text-center">
+                        <TableCell colSpan={13} className="h-24 text-center">
                           <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                         </TableCell>
                       </TableRow>
                     ) : sales.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={12} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={13} className="h-24 text-center text-muted-foreground">
                           No sales found.
                         </TableCell>
                       </TableRow>
@@ -596,6 +597,9 @@ export default function SalesHistoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>{sale.patient?.name || "Walk-in"}</TableCell>
+                          <TableCell className="font-medium text-muted-foreground">
+                            {formatCurrency(Number(sale.totalPrice || 0))}
+                          </TableCell>
                           <TableCell className="font-bold text-primary">
                             {formatCurrency(Number(sale.netPrice || sale.totalPrice))}
                           </TableCell>

@@ -126,14 +126,24 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
     }
   }
 
-  // Calculate total refund amount
-  const totalRefund = sale.saleItems.reduce((sum, item) => {
+  // Calculate total refund amount (gross - before sale discount)
+  const grossRefund = sale.saleItems.reduce((sum, item) => {
     if (selectedItems[item.id]) {
       const qty = returnQuantities[item.id] || Number(item.quantity)
       return sum + (Number(item.price) * qty)
     }
     return sum
   }, 0)
+
+  // Calculate sale-level discount percentage to apply proportionally to returns
+  const saleSubtotal = sale.saleItems.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0)
+  const saleDiscountAmount = Number(sale.discountAmount) || 
+    (saleSubtotal * Number(sale.discountPercentage || 0)) / 100
+  const saleDiscountPercent = saleSubtotal > 0 ? (saleDiscountAmount / saleSubtotal) * 100 : 0
+  
+  // Apply proportional discount to the return
+  const returnDiscount = (grossRefund * saleDiscountPercent) / 100
+  const totalRefund = Math.max(0, grossRefund - returnDiscount)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,8 +218,20 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
                 className="resize-none h-20"
               />
             </div>
-            <div className="text-lg font-bold flex items-end">
-                Return Value: {formatCurrency(totalRefund)}
+            <div className="space-y-1 text-right">
+                {returnDiscount > 0 && (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      Subtotal: {formatCurrency(grossRefund)}
+                    </div>
+                    <div className="text-sm text-emerald-600">
+                      Discount ({saleDiscountPercent.toFixed(1)}%): -{formatCurrency(returnDiscount)}
+                    </div>
+                  </>
+                )}
+                <div className="text-lg font-bold">
+                    Return Value: {formatCurrency(totalRefund)}
+                </div>
             </div>
           </div>
         </div>
