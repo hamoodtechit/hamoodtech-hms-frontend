@@ -111,6 +111,7 @@ export function PrintReport({ report }: PrintReportProps) {
                     {groupBlocks.map((block, bIdx) => {
                         if (block.type !== 'parameter') return null;
                         const isParamHeader = block.isHeader;
+                        if (isParamHeader) return null;
                         return (
                             <tr key={bIdx} className={cn("border-b border-gray-100", isParamHeader && "bg-blue-50/10")}>
                                 {columns.map((col, cIdx) => {
@@ -126,7 +127,7 @@ export function PrintReport({ report }: PrintReportProps) {
                                             className={cn(
                                                 "py-1 px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
                                                 col.key !== 'parameter' && "text-center",
-                                                isParameter && (block.isBold || block.isHeader) ? (isParamHeader ? "font-black text-black uppercase text-[11pt] tracking-tight pt-2 pb-0.5" : "font-bold italic text-black") : "",
+                                                isParameter && "font-bold text-black",
                                                 isResult && "font-black"
                                             )}
                                         >
