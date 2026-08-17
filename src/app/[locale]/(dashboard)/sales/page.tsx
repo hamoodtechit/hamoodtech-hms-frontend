@@ -674,7 +674,7 @@ export default function SalesHistoryPage() {
                                >
                                   <FileText className="h-4 w-4" />
                                </Button>
-                               {hasPermission('sale-return:create') && sale.status === 'completed' && (
+                               {hasPermission('sale-return:create') && (sale.status === 'completed' || sale.status === 'pending') && (
                                  <Button 
                                    variant="ghost" 
                                    size="icon" 
