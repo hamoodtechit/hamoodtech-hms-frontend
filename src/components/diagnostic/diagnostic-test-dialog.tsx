@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -14,8 +15,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SmartNumberInput } from "@/components/ui/smart-number-input"
 import { Textarea } from "@/components/ui/textarea"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { useCreateDiagnosticTest, useTestGroups, useUpdateDiagnosticTest } from "@/hooks/diagnostic-queries"
+import { useMedicines } from "@/hooks/pharmacy-queries"
 import { useDepartments } from "@/hooks/hr-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { DiagnosticTest, DiagnosticTestPayload } from "@/types/diagnostic"
@@ -158,6 +161,8 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 
 export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: DiagnosticTestDialogProps) {
     const [loading, setLoading] = useState(false)
+    const [selectedMedicineId, setSelectedMedicineId] = useState<string>("")
+    const [medicineQuantity, setMedicineQuantity] = useState<number>(1)
     const { activeStoreId, fetchStores } = useStoreContext()
 
     useEffect(() => {
@@ -168,6 +173,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
 
     const { data: departmentsRes } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
     const { data: testGroupsRes } = useTestGroups({ limit: 100 })
+    const { data: medicinesRes } = useMedicines({ limit: 1000, hasStock: true })
 
 
     const createMutation = useCreateDiagnosticTest()
@@ -193,6 +199,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
         machineDescription: "",
         refCommissionsPercentage: 0,
         serviceType: undefined,
+        testReagentConsumptions: [],
     })
 
     useEffect(() => {
@@ -216,6 +223,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     machineDescription: test.machineDescription || "",
                     refCommissionsPercentage: test.refCommissionsPercentage || 0,
                     serviceType: test.serviceType || undefined,
+                    testReagentConsumptions: test.testReagentConsumptions || [],
                 })
             } else {
                 setFormData({
@@ -236,6 +244,7 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                     machineDescription: "",
                     refCommissionsPercentage: 0,
                     serviceType: undefined,
+                    testReagentConsumptions: [],
                 })
             }
         }
@@ -269,7 +278,11 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                             ? p.options.split(",").map((s: string) => s.trim()).filter(Boolean) 
                             : Array.isArray(p.options) ? p.options : []
                     }))
-                    : null
+                    : null,
+                testReagentConsumptions: formData.testReagentConsumptions?.map(trc => ({
+                    medicineId: trc.medicineId,
+                    quantity: Number(trc.quantity)
+                })) || []
             }
 
             const cleanPayload: any = {}
@@ -445,6 +458,105 @@ export function DiagnosticTestDialog({ open, onOpenChange, test, onSuccess }: Di
                                         className="h-11 rounded-xl border-border bg-background shadow-sm"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Reagent Consumption Section */}
+                            <div className="flex items-center gap-2 mb-2 mt-6">
+                                <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Automatic Reagent Consumption</h3>
+                            </div>
+                            
+                            <div className="bg-indigo-500/5 dark:bg-indigo-500/10 p-6 rounded-2xl border border-indigo-500/10 dark:border-indigo-500/20 space-y-6">
+                                <div className="flex flex-col md:flex-row items-end gap-4">
+                                    <div className="space-y-2 flex-1">
+                                        <Label className="text-sm font-bold text-indigo-700 dark:text-indigo-300">Select Reagent / Product</Label>
+                                        <SearchableSelect 
+                                            value={selectedMedicineId}
+                                            onChange={setSelectedMedicineId}
+                                            options={medicinesRes?.data?.map(m => ({ id: m.id, name: `${m.name} (${m.unit})` })) || []}
+                                            placeholder="Search products in stock..."
+                                            showAll={false}
+                                        />
+                                    </div>
+                                    <div className="space-y-2 w-full md:w-48">
+                                        <Label className="text-sm font-bold text-indigo-700 dark:text-indigo-300 flex items-center justify-between">
+                                            Quantity
+                                            <span className="text-[10px] text-indigo-500/60 font-normal italic" title="Always use Base Units for Inventory Entry. e.g. ml, pieces">(Base Unit)</span>
+                                        </Label>
+                                        <SmartNumberInput 
+                                            value={medicineQuantity}
+                                            onChange={(v) => setMedicineQuantity(v || 1)}
+                                            min={0.1}
+                                        />
+                                    </div>
+                                    <Button 
+                                        type="button"
+                                        onClick={() => {
+                                            if (!selectedMedicineId) return;
+                                            const medicine = medicinesRes?.data?.find(m => m.id === selectedMedicineId);
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                testReagentConsumptions: [
+                                                    ...(prev.testReagentConsumptions || []),
+                                                    { 
+                                                        medicineId: selectedMedicineId, 
+                                                        quantity: medicineQuantity,
+                                                        medicine: medicine ? { id: medicine.id, name: medicine.name, unit: medicine.unit } : undefined
+                                                    }
+                                                ]
+                                            }));
+                                            setSelectedMedicineId("");
+                                            setMedicineQuantity(1);
+                                        }}
+                                        disabled={!selectedMedicineId || medicineQuantity <= 0}
+                                        className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" /> Add
+                                    </Button>
+                                </div>
+
+                                {(formData.testReagentConsumptions?.length ?? 0) > 0 && (
+                                    <div className="border border-indigo-500/20 rounded-xl overflow-hidden bg-background">
+                                        <Table>
+                                            <TableHeader className="bg-indigo-500/10">
+                                                <TableRow>
+                                                    <TableHead className="font-bold text-indigo-900 dark:text-indigo-200">Reagent Name</TableHead>
+                                                    <TableHead className="font-bold text-indigo-900 dark:text-indigo-200">Consumption Qty</TableHead>
+                                                    <TableHead className="text-right font-bold text-indigo-900 dark:text-indigo-200">Action</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {formData.testReagentConsumptions?.map((trc, idx) => (
+                                                    <TableRow key={idx}>
+                                                        <TableCell className="font-medium">
+                                                            {trc.medicine?.name || medicinesRes?.data?.find(m => m.id === trc.medicineId)?.name || 'Unknown Product'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                                                                {trc.quantity} {trc.medicine?.unit || medicinesRes?.data?.find(m => m.id === trc.medicineId)?.unit || ''}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        testReagentConsumptions: prev.testReagentConsumptions?.filter((_, i) => i !== idx)
+                                                                    }))
+                                                                }}
+                                                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

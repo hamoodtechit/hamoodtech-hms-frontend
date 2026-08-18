@@ -21,7 +21,8 @@ import {
     ClipboardList,
     DollarSign,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    FlaskConical
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCurrency } from "@/hooks/use-currency"
@@ -179,6 +180,35 @@ export function ServiceDetailSheet({ open, onOpenChange, service }: ServiceDetai
                                     )}
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Reagent Consumption Section */}
+                    {service.testReagentConsumptions && service.testReagentConsumptions.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <FlaskConical className="w-4 h-4 text-primary" />
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Automatic Reagent Consumption</h3>
+                            </div>
+                            <div className="bg-card border rounded-3xl p-6 shadow-sm overflow-hidden">
+                                <div className="space-y-3">
+                                    {service.testReagentConsumptions.map((trc, idx) => (
+                                        <div key={idx} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0 group">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 transition-all group-hover:scale-110">
+                                                    <Beaker className="w-4 h-4 text-indigo-500" />
+                                                </div>
+                                                <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                                                    {trc.medicine?.name || 'Unknown Product'}
+                                                </span>
+                                            </div>
+                                            <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                                                {trc.quantity} {trc.medicine?.unit || ''}
+                                            </Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
