@@ -65,7 +65,7 @@ export interface DiagnosticTestPayload {
   machineName?: string;
   machineDescription?: string;
   refCommissionsPercentage?: number;
-  testReagentConsumptions?: { medicineId: string; quantity: number }[];
+  testReagentConsumptions?: TestReagentConsumption[];
 }
 
 export interface DiagnosticTestGroup {
