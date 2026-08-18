@@ -229,6 +229,9 @@ export function CreateReturnDialog({ open, onOpenChange, sale, onSuccess }: Crea
                     </div>
                   </>
                 )}
+                <div className="text-sm text-blue-600 mb-1 font-medium">
+                    Paid Amount: {formatCurrency(Number(sale.paidAmount || 0))}
+                </div>
                 <div className="text-lg font-bold">
                     Return Value: {formatCurrency(totalRefund)}
                 </div>
