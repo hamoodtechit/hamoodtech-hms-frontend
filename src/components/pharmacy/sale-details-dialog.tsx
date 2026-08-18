@@ -292,7 +292,7 @@ export function SaleDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -548,7 +548,7 @@ export function SaleDetailsDialog({
                         <TableCell className="font-medium text-xs">
                           <div>{sr.invoiceNumber}</div>
                           {sr.note && (
-                              <div className="text-[10px] text-muted-foreground font-normal italic mt-0.5 truncate max-w-[150px]" title={sr.note}>
+                              <div className="text-xs text-foreground font-bold bg-muted/50 p-1.5 rounded-md mt-1 italic w-full" title={sr.note}>
                                   Note: {sr.note}
                               </div>
                           )}
