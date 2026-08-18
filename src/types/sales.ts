@@ -155,6 +155,7 @@ export interface SaleReturn {
   discountAmount?: number | string;
   note?: string;
   saleReturnItems: SaleReturnItemDetails[];
+  transactions?: any[];
   createdAt: string;
   updatedAt: string;
 }

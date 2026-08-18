@@ -374,7 +374,7 @@ export default function SalesReturnsPage() {
                   <TableHead>Invoice</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Patient</TableHead>
-                  <TableHead>Total Return</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -401,7 +401,7 @@ export default function SalesReturnsPage() {
                       </TableCell>
                       <TableCell>{item.patient?.name || "N/A"}</TableCell>
                       <TableCell className="font-bold text-orange-600">
-                        {formatCurrency(Number(item.totalPrice))}
+                        {formatCurrency(item.transactions && item.transactions.length > 0 ? item.transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0) : Number(item.totalPrice))}
                       </TableCell>
                       <TableCell>
                         <Badge 

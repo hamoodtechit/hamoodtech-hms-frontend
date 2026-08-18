@@ -554,7 +554,9 @@ export function SaleDetailsDialog({
                           )}
                         </TableCell>
                         <TableCell className="text-xs">{new Date(sr.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right text-xs font-semibold">{formatCurrency(sr.totalPrice)}</TableCell>
+                        <TableCell className="text-right text-xs font-semibold">
+                          {formatCurrency(sr.transactions && sr.transactions.length > 0 ? sr.transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0) : sr.totalPrice)}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Badge variant={sr.status === 'completed' ? 'default' : 'secondary'} className="text-[10px] h-4">
                             {sr.status}
