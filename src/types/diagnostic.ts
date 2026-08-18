@@ -29,6 +29,18 @@ export interface DiagnosticTest {
     id: string;
     name: string;
   };
+  testReagentConsumptions?: TestReagentConsumption[];
+}
+
+export interface TestReagentConsumption {
+  id?: string;
+  medicineId: string;
+  quantity: number;
+  medicine?: {
+    id: string;
+    name: string;
+    unit: string;
+  };
 }
 
 // Alias for backwards compatibility
@@ -53,6 +65,7 @@ export interface DiagnosticTestPayload {
   machineName?: string;
   machineDescription?: string;
   refCommissionsPercentage?: number;
+  testReagentConsumptions?: { medicineId: string; quantity: number }[];
 }
 
 export interface DiagnosticTestGroup {

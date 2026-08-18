@@ -541,8 +541,9 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
             toast.success("Report results finalized")
             onOpenChange(false)
             onSuccess?.()
-        } catch {
-            toast.error("Failed to save report results")
+        } catch (error: any) {
+            const errorMsg = error?.response?.data?.message || error?.message || "Failed to save report results"
+            toast.error(errorMsg)
         }
     }
 
