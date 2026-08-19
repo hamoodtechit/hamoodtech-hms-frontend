@@ -111,7 +111,21 @@ export function PrintReport({ report }: PrintReportProps) {
                     {groupBlocks.map((block, bIdx) => {
                         if (block.type !== 'parameter') return null;
                         const isParamHeader = block.isHeader;
-                        if (isParamHeader) return null;
+                        
+                        if (isParamHeader) {
+                            // Smart Deduplication: Check if this header only has one parameter 
+                            // and its name exactly matches the header. If so, hide the header.
+                            const childParams = [];
+                            for (let i = bIdx + 1; i < groupBlocks.length; i++) {
+                                if (groupBlocks[i].type !== 'parameter') continue;
+                                if (groupBlocks[i].isHeader) break;
+                                childParams.push(groupBlocks[i]);
+                            }
+                            
+                            if (childParams.length === 1 && childParams[0].parameter?.toLowerCase().trim() === block.parameter?.toLowerCase().trim()) {
+                                return null;
+                            }
+                        }
                         return (
                             <tr key={bIdx} className={cn("border-b border-gray-100", isParamHeader && "bg-blue-50/10")}>
                                 {columns.map((col, cIdx) => {
