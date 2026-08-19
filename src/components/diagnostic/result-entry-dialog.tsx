@@ -748,17 +748,28 @@ export function ResultEntryDialog({ open, onOpenChange, report, onSuccess }: Res
 
                                                                             <TableCell className="px-8 py-3">
                                                                                 <div className="relative group/input">
-                                                                                    <Textarea 
-                                                                                        value={data.refRange}
-                                                                                        onChange={e => updateParam(testKey, paramKey, 'refRange', e.target.value, defaultData)}
-                                                                                        rows={1}
-                                                                                        className={cn(
-                                                                                            "min-h-9 rounded-xl bg-muted/20 border-transparent text-center text-[10px] font-bold text-muted-foreground/70 italic transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4 py-2 resize",
-                                                                                            !data.refRange && "opacity-30"
-                                                                                        )}
-                                                                                        placeholder="Reference"
-                                                                                    />
-                                                                                    <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all pointer-events-none" />
+                                                                                    {data.refRange?.trim().startsWith('[HTML]') ? (
+                                                                                        <div 
+                                                                                            className="min-h-9 rounded-xl bg-muted/10 border border-border/50 text-center text-[9px] text-muted-foreground/80 overflow-y-auto max-h-32 custom-scrollbar p-2 relative shadow-inner"
+                                                                                        >
+                                                                                            <div className="absolute top-1 right-2 text-[7px] font-black uppercase text-primary/50 tracking-widest">HTML View</div>
+                                                                                            <div dangerouslySetInnerHTML={{ __html: data.refRange.replace('[HTML]', '') }} className="scale-[0.8] origin-top opacity-80" />
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            <Textarea 
+                                                                                                value={data.refRange}
+                                                                                                onChange={e => updateParam(testKey, paramKey, 'refRange', e.target.value, defaultData)}
+                                                                                                rows={1}
+                                                                                                className={cn(
+                                                                                                    "min-h-9 rounded-xl bg-muted/20 border-transparent text-center text-[10px] font-bold text-muted-foreground/70 italic transition-all hover:bg-background hover:border-border focus-visible:ring-primary/20 shadow-sm px-4 py-2 resize",
+                                                                                                    !data.refRange && "opacity-30"
+                                                                                                )}
+                                                                                                placeholder="Reference"
+                                                                                            />
+                                                                                            <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/input:opacity-100 transition-all pointer-events-none" />
+                                                                                        </>
+                                                                                    )}
                                                                                 </div>
                                                                             </TableCell>
                                                                         </TableRow>
