@@ -139,9 +139,10 @@ export function PrintReport({ report }: PrintReportProps) {
                                             key={cIdx} 
                                             style={{ width: col.width }} 
                                             className={cn(
-                                                "py-1 px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
+                                                "px-1 text-[10.5pt] leading-snug break-words whitespace-pre-wrap",
+                                                !isParamHeader ? "py-1" : "pt-4 pb-1.5",
                                                 col.key !== 'parameter' && "text-center",
-                                                isParameter && "font-bold text-black",
+                                                isParameter && (isParamHeader ? "font-black uppercase text-[11pt] tracking-tight text-black" : "font-bold text-black"),
                                                 isResult && "font-black"
                                             )}
                                         >
