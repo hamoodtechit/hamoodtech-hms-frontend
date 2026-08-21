@@ -64,7 +64,7 @@ export function AssignmentDialog({
     const createMutation = useCreateBulkSchedules()
 
     // Data Fetching
-    const { data: employeesRes } = useEmployees({ branchId, limit: 200 })
+    const { data: employeesRes } = useEmployees({ branchId: branchId || undefined, limit: 200 })
     const { data: shiftsRes } = useShifts({ limit: 100 })
 
     const getArrayData = (res: any) => {
@@ -85,6 +85,8 @@ export function AssignmentDialog({
             endDate: initialDate || "",
         },
     })
+
+    const selectedEmployeeIds = form.watch("employeeIds") || []
 
     useEffect(() => {
         if (open) {
@@ -272,7 +274,7 @@ export function AssignmentDialog({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading || form.getValues("employeeIds").length === 0}>
+                            <Button type="submit" disabled={isLoading || selectedEmployeeIds.length === 0}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Assign Employee
                             </Button>
