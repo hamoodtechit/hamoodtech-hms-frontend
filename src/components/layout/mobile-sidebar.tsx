@@ -34,7 +34,8 @@ export function MobileSidebar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    setIsMounted(true)
+    const timer = setTimeout(() => setIsMounted(true), 0)
+    return () => clearTimeout(timer)
   }, [])
 
   // Close sidebar on route change
