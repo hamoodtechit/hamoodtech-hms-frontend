@@ -2,9 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useServiceSalesReport } from "@/hooks/report-queries"
+import { useDiagnosticTests } from "@/hooks/diagnostic-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { FilterPopover } from "@/components/shared/filter-popover"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 import { endOfDay, format, startOfMonth } from "date-fns"
 import { useMemo, useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
@@ -40,11 +43,15 @@ export function ServiceSalesDashboard() {
     })
     const [sortField, setSortField] = useState<SortField>("netAmount")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
+    const [serviceId, setServiceId] = useState<string>("")
 
+    const { data: testsData, isLoading: isLoadingTests } = useDiagnosticTests({ branchId: activeStoreId })
+    
     const { data: reportData, isLoading } = useServiceSalesReport({
         branchId: activeStoreId || undefined,
         startDate: date?.from ? format(date.from, "yyyy-MM-dd") : undefined,
         endDate: date?.to ? format(endOfDay(date.to), "yyyy-MM-dd") : undefined,
+        serviceId: serviceId || undefined,
     })
 
     const services: IServiceSalesItem[] = reportData?.data || []
@@ -144,6 +151,25 @@ export function ServiceSalesDashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <FilterPopover 
+                        activeFilterCount={serviceId ? 1 : 0}
+                        onReset={() => setServiceId("")}
+                        className="w-[300px]"
+                    >
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Service / Test</label>
+                                <SearchableSelect 
+                                    value={serviceId}
+                                    onChange={setServiceId}
+                                    options={testsData?.data?.map(t => ({ id: t.id, name: t.name })) || []}
+                                    loading={isLoadingTests}
+                                    placeholder="Select a service..."
+                                    allLabel="All Services"
+                                />
+                            </div>
+                        </div>
+                    </FilterPopover>
                     <DatePickerWithRange date={date} setDate={setDate} />
                 </div>
             </div>
