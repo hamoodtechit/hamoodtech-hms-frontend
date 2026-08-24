@@ -45,7 +45,7 @@ export function DepartmentSalesDashboard() {
     const [sortDir, setSortDir] = useState<SortDir>("desc")
     const [departmentId, setDepartmentId] = useState<string>("")
 
-    const { data: deptsData, isLoading: isLoadingDepts } = useDepartments({ branchId: activeStoreId, limit: 100 })
+    const { data: deptsData, isLoading: isLoadingDepts } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
 
     const { data: reportData, isLoading } = useDepartmentSalesReport({
         branchId: activeStoreId || undefined,
