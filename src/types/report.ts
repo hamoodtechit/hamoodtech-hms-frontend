@@ -73,3 +73,27 @@ export interface IServiceSalesResponse {
   message: string;
   data: IServiceSalesItem[];
 }
+
+// Department Sales Report Types
+export interface IDepartmentSalesItem {
+  departmentId: string;
+  departmentName: string;
+  totalSaleCount: number;
+  totalAmount: number;
+  totalDiscount: number;
+  netAmount: number;
+  services: IServiceSalesItem[];
+}
+
+export interface IDepartmentSalesParams {
+  startDate?: string;
+  endDate?: string;
+  departmentId?: string;
+  branchId?: string;
+}
+
+export interface IDepartmentSalesResponse {
+  success: boolean;
+  message: string;
+  data: IDepartmentSalesItem[];
+}
