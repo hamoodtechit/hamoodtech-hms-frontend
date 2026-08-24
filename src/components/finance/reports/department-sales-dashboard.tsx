@@ -1,5 +1,11 @@
 "use client"
 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDepartmentSalesReport } from "@/hooks/report-queries"
 import { useDepartments } from "@/hooks/hr-queries"
@@ -29,6 +35,7 @@ import {
     ShoppingCart,
     TrendingUp,
     FileDown,
+    Printer,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -141,6 +148,50 @@ export function DepartmentSalesDashboard() {
         document.body.removeChild(link)
     }
 
+    const handlePrintReport = () => {
+        const printContent = document.getElementById('department-sales-print-content')?.innerHTML
+        if (!printContent) return
+
+        const iframe = document.createElement('iframe')
+        iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;'
+        document.body.appendChild(iframe)
+
+        const iframeDoc = iframe.contentWindow?.document
+        if (iframeDoc) {
+            iframeDoc.open()
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Department Sales Report</title>
+                        ${Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(el => el.outerHTML).join('\n')}
+                        <style>
+                            @page { size: A4; margin: 0; }
+                            body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
+                            .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Department Sales Report</h2>
+                            ${printContent}
+                        </div>
+                    </body>
+                </html>
+            `)
+            iframeDoc.close()
+
+            setTimeout(() => {
+                iframe.contentWindow?.focus()
+                iframe.contentWindow?.print()
+                setTimeout(() => {
+                    document.body.removeChild(iframe)
+                }, 1000)
+            }, 500)
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -207,10 +258,24 @@ export function DepartmentSalesDashboard() {
                         </div>
                     </FilterPopover>
                     <DatePickerWithRange date={date} setDate={setDate} />
-                    <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
-                        <FileDown className="h-4 w-4" />
-                        Download CSV
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <FileDown className="h-4 w-4" />
+                                Download
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={handlePrintReport}>
+                                <Printer className="h-4 w-4" />
+                                Print / PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 cursor-pointer" onClick={handleExportCSV}>
+                                <FileDown className="h-4 w-4" />
+                                Export CSV
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -274,7 +339,7 @@ export function DepartmentSalesDashboard() {
                         Department-wise Breakdown
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent id="department-sales-print-content">
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
                             <TableHeader>
