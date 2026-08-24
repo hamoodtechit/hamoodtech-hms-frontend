@@ -399,6 +399,12 @@ function SidebarBase() {
               href: "/reports/service-sales",
               permission: "report:read",
               roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+            },
+            {
+              label: "Department Sales",
+              href: "/reports/department-sales",
+              permission: "report:read",
+              roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             }
           ]
         }
