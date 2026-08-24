@@ -393,6 +393,12 @@ function SidebarBase() {
               href: "/finance/doctor-payment?tab=summary",
               permission: ["consultation-charge:read", "sale:read"],
               roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+            },
+            {
+              label: "Service Sales",
+              href: "/reports/service-sales",
+              permission: "report:read",
+              roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             }
           ]
         }
