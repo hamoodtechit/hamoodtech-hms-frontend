@@ -2,9 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDepartmentSalesReport } from "@/hooks/report-queries"
+import { useDepartments } from "@/hooks/hr-queries"
 import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { FilterPopover } from "@/components/shared/filter-popover"
+import { SearchableSelect } from "@/components/shared/searchable-select"
 import { endOfDay, format, startOfMonth } from "date-fns"
 import { useMemo, useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
@@ -40,11 +43,15 @@ export function DepartmentSalesDashboard() {
     })
     const [sortField, setSortField] = useState<SortField>("netAmount")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
+    const [departmentId, setDepartmentId] = useState<string>("")
+
+    const { data: deptsData, isLoading: isLoadingDepts } = useDepartments({ branchId: activeStoreId, limit: 100 })
 
     const { data: reportData, isLoading } = useDepartmentSalesReport({
         branchId: activeStoreId || undefined,
         startDate: date?.from ? format(date.from, "yyyy-MM-dd") : undefined,
         endDate: date?.to ? format(endOfDay(date.to), "yyyy-MM-dd") : undefined,
+        departmentId: departmentId || undefined,
     })
 
     const departments: IDepartmentSalesItem[] = reportData?.data || []
@@ -144,6 +151,25 @@ export function DepartmentSalesDashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <FilterPopover 
+                        activeFilterCount={departmentId ? 1 : 0}
+                        onReset={() => setDepartmentId("")}
+                        className="w-[300px]"
+                    >
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Department</label>
+                                <SearchableSelect 
+                                    value={departmentId}
+                                    onChange={setDepartmentId}
+                                    options={deptsData?.data?.map(d => ({ id: d.id, name: d.name })) || []}
+                                    loading={isLoadingDepts}
+                                    placeholder="Select a department..."
+                                    allLabel="All Departments"
+                                />
+                            </div>
+                        </div>
+                    </FilterPopover>
                     <DatePickerWithRange date={date} setDate={setDate} />
                 </div>
             </div>
