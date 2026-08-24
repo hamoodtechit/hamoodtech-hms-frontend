@@ -50,3 +50,26 @@ export interface IOverallSummaryResponse {
   message: string;
   data: IOverallSummaryData;
 }
+
+// Service Sales Report Types
+export interface IServiceSalesItem {
+  serviceId: string;
+  serviceName: string;
+  totalSaleCount: number;
+  totalAmount: number;
+  totalDiscount: number;
+  netAmount: number;
+}
+
+export interface IServiceSalesParams {
+  startDate?: string;
+  endDate?: string;
+  serviceId?: string;
+  branchId?: string;
+}
+
+export interface IServiceSalesResponse {
+  success: boolean;
+  message: string;
+  data: IServiceSalesItem[];
+}
