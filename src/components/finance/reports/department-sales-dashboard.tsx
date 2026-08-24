@@ -28,6 +28,7 @@ import {
     Layers,
     ShoppingCart,
     TrendingUp,
+    FileDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -105,6 +106,41 @@ export function DepartmentSalesDashboard() {
         </Button>
     )
 
+    const handleExportCSV = () => {
+        let csvContent = "data:text/csv;charset=utf-8,"
+        csvContent += "Department Name,Sale Count,Total Amount,Discount,Net Amount\n"
+
+        if (sortedDepartments.length > 0) {
+            sortedDepartments.forEach(department => {
+                const row = [
+                    `"${department.departmentName}"`,
+                    department.totalSaleCount,
+                    department.totalAmount,
+                    department.totalDiscount,
+                    department.netAmount
+                ]
+                csvContent += row.join(",") + "\n"
+            })
+            
+            // Grand Total
+            csvContent += `\n"GRAND TOTAL",${totals.totalSaleCount},${totals.totalAmount},${totals.totalDiscount},${totals.netAmount}\n`
+        } else {
+            csvContent += "No data available\n"
+        }
+
+        const encodedUri = encodeURI(csvContent)
+        const link = document.createElement("a")
+        link.setAttribute("href", encodedUri)
+        
+        const startStr = date?.from ? format(date.from, "yyyy-MM-dd") : "all"
+        const endStr = date?.to ? format(date.to, "yyyy-MM-dd") : "all"
+        
+        link.setAttribute("download", `department_sales_report_${startStr}_to_${endStr}.csv`)
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
+
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -171,6 +207,10 @@ export function DepartmentSalesDashboard() {
                         </div>
                     </FilterPopover>
                     <DatePickerWithRange date={date} setDate={setDate} />
+                    <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
+                        <FileDown className="h-4 w-4" />
+                        Download CSV
+                    </Button>
                 </div>
             </div>
 
