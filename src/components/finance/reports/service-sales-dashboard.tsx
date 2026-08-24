@@ -6,7 +6,7 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { endOfDay, format, startOfMonth } from "date-fns"
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
 import { Skeleton } from "@/components/ui/skeleton"
 import { IServiceSalesItem } from "@/types/report"
@@ -34,16 +34,12 @@ type SortDir = "asc" | "desc"
 export function ServiceSalesDashboard() {
     const { activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
-    const [date, setDate] = useState<DateRange | undefined>()
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: startOfMonth(new Date()),
+        to: endOfDay(new Date()),
+    })
     const [sortField, setSortField] = useState<SortField>("netAmount")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
-
-    useEffect(() => {
-        setDate({
-            from: startOfMonth(new Date()),
-            to: endOfDay(new Date()),
-        })
-    }, [])
 
     const { data: reportData, isLoading } = useServiceSalesReport({
         branchId: activeStoreId || undefined,
@@ -89,7 +85,7 @@ export function ServiceSalesDashboard() {
         }
     }
 
-    const SortHeader = ({ field, children }: { field: SortField; children: ReactNode }) => (
+    const renderSortHeader = (field: SortField, children: ReactNode) => (
         <Button
             variant="ghost"
             size="sm"
@@ -219,19 +215,19 @@ export function ServiceSalesDashboard() {
                                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                                     <TableHead className="w-12 text-center">#</TableHead>
                                     <TableHead>
-                                        <SortHeader field="serviceName">Service Name</SortHeader>
+                                        {renderSortHeader("serviceName", "Service Name")}
                                     </TableHead>
                                     <TableHead className="text-center">
-                                        <SortHeader field="totalSaleCount">Sale Count</SortHeader>
+                                        {renderSortHeader("totalSaleCount", "Sale Count")}
                                     </TableHead>
                                     <TableHead className="text-right">
-                                        <SortHeader field="totalAmount">Total Amount</SortHeader>
+                                        {renderSortHeader("totalAmount", "Total Amount")}
                                     </TableHead>
                                     <TableHead className="text-right">
-                                        <SortHeader field="totalDiscount">Discount</SortHeader>
+                                        {renderSortHeader("totalDiscount", "Discount")}
                                     </TableHead>
                                     <TableHead className="text-right">
-                                        <SortHeader field="netAmount">Net Amount</SortHeader>
+                                        {renderSortHeader("netAmount", "Net Amount")}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
