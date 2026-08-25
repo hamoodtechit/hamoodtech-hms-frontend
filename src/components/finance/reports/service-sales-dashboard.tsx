@@ -170,6 +170,9 @@ export function ServiceSalesDashboard() {
                             @page { size: A4; margin: 0; }
                             body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
                             .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
+                            /* Fix scrollbars on print */
+                            * { overflow: visible !important; overflow-x: visible !important; overflow-y: visible !important; }
+                            ::-webkit-scrollbar { display: none !important; }
                         </style>
                     </head>
                     <body>
