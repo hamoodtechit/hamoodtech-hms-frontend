@@ -424,22 +424,22 @@ export function ServiceSalesDashboard() {
                                         ))}
 
                                         {/* Grand Total Row */}
-                                        <TableRow className="bg-muted/50 font-bold border-t-2">
-                                            <TableCell colSpan={2} className="text-right uppercase text-xs tracking-wider">
+                                        <TableRow className="bg-muted/50 font-bold border-t-2 text-black print:font-bold">
+                                            <TableCell colSpan={2} className="text-right uppercase text-xs tracking-wider font-bold">
                                                 Grand Total
                                             </TableCell>
-                                            <TableCell className="text-center">
-                                                <span className="inline-flex items-center justify-center min-w-[2.5rem] rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary">
+                                            <TableCell className="text-center font-bold">
+                                                <span className="inline-flex items-center justify-center min-w-[2.5rem] rounded-full bg-primary/20 px-2.5 py-0.5 text-xs font-bold text-primary print:text-black">
                                                     {totals.totalSaleCount}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-right font-mono">
+                                            <TableCell className="text-right font-mono font-bold">
                                                 {formatCurrency(totals.totalAmount)}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono text-amber-700">
+                                            <TableCell className="text-right font-mono font-bold text-amber-700 print:text-black">
                                                 {formatCurrency(totals.totalDiscount)}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono text-emerald-700">
+                                            <TableCell className="text-right font-mono font-bold text-emerald-700 print:text-black">
                                                 {formatCurrency(totals.netAmount)}
                                             </TableCell>
                                         </TableRow>
