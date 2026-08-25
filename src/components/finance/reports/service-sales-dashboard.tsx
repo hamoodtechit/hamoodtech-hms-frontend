@@ -43,7 +43,7 @@ type SortField = "serviceName" | "totalSaleCount" | "totalAmount" | "totalDiscou
 type SortDir = "asc" | "desc"
 
 export function ServiceSalesDashboard() {
-    const { activeStoreId } = useStoreContext()
+    const { stores, activeStoreId } = useStoreContext()
     const { formatCurrency } = useCurrency()
     const [date, setDate] = useState<DateRange | undefined>({
         from: startOfMonth(new Date()),
@@ -151,6 +151,14 @@ export function ServiceSalesDashboard() {
     const handlePrintReport = () => {
         const printContent = document.getElementById('service-sales-print-content')?.innerHTML
         if (!printContent) return
+        
+        const activeBranch = stores.find(s => s.id === activeStoreId)
+        const logoSrc = activeBranch?.logoUrl || "/Logo.png"
+        const hospitalName = activeBranch?.name || "PATWARY GENERAL HOSPITAL"
+        
+        const startDateStr = date?.from ? format(date.from, "dd MMM yyyy") : ""
+        const endDateStr = date?.to ? format(date.to, "dd MMM yyyy") : ""
+        const dateStr = startDateStr && endDateStr ? `From ${startDateStr} to ${endDateStr}` : ""
 
         const iframe = document.createElement('iframe')
         iframe.style.cssText = 'position:fixed; width:100vw; height:100vh; left:-100vw; top:-100vh; border:none;'
@@ -169,15 +177,29 @@ export function ServiceSalesDashboard() {
                         <style>
                             @page { size: A4; margin: 0; }
                             body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; justify-content: center; }
-                            .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; }
+                            .print-container { width: 210mm; min-height: 297mm; padding: 10mm; box-sizing: border-box; font-family: sans-serif; }
                             /* Fix scrollbars on print */
                             * { overflow: visible !important; overflow-x: visible !important; overflow-y: visible !important; }
                             ::-webkit-scrollbar { display: none !important; }
+                            table { font-size: 10px !important; border-collapse: collapse !important; width: 100% !important; border: 1px solid black !important; }
+                            th, td { border: 1px solid black !important; padding: 4px !important; color: black !important; }
+                            thead tr { background-color: #f9fafb !important; }
                         </style>
                     </head>
                     <body>
                         <div class="print-container">
-                            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Service Sales Report</h2>
+                            <!-- Header matching Pharmacy Sales Report -->
+                            <div class="flex flex-col items-center mb-6" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px;">
+                                <img src="${logoSrc}" alt="Hospital Logo" class="h-16 w-auto mb-2" style="height: 64px; width: auto; margin-bottom: 8px;" />
+                                <div class="text-center" style="text-align: center;">
+                                    <h1 class="text-2xl font-bold uppercase" style="font-size: 24px; font-weight: bold; text-transform: uppercase;">${hospitalName}</h1>
+                                    <h2 class="text-xl font-bold underline mt-1" style="font-size: 20px; font-weight: bold; text-decoration: underline; margin-top: 4px;">Service Sales Statement</h2>
+                                    <p class="text-sm mt-2" style="font-size: 14px; margin-top: 8px;">
+                                        ${dateStr}
+                                    </p>
+                                </div>
+                            </div>
+                            
                             ${printContent}
                         </div>
                     </body>
