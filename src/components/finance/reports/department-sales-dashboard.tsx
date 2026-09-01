@@ -14,6 +14,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { useDebounce } from "@/hooks/use-debounce"
 import { endOfDay, format, startOfMonth } from "date-fns"
 import { useMemo, useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
@@ -52,8 +53,10 @@ export function DepartmentSalesDashboard() {
     const [sortField, setSortField] = useState<SortField>("netAmount")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
     const [departmentId, setDepartmentId] = useState<string>("")
+    const [deptSearch, setDeptSearch] = useState<string>("")
+    const [debouncedDeptSearch] = useDebounce(deptSearch, 300)
 
-    const { data: deptsData, isLoading: isLoadingDepts } = useDepartments({ branchId: activeStoreId || undefined, limit: 100 })
+    const { data: deptsData, isLoading: isLoadingDepts } = useDepartments({ branchId: activeStoreId || undefined, search: debouncedDeptSearch || undefined, limit: 20 })
 
     const { data: reportData, isLoading } = useDepartmentSalesReport({
         branchId: activeStoreId || undefined,
@@ -276,6 +279,7 @@ export function DepartmentSalesDashboard() {
                                     onChange={setDepartmentId}
                                     options={deptsData?.data?.map(d => ({ id: d.id, name: d.name })) || []}
                                     loading={isLoadingDepts}
+                                    onSearchChange={setDeptSearch}
                                     placeholder="Select a department..."
                                     allLabel="All Departments"
                                 />
