@@ -57,8 +57,8 @@ export function ServiceSalesDashboard() {
     
     const { data: reportData, isLoading } = useServiceSalesReport({
         branchId: activeStoreId || undefined,
-        startDate: date?.from ? format(date.from, "yyyy-MM-dd") : undefined,
-        endDate: date?.to ? format(endOfDay(date.to), "yyyy-MM-dd") : undefined,
+        startDate: date?.from ? date.from.toISOString() : undefined,
+        endDate: date?.to ? endOfDay(date.to).toISOString() : undefined,
         serviceId: serviceId || undefined,
     })
 
