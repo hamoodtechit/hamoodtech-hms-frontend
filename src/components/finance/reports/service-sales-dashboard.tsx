@@ -14,6 +14,7 @@ import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { FilterPopover } from "@/components/shared/filter-popover"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { useDebounce } from "@/hooks/use-debounce"
 import { endOfDay, format, startOfMonth } from "date-fns"
 import { useMemo, useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
@@ -52,8 +53,10 @@ export function ServiceSalesDashboard() {
     const [sortField, setSortField] = useState<SortField>("netAmount")
     const [sortDir, setSortDir] = useState<SortDir>("desc")
     const [serviceId, setServiceId] = useState<string>("")
+    const [serviceSearch, setServiceSearch] = useState<string>("")
+    const [debouncedServiceSearch] = useDebounce(serviceSearch, 300)
 
-    const { data: testsData, isLoading: isLoadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
+    const { data: testsData, isLoading: isLoadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, search: debouncedServiceSearch || undefined, limit: 20 })
     
     const { data: reportData, isLoading } = useServiceSalesReport({
         branchId: activeStoreId || undefined,
@@ -276,6 +279,7 @@ export function ServiceSalesDashboard() {
                                     onChange={setServiceId}
                                     options={testsData?.data?.map(t => ({ id: t.id, name: t.name })) || []}
                                     loading={isLoadingTests}
+                                    onSearchChange={setServiceSearch}
                                     placeholder="Select a service..."
                                     allLabel="All Services"
                                 />
