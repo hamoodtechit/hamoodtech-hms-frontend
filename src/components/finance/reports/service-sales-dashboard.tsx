@@ -53,7 +53,7 @@ export function ServiceSalesDashboard() {
     const [sortDir, setSortDir] = useState<SortDir>("desc")
     const [serviceId, setServiceId] = useState<string>("")
 
-    const { data: testsData, isLoading: isLoadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined })
+    const { data: testsData, isLoading: isLoadingTests } = useDiagnosticTests({ branchId: activeStoreId || undefined, limit: 1000 })
     
     const { data: reportData, isLoading } = useServiceSalesReport({
         branchId: activeStoreId || undefined,
