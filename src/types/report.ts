@@ -97,3 +97,62 @@ export interface IDepartmentSalesResponse {
   message: string;
   data: IDepartmentSalesItem[];
 }
+
+// Pharmacy Sales Report Types
+export interface IPharmacySalesPayment {
+  date: string;
+  amount: number;
+  paymentMethod: string;
+  receiveAccount: string;
+}
+
+export interface IPharmacySaleItem {
+  slNo: number;
+  patientNumber: string;
+  invoiceNumber: string;
+  totalPrice: number;
+  discountAmount: number;
+  taxAmount: number;
+  netAmount: number;
+  paid: number;
+  due: number;
+  createdBy: string;
+  createdAt: string;
+  payments: IPharmacySalesPayment[];
+}
+
+export interface IPharmacyReturnItem {
+  slNo: number;
+  patientNumber: string;
+  invoiceNumber: string;
+  totalReturn: number;
+  taxAmount: number;
+  createdAt: string;
+}
+
+export interface IPharmacySalesReportData {
+  outdoorSales: IPharmacySaleItem[];
+  indoorSales: IPharmacySaleItem[];
+  outdoorReturns: IPharmacyReturnItem[];
+  indoorReturns: IPharmacyReturnItem[];
+  totalPrice: number;
+  discountAmount: number;
+  taxAmount: number;
+  netAmount: number;
+  paid: number;
+  due: number;
+  totalReturn: number;
+}
+
+export interface IPharmacySalesParams {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+}
+
+export interface IPharmacySalesReportResponse {
+  success: boolean;
+  message: string;
+  data: IPharmacySalesReportData;
+}
+
