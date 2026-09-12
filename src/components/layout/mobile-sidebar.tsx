@@ -406,6 +406,12 @@ function SidebarBase() {
               href: "/reports/department-sales",
               permission: "report:read",
               roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
+            },
+            {
+              label: "Pharmacy Sales",
+              href: "/reports/pharmacy-sales",
+              permission: "report:read",
+              roles: ["Super Admin", "Admin", "Accountant", "Pharmacist"],
             }
           ]
         }
