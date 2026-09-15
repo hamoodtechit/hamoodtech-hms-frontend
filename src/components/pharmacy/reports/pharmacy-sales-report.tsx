@@ -48,10 +48,12 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const outdoorSales = patchSales(data?.outdoor?.sales || [])
   const outdoorReturns = data?.outdoor?.returns || []
   const outdoorSubTotals = computeSubTotals(outdoorSales)
+  const outdoorBackendSubTotals = data?.outdoor?.subTotals || {}
   
   const indoorSales = patchSales(data?.indoor?.sales || [])
   const indoorReturns = data?.indoor?.returns || []
   const indoorSubTotals = computeSubTotals(indoorSales)
+  const indoorBackendSubTotals = data?.indoor?.subTotals || {}
 
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
 
@@ -148,7 +150,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               ))}
               <tr className="font-bold bg-red-50">
                 <td colSpan={3} className="border border-black px-1 py-1 text-right uppercase">Total Return :</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(outdoorSubTotals.totalReturn || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(outdoorBackendSubTotals.totalReturn || 0).toFixed(2)}</td>
                 <td colSpan={2} className="border border-black px-1 py-1"></td>
               </tr>
             </tbody>
@@ -232,7 +234,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               ))}
               <tr className="font-bold bg-red-50">
                 <td colSpan={3} className="border border-black px-1 py-1 text-right uppercase">Total Return :</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(indoorSubTotals.totalReturn || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(indoorBackendSubTotals.totalReturn || 0).toFixed(2)}</td>
                 <td colSpan={2} className="border border-black px-1 py-1"></td>
               </tr>
             </tbody>
@@ -309,7 +311,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
             </div>
             <div className="flex justify-between font-bold border-t border-black pt-1 bg-green-50 text-green-800">
               <span>Total Cash Collected</span>
-              <span>{(outdoorSubTotals.paid + indoorSubTotals.paid + Number(summary.totalDueCollected || 0)).toFixed(2)}</span>
+              <span>{(outdoorSubTotals.paid + indoorSubTotals.paid + Number(summary.totalDueCollected || 0) - Number(summary.totalReturn || 0)).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600 border-t border-black pt-1">
               <span>Remaining Due</span>

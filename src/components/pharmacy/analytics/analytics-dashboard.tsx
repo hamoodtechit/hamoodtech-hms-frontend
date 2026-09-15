@@ -173,14 +173,16 @@ export function AnalyticsDashboard() {
             const remainingDue = [...outdoorSales, ...indoorSales].reduce((sum, s) => sum + Number(s.due || 0), 0)
             const totalDueCollected = Number(summary.totalDueCollected || 0)
 
+            const totalReturn = Number(summary.totalReturn || 0)
+
             csvContent += "\n\nSUMMARY\n"
             csvContent += `Gross Sale,${summary.totalSale || 0}\n`
-            csvContent += `Total Return,${summary.totalReturn || 0}\n`
+            csvContent += `Total Return,${totalReturn}\n`
             csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
             csvContent += `Net Sales,${summary.totalNetSale || 0}\n`
             csvContent += `Upfront Paid,${upfrontPaid.toFixed(2)}\n`
             csvContent += `Due Collected,${totalDueCollected.toFixed(2)}\n`
-            csvContent += `Total Cash Collected,${(upfrontPaid + totalDueCollected).toFixed(2)}\n`
+            csvContent += `Total Cash Collected,${(upfrontPaid + totalDueCollected - totalReturn).toFixed(2)}\n`
             csvContent += `Remaining Due,${remainingDue.toFixed(2)}\n`
             
             const encodedUri = encodeURI(csvContent)
