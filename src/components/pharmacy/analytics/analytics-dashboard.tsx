@@ -182,7 +182,7 @@ export function AnalyticsDashboard() {
                 csvContent += `Net Sales,${summary.totalNetSale || 0}\n`
                 csvContent += `Upfront Paid,${upfrontPaid.toFixed(2)}\n`
                 csvContent += `Due Collected,${totalDueCollected.toFixed(2)}\n`
-                csvContent += `Total Cash Collected,${(upfrontPaid + totalDueCollected - totalReturn).toFixed(2)}\n`
+                csvContent += `Cash in Hand,${Number(summary.totalCollection || 0).toFixed(2)}\n`
                 csvContent += `Remaining Due,${remainingDue.toFixed(2)}\n`
 
                 const encodedUri = encodeURI(csvContent)

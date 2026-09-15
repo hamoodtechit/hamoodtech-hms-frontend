@@ -310,8 +310,8 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold border-t border-black pt-1 bg-green-50 text-green-800">
-              <span>Total Cash Collected</span>
-              <span>{(outdoorSubTotals.paid + indoorSubTotals.paid + Number(summary.totalDueCollected || 0) - Number(summary.totalReturn || 0)).toFixed(2)}</span>
+              <span>Cash in Hand</span>
+              <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600 border-t border-black pt-1">
               <span>Remaining Due</span>
