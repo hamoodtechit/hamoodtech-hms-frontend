@@ -13,16 +13,45 @@ interface SalesReportProps {
 export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesReportProps) {
   const { formatCurrency } = useCurrency()
   
-  const outdoorSales = data?.outdoor?.sales || []
-  const outdoorReturns = data?.outdoor?.returns || []
-  const outdoorSubTotals = data?.outdoor?.subTotals || {}
-  
-  const indoorSales = data?.indoor?.sales || []
-  const indoorReturns = data?.indoor?.returns || []
-  const indoorSubTotals = data?.indoor?.subTotals || {}
-  
   const dueCollections = data?.dueCollections || []
   const summary = data?.summary || {}
+
+  // Helper: sum all due collections for a specific invoice
+  const getDueCollectionForInvoice = (invoiceNumber: string) => {
+    return dueCollections
+      .filter((d: any) => d.invoiceNumber === invoiceNumber)
+      .reduce((sum: number, d: any) => sum + Number(d.collectedAmount || 0), 0)
+  }
+
+  // Patch sales: subtract due collections from paid to get upfront-only values
+  const patchSales = (sales: any[]) => {
+    return sales.map(s => {
+      const dueCollected = getDueCollectionForInvoice(s.invoiceNumber)
+      const upfrontPaid = Math.max(0, Number(s.paid || 0) - dueCollected)
+      const upfrontDue = Number(s.netAmount || 0) - upfrontPaid
+      return { ...s, paid: upfrontPaid, due: upfrontDue }
+    })
+  }
+
+  // Compute subtotals from patched rows (not backend subtotals which are inflated)
+  const computeSubTotals = (sales: any[]) => {
+    return sales.reduce((acc, s) => ({
+      totalPrice: acc.totalPrice + Number(s.totalPrice || 0),
+      discountAmount: acc.discountAmount + Number(s.discountAmount || 0),
+      taxAmount: acc.taxAmount + Number(s.taxAmount || 0),
+      netAmount: acc.netAmount + Number(s.netAmount || 0),
+      paid: acc.paid + Number(s.paid || 0),
+      due: acc.due + Number(s.due || 0),
+    }), { totalPrice: 0, discountAmount: 0, taxAmount: 0, netAmount: 0, paid: 0, due: 0 })
+  }
+
+  const outdoorSales = patchSales(data?.outdoor?.sales || [])
+  const outdoorReturns = data?.outdoor?.returns || []
+  const outdoorSubTotals = computeSubTotals(outdoorSales)
+  
+  const indoorSales = patchSales(data?.indoor?.sales || [])
+  const indoorReturns = data?.indoor?.returns || []
+  const indoorSubTotals = computeSubTotals(indoorSales)
 
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
 
@@ -270,17 +299,21 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-red-600">
-              <span>Remaining Due (New)</span>
-              <span className="font-bold">{Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}</span>
+            <div className="flex justify-between border-t border-black pt-1">
+              <span>Upfront Paid</span>
+              <span className="font-bold">{(outdoorSubTotals.paid + indoorSubTotals.paid).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-blue-700">
-              <span>Total Due Collected</span>
+              <span>Due Collected</span>
               <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold border-t border-black pt-1">
-              <span>Total Collection</span>
-              <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
+            <div className="flex justify-between font-bold border-t border-black pt-1 bg-green-50 text-green-800">
+              <span>Total Cash Collected</span>
+              <span>{(outdoorSubTotals.paid + indoorSubTotals.paid + Number(summary.totalDueCollected || 0)).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-red-600 border-t border-black pt-1">
+              <span>Remaining Due</span>
+              <span className="font-bold">{(outdoorSubTotals.due + indoorSubTotals.due).toFixed(2)}</span>
             </div>
           </div>
         </div>

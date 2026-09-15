@@ -114,9 +114,28 @@ export function AnalyticsDashboard() {
             }
         } else {
             // Excel/CSV logic — Outdoor Sales
-            const outdoorSales = data.data.outdoor?.sales || []
-            const outdoorReturns = data.data.outdoor?.returns || []
             const dueCollections = data.data.dueCollections || []
+            const outdoorReturns = data.data.outdoor?.returns || []
+
+            // Helper: sum all due collections for a specific invoice
+            const getDueCollectionForInvoice = (invoiceNumber: string) => {
+                return dueCollections
+                    .filter((d: any) => d.invoiceNumber === invoiceNumber)
+                    .reduce((sum: number, d: any) => sum + Number(d.collectedAmount || 0), 0)
+            }
+
+            // Patch sales: subtract due collections from paid
+            const patchSales = (sales: any[]) => {
+                return sales.map(s => {
+                    const dueCollected = getDueCollectionForInvoice(s.invoiceNumber)
+                    const upfrontPaid = Math.max(0, Number(s.paid || 0) - dueCollected)
+                    const upfrontDue = Number(s.netAmount || 0) - upfrontPaid
+                    return { ...s, paid: upfrontPaid, due: upfrontDue }
+                })
+            }
+
+            const outdoorSales = patchSales(data.data.outdoor?.sales || [])
+            const indoorSales = patchSales(data.data.indoor?.sales || [])
             const summary = data.data.summary || {}
 
             let csvContent = "data:text/csv;charset=utf-8,"
@@ -149,15 +168,20 @@ export function AnalyticsDashboard() {
                 ).join("\n")
             }
 
-            // Summary
+            // Summary — compute upfront paid from patched rows
+            const upfrontPaid = [...outdoorSales, ...indoorSales].reduce((sum, s) => sum + Number(s.paid || 0), 0)
+            const remainingDue = [...outdoorSales, ...indoorSales].reduce((sum, s) => sum + Number(s.due || 0), 0)
+            const totalDueCollected = Number(summary.totalDueCollected || 0)
+
             csvContent += "\n\nSUMMARY\n"
             csvContent += `Gross Sale,${summary.totalSale || 0}\n`
             csvContent += `Total Return,${summary.totalReturn || 0}\n`
             csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
-            csvContent += `Net Sales,${summary.netSales || 0}\n`
-            csvContent += `Total Due Collected,${summary.totalDueCollected || 0}\n`
-            csvContent += `Total Collection,${summary.totalCollection || 0}\n`
-            csvContent += `Net Collection,${summary.netCollection || 0}\n`
+            csvContent += `Net Sales,${summary.totalNetSale || 0}\n`
+            csvContent += `Upfront Paid,${upfrontPaid.toFixed(2)}\n`
+            csvContent += `Due Collected,${totalDueCollected.toFixed(2)}\n`
+            csvContent += `Total Cash Collected,${(upfrontPaid + totalDueCollected).toFixed(2)}\n`
+            csvContent += `Remaining Due,${remainingDue.toFixed(2)}\n`
             
             const encodedUri = encodeURI(csvContent)
             const link = document.createElement("a")
