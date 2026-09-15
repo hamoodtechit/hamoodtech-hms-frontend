@@ -117,25 +117,8 @@ export function AnalyticsDashboard() {
                 const dueCollections = data.data.dueCollections || []
                 const outdoorReturns = data.data.outdoor?.returns || []
 
-                // Helper: sum all due collections for a specific invoice
-                const getDueCollectionForInvoice = (invoiceNumber: string) => {
-                    return dueCollections
-                        .filter((d: any) => d.invoiceNumber === invoiceNumber)
-                        .reduce((sum: number, d: any) => sum + Number(d.collectedAmount || 0), 0)
-                }
-
-                // Patch sales: subtract due collections from paid
-                const patchSales = (sales: any[]) => {
-                    return sales.map(s => {
-                        const dueCollected = getDueCollectionForInvoice(s.invoiceNumber)
-                        const upfrontPaid = Math.min(Number(s.netAmount || 0), Math.max(0, Number(s.paid || 0) - dueCollected))
-                        const upfrontDue = Number(s.netAmount || 0) - upfrontPaid
-                        return { ...s, paid: upfrontPaid, due: upfrontDue }
-                    })
-                }
-
-                const outdoorSales = patchSales(data.data.outdoor?.sales || [])
-                const indoorSales = patchSales(data.data.indoor?.sales || [])
+                const outdoorSales = data.data.outdoor?.sales || []
+                const indoorSales = data.data.indoor?.sales || []
                 const summary = data.data.summary || {}
 
                 let csvContent = "data:text/csv;charset=utf-8,"
@@ -168,8 +151,6 @@ export function AnalyticsDashboard() {
                     ).join("\n")
                 }
 
-                // Summary — compute upfront paid from patched rows
-                const upfrontPaid = [...outdoorSales, ...indoorSales].reduce((sum, s) => sum + Number(s.paid || 0), 0)
                 const remainingDue = [...outdoorSales, ...indoorSales].reduce((sum, s) => sum + Number(s.due || 0), 0)
                 const totalDueCollected = Number(summary.totalDueCollected || 0)
 
@@ -180,7 +161,7 @@ export function AnalyticsDashboard() {
                 csvContent += `Total Return,${totalReturn}\n`
                 csvContent += `Total Discount,${summary.totalDiscount || 0}\n`
                 csvContent += `Net Sales,${summary.totalNetSale || 0}\n`
-                csvContent += `Upfront Paid,${upfrontPaid.toFixed(2)}\n`
+                csvContent += `Upfront Paid,${(outdoorSales.reduce((acc: number, s: any) => acc + Number(s.paid || 0), 0) + indoorSales.reduce((acc: number, s: any) => acc + Number(s.paid || 0), 0)).toFixed(2)}\n`
                 csvContent += `Due Collected,${totalDueCollected.toFixed(2)}\n`
                 csvContent += `Cash in Hand,${Number(summary.totalCollection || 0).toFixed(2)}\n`
                 csvContent += `Remaining Due,${remainingDue.toFixed(2)}\n`

@@ -16,44 +16,13 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const dueCollections = data?.dueCollections || []
   const summary = data?.summary || {}
 
-  // Helper: sum all due collections for a specific invoice
-  const getDueCollectionForInvoice = (invoiceNumber: string) => {
-    return dueCollections
-      .filter((d: any) => d.invoiceNumber === invoiceNumber)
-      .reduce((sum: number, d: any) => sum + Number(d.collectedAmount || 0), 0)
-  }
-
-  // Patch sales: subtract due collections from paid to get upfront-only values
-  const patchSales = (sales: any[]) => {
-    return sales.map(s => {
-      const dueCollected = getDueCollectionForInvoice(s.invoiceNumber)
-      const upfrontPaid = Math.max(0, Number(s.paid || 0) - dueCollected)
-      const upfrontDue = Number(s.netAmount || 0) - upfrontPaid
-      return { ...s, paid: upfrontPaid, due: upfrontDue }
-    })
-  }
-
-  // Compute subtotals from patched rows (not backend subtotals which are inflated)
-  const computeSubTotals = (sales: any[]) => {
-    return sales.reduce((acc, s) => ({
-      totalPrice: acc.totalPrice + Number(s.totalPrice || 0),
-      discountAmount: acc.discountAmount + Number(s.discountAmount || 0),
-      taxAmount: acc.taxAmount + Number(s.taxAmount || 0),
-      netAmount: acc.netAmount + Number(s.netAmount || 0),
-      paid: acc.paid + Number(s.paid || 0),
-      due: acc.due + Number(s.due || 0),
-    }), { totalPrice: 0, discountAmount: 0, taxAmount: 0, netAmount: 0, paid: 0, due: 0 })
-  }
-
-  const outdoorSales = patchSales(data?.outdoor?.sales || [])
+  const outdoorSales = data?.outdoor?.sales || []
   const outdoorReturns = data?.outdoor?.returns || []
-  const outdoorSubTotals = computeSubTotals(outdoorSales)
-  const outdoorBackendSubTotals = data?.outdoor?.subTotals || {}
-
-  const indoorSales = patchSales(data?.indoor?.sales || [])
+  const outdoorSubTotals = data?.outdoor?.subTotals || {}
+  
+  const indoorSales = data?.indoor?.sales || []
   const indoorReturns = data?.indoor?.returns || []
-  const indoorSubTotals = computeSubTotals(indoorSales)
-  const indoorBackendSubTotals = data?.indoor?.subTotals || {}
+  const indoorSubTotals = data?.indoor?.subTotals || {}
 
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
 
@@ -150,7 +119,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               ))}
               <tr className="font-bold bg-red-50">
                 <td colSpan={3} className="border border-black px-1 py-1 text-right uppercase">Total Return :</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(outdoorBackendSubTotals.totalReturn || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(outdoorSubTotals.totalReturn || 0).toFixed(2)}</td>
                 <td colSpan={2} className="border border-black px-1 py-1"></td>
               </tr>
             </tbody>
@@ -234,7 +203,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               ))}
               <tr className="font-bold bg-red-50">
                 <td colSpan={3} className="border border-black px-1 py-1 text-right uppercase">Total Return :</td>
-                <td className="border border-black px-1 py-1 text-right">{Number(indoorBackendSubTotals.totalReturn || 0).toFixed(2)}</td>
+                <td className="border border-black px-1 py-1 text-right">{Number(indoorSubTotals.totalReturn || 0).toFixed(2)}</td>
                 <td colSpan={2} className="border border-black px-1 py-1"></td>
               </tr>
             </tbody>
