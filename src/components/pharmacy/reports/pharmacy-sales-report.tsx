@@ -12,7 +12,7 @@ interface SalesReportProps {
 
 export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesReportProps) {
   const { formatCurrency } = useCurrency()
-  
+
   const dueCollections = data?.dueCollections || []
   const summary = data?.summary || {}
 
@@ -49,7 +49,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const outdoorReturns = data?.outdoor?.returns || []
   const outdoorSubTotals = computeSubTotals(outdoorSales)
   const outdoorBackendSubTotals = data?.outdoor?.subTotals || {}
-  
+
   const indoorSales = patchSales(data?.indoor?.sales || [])
   const indoorReturns = data?.indoor?.returns || []
   const indoorSubTotals = computeSubTotals(indoorSales)
@@ -63,11 +63,11 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
       <div className="flex flex-col items-center mb-6">
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
         <div className="text-center">
-            <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
-            <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
-            <p className="text-sm mt-2">
+          <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
+          <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
+          <p className="text-sm mt-2">
             From {format(dateRange.from, "dd MMM yyyy")} to {format(dateRange.to, "dd MMM yyyy")}
-            </p>
+          </p>
         </div>
       </div>
 
