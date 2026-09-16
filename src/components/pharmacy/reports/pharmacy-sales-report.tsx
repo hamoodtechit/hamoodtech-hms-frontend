@@ -270,17 +270,19 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-red-600">
-              <span>Remaining Due (New)</span>
-              <span className="font-bold">{Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-blue-700">
-              <span>Total Due Collected</span>
+            <div className="flex justify-between text-blue-700 border-t border-black pt-1 mt-1">
+              <span>Due Collected</span>
               <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold border-t border-black pt-1">
-              <span>Total Collection</span>
+            <div className="flex justify-between bg-green-100 text-green-800 font-bold px-1 py-0.5">
+              <span>Cash in Hand</span>
               <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-red-600 border-t border-black pt-1">
+              <span>Remaining Due</span>
+              <span className="font-bold">
+                {Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
