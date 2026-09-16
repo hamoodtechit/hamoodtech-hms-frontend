@@ -155,3 +155,4 @@ export interface IPharmacySalesReportResponse {
   message: string;
   data: IPharmacySalesReportData;
 }
+
