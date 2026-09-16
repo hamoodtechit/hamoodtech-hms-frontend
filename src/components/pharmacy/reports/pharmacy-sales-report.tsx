@@ -276,7 +276,7 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
             </div>
             <div className="flex justify-between bg-green-100 text-green-800 font-bold px-1 py-0.5">
               <span>Cash in Hand</span>
-              <span>{(Number(summary.totalCollection || 0) + Number(summary.totalDueCollected || 0)).toFixed(2)}</span>
+              <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600 border-t border-black pt-1">
               <span>Remaining Due</span>
