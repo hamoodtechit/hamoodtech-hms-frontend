@@ -84,8 +84,7 @@ export function AnalyticsDashboard() {
 
                 const totalDueCollected = dueCollectionResponse?.data?.summary?.totalDueCollected || 0;
                 data.data.summary.totalDueCollected = totalDueCollected;
-                data.data.summary.totalCollection = Number(data.data.summary.totalCollection || 0) + totalDueCollected;
-                data.data.summary.netCollection = Number(data.data.summary.netCollection || 0) + totalDueCollected;
+                // Removed frontend calculation of totalCollection and netCollection to strictly use backend data
             }
 
             toast.dismiss(loadingToast)
