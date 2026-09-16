@@ -12,7 +12,10 @@ interface SalesReportProps {
 
 export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesReportProps) {
   const { formatCurrency } = useCurrency()
-  
+
+  const dueCollections = data?.dueCollections || []
+  const summary = data?.summary || {}
+
   const outdoorSales = data?.outdoor?.sales || []
   const outdoorReturns = data?.outdoor?.returns || []
   const outdoorSubTotals = data?.outdoor?.subTotals || {}
@@ -20,9 +23,6 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
   const indoorSales = data?.indoor?.sales || []
   const indoorReturns = data?.indoor?.returns || []
   const indoorSubTotals = data?.indoor?.subTotals || {}
-  
-  const dueCollections = data?.dueCollections || []
-  const summary = data?.summary || {}
 
   const logoSrc = activeBranch?.logoUrl || "/Logo.png"
 
@@ -32,11 +32,11 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
       <div className="flex flex-col items-center mb-6">
         <img src={logoSrc} alt="Hospital Logo" className="h-16 w-auto mb-2" />
         <div className="text-center">
-            <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
-            <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
-            <p className="text-sm mt-2">
+          <h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1>
+          <h2 className="text-xl font-bold underline mt-1">Pharmacy Sales Statement</h2>
+          <p className="text-sm mt-2">
             From {format(dateRange.from, "dd MMM yyyy")} to {format(dateRange.to, "dd MMM yyyy")}
-            </p>
+          </p>
         </div>
       </div>
 
@@ -270,17 +270,19 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>Total Return</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-red-600">
-              <span>Remaining Due (New)</span>
-              <span className="font-bold">{Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-blue-700">
-              <span>Total Due Collected</span>
+            <div className="flex justify-between text-blue-700 border-t border-black pt-1 mt-1">
+              <span>Due Collected</span>
               <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold border-t border-black pt-1">
-              <span>Total Collection</span>
+            <div className="flex justify-between bg-green-100 text-green-800 font-bold px-1 py-0.5">
+              <span>Cash in Hand</span>
               <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-red-600 border-t border-black pt-1">
+              <span>Remaining Due</span>
+              <span className="font-bold">
+                {Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - (Number(summary.totalCollection || 0) - Number(summary.totalDueCollected || 0))).toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
