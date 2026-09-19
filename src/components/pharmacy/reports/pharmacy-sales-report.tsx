@@ -247,39 +247,51 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
 
       {/* ── Summary ───────────────────────────────────────────── */}
       <div className="flex justify-end mt-4">
-        <div className="w-72 border border-black">
+        <div className="w-80 border border-black">
           <div className="bg-gray-200 text-center font-bold border-b border-black py-1 uppercase text-xs">Summary</div>
-          <div className="p-2 space-y-1 text-xs">
+          <div className="p-2 space-y-0.5 text-xs">
+            {/* Section 1: Gross → Net */}
             <div className="flex justify-between">
-              <span>Total Sale (Gross)</span>
+              <span>Total Sale</span>
               <span className="font-bold">{Number(summary.totalSale || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Total Tax</span>
+              <span>(+) Total Tax</span>
               <span className="font-bold">{Number(summary.totalTax || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600">
-              <span>Total Discount</span>
+              <span>(-) Total Discount</span>
               <span className="font-bold">- {Number(summary.totalDiscount || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between border-t border-black pt-1">
+            <div className="flex justify-between font-bold border-t border-black pt-1 mt-1">
               <span>Net Sales</span>
-              <span className="font-bold">{Number(summary.totalNetSale || 0).toFixed(2)}</span>
+              <span>{Number(summary.totalNetSale || 0).toFixed(2)}</span>
             </div>
+
+            {/* Section 2: Net Sales → after returns */}
             <div className="flex justify-between text-red-600">
-              <span>Total Return</span>
+              <span>(-) Returns</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-blue-700 border-t border-black pt-1 mt-1">
-              <span>Due Collected</span>
-              <span className="font-bold">{Number(summary.totalDueCollected || 0).toFixed(2)}</span>
+
+            {/* Section 3: Cash collections */}
+            <div className="border-t border-dashed border-gray-400 my-1"></div>
+            <div className="flex justify-between">
+              <span>Sale Cash</span>
+              <span className="font-bold">{Number(summary.totalCollection || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between bg-green-100 text-green-800 font-bold px-1 py-0.5">
-              <span>Cash in Hand</span>
-              <span>{Number(summary.totalCollection || 0).toFixed(2)}</span>
+            <div className="flex justify-between text-blue-700">
+              <span>(+) Due Collected</span>
+              <span className="font-bold">+ {Number(summary.totalDueCollected || 0).toFixed(2)}</span>
+            </div>
+
+            {/* Section 4: Totals */}
+            <div className="flex justify-between font-bold border-t border-black pt-1 mt-1 bg-green-100 text-green-800 px-1 py-0.5">
+              <span>Net Collected Cash</span>
+              <span>{(Number(summary.totalCollection || 0) + Number(summary.totalDueCollected || 0)).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-600 border-t border-black pt-1">
-              <span>Remaining Due</span>
+              <span>Due Amount</span>
               <span className="font-bold">
                 {Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - Number(summary.totalCollection || 0)).toFixed(2)}
               </span>
