@@ -268,10 +268,14 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
               <span>{Number(summary.totalNetSale || 0).toFixed(2)}</span>
             </div>
 
-            {/* Section 2: Net Sales → after returns */}
+            {/* Section 2: Net Sales → after returns & due */}
             <div className="flex justify-between text-red-600">
               <span>(-) Returns</span>
               <span className="font-bold">- {Number(summary.totalReturn || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-red-600">
+              <span>(-) Due Amount</span>
+              <span className="font-bold">- {Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - Number(summary.totalCollection || 0)).toFixed(2)}</span>
             </div>
 
             {/* Section 3: Cash collections */}
@@ -289,12 +293,6 @@ export function PharmacySalesReport({ data, dateRange, activeBranch }: SalesRepo
             <div className="flex justify-between font-bold border-t border-black pt-1 mt-1 bg-green-100 text-green-800 px-1 py-0.5">
               <span>Net Collected Cash</span>
               <span>{(Number(summary.totalCollection || 0) + Number(summary.totalDueCollected || 0)).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-red-600 border-t border-black pt-1">
-              <span>Due Amount</span>
-              <span className="font-bold">
-                {Math.max(0, Number(summary.totalNetSale || 0) - Number(summary.totalReturn || 0) - Number(summary.totalCollection || 0)).toFixed(2)}
-              </span>
             </div>
           </div>
         </div>
