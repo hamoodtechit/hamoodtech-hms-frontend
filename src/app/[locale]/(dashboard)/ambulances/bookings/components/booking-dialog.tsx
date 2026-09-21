@@ -203,8 +203,8 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden rounded-3xl border-none shadow-2xl">
-                    <DialogHeader className="p-8 pb-4 bg-zinc-50 dark:bg-zinc-900/50 border-b">
+                <DialogContent className="sm:max-w-[1000px] p-0 overflow-hidden rounded-3xl border-none shadow-2xl flex flex-col max-h-[95vh] w-[95vw]">
+                    <DialogHeader className="p-8 pb-4 bg-zinc-50 dark:bg-zinc-900/50 border-b shrink-0">
                         <DialogTitle className="text-2xl font-black tracking-tight uppercase">
                             {bookingToEdit ? "Manage Transport Booking" : "Record New Dispatch Request"}
                         </DialogTitle>
@@ -214,8 +214,9 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                     </DialogHeader>
 
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 pt-6 space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col overflow-hidden">
+                            <div className="p-6 md:p-8 pt-6 space-y-8 overflow-y-auto">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Section 1: Patient Details */}
                                 <div className="space-y-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/80 mb-2">Patient Information</h3>
@@ -522,8 +523,8 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                                     </FormItem>
                                 )}
                             />
-
-                            <DialogFooter className="pt-4 border-t gap-3 sm:justify-end">
+                            </div>
+                            <DialogFooter className="p-6 border-t gap-3 sm:justify-end bg-zinc-50 dark:bg-zinc-900/50 shrink-0">
                                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isLoading} className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted transition-all">
                                     Discard Changes
                                 </Button>
