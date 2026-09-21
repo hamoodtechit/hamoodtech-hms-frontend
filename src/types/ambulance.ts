@@ -60,6 +60,13 @@ export interface AmbulanceBooking {
     guardianRelation?: string;
     status: AmbulanceBookingStatus;
     note?: string;
+    totalFare: number;
+    discountAmount: number;
+    netFare: number;
+    paidAmount: number;
+    dueAmount: number;
+    paymentStatus: string;
+    transactions?: any[];
     createdAt: string;
     updatedAt: string;
     ambulance?: Ambulance;
@@ -88,6 +95,11 @@ export interface AmbulanceBookingPayload {
     guardianRelation?: string;
     status: AmbulanceBookingStatus | string;
     note?: string;
+    totalFare?: number;
+    discountAmount?: number;
+    paidAmount?: number;
+    paymentAmount?: number;
+    accountId?: string;
 }
 
 export interface AmbulanceBookingPaginatedResponse {

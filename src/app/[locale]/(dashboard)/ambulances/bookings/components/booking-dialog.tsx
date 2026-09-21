@@ -27,13 +27,14 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { SearchableSelect } from "@/components/shared/searchable-select"
+import { useFinanceAccounts } from "@/hooks/finance-queries"
 import { useCreateAmbulanceBooking, useUpdateAmbulanceBooking } from "@/hooks/ambulance-booking-queries"
 import { useAmbulances } from "@/hooks/ambulance-queries"
 import { usePatients } from "@/hooks/patient-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { AmbulanceBooking, AmbulanceBookingPayload } from "@/types/ambulance"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, Plus, UserPlus } from "lucide-react"
+import { Loader2, Plus, UserPlus, Banknote, CreditCard, Percent } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -52,6 +53,21 @@ const bookingSchema = z.object({
     guardianRelation: z.string().optional(),
     status: z.enum(["pending", "confirmed", "cancelled", "completed"]),
     note: z.string().optional(),
+    totalFare: z.coerce.number().optional(),
+    discountAmount: z.coerce.number().optional(),
+    paidAmount: z.coerce.number().optional(),
+    paymentAmount: z.coerce.number().optional(),
+    accountId: z.string().optional(),
+}).superRefine((data, ctx) => {
+    if ((data.paidAmount ?? 0) > 0 || (data.paymentAmount ?? 0) > 0) {
+        if (!data.accountId) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Account is required when collecting payment",
+                path: ["accountId"],
+            });
+        }
+    }
 })
 
 interface BookingDialogProps {
@@ -79,8 +95,14 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
     const { data: patientsRes } = usePatients({ limit: 100 })
     const patients = Array.isArray(patientsRes?.data) ? patientsRes.data : []
 
+    const { data: accountsRes } = useFinanceAccounts({ 
+        branchId: activeStoreId || undefined,
+        limit: 100 
+    })
+    const accounts = Array.isArray(accountsRes?.data) ? accountsRes.data : []
+
     const form = useForm<z.infer<typeof bookingSchema>>({
-        resolver: zodResolver(bookingSchema),
+        resolver: zodResolver(bookingSchema) as any,
         defaultValues: {
             branchId: activeStoreId || "",
             ambulanceId: "",
@@ -94,6 +116,11 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
             guardianRelation: "",
             status: "pending",
             note: "",
+            totalFare: 0,
+            discountAmount: 0,
+            paidAmount: 0,
+            paymentAmount: 0,
+            accountId: "",
         },
     })
 
@@ -112,6 +139,11 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                 guardianRelation: bookingToEdit.guardianRelation || "",
                 status: bookingToEdit.status,
                 note: bookingToEdit.note || "",
+                totalFare: bookingToEdit.totalFare || 0,
+                discountAmount: bookingToEdit.discountAmount || 0,
+                paidAmount: 0, // Reset paid/payment fields since they are used for current transaction
+                paymentAmount: 0,
+                accountId: "",
             })
         } else if (open) {
             form.reset({
@@ -127,9 +159,24 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                 guardianRelation: "",
                 status: "pending",
                 note: "",
+                totalFare: 0,
+                discountAmount: 0,
+                paidAmount: 0,
+                paymentAmount: 0,
+                accountId: "",
             })
         }
     }, [bookingToEdit, form, open, activeStoreId])
+
+    const totalFare = form.watch("totalFare") || 0
+    const discountAmount = form.watch("discountAmount") || 0
+    const paidAmount = form.watch("paidAmount") || 0
+    const paymentAmount = form.watch("paymentAmount") || 0
+
+    const netFare = totalFare - discountAmount
+    const currentDue = bookingToEdit 
+        ? Math.max(0, (bookingToEdit.dueAmount || 0) - paymentAmount)
+        : Math.max(0, netFare - paidAmount)
 
     // Update patient info when a patient is selected from the searchable dropdown
     const handlePatientChange = (patientId: string) => {
@@ -353,6 +400,107 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                                                 </FormItem>
                                             )}
                                         />
+                                    </div>
+                                </div>
+
+                                {/* Section 5: Financial Details */}
+                                <div className="space-y-4 md:col-span-2">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/80 mb-2">Financial Setup & Billing</h3>
+                                    <div className="bg-amber-500/5 p-5 rounded-3xl border border-amber-500/10 space-y-5">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <FormField
+                                                control={form.control}
+                                                name="totalFare"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold text-amber-900/70 dark:text-amber-500/70">Total Base Fare</FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-600/50" />
+                                                                <Input type="number" className="h-10 pl-9 rounded-xl font-bold bg-background border-amber-500/20" {...field} />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="discountAmount"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold text-amber-900/70 dark:text-amber-500/70">Discount Amount</FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-600/50" />
+                                                                <Input type="number" className="h-10 pl-9 rounded-xl font-bold bg-background border-amber-500/20" {...field} />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between py-3 border-y border-amber-500/10">
+                                            <span className="text-sm font-bold text-amber-900/60 dark:text-amber-500/60">Calculated Net Fare:</span>
+                                            <span className="text-lg font-black text-amber-600">৳ {netFare.toFixed(2)}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <FormField
+                                                control={form.control}
+                                                name={bookingToEdit ? "paymentAmount" : "paidAmount"}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold text-emerald-700/70">
+                                                            {bookingToEdit ? "Collect Due Payment" : "Initial Payment Received"}
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600/50" />
+                                                                <Input type="number" className="h-10 pl-9 rounded-xl font-bold bg-background border-emerald-500/20" {...field} />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="accountId"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs font-bold text-emerald-700/70">Deposit Account</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-10 rounded-xl bg-background border-emerald-500/20 font-bold">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <CreditCard className="h-4 w-4 text-emerald-600/50" />
+                                                                        <SelectValue placeholder="Select account..." />
+                                                                    </div>
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="rounded-xl border-emerald-500/20">
+                                                                {accounts.map((acc: any) => (
+                                                                    <SelectItem key={acc.id} value={acc.id} className="font-medium">
+                                                                        {acc.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+
+                                        {currentDue > 0 && (
+                                            <div className="flex items-center justify-between pt-2">
+                                                <span className="text-sm font-bold text-rose-500/80">Remaining Due Balance:</span>
+                                                <span className="text-lg font-black text-rose-500">৳ {currentDue.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
