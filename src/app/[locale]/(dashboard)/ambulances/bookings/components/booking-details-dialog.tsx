@@ -78,19 +78,19 @@ export function BookingDetailsDialog({ open, onOpenChange, booking }: BookingDet
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50">
                                 <p className="text-[10px] text-muted-foreground uppercase font-black">Total Fare</p>
-                                <p className="text-lg font-bold">৳ {(booking.totalFare || 0).toFixed(2)}</p>
+                                <p className="text-lg font-bold">৳ {Number(booking.totalFare || 0).toFixed(2)}</p>
                             </div>
                             <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50">
                                 <p className="text-[10px] text-muted-foreground uppercase font-black">Discount</p>
-                                <p className="text-lg font-bold text-rose-500">৳ {(booking.discountAmount || 0).toFixed(2)}</p>
+                                <p className="text-lg font-bold text-rose-500">৳ {Number(booking.discountAmount || 0).toFixed(2)}</p>
                             </div>
                             <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50">
                                 <p className="text-[10px] text-muted-foreground uppercase font-black">Paid Amount</p>
-                                <p className="text-lg font-bold text-emerald-600">৳ {(booking.paidAmount || 0).toFixed(2)}</p>
+                                <p className="text-lg font-bold text-emerald-600">৳ {Number(booking.paidAmount || 0).toFixed(2)}</p>
                             </div>
                             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
                                 <p className="text-[10px] text-amber-600/80 uppercase font-black">Due Balance</p>
-                                <p className="text-lg font-bold text-amber-600">৳ {(booking.dueAmount || 0).toFixed(2)}</p>
+                                <p className="text-lg font-bold text-amber-600">৳ {Number(booking.dueAmount || 0).toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
@@ -126,7 +126,7 @@ export function BookingDetailsDialog({ open, onOpenChange, booking }: BookingDet
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-bold text-emerald-600">
-                                                    ৳ {(tx.amount || 0).toFixed(2)}
+                                                    ৳ {Number(tx.amount || 0).toFixed(2)}
                                                 </td>
                                             </tr>
                                         ))}

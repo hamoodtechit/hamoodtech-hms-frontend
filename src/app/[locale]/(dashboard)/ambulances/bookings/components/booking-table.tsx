@@ -165,23 +165,23 @@ export function BookingTable({ bookings, loading, onEdit, onDelete, onViewDetail
                         </TableCell>
                         <TableCell className="text-right font-medium">
                             <div className="flex flex-col items-end">
-                                <span>৳ {(booking.netFare || 0).toFixed(2)}</span>
-                                {booking.discountAmount > 0 && (
+                                <span>৳ {Number(booking.netFare || 0).toFixed(2)}</span>
+                                {Number(booking.discountAmount || 0) > 0 && (
                                     <span className="text-[10px] text-muted-foreground line-through">
-                                        ৳ {(booking.totalFare || 0).toFixed(2)}
+                                        ৳ {Number(booking.totalFare || 0).toFixed(2)}
                                     </span>
                                 )}
                             </div>
                         </TableCell>
                         <TableCell className="text-center">
-                            {booking.dueAmount > 0 ? (
-                                booking.paidAmount > 0 ? (
+                            {Number(booking.dueAmount || 0) > 0 ? (
+                                Number(booking.paidAmount || 0) > 0 ? (
                                     <Badge className="bg-amber-500 hover:bg-amber-600">Partial</Badge>
                                 ) : (
                                     <Badge variant="destructive">Unpaid</Badge>
                                 )
                             ) : (
-                                booking.netFare > 0 ? (
+                                Number(booking.netFare || 0) > 0 ? (
                                     <Badge className="bg-emerald-500 hover:bg-emerald-600">Paid</Badge>
                                 ) : (
                                     <Badge variant="secondary">N/A</Badge>
