@@ -29,9 +29,10 @@ interface BookingTableProps {
     loading: boolean
     onEdit: (booking: AmbulanceBooking) => void
     onDelete: (booking: AmbulanceBooking) => void
+    onViewDetails?: (booking: AmbulanceBooking) => void
 }
 
-export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTableProps) {
+export function BookingTable({ bookings, loading, onEdit, onDelete, onViewDetails }: BookingTableProps) {
     const { hasPermission } = usePermissions()
 
     const getStatusBadge = (status: string) => {
@@ -59,6 +60,8 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                         <TableHead>Route (Pickup → Dropoff)</TableHead>
                         <TableHead>Ambulance</TableHead>
                         <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-right">Fare (Net)</TableHead>
+                        <TableHead className="text-center">Payment</TableHead>
                         <TableHead>Booking Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -97,6 +100,8 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                     <TableHead>Route (Pickup → Dropoff)</TableHead>
                     <TableHead>Ambulance</TableHead>
                     <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-right">Fare (Net)</TableHead>
+                    <TableHead className="text-center">Payment</TableHead>
                     <TableHead>Booking Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -158,6 +163,31 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                         <TableCell className="text-center">
                             {getStatusBadge(booking.status)}
                         </TableCell>
+                        <TableCell className="text-right font-medium">
+                            <div className="flex flex-col items-end">
+                                <span>৳ {(booking.netFare || 0).toFixed(2)}</span>
+                                {booking.discountAmount > 0 && (
+                                    <span className="text-[10px] text-muted-foreground line-through">
+                                        ৳ {(booking.totalFare || 0).toFixed(2)}
+                                    </span>
+                                )}
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                            {booking.dueAmount > 0 ? (
+                                booking.paidAmount > 0 ? (
+                                    <Badge className="bg-amber-500 hover:bg-amber-600">Partial</Badge>
+                                ) : (
+                                    <Badge variant="destructive">Unpaid</Badge>
+                                )
+                            ) : (
+                                booking.netFare > 0 ? (
+                                    <Badge className="bg-emerald-500 hover:bg-emerald-600">Paid</Badge>
+                                ) : (
+                                    <Badge variant="secondary">N/A</Badge>
+                                )
+                            )}
+                        </TableCell>
                         <TableCell>
                             <div className="flex flex-col">
                                 <span className="text-sm font-medium">{new Date(booking.createdAt).toLocaleDateString()}</span>
@@ -175,9 +205,14 @@ export function BookingTable({ bookings, loading, onEdit, onDelete }: BookingTab
                                 <DropdownMenuContent align="end" className="w-[180px] rounded-xl shadow-xl border-border/50">
                                     <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground tracking-widest px-3 py-2">Booking Management</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
+                                    {onViewDetails && (
+                                        <DropdownMenuItem onClick={() => onViewDetails(booking)} className="cursor-pointer font-medium">
+                                            <Calendar className="mr-2 h-4 w-4" /> View Details
+                                        </DropdownMenuItem>
+                                    )}
                                     {hasPermission("ambulance-booking:update") && (
-                                        <DropdownMenuItem onClick={() => onEdit(booking)} className="cursor-pointer">
-                                            <Edit className="mr-2 h-4 w-4" /> Manage Status
+                                        <DropdownMenuItem onClick={() => onEdit(booking)} className="cursor-pointer font-medium">
+                                            <Edit className="mr-2 h-4 w-4" /> Manage & Billing
                                         </DropdownMenuItem>
                                     )}
                                     {hasPermission("ambulance-booking:delete") && (
