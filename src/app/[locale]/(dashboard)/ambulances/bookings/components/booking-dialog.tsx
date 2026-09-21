@@ -178,6 +178,19 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
         ? Math.max(0, (bookingToEdit.dueAmount || 0) - paymentAmount)
         : Math.max(0, netFare - paidAmount)
 
+    // Auto-select "Ambulance" account by default for new bookings
+    useEffect(() => {
+        if (open && !bookingToEdit && accounts.length > 0 && !form.getValues("accountId")) {
+            const defaultAcc = accounts.find((a: any) => a.name?.toLowerCase().includes("ambulance")) 
+                || accounts.find((a: any) => a.name?.toLowerCase().includes("cash"))
+                || accounts[0];
+            
+            if (defaultAcc) {
+                form.setValue("accountId", defaultAcc.id);
+            }
+        }
+    }, [open, bookingToEdit, accounts, form]);
+
     // Update patient info when a patient is selected from the searchable dropdown
     const handlePatientChange = (patientId: string) => {
         const patient = patients.find(p => p.id === patientId)

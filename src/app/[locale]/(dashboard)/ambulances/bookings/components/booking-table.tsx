@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table"
 import { usePermissions } from "@/hooks/use-permissions"
 import { AmbulanceBooking } from "@/types/ambulance"
-import { Edit, MoreHorizontal, Phone, Trash2, MapPin, Calendar, User } from "lucide-react"
+import { Edit, MoreHorizontal, Phone, Trash2, MapPin, Calendar, User, Printer } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface BookingTableProps {
@@ -30,9 +30,10 @@ interface BookingTableProps {
     onEdit: (booking: AmbulanceBooking) => void
     onDelete: (booking: AmbulanceBooking) => void
     onViewDetails?: (booking: AmbulanceBooking) => void
+    onPrint?: (booking: AmbulanceBooking) => void
 }
 
-export function BookingTable({ bookings, loading, onEdit, onDelete, onViewDetails }: BookingTableProps) {
+export function BookingTable({ bookings, loading, onEdit, onDelete, onViewDetails, onPrint }: BookingTableProps) {
     const { hasPermission } = usePermissions()
 
     const getStatusBadge = (status: string) => {
@@ -208,6 +209,11 @@ export function BookingTable({ bookings, loading, onEdit, onDelete, onViewDetail
                                     {onViewDetails && (
                                         <DropdownMenuItem onClick={() => onViewDetails(booking)} className="cursor-pointer font-medium">
                                             <Calendar className="mr-2 h-4 w-4" /> View Details
+                                        </DropdownMenuItem>
+                                    )}
+                                    {onPrint && (
+                                        <DropdownMenuItem onClick={() => onPrint(booking)} className="cursor-pointer font-medium">
+                                            <Printer className="mr-2 h-4 w-4" /> Print Invoice
                                         </DropdownMenuItem>
                                     )}
                                     {hasPermission("ambulance-booking:update") && (

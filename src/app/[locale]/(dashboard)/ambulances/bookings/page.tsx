@@ -24,6 +24,7 @@ import { useState } from "react"
 import { BookingDialog } from "./components/booking-dialog"
 import { BookingTable } from "./components/booking-table"
 import { BookingDetailsDialog } from "./components/booking-details-dialog"
+import { AmbulancePrintDialog } from "./components/ambulance-print-dialog"
 import {
     Select,
     SelectContent,
@@ -49,6 +50,8 @@ export default function AmbulanceBookingsPage() {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
     const [viewingBooking, setViewingBooking] = useState<AmbulanceBooking | null>(null)
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+    const [printingBooking, setPrintingBooking] = useState<AmbulanceBooking | null>(null)
+    const [printDialogOpen, setPrintDialogOpen] = useState(false)
 
     // Queries
     const { data: bookingRes, isLoading } = useAmbulanceBookings({
@@ -93,6 +96,11 @@ export default function AmbulanceBookingsPage() {
     const handleViewDetails = (booking: AmbulanceBooking) => {
         setViewingBooking(booking)
         setDetailsDialogOpen(true)
+    }
+
+    const handlePrint = (booking: AmbulanceBooking) => {
+        setPrintingBooking(booking)
+        setPrintDialogOpen(true)
     }
 
     return (
@@ -180,6 +188,7 @@ export default function AmbulanceBookingsPage() {
                             onEdit={handleEdit}
                             onDelete={handleDeleteClick}
                             onViewDetails={handleViewDetails}
+                            onPrint={handlePrint}
                         />
 
                         {/* Pagination */}
@@ -245,6 +254,12 @@ export default function AmbulanceBookingsPage() {
                     open={detailsDialogOpen}
                     onOpenChange={setDetailsDialogOpen}
                     booking={viewingBooking}
+                />
+
+                <AmbulancePrintDialog
+                    open={printDialogOpen}
+                    onOpenChange={setPrintDialogOpen}
+                    booking={printingBooking}
                 />
 
                 <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
