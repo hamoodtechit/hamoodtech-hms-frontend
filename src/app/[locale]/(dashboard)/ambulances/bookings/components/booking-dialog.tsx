@@ -277,23 +277,15 @@ export function BookingDialog({ open, onOpenChange, bookingToEdit }: BookingDial
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel className="text-xs font-bold text-blue-700/70">Select Available Ambulance *</FormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-10 rounded-xl bg-background border-blue-500/20 shadow-sm font-bold">
-                                                                <SelectValue placeholder="Choose vehicle..." />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent className="rounded-xl border-blue-500/20">
-                                                            {Array.isArray(ambulances) && ambulances.map((unit) => (
-                                                                <SelectItem key={unit.id} value={unit.id} className="font-medium">
-                                                                    <div className="flex flex-col">
-                                                                        <span>{unit.vehicleNumber}</span>
-                                                                        <span className="text-[10px] text-muted-foreground">{unit.driverName} • {unit.status}</span>
-                                                                    </div>
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <SearchableSelect 
+                                                        value={field.value || ""}
+                                                        onChange={field.onChange}
+                                                        options={Array.isArray(ambulances) ? ambulances.map(unit => ({ 
+                                                            id: unit.id, 
+                                                            name: `${unit.vehicleNumber} (${unit.driverName || 'No Driver'}) • ${unit.status}` 
+                                                        })) : []}
+                                                        placeholder="Search and choose vehicle..."
+                                                    />
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
