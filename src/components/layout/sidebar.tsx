@@ -23,7 +23,8 @@ import {
     Settings,
     Stethoscope,
     Users,
-    Wallet
+    Wallet,
+    Cloud
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
@@ -469,6 +470,13 @@ export function Sidebar() {
               module: "settings",
               permission: "settings:read",
               roles: ["Super Admin"],
+            },
+            {
+              label: "Cloud Backups",
+              href: "/settings?tab=backups",
+              module: "settings",
+              permission: "settings:read",
+              roles: ["Super Admin", "Admin"],
             },
             {
                 label: "Communication",

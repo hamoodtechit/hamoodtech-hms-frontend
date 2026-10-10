@@ -16,11 +16,15 @@ import { AppointmentConfig, FinanceConfig, GeneralConfig, PharmacyConfig } from 
 import { Banknote, Building2, Calendar, Cloud, Loader2, Megaphone, Pill, Save } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { useSearchParams } from "next/navigation"
 import { CommunicationSettings } from "@/components/communication/communication-settings"
 import { BackupSettings } from "@/components/settings/backup-settings"
 import { PermissionGuard } from "@/components/shared/permission-guard"
 
 export default function SettingsPage() {
+    const searchParams = useSearchParams()
+    const defaultTab = searchParams.get('tab') || 'general'
+    
     const { general, pharmacy, appointments, finance, fetchSettings } = useSettingsStore()
     const [loading, setLoading] = useState(false)
     
@@ -178,7 +182,7 @@ export default function SettingsPage() {
                 </div>
                 <Separator className="my-6" />
                 
-                <Tabs defaultValue="general" orientation="vertical" className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+                <Tabs defaultValue={defaultTab} orientation="vertical" className="flex flex-col lg:flex-row gap-6 lg:gap-10">
                     <TabsList className="flex flex-col h-auto w-full lg:w-64 items-stretch bg-transparent p-0 gap-1 shrink-0">
                         <TabsTrigger 
                             value="general"
