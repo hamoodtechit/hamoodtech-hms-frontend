@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useFinanceExpenseReport, useFinanceIncomeReport } from "@/hooks/finance-queries"
 import { useCurrency } from "@/hooks/use-currency"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useStoreContext } from "@/store/use-store-context"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { endOfDay, format, startOfMonth } from "date-fns"
@@ -20,6 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function FinanceReportsDashboard() {
   const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
+  const { hasPermission } = usePermissions()
+  const canReadExpenses = hasPermission("expense:read")
   const [date, setDate] = useState<DateRange | undefined>()
   const [saleType, setSaleType] = useState<string>("all")
 
@@ -44,7 +47,7 @@ export function FinanceReportsDashboard() {
     branchId: activeStoreId || undefined,
     startDate: date?.from ? date.from.toISOString() : undefined,
     endDate: date?.to ? endOfDay(date.to).toISOString() : undefined
-  }, { enabled: !!date?.from && !!date?.to })
+  }, { enabled: canReadExpenses && !!date?.from && !!date?.to })
 
   if (incomeLoading || expenseLoading) {
     return (
