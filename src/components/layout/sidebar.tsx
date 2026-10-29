@@ -341,6 +341,12 @@ export function Sidebar() {
               roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             },
             {
+              label: "Expense Report",
+              href: "/finance/reports/expenses",
+              permission: "expense:read",
+              roles: ["Super Admin", "Admin", "Accountant"],
+            },
+            {
               label: "Doctor Summary",
               href: "/finance/doctor-payment?tab=summary",
               permission: ["consultation-charge:read", "sale:read"],
