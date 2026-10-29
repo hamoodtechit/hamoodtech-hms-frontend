@@ -19,6 +19,7 @@ export interface Expense {
     date: string;
     expenseNumber: string;
     note?: string;
+    imageUrl?: string | null;
     recordedById: string;
     createdAt: string;
     updatedAt: string;
@@ -68,6 +69,7 @@ export interface CreateExpensePayload {
     amount: number;
     date: string;
     note?: string;
+    imageUrl?: string;
 }
 
 export interface ExpenseListResponse {

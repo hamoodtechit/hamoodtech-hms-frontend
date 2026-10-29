@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MediaPicker } from "@/components/media/media-picker"
 import {
     Select,
     SelectContent,
@@ -53,6 +54,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
     const [amount, setAmount] = useState(0)
     const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
     const [note, setNote] = useState("")
+    const [imageUrl, setImageUrl] = useState("")
 
     const categories = categoriesRes?.categories || []
     const mainCategories = categories.filter(c => !c.parentId)
@@ -69,6 +71,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                 setAmount(Number(expense.amount))
                 setDate(format(new Date(expense.date), "yyyy-MM-dd'T'HH:mm"))
                 setNote(expense.note || "")
+                setImageUrl(expense.imageUrl || "")
             } else {
                 setCategoryId("")
                 setSubCategoryId("")
@@ -76,6 +79,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                 setAmount(0)
                 setDate(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
                 setNote("")
+                setImageUrl("")
             }
         }
     }, [open, expense])
@@ -107,7 +111,8 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                     branchId: activeStoreId || "",
                     amount,
                     date: new Date(date).toISOString(),
-                    note
+                    note,
+                    imageUrl: imageUrl || undefined,
                 })
                 toast.success("Expense recorded successfully")
             }
@@ -202,6 +207,14 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Add any additional details..."
                             rows={2}
+                            disabled={isEdit}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Attachment (Optional)</Label>
+                        <MediaPicker
+                            value={imageUrl}
+                            onChange={setImageUrl}
                             disabled={isEdit}
                         />
                     </div>
