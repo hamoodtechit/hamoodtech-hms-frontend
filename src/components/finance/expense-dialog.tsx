@@ -127,14 +127,14 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
+            <DialogContent className="flex max-h-[calc(100dvh-2rem)] max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+                <DialogHeader className="shrink-0 border-b bg-muted/30 px-5 py-5 sm:px-6">
                     <DialogTitle>{isEdit ? "Expense Details" : "Record New Expense"}</DialogTitle>
                     <DialogDescription>
                         {isEdit ? "View details of this recorded expense." : "Enter details for a new hospital expense."}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid flex-1 gap-5 overflow-y-auto px-5 py-5 sm:grid-cols-2 sm:px-6">
                     <div className="grid gap-2">
                         <Label htmlFor="category">Category *</Label>
                         <Select value={categoryId} onValueChange={setCategoryId} disabled={isEdit}>
@@ -150,7 +150,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                     </div>
                     
                     {availableSubCategories.length > 0 && (
-                        <div className="grid gap-2 -mt-2">
+                        <div className="grid gap-2">
                             <Label htmlFor="subCategory">Sub-category (Optional)</Label>
                             <Select value={subCategoryId} onValueChange={setSubCategoryId} disabled={isEdit}>
                                 <SelectTrigger id="subCategory">
@@ -199,7 +199,7 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                             disabled={isEdit}
                         />
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 sm:col-span-2">
                         <Label htmlFor="note">Note (Optional)</Label>
                         <Textarea
                             id="note"
@@ -210,16 +210,22 @@ export function ExpenseDialog({ open, onOpenChange, expense, onSuccess }: Expens
                             disabled={isEdit}
                         />
                     </div>
-                    <div className="grid gap-2">
-                        <Label>Attachment (Optional)</Label>
-                        <MediaPicker
-                            value={imageUrl}
-                            onChange={setImageUrl}
-                            disabled={isEdit}
-                        />
+                    <div className="grid gap-2 sm:col-span-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <Label>Attachment <span className="font-normal text-muted-foreground">(Optional)</span></Label>
+                            {!imageUrl && <span className="text-xs text-muted-foreground">Upload or choose from Media Library</span>}
+                        </div>
+                        <div className="rounded-lg border bg-muted/20 p-3">
+                            <MediaPicker
+                                value={imageUrl}
+                                onChange={setImageUrl}
+                                disabled={isEdit}
+                                compact
+                            />
+                        </div>
                     </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="shrink-0 border-t bg-background px-5 py-4 sm:px-6">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         {isEdit ? "Close" : "Cancel"}
                     </Button>
