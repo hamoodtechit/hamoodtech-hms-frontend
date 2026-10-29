@@ -42,7 +42,7 @@ export function ExpenseReportsDashboard() {
       `<tr class="subtotal"><td colspan="5">Category Sub Total</td><td class="amount">${escapeHtml(Number(group.subTotals.amount).toFixed(2))}</td></tr>`,
     ]).join("")
     const branch = stores.find((store) => store.id === activeStoreId)
-    const printWindow = window.open("", "_blank", "noopener,noreferrer")
+    const printWindow = window.open("", "_blank")
     if (!printWindow) return
 
     printWindow.document.write(`<!doctype html><html><head><title>Expense Report</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1,h2,p{text-align:center;margin:0 0 8px}h1{font-size:22px}h2{font-size:17px}.summary{margin:24px 0;padding:12px;border:1px solid #111;text-align:right;font-weight:bold}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #333;padding:7px;text-align:left}th{background:#f1f5f9}.category td{background:#fff1f2;font-weight:bold}.subtotal td{background:#f8fafc;font-weight:bold}.amount{text-align:right}@media print{body{margin:12mm}}</style></head><body><h1>${escapeHtml(branch?.name || "Hospital")}</h1><h2>Expense Report</h2><p>${escapeHtml(format(date.from, "dd MMM yyyy"))} to ${escapeHtml(format(date.to, "dd MMM yyyy"))}</p><div class="summary">Total Expenditure: ${escapeHtml(Number(totalExpense).toFixed(2))}</div><table><thead><tr><th>SL No</th><th>Date</th><th>Expense No</th><th>Note</th><th>Recorded By</th><th class="amount">Amount</th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="text-align:center">No expense data available.</td></tr>'}</tbody></table></body></html>`)
