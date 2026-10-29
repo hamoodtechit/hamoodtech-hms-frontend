@@ -10,9 +10,10 @@ interface MediaPickerProps {
   value?: string
   onChange: (url: string) => void
   disabled?: boolean
+  compact?: boolean
 }
 
-export function MediaPicker({ value, onChange, disabled }: MediaPickerProps) {
+export function MediaPicker({ value, onChange, disabled, compact = false }: MediaPickerProps) {
   const [open, setOpen] = useState(false)
 
   const onSelect = (media: Media) => {
@@ -29,7 +30,7 @@ export function MediaPicker({ value, onChange, disabled }: MediaPickerProps) {
         />
         
         {value ? (
-            <div className="relative w-40 h-40 border rounded-lg overflow-hidden group">
+            <div className={`relative border rounded-lg overflow-hidden group ${compact ? "h-28 w-full" : "w-40 h-40"}`}>
                 <div className="absolute top-2 right-2 z-10">
                     <Button 
                         type="button" 
@@ -45,19 +46,22 @@ export function MediaPicker({ value, onChange, disabled }: MediaPickerProps) {
                 <img 
                     src={value} 
                     alt="Selected media" 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover"
                 />
             </div>
         ) : (
             <Button 
                 type="button" 
                 variant="outline" 
-                className="w-40 h-40 flex flex-col gap-2 border-dashed"
+                className={compact
+                    ? "h-24 w-full flex-row gap-2 border-dashed text-muted-foreground hover:text-foreground"
+                    : "w-40 h-40 flex flex-col gap-2 border-dashed"
+                }
                 onClick={() => setOpen(true)}
                 disabled={disabled}
             >
                 <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Select Image</span>
+                <span className="text-xs text-muted-foreground">{compact ? "Choose attachment" : "Select Image"}</span>
             </Button>
         )}
     </div>
