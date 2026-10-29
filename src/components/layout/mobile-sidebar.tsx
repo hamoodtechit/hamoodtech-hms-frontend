@@ -354,7 +354,7 @@ function SidebarBase() {
             {
               label: "Expense Tracking",
               href: "/finance/expenses",
-              permission: "account:read",
+              permission: "expense:read",
             },
             {
               label: "General Ledger",
@@ -393,7 +393,6 @@ function SidebarBase() {
               label: "Expense Report",
               href: "/finance/reports/expenses",
               permission: "expense:read",
-              roles: ["Super Admin", "Admin", "Accountant"],
             },
             {
               label: "Doctor Summary",
