@@ -20,7 +20,7 @@ export function AmbulanceReportPrint({ reportData, dateRange, activeBranch }: Am
       <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={activeBranch?.logoUrl || "/Logo.png"} alt="Hospital Logo" className="mb-2 h-16 w-auto" />
-        <div className="text-center"><h1 className="text-2xl font-bold uppercase">{activeBranch?.name || "PATWARY GENERAL HOSPITAL"}</h1><h2 className="mt-1 text-xl font-bold">Ambulance Service Report</h2><p className="mt-2 text-sm font-medium">Period: {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}</p></div>
+        <div className="text-center"><h1 className="text-2xl font-bold uppercase">PATWARY GENERAL HOSPITAL</h1><h2 className="mt-1 text-xl font-bold">Ambulance Service Report</h2><p className="mt-2 text-sm font-medium">Period: {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}</p></div>
       </div>
       <div className="mb-6 grid grid-cols-4 gap-3">
         <PrintMetric label="Bookings" value={summary.bookingCount} />
