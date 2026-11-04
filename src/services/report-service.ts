@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { IOverallSummaryResponse, IServiceSalesParams, IServiceSalesResponse, IDepartmentSalesParams, IDepartmentSalesResponse, IPharmacySalesParams, IPharmacySalesReportResponse } from "@/types/report";
+import { IOverallSummaryResponse, IServiceSalesParams, IServiceSalesResponse, IDepartmentSalesParams, IDepartmentSalesResponse, IPharmacySalesParams, IPharmacySalesReportResponse, IAmbulanceReportParams, IAmbulanceReportResponse } from "@/types/report";
 
 export const reportService = {
   getOverallSummary: async (params?: { branchId?: string; startDate?: string; endDate?: string }): Promise<IOverallSummaryResponse> => {
@@ -19,6 +19,10 @@ export const reportService = {
 
   getPharmacySales: async (params?: IPharmacySalesParams): Promise<IPharmacySalesReportResponse> => {
     const response = await api.get<IPharmacySalesReportResponse>("/reports/pharmacy-sales", { params });
+    return response.data;
+  },
+  getAmbulanceReport: async (params?: IAmbulanceReportParams): Promise<IAmbulanceReportResponse> => {
+    const response = await api.get<IAmbulanceReportResponse>("/reports/ambulance", { params });
     return response.data;
   },
 };

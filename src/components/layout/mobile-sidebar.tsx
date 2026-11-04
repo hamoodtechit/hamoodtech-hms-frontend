@@ -390,6 +390,11 @@ function SidebarBase() {
               roles: ["Super Admin", "Admin", "Accountant", "Receptionist"],
             },
             {
+              label: "Ambulance Report",
+              href: "/reports/ambulance",
+              permission: "report:read",
+            },
+            {
               label: "Expense Report",
               href: "/finance/reports/expenses",
               permission: "expense:read",
