@@ -15,7 +15,6 @@ import { useStoreContext } from "@/store/use-store-context"
 import { Ambulance as AmbulanceRecord } from "@/types/ambulance"
 import { endOfDay, format, startOfMonth } from "date-fns"
 import { Ambulance as AmbulanceIcon, CalendarDays, Printer, Search, Truck } from "lucide-react"
-import { createRoot } from "react-dom/client"
 import { useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
 import { AmbulanceReportPrint } from "./ambulance-report-print"
@@ -58,18 +57,23 @@ export function AmbulanceReportDashboard() {
 
   const handlePrintReport = () => {
     if (!printableReport || !date?.from || !date.to) return
-    const printWindow = window.open("", "_blank")
-    if (!printWindow) return
+    const printContent = document.getElementById("ambulance-report-print-content")?.innerHTML
+    if (!printContent) return
 
-    printWindow.document.write('<html><head><title>Ambulance Service Report</title>')
-    printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
-    printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
-    printWindow.document.close()
+    const iframe = document.createElement("iframe")
+    iframe.style.cssText = "position:fixed;width:100vw;height:100vh;left:-100vw;top:-100vh;border:none;"
+    document.body.appendChild(iframe)
+    const iframeDoc = iframe.contentWindow?.document
+    if (!iframeDoc) return
 
-    const container = printWindow.document.getElementById("report-root")
-    if (!container) return
-    createRoot(container).render(<AmbulanceReportPrint reportData={printableReport} dateRange={{ from: date.from, to: date.to }} activeBranch={stores.find((store) => store.id === activeStoreId)} />)
-    window.setTimeout(() => printWindow.print(), 1000)
+    iframeDoc.open()
+    iframeDoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ambulance Service Report</title>${Array.from(document.querySelectorAll("link[rel='stylesheet'], style")).map((element) => element.outerHTML).join("\n")}<style>@page{size:A4;margin:0}body{background:#fff!important;margin:0;padding:0;font-family:sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;justify-content:center}.print-container{width:210mm;min-height:297mm;padding:10mm;box-sizing:border-box}*{overflow:visible!important}::-webkit-scrollbar{display:none!important}table{font-size:10px!important;border-collapse:collapse!important;width:100%!important;border:1px solid #000!important}th,td{border:1px solid #000!important;padding:4px!important;color:#000!important}</style></head><body><div class="print-container">${printContent}</div></body></html>`)
+    iframeDoc.close()
+    window.setTimeout(() => {
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+      window.setTimeout(() => document.body.removeChild(iframe), 1000)
+    }, 500)
   }
 
   if (isLoading) return <div className="space-y-6"><div className="grid gap-4 md:grid-cols-4">{[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-28" />)}</div><Skeleton className="h-96" /></div>
@@ -91,6 +95,7 @@ export function AmbulanceReportDashboard() {
         <SummaryCard label="Outstanding Due" value={formatCurrency(summary?.outstandingDue || 0)} icon={<CalendarDays className="h-4 w-4" />} />
       </div>
       <Card><CardHeader><CardTitle>Booking Details</CardTitle></CardHeader><CardContent><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Patient & Contact</TableHead><TableHead>Vehicle</TableHead><TableHead>Route</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Net Fare</TableHead><TableHead className="text-right">Paid</TableHead><TableHead className="text-right">Due</TableHead></TableRow></TableHeader><TableBody>{!bookings.length ? <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground">No bookings found.</TableCell></TableRow> : bookings.map((booking) => <TableRow key={booking.id}><TableCell className="whitespace-nowrap">{format(new Date(booking.createdAt), "dd MMM yyyy")}</TableCell><TableCell><div className="font-medium">{booking.patientName}</div><div className="text-xs text-muted-foreground">{booking.guardianPhone || "—"}</div></TableCell><TableCell>{booking.ambulance?.vehicleNumber || "—"}</TableCell><TableCell className="max-w-56 truncate">{booking.pickupLocation} → {booking.dropoffLocation}</TableCell><TableCell className="capitalize">{booking.status}</TableCell><TableCell className="text-right">{formatCurrency(Number(booking.netFare))}</TableCell><TableCell className="text-right text-emerald-600">{formatCurrency(Number(booking.paidAmount))}</TableCell><TableCell className="text-right text-rose-600">{formatCurrency(Number(booking.dueAmount))}</TableCell></TableRow>)}</TableBody></Table></div>{report?.pagination && report.pagination.totalPages > 1 && <div className="mt-4 flex items-center justify-end gap-3"><span className="text-sm text-muted-foreground">Page {report.pagination.page} of {report.pagination.totalPages}</span><Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</Button><Button variant="outline" size="sm" disabled={page >= report.pagination.totalPages} onClick={() => setPage((current) => current + 1)}>Next</Button></div>}</CardContent></Card>
+      {printableReport && date?.from && date.to && <div className="hidden"><div id="ambulance-report-print-content"><AmbulanceReportPrint reportData={printableReport} dateRange={{ from: date.from, to: date.to }} activeBranch={stores.find((store) => store.id === activeStoreId)} /></div></div>}
     </div>
   )
 }
