@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { reportService } from "@/services/report-service";
-import { IOverallSummaryResponse, IServiceSalesParams, IServiceSalesResponse, IDepartmentSalesParams, IDepartmentSalesResponse, IPharmacySalesParams, IPharmacySalesReportResponse } from "@/types/report";
+import { IOverallSummaryResponse, IServiceSalesParams, IServiceSalesResponse, IDepartmentSalesParams, IDepartmentSalesResponse, IPharmacySalesParams, IPharmacySalesReportResponse, IAmbulanceReportParams, IAmbulanceReportResponse } from "@/types/report";
 
 export function useOverallSummaryReport(params?: { branchId?: string; startDate?: string; endDate?: string }) {
   return useQuery<IOverallSummaryResponse>({
@@ -27,5 +27,12 @@ export function usePharmacySalesReport(params?: IPharmacySalesParams) {
   return useQuery<IPharmacySalesReportResponse>({
     queryKey: ["reports", "pharmacy-sales", params],
     queryFn: () => reportService.getPharmacySales(params),
+  });
+}
+
+export function useAmbulanceReport(params?: IAmbulanceReportParams) {
+  return useQuery<IAmbulanceReportResponse>({
+    queryKey: ["reports", "ambulance", params],
+    queryFn: () => reportService.getAmbulanceReport(params),
   });
 }

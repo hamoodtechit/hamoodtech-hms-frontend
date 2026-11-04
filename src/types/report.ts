@@ -156,3 +156,54 @@ export interface IPharmacySalesReportResponse {
   data: IPharmacySalesReportData;
 }
 
+export interface IAmbulanceReportParams {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+  ambulanceId?: string;
+  status?: "pending" | "confirmed" | "cancelled" | "completed";
+  paymentStatus?: "due" | "partial" | "paid";
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface IAmbulanceReportBooking {
+  id: string;
+  patientName: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  status: string;
+  totalFare: number | string;
+  discountAmount: number | string;
+  netFare: number | string;
+  paidAmount: number | string;
+  dueAmount: number | string;
+  paymentStatus: string;
+  createdAt: string;
+  ambulance?: { vehicleNumber: string; driverName?: string };
+}
+
+export interface IAmbulanceReportData {
+  summary: {
+    bookingCount: number;
+    grossFare: number;
+    discount: number;
+    netFare: number;
+    paid: number;
+    due: number;
+    collectedInPeriod: number;
+    outstandingDue: number;
+  };
+  bookings: IAmbulanceReportBooking[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface IAmbulanceReportResponse {
+  success: boolean;
+  message: string;
+  data: IAmbulanceReportData;
+}
+
