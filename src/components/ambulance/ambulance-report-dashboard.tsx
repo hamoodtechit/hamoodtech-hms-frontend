@@ -14,14 +14,16 @@ import { useAmbulanceReport } from "@/hooks/report-queries"
 import { useStoreContext } from "@/store/use-store-context"
 import { Ambulance as AmbulanceRecord } from "@/types/ambulance"
 import { endOfDay, format, startOfMonth } from "date-fns"
-import { Ambulance as AmbulanceIcon, CalendarDays, Search, Truck } from "lucide-react"
+import { Ambulance as AmbulanceIcon, CalendarDays, Printer, Search, Truck } from "lucide-react"
+import { createRoot } from "react-dom/client"
 import { useState, type ReactNode } from "react"
 import { DateRange } from "react-day-picker"
+import { AmbulanceReportPrint } from "./ambulance-report-print"
 
 const ALL = "all"
 
 export function AmbulanceReportDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>({ from: startOfMonth(new Date()), to: endOfDay(new Date()) })
   const [search, setSearch] = useState("")
@@ -51,13 +53,30 @@ export function AmbulanceReportDashboard() {
     ? ambulancePayload
     : ((ambulancePayload as unknown as { ambulances?: AmbulanceRecord[] } | undefined)?.ambulances || [])
   const bookings = Array.isArray(report?.bookings) ? report.bookings : []
+  const printableReport = report ? { ...report, bookings } : undefined
   const updateFilter = (setter: (value: string) => void, value: string) => { setter(value); setPage(1) }
+
+  const handlePrintReport = () => {
+    if (!printableReport || !date?.from || !date.to) return
+    const printWindow = window.open("", "_blank")
+    if (!printWindow) return
+
+    printWindow.document.write('<html><head><title>Ambulance Service Report</title>')
+    printWindow.document.write('<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">')
+    printWindow.document.write('</head><body><div id="report-root"></div></body></html>')
+    printWindow.document.close()
+
+    const container = printWindow.document.getElementById("report-root")
+    if (!container) return
+    createRoot(container).render(<AmbulanceReportPrint reportData={printableReport} dateRange={{ from: date.from, to: date.to }} activeBranch={stores.find((store) => store.id === activeStoreId)} />)
+    window.setTimeout(() => printWindow.print(), 1000)
+  }
 
   if (isLoading) return <div className="space-y-6"><div className="grid gap-4 md:grid-cols-4">{[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-28" />)}</div><Skeleton className="h-96" /></div>
 
   return (
     <div className="space-y-6">
-      <div><h2 className="text-3xl font-bold tracking-tight">Ambulance Report</h2><p className="text-muted-foreground">Track ambulance bookings, collections, and outstanding dues.</p></div>
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><h2 className="text-3xl font-bold tracking-tight">Ambulance Report</h2><p className="text-muted-foreground">Track ambulance bookings, collections, and outstanding dues.</p></div><Button onClick={handlePrintReport} disabled={!printableReport} className="gap-2"><Printer className="h-4 w-4" /> Print / PDF</Button></div>
       <Card><CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-5">
         <DatePickerWithRange date={date} setDate={(value) => { setDate(value); setPage(1) }} />
         <Select value={ambulanceId} onValueChange={(value) => updateFilter(setAmbulanceId, value)}><SelectTrigger><Truck className="mr-2 h-4 w-4" /><SelectValue placeholder="All vehicles" /></SelectTrigger><SelectContent><SelectItem value={ALL}>All vehicles</SelectItem>{ambulances.map((ambulance) => <SelectItem key={ambulance.id} value={ambulance.id}>{ambulance.vehicleNumber}</SelectItem>)}</SelectContent></Select>
