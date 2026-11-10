@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFinanceIncomeReport } from "@/hooks/finance-queries"
@@ -82,8 +83,13 @@ export function FinanceReportsDashboard() {
         <div className="flex flex-wrap items-center gap-2">
           <Select value={saleType} onValueChange={setSaleType}><SelectTrigger className="w-[180px]"><Filter className="mr-2 h-4 w-4" /><SelectValue placeholder="Filter by type" /></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem><SelectItem value="appointment">Appointment</SelectItem><SelectItem value="hospital">Hospital</SelectItem><SelectItem value="admission">Admission</SelectItem><SelectItem value="emergency">Emergency</SelectItem></SelectContent></Select>
           <DatePickerWithRange date={date} setDate={setDate} />
-          <Button variant="outline" className="gap-2" onClick={handleExportCSV}><FileDown className="h-4 w-4" /> Export Sales (CSV)</Button>
-          <Button className="gap-2" onClick={handlePrintReport} disabled={!incomeResponse}><Printer className="h-4 w-4" /> Print / PDF</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button variant="outline" className="gap-2" disabled={!incomeResponse}><FileDown className="h-4 w-4" /> Download Report</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem className="gap-2" onClick={handlePrintReport}><Printer className="h-4 w-4" /> Print / Download PDF</DropdownMenuItem>
+              <DropdownMenuItem className="gap-2" onClick={handleExportCSV}><FileDown className="h-4 w-4" /> Export Sales (CSV)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
