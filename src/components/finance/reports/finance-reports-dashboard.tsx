@@ -10,12 +10,13 @@ import { useCurrency } from "@/hooks/use-currency"
 import { useStoreContext } from "@/store/use-store-context"
 import { IncomeGroup } from "@/types/finance"
 import { endOfDay, format, startOfMonth } from "date-fns"
-import { ArrowUpRight, FileDown, Filter } from "lucide-react"
+import { ArrowUpRight, FileDown, Filter, Printer } from "lucide-react"
 import { useEffect, useState } from "react"
 import { DateRange } from "react-day-picker"
+import { SalesFinancePrint } from "./sales-finance-print"
 
 export function FinanceReportsDashboard() {
-  const { activeStoreId } = useStoreContext()
+  const { activeStoreId, stores } = useStoreContext()
   const { formatCurrency } = useCurrency()
   const [date, setDate] = useState<DateRange | undefined>()
   const [saleType, setSaleType] = useState("all")
@@ -55,6 +56,21 @@ export function FinanceReportsDashboard() {
     document.body.removeChild(link)
   }
 
+  const handlePrintReport = () => {
+    if (!incomeResponse || !date?.from || !date.to) return
+    const printContent = document.getElementById("sales-finance-print-content")?.innerHTML
+    if (!printContent) return
+    const iframe = document.createElement("iframe")
+    iframe.style.cssText = "position:fixed;width:100vw;height:100vh;left:-100vw;top:-100vh;border:none;"
+    document.body.appendChild(iframe)
+    const iframeDoc = iframe.contentWindow?.document
+    if (!iframeDoc) return
+    iframeDoc.open()
+    iframeDoc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sales & Finance Report</title>${Array.from(document.querySelectorAll("link[rel='stylesheet'], style")).map((element) => element.outerHTML).join("\n")}<style>@page{size:A4;margin:0}body{background:#fff!important;margin:0;padding:0;font-family:sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;justify-content:center}.print-container{width:210mm;min-height:297mm;padding:10mm;box-sizing:border-box}*{overflow:visible!important}table{font-size:10px!important;border-collapse:collapse!important;width:100%!important;border:1px solid #000!important}th,td{border:1px solid #000!important;padding:4px!important;color:#000!important}</style></head><body><div class="print-container">${printContent}</div></body></html>`)
+    iframeDoc.close()
+    window.setTimeout(() => { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); window.setTimeout(() => document.body.removeChild(iframe), 1000) }, 500)
+  }
+
   if (isLoading) {
     return <div className="space-y-6"><Card><CardHeader><Skeleton className="h-5 w-40" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /></CardContent></Card><Card className="h-[400px]"><CardHeader><Skeleton className="h-6 w-48" /></CardHeader></Card></div>
   }
@@ -67,6 +83,7 @@ export function FinanceReportsDashboard() {
           <Select value={saleType} onValueChange={setSaleType}><SelectTrigger className="w-[180px]"><Filter className="mr-2 h-4 w-4" /><SelectValue placeholder="Filter by type" /></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem><SelectItem value="appointment">Appointment</SelectItem><SelectItem value="hospital">Hospital</SelectItem><SelectItem value="admission">Admission</SelectItem><SelectItem value="emergency">Emergency</SelectItem></SelectContent></Select>
           <DatePickerWithRange date={date} setDate={setDate} />
           <Button variant="outline" className="gap-2" onClick={handleExportCSV}><FileDown className="h-4 w-4" /> Export Sales (CSV)</Button>
+          <Button className="gap-2" onClick={handlePrintReport} disabled={!incomeResponse}><Printer className="h-4 w-4" /> Print / PDF</Button>
         </div>
       </div>
 
@@ -85,6 +102,7 @@ export function FinanceReportsDashboard() {
           </div>}
         </CardContent>
       </Card>
+      {incomeResponse && date?.from && date.to && <div className="hidden"><div id="sales-finance-print-content"><SalesFinancePrint reportData={incomeResponse} dateRange={{ from: date.from, to: date.to }} activeBranch={stores.find((store) => store.id === activeStoreId)} /></div></div>}
     </div>
   )
 }
